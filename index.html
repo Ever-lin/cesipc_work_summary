@@ -1,0 +1,540 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);font-size:14px;color:var(--color-text-primary)}
+.tabs{display:flex;gap:4px;padding:12px 16px 0;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);flex-wrap:wrap}
+.tab{padding:8px 16px;border-radius:6px 6px 0 0;cursor:pointer;font-size:13px;border:0.5px solid transparent;color:var(--color-text-secondary);background:transparent}
+.tab.active{background:var(--color-background-primary);border-color:var(--color-border-tertiary);border-bottom-color:var(--color-background-primary);color:var(--color-text-primary);font-weight:500}
+.panel{display:none;padding:16px}
+.panel.active{display:block}
+.section-title{font-size:16px;font-weight:500;margin-bottom:12px;color:var(--color-text-primary)}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;margin-bottom:12px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;flex-wrap:wrap}
+.card-title{font-weight:500;font-size:14px}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500}
+.badge-blue{background:#E6F1FB;color:#0C447C}
+.badge-green{background:#EAF3DE;color:#27500A}
+.badge-amber{background:#FAEEDA;color:#633806}
+.badge-red{background:#FCEBEB;color:#791F1F}
+.badge-gray{background:#F1EFE8;color:#444441}
+.badge-teal{background:#E1F5EE;color:#085041}
+label{font-size:12px;color:var(--color-text-secondary);display:block;margin-bottom:4px}
+input,select,textarea{width:100%;padding:7px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;font-family:var(--font-sans);background:var(--color-background-primary);color:var(--color-text-primary);outline:none}
+input:focus,select:focus,textarea:focus{border-color:#378ADD;box-shadow:0 0 0 2px #E6F1FB}
+textarea{resize:vertical;min-height:70px;line-height:1.5}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.field{margin-bottom:10px}
+.btn{padding:7px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);font-size:13px;cursor:pointer;font-family:var(--font-sans)}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:#185FA5;color:#fff;border-color:#185FA5}
+.btn-primary:hover{background:#0C447C;border-color:#0C447C}
+.btn-danger{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
+.btn-danger:hover{background:#F7C1C1}
+.btn-sm{padding:4px 10px;font-size:12px}
+.row-actions{display:flex;gap:6px;align-items:center}
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);gap:8px;flex-wrap:wrap}
+.summary-row:last-child{border-bottom:none}
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px}
+.metric-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
+.metric-value{font-size:20px;font-weight:500}
+.project-list{display:flex;flex-direction:column;gap:8px}
+.project-item{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px;background:var(--color-background-primary)}
+.project-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px}
+.project-name{font-weight:500;font-size:13px}
+.progress-bar{height:4px;background:var(--color-border-tertiary);border-radius:2px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:2px;background:#1D9E75;transition:width 0.3s}
+.tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);margin:2px 2px 0 0}
+.weekly-report{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;background:var(--color-background-primary)}
+.report-section{margin-bottom:12px}
+.report-label{font-size:12px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.sub-item{padding:6px 10px;border-left:2px solid var(--color-border-tertiary);margin-bottom:4px;font-size:13px;line-height:1.5}
+.collapse-btn{background:none;border:none;cursor:pointer;color:var(--color-text-secondary);font-size:12px;padding:2px 6px}
+.empty-state{text-align:center;padding:24px;color:var(--color-text-secondary);font-size:13px}
+.week-selector{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.week-btn{padding:5px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:20px;font-size:12px;cursor:pointer;background:transparent;color:var(--color-text-secondary)}
+.week-btn.active{background:#185FA5;color:#fff;border-color:#185FA5}
+.divider{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:12px 0}
+.export-area{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px;font-size:13px;line-height:1.8;white-space:pre-wrap;font-family:var(--font-mono);max-height:400px;overflow-y:auto;margin-top:10px}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;flex-shrink:0}
+.dot-green{background:#1D9E75}
+.dot-amber{background:#EF9F27}
+.dot-red{background:#E24B4A}
+.dot-blue{background:#378ADD}
+.dot-gray{background:#888780}
+.alert{padding:8px 12px;border-radius:var(--border-radius-md);font-size:12px;margin-bottom:10px}
+.alert-success{background:#EAF3DE;color:#27500A;border:0.5px solid #C0DD97}
+.inline-flex{display:flex;align-items:center;gap:8px}
+</style>
+
+<h2 class="sr-only">工作总结管理工具 — 整合业绩回款、项目情况和周报月报</h2>
+
+<div class="tabs" id="tabs">
+  <div class="tab active" onclick="switchTab('performance')">📊 业绩&回款</div>
+  <div class="tab" onclick="switchTab('projects')">📁 项目总结</div>
+  <div class="tab" onclick="switchTab('weekly')">📋 周报月报</div>
+  <div class="tab" onclick="switchTab('export')">📤 导出报告</div>
+</div>
+
+<div id="panel-performance" class="panel active">
+  <div class="metric-grid" id="metrics"></div>
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">新增记录</span>
+      <div class="inline-flex">
+        <select id="perf-week" style="width:auto">
+          <option>第一周</option><option>第二周</option><option>第三周</option><option>第四周</option>
+        </select>
+        <select id="perf-month" style="width:auto">
+          <option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>类型</label>
+        <select id="perf-type">
+          <option value="业绩">本周业绩</option>
+          <option value="回款">本周回款</option>
+          <option value="新成交">新成交</option>
+        </select>
+      </div>
+      <div class="field"><label>客户名称</label><input id="perf-client" placeholder="如：Centric Process Automation Pty Ltd"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>金额（USD）</label><input id="perf-amount" type="number" placeholder="如：19740"></div>
+      <div class="field"><label>备注</label><input id="perf-note" placeholder="可选"></div>
+    </div>
+    <button class="btn btn-primary" onclick="addPerf()">+ 添加记录</button>
+  </div>
+
+  <div id="perf-list"></div>
+</div>
+
+<div id="panel-projects" class="panel">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">添加/更新项目</span>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>项目编号</label><input id="proj-id" placeholder="如：项目1_260410_TPC-1082A"></div>
+      <div class="field"><label>客户名称</label><input id="proj-client" placeholder="如：Hakan Pir Electronics"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>产品型号</label><input id="proj-model" placeholder="如：TPC-1082A 25PCS"></div>
+      <div class="field"><label>项目状态</label>
+        <select id="proj-status">
+          <option value="询价">询价中</option>
+          <option value="报价">已报价</option>
+          <option value="跟进">跟进中</option>
+          <option value="确认">方案确认中</option>
+          <option value="成交">已成交</option>
+          <option value="长期">长期跟进</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>最新进展（报价/沟通记录）</label><textarea id="proj-progress" placeholder="如：2026/4/10 报价 USD1370，等待客户回复"></textarea></div>
+    <div class="grid3">
+      <div class="field"><label>报价金额（USD）</label><input id="proj-price" type="number" placeholder="可选"></div>
+      <div class="field"><label>月份</label>
+        <select id="proj-month">
+          <option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+        </select>
+      </div>
+      <div class="field"><label>优先级</label>
+        <select id="proj-priority">
+          <option value="高">高</option><option value="中">中</option><option value="低">低</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="addProject()">+ 保存项目</button>
+  </div>
+
+  <div id="proj-filters" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <button class="week-btn active" onclick="filterProj('all',this)">全部</button>
+    <button class="week-btn" onclick="filterProj('询价',this)">询价中</button>
+    <button class="week-btn" onclick="filterProj('报价',this)">已报价</button>
+    <button class="week-btn" onclick="filterProj('确认',this)">方案确认中</button>
+    <button class="week-btn" onclick="filterProj('跟进',this)">跟进中</button>
+    <button class="week-btn" onclick="filterProj('成交',this)">已成交</button>
+  </div>
+  <div id="proj-list" class="project-list"></div>
+</div>
+
+<div id="panel-weekly" class="panel">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">填写本周报告</span>
+      <div class="inline-flex">
+        <select id="w-week" style="width:auto">
+          <option>第一周</option><option selected>第二周</option><option>第三周</option><option>第四周</option>
+        </select>
+        <select id="w-month" style="width:auto">
+          <option value="3">3月</option><option value="4" selected>4月</option><option value="5">5月</option><option value="6">6月</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-label">1. 客户投入情况</div>
+      <div class="grid3">
+        <div class="field"><label>中等投入客户数</label><input id="w-mid" type="number" placeholder="9" value="9"></div>
+        <div class="field"><label>长期投入客户数</label><input id="w-long" type="number" placeholder="5" value="5"></div>
+        <div class="field"><label>新增背调客户数</label><input id="w-new" type="number" placeholder="10" value="10"></div>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-label">2. 重点项目状态</div>
+      <div class="field"><label>3-1 已确认订单</label><textarea id="w-orders" placeholder="列出已确认的订单项目"></textarea></div>
+      <div class="field"><label>3-2 已报价/已提供方案项目</label><textarea id="w-quoted" placeholder="列出已报价的项目"></textarea></div>
+      <div class="field"><label>3-3 方案确认中的项目</label><textarea id="w-pending" placeholder="列出方案确认中的项目"></textarea></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-label">3. 重点订单情况</div>
+      <textarea id="w-keyorders" placeholder="本周重要订单进展说明"></textarea>
+    </div>
+
+    <div class="report-section">
+      <div class="report-label">4. 售后情况</div>
+      <textarea id="w-aftersales" placeholder="本周售后问题及处理情况"></textarea>
+    </div>
+
+    <div class="report-section">
+      <div class="report-label">5. 下周计划</div>
+      <textarea id="w-plan" placeholder="下周主要工作计划"></textarea>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveWeekly()">保存周报</button>
+  </div>
+
+  <div id="saved-weeklies"></div>
+</div>
+
+<div id="panel-export" class="panel">
+  <div class="card">
+    <div class="card-header"><span class="card-title">生成工作总结报告</span></div>
+    <div class="grid2">
+      <div class="field"><label>报告月份</label>
+        <select id="exp-month">
+          <option value="3">3月</option><option value="4" selected>4月</option><option value="5">5月</option><option value="6">6月</option>
+        </select>
+      </div>
+      <div class="field"><label>报告类型</label>
+        <select id="exp-type">
+          <option value="weekly">周报</option>
+          <option value="monthly">月报（汇总）</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="generateReport()">生成报告</button>
+    <button class="btn" onclick="copyReport()" style="margin-left:8px">复制内容</button>
+  </div>
+  <div id="report-output"></div>
+</div>
+
+<script>
+let state = {
+  perf: [],
+  projects: [],
+  weeklies: []
+};
+
+function save(){try{localStorage.setItem('ws_state',JSON.stringify(state))}catch(e){}}
+function load(){try{const d=localStorage.getItem('ws_state');if(d)state=JSON.parse(d)}catch(e){}}
+
+load();
+
+const statusConfig = {
+  '询价':{label:'询价中',badge:'badge-blue'},
+  '报价':{label:'已报价',badge:'badge-amber'},
+  '跟进':{label:'跟进中',badge:'badge-gray'},
+  '确认':{label:'方案确认中',badge:'badge-teal'},
+  '成交':{label:'已成交',badge:'badge-green'},
+  '长期':{label:'长期跟进',badge:'badge-gray'}
+};
+
+const dotConfig = {
+  '询价':'dot-blue','报价':'dot-amber','跟进':'dot-gray','确认':'dot-blue','成交':'dot-green','长期':'dot-gray'
+};
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const idx = ['performance','projects','weekly','export'].indexOf(name);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='performance')renderPerf();
+  if(name==='projects')renderProjects();
+  if(name==='weekly')renderWeeklies();
+}
+
+function addPerf(){
+  const week=document.getElementById('perf-week').value;
+  const month=document.getElementById('perf-month').value;
+  const type=document.getElementById('perf-type').value;
+  const client=document.getElementById('perf-client').value.trim();
+  const amount=parseFloat(document.getElementById('perf-amount').value)||0;
+  const note=document.getElementById('perf-note').value.trim();
+  if(!client&&type!=='新成交'){alert('请填写客户名称');return;}
+  state.perf.push({id:Date.now(),week,month,type,client,amount,note});
+  save();
+  document.getElementById('perf-client').value='';
+  document.getElementById('perf-amount').value='';
+  document.getElementById('perf-note').value='';
+  renderPerf();
+}
+
+function renderPerf(){
+  const month=document.getElementById('perf-month')?.value||'4';
+  const monthData=state.perf.filter(p=>p.month===month);
+  const totalSales=monthData.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
+  const totalRecovery=monthData.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
+  const newDeals=monthData.filter(p=>p.type==='新成交').length;
+
+  document.getElementById('metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">${month}月总业绩</div><div class="metric-value" style="color:#185FA5">$${totalSales.toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-label">${month}月总回款</div><div class="metric-value" style="color:#1D9E75">$${totalRecovery.toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-label">新成交客户</div><div class="metric-value">${newDeals}</div></div>
+    <div class="metric"><div class="metric-label">记录总数</div><div class="metric-value">${monthData.length}</div></div>
+  `;
+
+  const weeks=['第一周','第二周','第三周','第四周'];
+  let html='';
+  weeks.forEach(w=>{
+    const wdata=monthData.filter(p=>p.week===w);
+    if(wdata.length===0)return;
+    const ws=wdata.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
+    const wr=wdata.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
+    html+=`<div class="card"><div class="card-header"><span class="card-title">${month}月 ${w}</span>
+      <span class="inline-flex"><span class="badge badge-blue">业绩 $${ws.toLocaleString()}</span><span class="badge badge-green">回款 $${wr.toLocaleString()}</span></span>
+      </div>`;
+    wdata.forEach(p=>{
+      html+=`<div class="summary-row">
+        <span class="inline-flex"><span class="status-dot ${p.type==='业绩'?'dot-blue':p.type==='回款'?'dot-green':'dot-amber'}"></span>
+        <span class="badge ${p.type==='业绩'?'badge-blue':p.type==='回款'?'badge-green':'badge-amber'}" style="font-size:10px">${p.type}</span>
+        <span style="font-size:13px">${p.client||'新成交'}</span></span>
+        <span class="inline-flex">
+        ${p.amount?`<span style="font-weight:500;font-size:13px">$${p.amount.toLocaleString()}</span>`:''}
+        ${p.note?`<span style="color:var(--color-text-secondary);font-size:12px">${p.note}</span>`:''}
+        <button class="btn btn-danger btn-sm" onclick="delPerf(${p.id})">删除</button>
+        </span>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  document.getElementById('perf-list').innerHTML=html||'<div class="empty-state">暂无记录，请在上方添加</div>';
+}
+
+function delPerf(id){state.perf=state.perf.filter(p=>p.id!==id);save();renderPerf();}
+
+let projFilter='all';
+function addProject(){
+  const pid=document.getElementById('proj-id').value.trim();
+  const client=document.getElementById('proj-client').value.trim();
+  if(!client){alert('请填写客户名称');return;}
+  const model=document.getElementById('proj-model').value.trim();
+  const status=document.getElementById('proj-status').value;
+  const progress=document.getElementById('proj-progress').value.trim();
+  const price=parseFloat(document.getElementById('proj-price').value)||0;
+  const month=document.getElementById('proj-month').value;
+  const priority=document.getElementById('proj-priority').value;
+
+  const existing=state.projects.findIndex(p=>p.pid===pid&&pid!=='');
+  if(existing>=0){
+    state.projects[existing]={...state.projects[existing],client,model,status,progress,price,month,priority,updated:new Date().toLocaleString('zh-CN')};
+  }else{
+    state.projects.push({id:Date.now(),pid,client,model,status,progress,price,month,priority,created:new Date().toLocaleString('zh-CN'),updated:new Date().toLocaleString('zh-CN'),histories:[{date:new Date().toLocaleDateString('zh-CN'),note:progress}]});
+  }
+  save();
+  ['proj-id','proj-client','proj-model','proj-progress','proj-price'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('proj-status').value='询价';
+  renderProjects();
+}
+
+function renderProjects(){
+  const list=state.projects.filter(p=>projFilter==='all'||p.status===projFilter);
+  if(list.length===0){document.getElementById('proj-list').innerHTML='<div class="empty-state">暂无项目，请在上方添加</div>';return;}
+  const html=list.map(p=>{
+    const sc=statusConfig[p.status]||{label:p.status,badge:'badge-gray'};
+    const prColor=p.priority==='高'?'badge-red':p.priority==='中'?'badge-amber':'badge-gray';
+    return `<div class="project-item">
+      <div class="project-header">
+        <div>
+          <div class="inline-flex" style="margin-bottom:4px">
+            <span class="status-dot ${dotConfig[p.status]||'dot-gray'}"></span>
+            <span class="project-name">${p.client}</span>
+          </div>
+          ${p.pid?`<div style="font-size:11px;color:var(--color-text-secondary);margin-left:14px">${p.pid}</div>`:''}
+          ${p.model?`<div style="font-size:12px;color:var(--color-text-secondary);margin-left:14px;margin-top:2px">产品：${p.model}</div>`:''}
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+          <span class="badge ${prColor}">${p.priority}优先</span>
+          <span class="badge ${sc.badge}">${sc.label}</span>
+        </div>
+      </div>
+      ${p.price?`<div style="font-size:13px;margin-bottom:6px">报价：<span style="font-weight:500;color:#185FA5">$${p.price.toLocaleString()}</span></div>`:''}
+      ${p.progress?`<div style="font-size:13px;line-height:1.6;color:var(--color-text-secondary);padding:6px 10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);margin-bottom:8px">${p.progress.replace(/\n/g,'<br>')}</div>`:''}
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:11px;color:var(--color-text-secondary)">更新：${p.updated||p.created||''}</span>
+        <div class="row-actions">
+          <button class="btn btn-sm" onclick="editProj(${p.id})">编辑</button>
+          <button class="btn btn-danger btn-sm" onclick="delProj(${p.id})">删除</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('proj-list').innerHTML=html;
+}
+
+function filterProj(f,btn){
+  projFilter=f;
+  document.querySelectorAll('#proj-filters .week-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderProjects();
+}
+
+function editProj(id){
+  const p=state.projects.find(x=>x.id===id);if(!p)return;
+  document.getElementById('proj-id').value=p.pid||'';
+  document.getElementById('proj-client').value=p.client||'';
+  document.getElementById('proj-model').value=p.model||'';
+  document.getElementById('proj-status').value=p.status||'询价';
+  document.getElementById('proj-progress').value=p.progress||'';
+  document.getElementById('proj-price').value=p.price||'';
+  document.getElementById('proj-month').value=p.month||'4';
+  document.getElementById('proj-priority').value=p.priority||'中';
+  window.scrollTo(0,0);
+}
+
+function delProj(id){if(!confirm('确认删除此项目？'))return;state.projects=state.projects.filter(p=>p.id!==id);save();renderProjects();}
+
+function saveWeekly(){
+  const week=document.getElementById('w-week').value;
+  const month=document.getElementById('w-month').value;
+  const data={
+    id:Date.now(),week,month,
+    mid:document.getElementById('w-mid').value,
+    long:document.getElementById('w-long').value,
+    newClients:document.getElementById('w-new').value,
+    orders:document.getElementById('w-orders').value,
+    quoted:document.getElementById('w-quoted').value,
+    pending:document.getElementById('w-pending').value,
+    keyorders:document.getElementById('w-keyorders').value,
+    aftersales:document.getElementById('w-aftersales').value,
+    plan:document.getElementById('w-plan').value,
+    savedAt:new Date().toLocaleString('zh-CN')
+  };
+  const existing=state.weeklies.findIndex(w=>w.week===week&&w.month===month);
+  if(existing>=0)state.weeklies[existing]=data;
+  else state.weeklies.push(data);
+  save();
+  const a=document.createElement('div');a.className='alert alert-success';a.textContent='周报已保存！';
+  document.getElementById('saved-weeklies').prepend(a);
+  setTimeout(()=>a.remove(),2000);
+  renderWeeklies();
+}
+
+function renderWeeklies(){
+  const list=state.weeklies.slice().reverse();
+  if(list.length===0){document.getElementById('saved-weeklies').innerHTML='<div class="empty-state">暂无已保存的周报</div>';return;}
+  const html=list.map(w=>`
+    <div class="weekly-report" style="margin-bottom:10px">
+      <div class="card-header" style="margin-bottom:10px">
+        <span class="card-title">${w.month}月 ${w.week} 周报</span>
+        <span style="font-size:11px;color:var(--color-text-secondary)">${w.savedAt}</span>
+      </div>
+      <div style="font-size:13px;line-height:1.8">
+        <div class="report-label">客户投入</div>
+        <div class="sub-item">中等投入：${w.mid}个 | 长期投入：${w.long}个 | 新增背调：${w.newClients}个</div>
+        ${w.orders?`<div class="report-label" style="margin-top:8px">已确认订单</div><div class="sub-item">${w.orders.replace(/\n/g,'<br>')}</div>`:''}
+        ${w.quoted?`<div class="report-label" style="margin-top:8px">已报价项目</div><div class="sub-item">${w.quoted.replace(/\n/g,'<br>')}</div>`:''}
+        ${w.pending?`<div class="report-label" style="margin-top:8px">方案确认中</div><div class="sub-item">${w.pending.replace(/\n/g,'<br>')}</div>`:''}
+        ${w.keyorders?`<div class="report-label" style="margin-top:8px">重点订单</div><div class="sub-item">${w.keyorders.replace(/\n/g,'<br>')}</div>`:''}
+        ${w.aftersales?`<div class="report-label" style="margin-top:8px">售后情况</div><div class="sub-item">${w.aftersales.replace(/\n/g,'<br>')}</div>`:''}
+        ${w.plan?`<div class="report-label" style="margin-top:8px">下周计划</div><div class="sub-item">${w.plan.replace(/\n/g,'<br>')}</div>`:''}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="loadWeekly(${w.id})">加载编辑</button>
+        <button class="btn btn-danger btn-sm" onclick="delWeekly(${w.id})">删除</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('saved-weeklies').innerHTML=html;
+}
+
+function loadWeekly(id){
+  const w=state.weeklies.find(x=>x.id===id);if(!w)return;
+  document.getElementById('w-week').value=w.week;
+  document.getElementById('w-month').value=w.month;
+  document.getElementById('w-mid').value=w.mid||'';
+  document.getElementById('w-long').value=w.long||'';
+  document.getElementById('w-new').value=w.newClients||'';
+  document.getElementById('w-orders').value=w.orders||'';
+  document.getElementById('w-quoted').value=w.quoted||'';
+  document.getElementById('w-pending').value=w.pending||'';
+  document.getElementById('w-keyorders').value=w.keyorders||'';
+  document.getElementById('w-aftersales').value=w.aftersales||'';
+  document.getElementById('w-plan').value=w.plan||'';
+}
+
+function delWeekly(id){if(!confirm('确认删除？'))return;state.weeklies=state.weeklies.filter(x=>x.id!==id);save();renderWeeklies();}
+
+function generateReport(){
+  const month=document.getElementById('exp-month').value;
+  const type=document.getElementById('exp-type').value;
+  const monthData=state.perf.filter(p=>p.month===month);
+  const totalSales=monthData.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
+  const totalRecovery=monthData.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
+  const newDeals=monthData.filter(p=>p.type==='新成交').length;
+  const projData=state.projects.filter(p=>p.month===month);
+  const weekly=state.weeklies.filter(w=>w.month===month).sort((a,b)=>a.week>b.week?1:-1);
+
+  let report=`【${month}月工作总结】\n${'='.repeat(40)}\n\n`;
+  report+=`一、业绩与回款\n`;
+  report+=`• 本月总业绩：USD ${totalSales.toLocaleString()}\n`;
+  report+=`• 本月总回款：USD ${totalRecovery.toLocaleString()}\n`;
+  report+=`• 新成交客户：${newDeals}个\n\n`;
+
+  if(type==='weekly'&&weekly.length>0){
+    report+=`二、各周详情\n`;
+    weekly.forEach(w=>{
+      report+=`\n▶ ${w.week}\n`;
+      report+=`  客户投入：中等${w.mid}个，长期${w.long}个，新增背调${w.newClients}个\n`;
+      if(w.orders)report+=`  已确认订单：${w.orders}\n`;
+      if(w.quoted)report+=`  已报价项目：${w.quoted}\n`;
+      if(w.pending)report+=`  方案确认中：${w.pending}\n`;
+      if(w.keyorders)report+=`  重点订单：${w.keyorders}\n`;
+      if(w.aftersales)report+=`  售后情况：${w.aftersales}\n`;
+    });
+    report+='\n';
+  }
+
+  if(projData.length>0){
+    report+=`三、项目情况总结\n`;
+    const groups={成交:[],确认:[],报价:[],询价:[],跟进:[],长期:[]};
+    projData.forEach(p=>{if(groups[p.status])groups[p.status].push(p);});
+    if(groups['成交'].length>0){report+=`\n【已成交】\n`;groups['成交'].forEach(p=>{report+=`  • ${p.client} — ${p.model||''} ${p.price?'USD '+p.price.toLocaleString():''}\n`});}
+    if(groups['确认'].length>0){report+=`\n【方案确认中】\n`;groups['确认'].forEach(p=>{report+=`  • ${p.client} — ${p.model||''}\n    ${p.progress||''}\n`});}
+    if(groups['报价'].length>0){report+=`\n【已报价】\n`;groups['报价'].forEach(p=>{report+=`  • ${p.client} — ${p.model||''} ${p.price?'报价 USD '+p.price.toLocaleString():''}\n`});}
+    if(groups['询价'].length>0){report+=`\n【询价中】\n`;groups['询价'].forEach(p=>{report+=`  • ${p.client} — ${p.model||''}\n`});}
+  }
+
+  if(weekly.length>0&&weekly[weekly.length-1].plan){
+    report+=`\n四、下周工作计划\n${weekly[weekly.length-1].plan}\n`;
+  }
+
+  document.getElementById('report-output').innerHTML=`<div class="export-area">${report}</div>`;
+  window._reportText=report;
+}
+
+function copyReport(){
+  if(!window._reportText){generateReport();}
+  navigator.clipboard.writeText(window._reportText).then(()=>{
+    const b=event.target;const orig=b.textContent;b.textContent='已复制！';setTimeout(()=>b.textContent=orig,1500);
+  });
+}
+
+renderPerf();
+</script>
