@@ -108,7 +108,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
 
 <!-- ===== 项目情况 ===== -->
 <div id="panel-projects" class="panel">
-  <div class="hint">同一个项目用相同「项目名称」保存，每次追加进展。成交后状态改为「已成交」，导出时自动显示 ✅，其余显示 ⭕️。</div>
+  <div class="hint">同一个项目用相同「项目名称」保存，每次追加进展。已成交显示 ✅，丢单显示 ❌，其余状态显示 ⭕️。</div>
   <div class="card">
     <div class="card-header"><span class="card-title">新增 / 追加进展</span></div>
     <div class="grid2">
@@ -116,7 +116,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
       <div class="field"><label>客户名称</label><input id="proj-client" placeholder="如：Orange Ltd"></div>
     </div>
     <div class="field"><label>当前状态</label>
-      <select id="proj-status"><option value="询价">询价中</option><option value="报价">已报价</option><option value="跟进">跟进中</option><option value="确认">方案确认中</option><option value="成交">已成交</option><option value="长期">长期跟进</option><option value="丢单">丢单</option></select>
+      <select id="proj-status"><option value="报价">已报价</option><option value="方案">已提供方案</option><option value="确认">方案确认中</option><option value="报价跟进">已报价跟进中</option><option value="长期">长期跟进项目</option><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="丢单">丢单</option><option value="询价">询价中</option><option value="跟进">跟进中</option></select>
     </div>
     <div class="field"><label>本次进展记录（含日期、报价、沟通内容）</label><textarea id="proj-progress" placeholder="如：2026/4/18 报价 ¥9800，客户表示需内部确认"></textarea></div>
     <div class="grid2">
@@ -127,7 +127,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
   </div>
   <div class="filter-bar">
     <select class="ym-s" id="pj-fy" onchange="renderProjects()"></select>
-    <select class="ym-s" id="pj-status" onchange="renderProjects()"><option value="all">全部状态</option><option value="询价">询价中</option><option value="报价">已报价</option><option value="确认">方案确认中</option><option value="跟进">跟进中</option><option value="成交">已成交</option><option value="长期">长期跟进</option><option value="丢单">丢单</option></select>
+    <select class="ym-s" id="pj-status" onchange="renderProjects()"><option value="all">全部状态</option><option value="报价">已报价</option><option value="方案">已提供方案</option><option value="确认">方案确认中</option><option value="报价跟进">已报价跟进中</option><option value="长期">长期跟进项目</option><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="丢单">丢单</option><option value="询价">询价中</option><option value="跟进">跟进中</option></select>
   </div>
   <div id="proj-list"></div>
 </div>
@@ -250,7 +250,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
 
 <script>
 const NO_AMT=['昆明途恒科技有限公司'];
-const SC={询价:{label:'询价中'},报价:{label:'已报价'},跟进:{label:'跟进中'},确认:{label:'方案确认中'},成交:{label:'已成交'},长期:{label:'长期跟进'},丢单:{label:'丢单'}};
+const SC={报价:{label:'已报价'},报价跟进:{label:'已报价跟进中'},方案:{label:'已提供方案'},确认:{label:'方案确认中'},长期:{label:'长期跟进项目'},确认订单:{label:'已确认订单'},成交:{label:'已成交'},丢单:{label:'丢单'},询价:{label:'询价中'},跟进:{label:'跟进中'}};
 const MONTHS_ORDER=['4','5','6','7','8','9','10','11','12','1','2','3'];
 const MONTH_NAMES={1:'1月',2:'2月',3:'3月',4:'4月',5:'5月',6:'6月',7:'7月',8:'8月',9:'9月',10:'10月',11:'11月',12:'12月'};
 function fyMonthIdx(m){return MONTHS_ORDER.indexOf(String(m));}
@@ -259,7 +259,8 @@ function calYearOfFYMonth(fy,m){const y=parseInt(fy.replace('FY',''));return par
 function buildFYOptions(id,sel){
   const now=new Date();const cy=now.getFullYear();const cm=now.getMonth()+1;
   const curFY=cm>=4?`FY${cy}`:`FY${cy-1}`;
-  const fys=[`FY${parseInt(curFY.replace('FY',''))-1}`,curFY,`FY${parseInt(curFY.replace('FY',''))+1}`];
+  const base=parseInt(curFY.replace('FY',''));
+  const fys=[];for(let i=base-2;i<=base+3;i++)fys.push(`FY${i}`);
   const el=document.getElementById(id);if(!el)return;
   el.innerHTML=fys.map(f=>`<option value="${f}"${f===(sel||curFY)?'selected':''}>${f}（${f.replace('FY','')}年4月–${parseInt(f.replace('FY',''))+1}年3月）</option>`).join('');
 }
@@ -495,7 +496,7 @@ function refreshProjDatalist(){
   document.getElementById('proj-dl').innerHTML=names.map(n=>`<option value="${n}">`).join('');
 }
 
-function projIcon(status){return status==='成交'?'✅':'⭕️';}
+function projIcon(status){return status==='成交'?'✅':status==='丢单'?'❌':'⭕️';}
 
 function addProject(){
   const client=document.getElementById('proj-client').value.trim();
@@ -534,8 +535,9 @@ function renderProjects(){
     html+=`<div class="project-item">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
         <div>
+          <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:2px">${latest.client}</div>
           <div style="font-size:13px;font-weight:500;margin-bottom:2px">${icon} ${latest.name}</div>
-          <div style="font-size:12px;color:var(--color-text-secondary)">${latest.client} · ${latest.recordDate}</div>
+          <div style="font-size:11px;color:var(--color-text-secondary)">${latest.recordDate}</div>
         </div>
         <div class="inline-flex" style="flex-shrink:0"><span class="badge ${pc}">${latest.priority}</span><span class="badge badge-gray">${sc.label}</span></div>
       </div>
@@ -577,7 +579,15 @@ function renderProjSync(containerId){
   const keys=Object.keys(grouped);
   if(!keys.length){el.innerHTML='<div style="font-size:12px;color:var(--color-text-secondary);padding:8px">暂无项目数据</div>';return;}
   // group by status category
-  const cats=[{label:'已成交',statuses:['成交']},{label:'方案确认中',statuses:['确认']},{label:'已报价',statuses:['报价']},{label:'询价/跟进',statuses:['询价','跟进','长期']},{label:'丢单',statuses:['丢单']}];
+  const cats=[
+    {label:'✅ 已成交',statuses:['成交']},
+    {label:'⭕️ 已确认订单',statuses:['确认订单']},
+    {label:'⭕️ 已报价/已提供方案',statuses:['报价','方案']},
+    {label:'⭕️ 方案确认中',statuses:['确认']},
+    {label:'⭕️ 长期跟进项目/已报价跟进中',statuses:['长期','报价跟进']},
+    {label:'⭕️ 询价/跟进中',statuses:['询价','跟进']},
+    {label:'❌ 丢单',statuses:['丢单']}
+  ];
   let html='';
   cats.forEach(cat=>{
     const items=keys.filter(k=>{const l=grouped[k].sort((a,b)=>b.id-a.id)[0];return cat.statuses.includes(l.status);});
@@ -619,18 +629,20 @@ function getCheckedProjects(containerId){
 function buildProjSection(projects,forMonthly){
   if(!projects.length)return'';
   const cats=[
-    {label:'3-1 已确认订单',statuses:['成交']},
-    {label:'3-2 方案确认中',statuses:['确认']},
-    {label:'3-3 已报价/已提供方案',statuses:['报价']},
-    {label:'3-4 询价/跟进中',statuses:['询价','跟进','长期']},
+    {label:'已成交',statuses:['成交'],icon:'✅'},
+    {label:'已确认订单',statuses:['确认订单'],icon:'⭕️'},
+    {label:'已报价/已提供方案',statuses:['报价','方案'],icon:'⭕️'},
+    {label:'方案确认中',statuses:['确认'],icon:'⭕️'},
+    {label:'长期跟进项目/已报价跟进中',statuses:['长期','报价跟进'],icon:'⭕️'},
+    {label:'其他（丢单）',statuses:['丢单'],icon:'❌'},
   ];
-  if(forMonthly){cats[0].label='已成交';cats[1].label='方案确认中';cats[2].label='已报价/已提供方案';cats[3].label='询价/跟进中';}
+  if(!forMonthly){cats[1].label='3-1 已确认订单';cats[2].label='3-2 已报价/已提供方案';cats[3].label='3-3 方案确认中';cats[4].label='3-4 长期跟进/报价跟进中';cats[5].label='3-5 其他（丢单）';}
   let r='';
   cats.forEach(cat=>{
     const items=projects.filter(p=>cat.statuses.includes(p.status));
     if(!items.length)return;
     r+=`${cat.label}：\n`;
-    items.forEach(p=>{r+=`  ${projIcon(p.status)} ${p.name}\n  ${p.client} | ${p.progress||''}\n`;});
+    items.forEach(p=>{r+=`  ${projIcon(p.status)} ${p.client}\n  ${p.name}\n  ${p.progress||''}\n`;});
   });
   return r;
 }
