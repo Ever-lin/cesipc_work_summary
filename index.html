@@ -146,13 +146,13 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
 <!-- ===== 导出报告 ===== -->
 <div id="panel-export" class="panel">
   <div class="sub-tabs">
-    <button class="sub-tab active" onclick="switchSub('sw-write',this)">填写周报/月报</button>
-    <button class="sub-tab" onclick="switchSub('sw-daily',this)">导出日报</button>
+    <button class="sub-tab active" onclick="switchSub('sw-daily',this)">导出日报</button>
+    <button class="sub-tab" onclick="switchSub('sw-write',this)">填写周报/月报</button>
     <button class="sub-tab" onclick="switchSub('sw-weekly',this)">导出周报</button>
     <button class="sub-tab" onclick="switchSub('sw-monthly',this)">导出月报</button>
   </div>
 
-  <div id="sw-write" class="sub-panel active">
+  <div id="sw-write" class="sub-panel">
     <div class="sub-tabs" style="margin-bottom:10px">
       <button class="sub-tab active" onclick="switchWrite('write-weekly',this)">周报内容</button>
       <button class="sub-tab" onclick="switchWrite('write-monthly',this)">月报内容</button>
@@ -171,6 +171,10 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
           <div class="field"><label>中等投入客户数</label><input id="w-mid" type="number"></div>
           <div class="field"><label>长期投入客户数</label><input id="w-long" type="number"></div>
           <div class="field"><label>新增背调客户数</label><input id="w-new" type="number"></div>
+        </div>
+        <div class="grid2" style="margin-top:-4px">
+          <div class="field"><label style="color:var(--color-text-secondary)">　↳ 其中中等投入</label><input id="w-new-mid" type="number" placeholder="0"></div>
+          <div class="field"><label style="color:var(--color-text-secondary)">　↳ 其中长期投入</label><input id="w-new-long" type="number" placeholder="0"></div>
         </div>
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目状态（从项目情况同步）<button class="btn btn-sm" onclick="fillProjTextareas('w')">↻ 刷新项目</button></div>
         <div class="field"><label>3-1 已确认订单（已成交 / 已确认订单）</label><textarea id="w-p1" rows="3"></textarea></div>
@@ -199,6 +203,10 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
           <div class="field"><label>长期投入客户数</label><input id="wm-long" type="number"></div>
           <div class="field"><label>新增背调客户数</label><input id="wm-new" type="number"></div>
         </div>
+        <div class="grid2" style="margin-top:-4px">
+          <div class="field"><label style="color:var(--color-text-secondary)">　↳ 其中中等投入</label><input id="wm-new-mid" type="number" placeholder="0"></div>
+          <div class="field"><label style="color:var(--color-text-secondary)">　↳ 其中长期投入</label><input id="wm-new-long" type="number" placeholder="0"></div>
+        </div>
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目状态（从项目情况同步）<button class="btn btn-sm" onclick="fillProjTextareas('wm')">↻ 刷新项目</button></div>
         <div class="field"><label>3-1 已确认订单（已成交 / 已确认订单）</label><textarea id="wm-p1" rows="3"></textarea></div>
         <div class="field"><label>3-2 已报价/已提供方案（已报价 / 已报价跟进中 / 已提供方案）</label><textarea id="wm-p2" rows="3"></textarea></div>
@@ -214,7 +222,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
     </div>
   </div>
 
-  <div id="sw-daily" class="sub-panel">
+  <div id="sw-daily" class="sub-panel active">
     <div class="card">
       <div class="card-header"><span class="card-title">导出日报</span></div>
       <div class="hint">自动提取「项目情况」中所选日期的进展记录。</div>
@@ -762,6 +770,7 @@ function saveWeekly(){
   const checkedProjs=[];
   const data={id:Date.now(),fy,month,week,checkedProjs,
     mid:document.getElementById('w-mid').value,long:document.getElementById('w-long').value,newClients:document.getElementById('w-new').value,
+    newMid:document.getElementById('w-new-mid').value,newLong:document.getElementById('w-new-long').value,
     p1:document.getElementById('w-p1').value,p2:document.getElementById('w-p2').value,p3:document.getElementById('w-p3').value,p4:document.getElementById('w-p4').value,
     keyorders:document.getElementById('w-keyorders').value,aftersales:document.getElementById('w-aftersales').value,plan:document.getElementById('w-plan').value,
     savedAt:new Date().toLocaleString('zh-CN')};
@@ -783,7 +792,7 @@ function renderSavedWeeklies(){
       <div class="card-header" style="margin-bottom:8px"><span style="font-size:13px;font-weight:500">${w.fy} ${w.month}月 ${w.week}</span>
         <div class="inline-flex"><button class="btn btn-primary btn-sm" onclick="editWeekly(${w.id})">编辑</button><button class="btn btn-sm" onclick="loadWeekly(${w.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delWeekly(${w.id})">删除</button></div>
       </div>
-      <div style="margin:4px 0 8px;font-size:12px"><span style="color:var(--color-text-secondary);font-weight:500">客户投入：</span>中等${w.mid||0}个 · 长期${w.long||0}个 · 背调${w.newClients||0}个</div>
+      <div style="margin:4px 0 8px;font-size:12px"><span style="color:var(--color-text-secondary);font-weight:500">客户投入：</span>中等${w.mid||0}个 · 长期${w.long||0}个 · 背调${w.newClients||0}个${(w.newMid||w.newLong)?`（其中中等${w.newMid||0}个，长期${w.newLong||0}个）`:''}</div>
       <div style="margin:6px 0 4px;font-size:12px;font-weight:500;color:var(--color-text-secondary)">重点项目状态</div>
       <div style="font-size:12px;background:var(--color-background-secondary);padding:8px 10px;border-radius:var(--border-radius-md);white-space:pre-wrap;line-height:1.7;font-family:var(--font-mono);margin-bottom:6px">${projTxt}</div>
       ${infoRow('重点订单',w.keyorders)}
@@ -800,6 +809,8 @@ function loadWeekly(id){
   document.getElementById('w-month').value=w.month;document.getElementById('w-week').value=w.week;
   ['mid','long','p1','p2','p3','p4','keyorders','aftersales','plan'].forEach(f=>{const el=document.getElementById('w-'+f);if(el)el.value=w[f]||'';});
   document.getElementById('w-new').value=w.newClients||'';
+  document.getElementById('w-new-mid').value=w.newMid||'';
+  document.getElementById('w-new-long').value=w.newLong||'';
 }
 function delWeekly(id){if(!confirm('确认删除？'))return;state.weeklies=state.weeklies.filter(x=>x.id!==id);save();renderSavedWeeklies();}
 function editWeekly(id){
@@ -822,6 +833,7 @@ function saveMonthly(){
   const fy=document.getElementById('wm-fy').value,month=document.getElementById('wm-month').value;
   const data={id:Date.now(),fy,month,checkedProjs:[],
     mid:document.getElementById('wm-mid').value,long:document.getElementById('wm-long').value,newClients:document.getElementById('wm-new').value,
+    newMid:document.getElementById('wm-new-mid').value,newLong:document.getElementById('wm-new-long').value,
     p1:document.getElementById('wm-p1').value,p2:document.getElementById('wm-p2').value,p3:document.getElementById('wm-p3').value,p4:document.getElementById('wm-p4').value,
     keyorders:document.getElementById('wm-keyorders').value,aftersales:document.getElementById('wm-aftersales').value,plan:document.getElementById('wm-plan').value,
     savedAt:new Date().toLocaleString('zh-CN')};
@@ -843,7 +855,7 @@ function renderSavedMonthlies(){
       <div class="card-header" style="margin-bottom:8px"><span style="font-size:13px;font-weight:500">${m.fy} ${m.month}月月报</span>
         <div class="inline-flex"><button class="btn btn-primary btn-sm" onclick="editMonthly(${m.id})">编辑</button><button class="btn btn-sm" onclick="loadMonthly(${m.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delMonthly(${m.id})">删除</button></div>
       </div>
-      <div style="margin:4px 0 8px;font-size:12px"><span style="color:var(--color-text-secondary);font-weight:500">客户投入：</span>中等${m.mid||0}个 · 长期${m.long||0}个 · 背调${m.newClients||0}个</div>
+      <div style="margin:4px 0 8px;font-size:12px"><span style="color:var(--color-text-secondary);font-weight:500">客户投入：</span>中等${m.mid||0}个 · 长期${m.long||0}个 · 背调${m.newClients||0}个${(m.newMid||m.newLong)?`（其中中等${m.newMid||0}个，长期${m.newLong||0}个）`:''}</div>
       <div style="margin:6px 0 4px;font-size:12px;font-weight:500;color:var(--color-text-secondary)">重点项目状态</div>
       <div style="font-size:12px;background:var(--color-background-secondary);padding:8px 10px;border-radius:var(--border-radius-md);white-space:pre-wrap;line-height:1.7;font-family:var(--font-mono);margin-bottom:6px">${projTxt}</div>
       ${infoRow('重点订单',m.keyorders)}
@@ -860,6 +872,8 @@ function loadMonthly(id){
   document.getElementById('wm-month').value=m.month;
   ['mid','long','p1','p2','p3','p4','keyorders','aftersales','plan'].forEach(f=>{const el=document.getElementById('wm-'+f);if(el)el.value=m[f]||'';});
   document.getElementById('wm-new').value=m.newClients||'';
+  document.getElementById('wm-new-mid').value=m.newMid||'';
+  document.getElementById('wm-new-long').value=m.newLong||'';
 }
 function delMonthly(id){if(!confirm('确认删除？'))return;state.monthlies=state.monthlies.filter(x=>x.id!==id);save();renderSavedMonthlies();}
 function editMonthly(id){
@@ -919,7 +933,11 @@ function genWeekly(){
   monthDeals.forEach(p=>{r+=`  ${p.client}\n`;});
   // 4. 客户投入
   r+='\n';
-  if(wr&&(wr.mid||wr.long||wr.newClients))r+=`4. 客户投入情况\n  中等投入${wr.mid||0}个，长期投入${wr.long||0}个，新增背调${wr.newClients||0}个\n\n`;
+  if(wr&&(wr.mid||wr.long||wr.newClients)){
+    let newBreakdown='';
+    if(wr.newClients&&(wr.newMid||wr.newLong))newBreakdown=`（其中中等投入${wr.newMid||0}个，长期投入${wr.newLong||0}个）`;
+    r+=`4. 客户投入情况\n  中等投入${wr.mid||0}个，长期投入${wr.long||0}个，新增背调${wr.newClients||0}个${newBreakdown}\n\n`;
+  }
   // 5. 重点项目状态 — 始终显示
   r+=`5. 重点项目状态\n`;
   r+=`3-1 已确认订单：\n${(wr&&wr.p1)||'（暂无）'}\n\n`;
@@ -958,7 +976,11 @@ function genMonthly(){
   dC.forEach(p=>{r+=fl(p)+'\n';});
   // 4. 客户投入
   r+='\n';
-  if(mm&&(mm.mid||mm.long||mm.newClients))r+=`4. 客户投入情况\n  中等投入${mm.mid||0}个，长期投入${mm.long||0}个，新增背调${mm.newClients||0}个\n\n`;
+  if(mm&&(mm.mid||mm.long||mm.newClients)){
+    let newBreakdown='';
+    if(mm.newClients&&(mm.newMid||mm.newLong))newBreakdown=`（其中中等投入${mm.newMid||0}个，长期投入${mm.newLong||0}个）`;
+    r+=`4. 客户投入情况\n  中等投入${mm.mid||0}个，长期投入${mm.long||0}个，新增背调${mm.newClients||0}个${newBreakdown}\n\n`;
+  }
   // 5. 重点项目状态 — 始终显示
   r+=`5. 重点项目状态\n`;
   r+=`3-1 已确认订单：\n${(mm&&mm.p1)||'（暂无）'}\n\n`;
