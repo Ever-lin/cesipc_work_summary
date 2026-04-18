@@ -109,8 +109,12 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
 <!-- ===== 项目情况 ===== -->
 <div id="panel-projects" class="panel">
   <div class="hint">同一个项目用相同「项目名称」保存，每次追加进展。已成交显示 ✅，丢单显示 ❌，其余状态显示 ⭕️。</div>
-  <div class="card">
-    <div class="card-header"><span class="card-title">新增 / 追加进展</span></div>
+  <div class="card" id="proj-form-card">
+    <div class="card-header">
+      <span class="card-title" id="proj-form-title">新增 / 追加进展</span>
+      <button id="proj-cancel-edit" class="btn btn-sm" style="display:none" onclick="cancelEditRecord()">✕ 取消编辑</button>
+    </div>
+    <input type="hidden" id="proj-edit-id" value="">
     <div class="grid2">
       <div class="field"><label>项目名称（唯一标识）</label><input id="proj-name" placeholder="如：Orange_项目10_260330_UTC-S1272A" list="proj-dl"><datalist id="proj-dl"></datalist></div>
       <div class="field"><label>客户名称</label><input id="proj-client" placeholder="如：Orange Ltd"></div>
@@ -118,18 +122,22 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
     <div class="field"><label>当前状态</label>
       <select id="proj-status"><option value="报价">已报价</option><option value="方案">已提供方案</option><option value="确认">方案确认中</option><option value="报价跟进">已报价跟进中</option><option value="长期">长期跟进项目</option><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="丢单">丢单</option></select>
     </div>
-    <div class="field"><label>本次进展记录（含日期、报价、沟通内容）</label><textarea id="proj-progress" placeholder="如：2026/4/18 报价 ¥9800，客户表示需内部确认"></textarea></div>
+    <div class="field"><label>进展记录（含日期、报价、沟通内容）</label><textarea id="proj-progress" placeholder="如：2026/4/18 报价 ¥9800，客户表示需内部确认"></textarea></div>
     <div class="grid2">
       <div class="field"><label>记录日期</label><input id="proj-date" type="date"></div>
       <div class="field"><label>优先级</label><select id="proj-priority"><option value="高">高</option><option value="中" selected>中</option><option value="低">低</option></select></div>
     </div>
-    <button class="btn btn-primary" onclick="addProject()">+ 保存（新增或追加进展）</button>
+    <button class="btn btn-primary" id="proj-submit-btn" onclick="submitProject()">+ 保存（新增或追加进展）</button>
   </div>
   <div class="filter-bar">
     <select class="ym-s" id="pj-fy" onchange="renderProjects()"></select>
     <select class="ym-s" id="pj-month" onchange="renderProjects()"><option value="all">全部月份</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select>
     <select class="ym-s" id="pj-week" onchange="renderProjects()"><option value="all">全部周次</option><option value="第一周">第一周</option><option value="第二周">第二周</option><option value="第三周">第三周</option><option value="第四周">第四周</option><option value="第五周">第五周</option></select>
     <select class="ym-s" id="pj-status" onchange="renderProjects()"><option value="all">全部状态</option><option value="报价">已报价</option><option value="方案">已提供方案</option><option value="确认">方案确认中</option><option value="报价跟进">已报价跟进中</option><option value="长期">长期跟进项目</option><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="丢单">丢单</option></select>
+    <div style="position:relative;flex:1;min-width:140px;max-width:260px">
+      <input id="pj-search" placeholder="🔍 搜索项目名/客户名" oninput="renderProjects()" style="width:100%;padding:5px 28px 5px 10px;font-size:13px;background:#F5F4F0;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md)">
+      <span id="pj-search-clear" onclick="document.getElementById('pj-search').value='';renderProjects()" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--color-text-secondary);font-size:14px;line-height:1">✕</span>
+    </div>
   </div>
   <div id="proj-status-counts" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
   <div id="proj-list"></div>
@@ -500,28 +508,15 @@ function refreshProjDatalist(){
 
 function projIcon(status){return status==='成交'?'✅':status==='丢单'?'❌':'⭕️';}
 
-function addProject(){
-  const client=document.getElementById('proj-client').value.trim();
-  if(!client){alert('请填写客户名称');return;}
-  const entry={
-    id:Date.now(),
-    name:document.getElementById('proj-name').value.trim()||client,
-    client,status:document.getElementById('proj-status').value,
-    progress:document.getElementById('proj-progress').value.trim(),
-    recordDate:document.getElementById('proj-date').value||todayStr(),
-    priority:document.getElementById('proj-priority').value,
-    savedAt:new Date().toLocaleString('zh-CN')
-  };
-  state.projects.push(entry);save();
-  ['proj-name','proj-client','proj-progress'].forEach(i=>document.getElementById(i).value='');
-  document.getElementById('proj-date').value=todayStr();
-  renderProjects();refreshProjDatalist();renderProjSync('w-proj-sync');renderProjSync('wm-proj-sync');
-}
 
 function renderProjects(){
   const pjFY=document.getElementById('pj-fy').value,pjS=document.getElementById('pj-status').value;
   const pjMonth=document.getElementById('pj-month').value;
   const pjWeek=document.getElementById('pj-week').value;
+  const pjSearchEl=document.getElementById('pj-search');
+  const pjQ=(pjSearchEl?pjSearchEl.value.trim().toLowerCase():'');
+  const clearBtn=document.getElementById('pj-search-clear');
+  if(clearBtn)clearBtn.style.display=pjQ?'inline':'none';
   const grouped={};
   state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
   const keys=Object.keys(grouped);
@@ -579,6 +574,11 @@ function renderProjects(){
     }
     const stOk=pjS==='all'||latest.status===pjS;
     if(!stOk)return;
+    // search filter
+    if(pjQ){
+      const haystack=(k+' '+(latest.client||'')+' '+(latest.progress||'')).toLowerCase();
+      if(!haystack.includes(pjQ))return;
+    }
     const icon=projIcon(latest.status);
     const sc=SC[latest.status]||{label:latest.status};
     const pc=latest.priority==='高'?'badge-red':latest.priority==='中'?'badge-amber':'badge-gray';
@@ -596,14 +596,51 @@ function renderProjects(){
         <div id="${hid}" style="display:none;margin-bottom:6px">${entries.slice(1).map(e=>`<div class="history-item"><span style="font-size:11px">${e.recordDate} · ${SC[e.status]?.label||e.status}</span><br>${e.progress||'—'}</div>`).join('')}</div>`:''}
       <div style="display:flex;justify-content:space-between;align-items:center">
         <span style="font-size:11px;color:var(--color-text-secondary)">${latest.savedAt}</span>
-        <div class="inline-flex"><button class="btn btn-xs" onclick="fillEdit('${k.replace(/'/g,"\\'")}')">追加进展</button><button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="editLatestProgress('${k.replace(/'/g,"\\'")}',${latest.id})">编辑进展</button><button class="btn btn-danger btn-xs" onclick="delGroup('${k.replace(/'/g,"\\'")}')">删除</button></div>
+        <div class="inline-flex"><button class="btn btn-xs" onclick="fillEdit('${k.replace(/'/g,"\\'")}')">追加进展</button><button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="editLatestProgress('${k.replace(/'/g,"\\'")}',${latest.id})">编辑记录</button><button class="btn btn-danger btn-xs" onclick="delGroup('${k.replace(/'/g,"\\'")}')">删除</button></div>
       </div>
     </div>`;
   });
   document.getElementById('proj-list').innerHTML=html||'<div style="text-align:center;padding:20px;color:var(--color-text-secondary);font-size:13px">暂无项目</div>';
 }
 
+function submitProject(){
+  const editId=document.getElementById('proj-edit-id').value;
+  if(editId){
+    // Edit mode: update existing entry
+    const entry=state.projects.find(p=>String(p.id)===editId);
+    if(!entry){alert('记录不存在');return;}
+    entry.name=document.getElementById('proj-name').value.trim()||entry.name;
+    entry.client=document.getElementById('proj-client').value.trim()||entry.client;
+    entry.status=document.getElementById('proj-status').value;
+    entry.progress=document.getElementById('proj-progress').value.trim();
+    entry.recordDate=document.getElementById('proj-date').value||todayStr();
+    entry.priority=document.getElementById('proj-priority').value;
+    entry.savedAt=new Date().toLocaleString('zh-CN');
+    save();cancelEditRecord();renderProjects();refreshProjDatalist();
+    const a=document.createElement('div');a.className='alert-s';a.textContent='记录已更新！';
+    document.getElementById('proj-form-card').prepend(a);setTimeout(()=>a.remove(),1800);
+  } else {
+    // Append / new mode
+    const client=document.getElementById('proj-client').value.trim();
+    if(!client){alert('请填写客户名称');return;}
+    const entry={
+      id:Date.now(),
+      name:document.getElementById('proj-name').value.trim()||client,
+      client,status:document.getElementById('proj-status').value,
+      progress:document.getElementById('proj-progress').value.trim(),
+      recordDate:document.getElementById('proj-date').value||todayStr(),
+      priority:document.getElementById('proj-priority').value,
+      savedAt:new Date().toLocaleString('zh-CN')
+    };
+    state.projects.push(entry);save();
+    ['proj-name','proj-client','proj-progress'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('proj-date').value=todayStr();
+    renderProjects();refreshProjDatalist();renderProjSync('w-proj-sync');renderProjSync('wm-proj-sync');
+  }
+}
+
 function fillEdit(name){
+  cancelEditRecord();
   const entries=state.projects.filter(p=>(p.name||p.client)===name).sort((a,b)=>b.id-a.id);
   if(!entries.length)return;const l=entries[0];
   document.getElementById('proj-name').value=l.name||l.client;
@@ -618,11 +655,32 @@ function fillEdit(name){
 function editLatestProgress(name,id){
   const entry=state.projects.find(p=>p.id===id);
   if(!entry)return;
-  const newProg=prompt('编辑最新进展记录：',entry.progress||'');
-  if(newProg===null)return; // cancelled
-  entry.progress=newProg;
-  entry.savedAt=new Date().toLocaleString('zh-CN');
-  save();renderProjects();
+  // Fill form in edit mode
+  document.getElementById('proj-edit-id').value=String(id);
+  document.getElementById('proj-name').value=entry.name||entry.client;
+  document.getElementById('proj-client').value=entry.client;
+  document.getElementById('proj-status').value=entry.status;
+  document.getElementById('proj-progress').value=entry.progress||'';
+  document.getElementById('proj-date').value=entry.recordDate||todayStr();
+  document.getElementById('proj-priority').value=entry.priority||'中';
+  // Switch card to edit mode UI
+  document.getElementById('proj-form-title').textContent='✏️ 编辑记录';
+  document.getElementById('proj-form-card').style.borderColor='#378ADD';
+  document.getElementById('proj-form-card').style.background='#F0F7FF';
+  document.getElementById('proj-cancel-edit').style.display='inline-block';
+  document.getElementById('proj-submit-btn').textContent='💾 保存修改';
+  document.getElementById('proj-submit-btn').style.background='#0C447C';
+  switchTab('projects');window.scrollTo(0,0);
+}
+
+function cancelEditRecord(){
+  document.getElementById('proj-edit-id').value='';
+  document.getElementById('proj-form-title').textContent='新增 / 追加进展';
+  document.getElementById('proj-form-card').style.borderColor='';
+  document.getElementById('proj-form-card').style.background='';
+  document.getElementById('proj-cancel-edit').style.display='none';
+  document.getElementById('proj-submit-btn').textContent='+ 保存（新增或追加进展）';
+  document.getElementById('proj-submit-btn').style.background='';
 }
 
 function delGroup(name){
