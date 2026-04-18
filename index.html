@@ -10,7 +10,7 @@ body{font-family:var(--font-sans);font-size:14px;color:var(--color-text-primary)
 .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;flex-wrap:wrap}
 .card-title{font-weight:500;font-size:14px}
 .badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500}
-.badge-blue{background:#E6F1FB;color:#0C447C}.badge-green{background:#EAF3DE;color:#27500A}.badge-amber{background:#FAEEDA;color:#633806}.badge-red{background:#FCEBEB;color:#791F1F}.badge-gray{background:#F1EFE8;color:#444441}.badge-teal{background:#E1F5EE;color:#085041}.badge-purple{background:#EEEDFE;color:#3C3489}
+.badge-blue{background:#E6F1FB;color:#0C447C}.badge-green{background:#EAF3DE;color:#27500A}.badge-amber{background:#FAEEDA;color:#633806}.badge-red{background:#FCEBEB;color:#791F1F}.badge-gray{background:#F1EFE8;color:#444441}.badge-teal{background:#E1F5EE;color:#085041}
 label{font-size:12px;color:var(--color-text-secondary);display:block;margin-bottom:4px}
 input,select,textarea{width:100%;padding:7px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;font-family:var(--font-sans);background:var(--color-background-primary);color:var(--color-text-primary);outline:none}
 input:focus,select:focus,textarea:focus{border-color:#378ADD;box-shadow:0 0 0 2px #E6F1FB}
@@ -21,7 +21,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
 .btn{padding:7px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);font-size:13px;cursor:pointer;font-family:var(--font-sans)}
 .btn:hover{background:var(--color-background-secondary)}
 .btn-primary{background:#185FA5;color:#fff;border-color:#185FA5}.btn-primary:hover{background:#0C447C}
-.btn-danger{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}.btn-danger:hover{background:#F7C1C1}
+.btn-danger{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
 .btn-sm{padding:4px 10px;font-size:12px}
 .btn-xs{padding:2px 8px;font-size:11px}
 .summary-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary);gap:8px;flex-wrap:wrap}
@@ -29,31 +29,30 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
 .metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
 .metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px}
 .metric-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
-.metric-value{font-size:20px;font-weight:500}
+.metric-value{font-size:19px;font-weight:500}
 .project-item{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px;background:var(--color-background-primary);margin-bottom:8px}
-.project-name{font-weight:500;font-size:13px}
 .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;flex-shrink:0;vertical-align:middle}
 .dot-green{background:#1D9E75}.dot-amber{background:#EF9F27}.dot-blue{background:#378ADD}.dot-gray{background:#888780}.dot-red{background:#E24B4A}.dot-teal{background:#1D9E75}
 .inline-flex{display:flex;align-items:center;gap:8px}
 .filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
 .ym-s{width:auto;padding:5px 10px;font-size:13px}
-.section-label{font-size:12px;font-weight:500;color:var(--color-text-secondary);letter-spacing:0.4px;margin-bottom:6px;margin-top:10px}
-.alert-success{background:#EAF3DE;color:#27500A;border:0.5px solid #C0DD97;padding:8px 12px;border-radius:var(--border-radius-md);font-size:12px;margin-bottom:10px}
+.slabel{font-size:12px;font-weight:500;color:var(--color-text-secondary);letter-spacing:0.4px;margin-bottom:6px;margin-top:10px;padding-top:6px;border-top:0.5px solid var(--color-border-tertiary)}
+.alert-s{background:#EAF3DE;color:#27500A;border:0.5px solid #C0DD97;padding:8px 12px;border-radius:var(--border-radius-md);font-size:12px;margin-bottom:10px}
 .pivot-table{width:100%;border-collapse:collapse;font-size:12px}
 .pivot-table th{background:var(--color-background-secondary);padding:7px 10px;text-align:left;font-weight:500;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary)}
-.pivot-table td{padding:6px 10px;border:0.5px solid var(--color-border-tertiary);vertical-align:top}
+.pivot-table td{padding:6px 10px;border:0.5px solid var(--color-border-tertiary)}
 .pivot-table tr:hover td{background:var(--color-background-secondary)}
 .pivot-table .num{text-align:right;font-variant-numeric:tabular-nums}
-.pivot-table .total{font-weight:500;background:var(--color-background-secondary)}
+.pivot-table .total-row td{font-weight:500;background:var(--color-background-secondary)}
 .history-item{padding:5px 10px;border-left:2px solid var(--color-border-tertiary);margin:4px 0;font-size:12px;color:var(--color-text-secondary);line-height:1.5}
-.history-item.latest{border-left-color:#185FA5;color:var(--color-text-primary)}
-.export-area{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px;font-size:13px;line-height:1.9;white-space:pre-wrap;font-family:var(--font-mono);max-height:480px;overflow-y:auto;margin-top:10px;border:0.5px solid var(--color-border-tertiary)}
-.tab-sub{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
-.tab-sub-btn{padding:5px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:20px;font-size:12px;cursor:pointer;background:transparent;color:var(--color-text-secondary)}
-.tab-sub-btn.active{background:#185FA5;color:#fff;border-color:#185FA5}
+.export-area{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px;font-size:13px;line-height:1.9;white-space:pre-wrap;font-family:var(--font-mono);max-height:500px;overflow-y:auto;margin-top:10px;border:0.5px solid var(--color-border-tertiary)}
+.sub-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+.sub-tab{padding:5px 14px;border:0.5px solid var(--color-border-tertiary);border-radius:20px;font-size:12px;cursor:pointer;background:transparent;color:var(--color-text-secondary)}
+.sub-tab.active{background:#185FA5;color:#fff;border-color:#185FA5}
 .sub-panel{display:none}.sub-panel.active{display:block}
+.hint{font-size:12px;color:var(--color-text-secondary);background:var(--color-background-secondary);padding:8px 10px;border-radius:var(--border-radius-md);margin-bottom:10px;line-height:1.6}
 </style>
-<h2 class="sr-only">工作总结管理工具 v4</h2>
+<h2 class="sr-only">工作总结管理工具 v5</h2>
 
 <div class="tabs">
   <div class="tab active" onclick="switchTab('performance')">业绩&回款</div>
@@ -63,20 +62,17 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
 
 <div id="panel-performance" class="panel active">
   <div class="filter-bar">
-    <select class="ym-s" id="view-year" onchange="renderPerf()"><option value="2025">2025年</option><option value="2026" selected>2026年</option></select>
+    <select class="ym-s" id="view-fy" onchange="renderPerf()"></select>
     <select class="ym-s" id="view-month" onchange="renderPerf()">
-      <option value="1">1月</option><option value="2">2月</option><option value="3" selected>3月</option>
-      <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
-      <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
-      <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+      <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
     </select>
   </div>
   <div class="metric-grid" id="metrics"></div>
   <div class="card">
     <div class="card-header"><span class="card-title">新增记录</span>
       <div class="inline-flex">
-        <select class="ym-s" id="perf-year"><option value="2025">2025年</option><option value="2026" selected>2026年</option></select>
-        <select class="ym-s" id="perf-month"><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4" selected>4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select>
+        <select class="ym-s" id="perf-fy"></select>
+        <select class="ym-s" id="perf-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select>
         <select class="ym-s" id="perf-week"><option>第一周</option><option>第二周</option><option>第三周</option><option>第四周</option></select>
       </div>
     </div>
@@ -101,10 +97,11 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
 </div>
 
 <div id="panel-projects" class="panel">
+  <div class="hint">填写说明：同一个项目用相同的「项目名称」保存，每次有新进展就追加一条。展示时只显示最新状态，历史进展可展开查看。日报导出时会自动按日期提取当天所有项目进展。</div>
   <div class="card">
-    <div class="card-header"><span class="card-title">新增/更新项目</span></div>
+    <div class="card-header"><span class="card-title">新增 / 追加进展</span></div>
     <div class="grid2">
-      <div class="field"><label>项目名称（唯一标识）</label><input id="proj-name" placeholder="如：Hakan_TPC-1082A_25PCS" list="proj-names-list"><datalist id="proj-names-list"></datalist></div>
+      <div class="field"><label>项目名称（唯一标识，同项目保持一致）</label><input id="proj-name" placeholder="如：Hakan_TPC-1082A" list="proj-dl"><datalist id="proj-dl"></datalist></div>
       <div class="field"><label>客户名称</label><input id="proj-client" placeholder="如：Hakan Pir Electronics"></div>
     </div>
     <div class="grid2">
@@ -113,103 +110,134 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
         <select id="proj-status"><option value="询价">询价中</option><option value="报价">已报价</option><option value="跟进">跟进中</option><option value="确认">方案确认中</option><option value="成交">已成交</option><option value="长期">长期跟进</option><option value="丢单">丢单</option></select>
       </div>
     </div>
-    <div class="field"><label>本次进展记录</label><textarea id="proj-progress" placeholder="如：2026/4/18 报价 ¥9800，等待客户确认"></textarea></div>
-    <div class="grid3">
-      <div class="field"><label>报价金额（¥）</label><input id="proj-price" type="number" placeholder="可选"></div>
-      <div class="field"><label>年/月</label><div class="inline-flex"><select id="proj-year" style="width:auto"><option value="2025">2025</option><option value="2026" selected>2026</option></select><select id="proj-month" style="width:auto"><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4" selected>4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select></div></div>
+    <div class="field"><label>本次进展记录（含日期、报价、沟通内容等）</label><textarea id="proj-progress" placeholder="如：2026/4/18 报价 ¥9800，客户表示需内部确认后回复"></textarea></div>
+    <div class="grid2">
+      <div class="field"><label>记录日期</label><input id="proj-date" type="date"></div>
       <div class="field"><label>优先级</label><select id="proj-priority"><option value="高">高</option><option value="中" selected>中</option><option value="低">低</option></select></div>
     </div>
     <button class="btn btn-primary" onclick="addProject()">+ 保存（新增或追加进展）</button>
   </div>
   <div class="filter-bar">
-    <select class="ym-s" id="pj-year" onchange="renderProjects()"><option value="all">全部年份</option><option value="2025">2025年</option><option value="2026" selected>2026年</option></select>
-    <select class="ym-s" id="pj-month" onchange="renderProjects()"><option value="all">全部月份</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4" selected>4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select>
+    <select class="ym-s" id="pj-fy" onchange="renderProjects()"></select>
+    <select class="ym-s" id="pj-month" onchange="renderProjects()"><option value="all">全部月份</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select>
     <select class="ym-s" id="pj-status" onchange="renderProjects()"><option value="all">全部状态</option><option value="询价">询价中</option><option value="报价">已报价</option><option value="确认">方案确认中</option><option value="跟进">跟进中</option><option value="成交">已成交</option><option value="长期">长期跟进</option><option value="丢单">丢单</option></select>
   </div>
   <div id="proj-list"></div>
 </div>
 
 <div id="panel-export" class="panel">
-  <div class="tab-sub">
-    <button class="tab-sub-btn active" onclick="switchSub('sub-write',this)">填写周报</button>
-    <button class="tab-sub-btn" onclick="switchSub('sub-daily',this)">导出日报</button>
-    <button class="tab-sub-btn" onclick="switchSub('sub-weekly',this)">导出周报</button>
-    <button class="tab-sub-btn" onclick="switchSub('sub-monthly',this)">导出月报</button>
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="switchSub('sw-write',this)">填写周报/月报</button>
+    <button class="sub-tab" onclick="switchSub('sw-daily',this)">导出日报</button>
+    <button class="sub-tab" onclick="switchSub('sw-weekly',this)">导出周报</button>
+    <button class="sub-tab" onclick="switchSub('sw-monthly',this)">导出月报</button>
   </div>
 
-  <div id="sub-write" class="sub-panel active">
-    <div class="card">
-      <div class="card-header"><span class="card-title">填写周报</span>
-        <div class="inline-flex">
-          <select class="ym-s" id="w-year"><option value="2025">2025年</option><option value="2026" selected>2026年</option></select>
-          <select class="ym-s" id="w-month"><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4" selected>4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select>
-          <select class="ym-s" id="w-week"><option>第一周</option><option selected>第二周</option><option>第三周</option><option>第四周</option></select>
-        </div>
-      </div>
-      <div class="section-label">客户投入</div>
-      <div class="grid3">
-        <div class="field"><label>中等投入客户数</label><input id="w-mid" type="number"></div>
-        <div class="field"><label>长期投入客户数</label><input id="w-long" type="number"></div>
-        <div class="field"><label>新增背调客户数</label><input id="w-new" type="number"></div>
-      </div>
-      <div class="section-label">重点项目状态</div>
-      <div class="field"><label>已确认订单</label><textarea id="w-orders"></textarea></div>
-      <div class="field"><label>已报价/已提供方案</label><textarea id="w-quoted"></textarea></div>
-      <div class="field"><label>方案确认中</label><textarea id="w-pending"></textarea></div>
-      <div class="section-label">其他</div>
-      <div class="field"><label>重点订单情况</label><textarea id="w-keyorders"></textarea></div>
-      <div class="field"><label>售后情况</label><textarea id="w-aftersales"></textarea></div>
-      <div class="field"><label>下周计划</label><textarea id="w-plan"></textarea></div>
-      <button class="btn btn-primary" onclick="saveWeekly()">保存周报</button>
+  <div id="sw-write" class="sub-panel active">
+    <div class="sub-tabs" style="margin-bottom:10px">
+      <button class="sub-tab active" onclick="switchWrite('write-weekly',this)">周报内容</button>
+      <button class="sub-tab" onclick="switchWrite('write-monthly',this)">月报内容</button>
     </div>
-    <div id="saved-weeklies"></div>
+
+    <div id="write-weekly" class="sub-panel active">
+      <div class="card">
+        <div class="card-header"><span class="card-title">填写周报附加内容</span>
+          <div class="inline-flex">
+            <select class="ym-s" id="w-fy"></select>
+            <select class="ym-s" id="w-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select>
+            <select class="ym-s" id="w-week"><option>第一周</option><option selected>第二周</option><option>第三周</option><option>第四周</option></select>
+          </div>
+        </div>
+        <div class="slabel">客户投入情况（截至本周）</div>
+        <div class="grid3">
+          <div class="field"><label>中等投入客户数</label><input id="w-mid" type="number"></div>
+          <div class="field"><label>长期投入客户数</label><input id="w-long" type="number"></div>
+          <div class="field"><label>新增背调客户数</label><input id="w-new" type="number"></div>
+        </div>
+        <div class="slabel">重点项目状态</div>
+        <div class="field"><label>3-1 已确认订单</label><textarea id="w-orders"></textarea></div>
+        <div class="field"><label>3-2 已报价/已提供方案</label><textarea id="w-quoted"></textarea></div>
+        <div class="field"><label>3-3 方案确认中</label><textarea id="w-pending"></textarea></div>
+        <div class="slabel">其他</div>
+        <div class="field"><label>重点订单情况</label><textarea id="w-keyorders"></textarea></div>
+        <div class="field"><label>售后情况</label><textarea id="w-aftersales"></textarea></div>
+        <div class="field"><label>下周计划</label><textarea id="w-plan"></textarea></div>
+        <button class="btn btn-primary" onclick="saveWeekly()">保存周报内容</button>
+      </div>
+      <div id="saved-weeklies"></div>
+    </div>
+
+    <div id="write-monthly" class="sub-panel">
+      <div class="card">
+        <div class="card-header"><span class="card-title">填写月报附加内容</span>
+          <div class="inline-flex">
+            <select class="ym-s" id="wm-fy"></select>
+            <select class="ym-s" id="wm-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select>
+          </div>
+        </div>
+        <div class="slabel">客户投入情况（本月汇总）</div>
+        <div class="grid3">
+          <div class="field"><label>中等投入客户数</label><input id="wm-mid" type="number"></div>
+          <div class="field"><label>长期投入客户数</label><input id="wm-long" type="number"></div>
+          <div class="field"><label>新增背调客户数</label><input id="wm-new" type="number"></div>
+        </div>
+        <div class="slabel">重点项目状态</div>
+        <div class="field"><label>已确认订单</label><textarea id="wm-orders"></textarea></div>
+        <div class="field"><label>已报价/已提供方案</label><textarea id="wm-quoted"></textarea></div>
+        <div class="field"><label>方案确认中</label><textarea id="wm-pending"></textarea></div>
+        <div class="slabel">其他</div>
+        <div class="field"><label>重点订单情况</label><textarea id="wm-keyorders"></textarea></div>
+        <div class="field"><label>售后情况</label><textarea id="wm-aftersales"></textarea></div>
+        <div class="field"><label>下月计划</label><textarea id="wm-plan"></textarea></div>
+        <button class="btn btn-primary" onclick="saveMonthly()">保存月报内容</button>
+      </div>
+      <div id="saved-monthlies"></div>
+    </div>
   </div>
 
-  <div id="sub-daily" class="sub-panel">
+  <div id="sw-daily" class="sub-panel">
     <div class="card">
       <div class="card-header"><span class="card-title">导出日报</span></div>
+      <div class="hint">日报内容来自「项目情况」中当天的进展记录。选择日期后自动提取。</div>
       <div class="grid2">
-        <div class="field"><label>年份</label><select id="d-year"><option value="2026" selected>2026年</option><option value="2025">2025年</option></select></div>
-        <div class="field"><label>日期（如：4月18日）</label><input id="d-date" placeholder="4月18日"></div>
+        <div class="field"><label>日期</label><input id="d-date" type="date"></div>
+        <div class="field" style="display:flex;align-items:flex-end;gap:8px">
+          <button class="btn btn-primary" onclick="genDaily()" style="flex:1">生成日报</button>
+          <button class="btn" onclick="copyTxt('daily-out')">复制</button>
+        </div>
       </div>
-      <div class="field"><label>今日业绩（可手动填写）</label><textarea id="d-perf" placeholder="客户名 金额&#10;客户名 金额"></textarea></div>
-      <div class="field"><label>今日回款</label><textarea id="d-recov" placeholder="客户名 金额"></textarea></div>
-      <div class="field"><label>今日新成交</label><textarea id="d-deal" placeholder="客户名"></textarea></div>
-      <div class="field"><label>今日项目进展</label><textarea id="d-proj" placeholder="项目进展描述"></textarea></div>
-      <div class="field"><label>其他事项</label><textarea id="d-other" placeholder="可选"></textarea></div>
-      <button class="btn btn-primary" onclick="genDaily()">生成日报</button>
-      <button class="btn" onclick="copyOut('daily-out')" style="margin-left:8px">复制</button>
     </div>
     <div id="daily-out"></div>
   </div>
 
-  <div id="sub-weekly" class="sub-panel">
+  <div id="sw-weekly" class="sub-panel">
     <div class="card">
       <div class="card-header"><span class="card-title">导出周报</span></div>
-      <div class="grid2">
-        <div class="field"><label>年份</label><select id="ew-year"><option value="2026" selected>2026年</option><option value="2025">2025年</option></select></div>
-        <div class="field"><label>月份</label><select id="ew-month"><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4" selected>4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select></div>
+      <div class="hint">业绩&回款数据 + 填写周报内容 自动合并生成。</div>
+      <div class="grid3">
+        <div class="field"><label>财年</label><select id="ew-fy"></select></div>
+        <div class="field"><label>月份</label><select id="ew-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select></div>
+        <div class="field"><label>周次</label><select id="ew-week"><option>第一周</option><option selected>第二周</option><option>第三周</option><option>第四周</option></select></div>
       </div>
-      <div class="field"><label>选择周次</label><select id="ew-week"><option>第一周</option><option selected>第二周</option><option>第三周</option><option>第四周</option></select></div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-primary" onclick="genWeekly()">生成周报</button>
-        <button class="btn" onclick="copyOut('weekly-out')">复制</button>
+        <button class="btn" onclick="copyTxt('weekly-out')">复制</button>
       </div>
     </div>
     <div id="weekly-out"></div>
   </div>
 
-  <div id="sub-monthly" class="sub-panel">
+  <div id="sw-monthly" class="sub-panel">
     <div class="card">
       <div class="card-header"><span class="card-title">导出月报</span></div>
-      <div class="grid3">
-        <div class="field"><label>年份</label><select id="em-year"><option value="2026" selected>2026年</option><option value="2025">2025年</option></select></div>
-        <div class="field"><label>月份</label><select id="em-month"><option value="1">1月</option><option value="2">2月</option><option value="3" selected>3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select></div>
-        <div class="field"><label>截至统计范围</label><select id="em-cumul"><option value="year">本年度累计</option><option value="all">全部历史</option></select></div>
+      <div class="hint">业绩&回款数据（含截至本月年度累计）+ 填写月报内容 自动合并生成。</div>
+      <div class="grid2">
+        <div class="field"><label>财年</label><select id="em-fy"></select></div>
+        <div class="field"><label>月份</label><select id="em-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select></div>
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-primary" onclick="genMonthly()">生成月报</button>
-        <button class="btn" onclick="copyOut('monthly-out')">复制</button>
+        <button class="btn" onclick="copyTxt('monthly-out')">复制</button>
       </div>
     </div>
     <div id="monthly-out"></div>
@@ -220,72 +248,113 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
 const NO_AMT=['昆明途恒科技有限公司'];
 const SC={询价:{label:'询价中',badge:'badge-blue',dot:'dot-blue'},报价:{label:'已报价',badge:'badge-amber',dot:'dot-amber'},跟进:{label:'跟进中',badge:'badge-gray',dot:'dot-gray'},确认:{label:'方案确认中',badge:'badge-teal',dot:'dot-teal'},成交:{label:'已成交',badge:'badge-green',dot:'dot-green'},长期:{label:'长期跟进',badge:'badge-gray',dot:'dot-gray'},丢单:{label:'丢单',badge:'badge-red',dot:'dot-red'}};
 
+// 财年工具: 财年从每年4月1日开始
+// FY2026 = 2026-04-01 到 2027-03-31
+// 给定 calYear+month，返回财年标签
+function getFY(calYear,month){
+  const m=parseInt(month),y=parseInt(calYear);
+  return m>=4?`FY${y}`:`FY${y-1}`;
+}
+function getFYYears(fy){
+  const y=parseInt(fy.replace('FY',''));
+  return [String(y),String(y+1)];
+}
+// 财年内的月份顺序判断（4月=第1个月，3月=第12个月）
+function fyMonthIndex(m){const mi=parseInt(m);return mi>=4?mi-4:mi+8;}
+
+function buildFYOptions(selectId,selectedFY){
+  const now=new Date();
+  const curFY=now.getMonth()>=3?`FY${now.getFullYear()}`:`FY${now.getFullYear()-1}`;
+  const fys=[];
+  for(let i=-1;i<=1;i++){fys.push(`FY${parseInt(curFY.replace('FY',''))+i}`);}
+  const sel=document.getElementById(selectId);
+  if(!sel)return;
+  sel.innerHTML=fys.map(f=>`<option value="${f}"${f===(selectedFY||curFY)?'selected':''}>${f}（${parseInt(f.replace('FY',''))}年4月–${parseInt(f.replace('FY',''))+1}年3月）</option>`).join('');
+}
+
 const SEED=[
-{id:1001,year:'2026',month:'3',week:'第一周',type:'业绩',client:'RONAV FZE',amount:38500,note:'',noAmount:false},
-{id:1002,year:'2026',month:'3',week:'第一周',type:'业绩',client:'Centric Process Automation Pty Ltd',amount:19740,note:'',noAmount:false},
-{id:1003,year:'2026',month:'3',week:'第一周',type:'业绩',client:'Armfield Limited',amount:3430,note:'',noAmount:false},
-{id:1004,year:'2026',month:'3',week:'第一周',type:'业绩',client:'STW service engineering co.ltd',amount:4830,note:'',noAmount:false},
-{id:1005,year:'2026',month:'3',week:'第一周',type:'业绩',client:'Goldbell Weigh-System Pte Ltd',amount:23975,note:'',noAmount:false},
-{id:1006,year:'2026',month:'3',week:'第一周',type:'业绩',client:'D.C. Engineering And Trading',amount:12834,note:'',noAmount:false},
-{id:1007,year:'2026',month:'3',week:'第一周',type:'业绩',client:'E-POWER SERVICE CO.,LTD',amount:3570,note:'',noAmount:false},
-{id:1101,year:'2026',month:'3',week:'第一周',type:'回款',client:'Goldbell Weigh-System Pte Ltd',amount:23975,note:'',noAmount:false},
-{id:1102,year:'2026',month:'3',week:'第一周',type:'回款',client:'ENT GROUP COMPANY LIMITED',amount:247100,note:'',noAmount:false},
-{id:1103,year:'2026',month:'3',week:'第一周',type:'回款',client:'D.C. Engineering And Trading',amount:17250,note:'',noAmount:false},
-{id:1104,year:'2026',month:'3',week:'第一周',type:'回款',client:'PT. IGUS INDONESIA',amount:3010,note:'',noAmount:false},
-{id:1201,year:'2026',month:'3',week:'第一周',type:'新成交',client:'D.C. Engineering And Trading',amount:0,note:'',noAmount:true},
-{id:1202,year:'2026',month:'3',week:'第一周',type:'新成交',client:'E-POWER SERVICE CO.,LTD',amount:0,note:'',noAmount:true},
-{id:2001,year:'2026',month:'3',week:'第二周',type:'业绩',client:'上海来贺自动化设备有限公司',amount:42500,note:'',noAmount:false},
-{id:2002,year:'2026',month:'3',week:'第二周',type:'业绩',client:'上海迦锐自动化检测科技有限公司',amount:11250,note:'',noAmount:false},
-{id:2003,year:'2026',month:'3',week:'第二周',type:'业绩',client:'D.C. Engineering And Trading',amount:5451,note:'',noAmount:false},
-{id:2004,year:'2026',month:'3',week:'第二周',type:'业绩',client:'PT MEKANIKA DIGITAL PRATAMA',amount:116515,note:'',noAmount:false},
-{id:2005,year:'2026',month:'3',week:'第二周',type:'业绩',client:'ENT GROUP COMPANY LIMITED',amount:27370,note:'',noAmount:false},
-{id:2101,year:'2026',month:'3',week:'第二周',type:'回款',client:'RA Robotics & Automation Sdn. Bhd.',amount:10080,note:'',noAmount:false},
-{id:2102,year:'2026',month:'3',week:'第二周',type:'回款',client:'NPK Magnit',amount:12740,note:'',noAmount:false},
-{id:2103,year:'2026',month:'3',week:'第二周',type:'回款',client:'E-POWER SERVICE CO.,LTD',amount:3570,note:'',noAmount:false},
-{id:2104,year:'2026',month:'3',week:'第二周',type:'回款',client:'上海来贺自动化设备有限公司',amount:27000,note:'',noAmount:false},
-{id:2105,year:'2026',month:'3',week:'第二周',type:'回款',client:'PT MEKANIKA DIGITAL PRATAMA',amount:59395,note:'',noAmount:false},
-{id:2106,year:'2026',month:'3',week:'第二周',type:'回款',client:'D.C. Engineering And Trading',amount:5900,note:'',noAmount:false},
-{id:3001,year:'2026',month:'3',week:'第三周',type:'业绩',client:'Centric Process Automation Pty Ltd',amount:7280,note:'',noAmount:false},
-{id:3002,year:'2026',month:'3',week:'第三周',type:'业绩',client:'ADTECH VIETNAM TECHNOLOGY DEVELOPMENT COMPANY LIMITED',amount:6650,note:'',noAmount:false},
-{id:3101,year:'2026',month:'3',week:'第三周',type:'回款',client:'STW service engineering co.ltd',amount:4830,note:'',noAmount:false},
-{id:3102,year:'2026',month:'3',week:'第三周',type:'回款',client:'上海来贺自动化设备有限公司',amount:25050,note:'',noAmount:false},
-{id:3103,year:'2026',month:'3',week:'第三周',type:'回款',client:'PT MEKANIKA DIGITAL PRATAMA',amount:116515,note:'',noAmount:false},
-{id:3104,year:'2026',month:'3',week:'第三周',type:'回款',client:'ENT GROUP COMPANY LIMITED',amount:77520,note:'50150+27370',noAmount:false},
-{id:3105,year:'2026',month:'3',week:'第三周',type:'回款',client:'RONAV FZE',amount:38500,note:'',noAmount:false},
-{id:3106,year:'2026',month:'3',week:'第三周',type:'回款',client:'Centric Process Automation Pty Ltd',amount:7280,note:'',noAmount:false},
-{id:3107,year:'2026',month:'3',week:'第三周',type:'回款',client:'ADTECH VIETNAM TECHNOLOGY DEVELOPMENT COMPANY LIMITED',amount:6650,note:'',noAmount:false},
-{id:3201,year:'2026',month:'3',week:'第三周',type:'新成交',client:'ADTECH VIETNAM TECHNOLOGY DEVELOPMENT COMPANY LIMITED',amount:0,note:'',noAmount:true},
-{id:4001,year:'2026',month:'3',week:'第四周',type:'业绩',client:'ENT GROUP COMPANY LIMITED',amount:28873,note:'',noAmount:false},
-{id:4101,year:'2026',month:'3',week:'第四周',type:'回款',client:'ENT GROUP COMPANY LIMITED',amount:127225,note:'',noAmount:false},
-{id:5001,year:'2026',month:'4',week:'第一周',type:'业绩',client:'Centric Process Automation Pty Ltd',amount:11900,note:'',noAmount:false},
-{id:5002,year:'2026',month:'4',week:'第一周',type:'业绩',client:'昆明途恒科技有限公司',amount:5000,note:'',noAmount:false},
-{id:5003,year:'2026',month:'4',week:'第一周',type:'业绩',client:'Centra Technology',amount:546000,note:'',noAmount:false},
-{id:5004,year:'2026',month:'4',week:'第一周',type:'业绩',client:'来贺自动化设备有限公司销售',amount:110000,note:'',noAmount:false},
-{id:5005,year:'2026',month:'4',week:'第一周',type:'业绩',client:'KVA Master Power Tech',amount:99400,note:'',noAmount:false},
-{id:5006,year:'2026',month:'4',week:'第一周',type:'业绩',client:'iLED Ivan Potter',amount:1680,note:'',noAmount:false},
-{id:5007,year:'2026',month:'4',week:'第一周',type:'业绩',client:'RONAV FZE',amount:34300,note:'',noAmount:false},
-{id:5008,year:'2026',month:'4',week:'第一周',type:'业绩',client:'ENT GROUP COMPANY LIMITED',amount:35525,note:'',noAmount:false},
-{id:5101,year:'2026',month:'4',week:'第一周',type:'回款',client:'昆明途恒科技有限公司',amount:5000,note:'',noAmount:false},
-{id:5102,year:'2026',month:'4',week:'第一周',type:'回款',client:'来贺自动化设备有限公司销售',amount:12750,note:'',noAmount:false},
-{id:5103,year:'2026',month:'4',week:'第一周',type:'回款',client:'Centric Process Automation Pty Ltd',amount:19740,note:'',noAmount:false},
-{id:5104,year:'2026',month:'4',week:'第一周',type:'回款',client:'Centric Process Automation Pty Ltd',amount:11900,note:'',noAmount:false},
-{id:5105,year:'2026',month:'4',week:'第一周',type:'回款',client:'iLED Ivan Potter',amount:1680,note:'',noAmount:false},
-{id:5106,year:'2026',month:'4',week:'第一周',type:'回款',client:'上海迦锐自动化检测科技有限公司',amount:11250,note:'',noAmount:false},
-{id:5201,year:'2026',month:'4',week:'第一周',type:'新成交',client:'昆明途恒科技有限公司',amount:0,note:'',noAmount:true},
+{id:1001,fy:'FY2025',calYear:'2026',month:'3',week:'第一周',type:'业绩',client:'RONAV FZE',amount:38500,note:'',noAmount:false},
+{id:1002,fy:'FY2025',calYear:'2026',month:'3',week:'第一周',type:'业绩',client:'Centric Process Automation Pty Ltd',amount:19740,note:'',noAmount:false},
+{id:1003,fy:'FY2025',calYear:'2026',month:'3',week:'第一周',type:'业绩',client:'Armfield Limited',amount:3430,note:'',noAmount:false},
+{id:1004,fy:'FY2025',calYear:'2026',month:'3',week:'第一周',type:'业绩',client:'STW service engineering co.ltd',amount:4830,note:'',noAmount:false},
+{id:1005,fy:'FY2025',calYear:'2026',month:'3',week:'第一周',type:'业绩',client:'Goldbell Weigh-System Pte Ltd',amount:23975,note:'',noAmount:false},
+{id:1006,fy:'FY2025',calYear:'2026',month:'3',week:'第一周',type:'业绩',client:'D.C. Engineering And Trading',amount:12834,note:'',noAmount:false},
+{id:1007,fy:'FY2025',calYear:'2026',month:'3',week:'第一周',type:'业绩',client:'E-POWER SERVICE CO.,LTD',amount:3570,note:'',noAmount:false},
+{id:1101,fy:'FY2025',calYear:'2026',month:'3',week:'第一周',type:'回款',client:'Goldbell Weigh-System Pte Ltd',amount:23975,note:'',noAmount:false},
+{id:1102,fy:'FY2025',calYear:'2026',month:'3',week:'第一周',type:'回款',client:'ENT GROUP COMPANY LIMITED',amount:247100,note:'',noAmount:false},
+{id:1103,fy:'FY2025',calYear:'2026',month:'3',week:'第一周',type:'回款',client:'D.C. Engineering And Trading',amount:17250,note:'',noAmount:false},
+{id:1104,fy:'FY2025',calYear:'2026',month:'3',week:'第一周',type:'回款',client:'PT. IGUS INDONESIA',amount:3010,note:'',noAmount:false},
+{id:1201,fy:'FY2025',calYear:'2026',month:'3',week:'第一周',type:'新成交',client:'D.C. Engineering And Trading',amount:0,note:'',noAmount:true},
+{id:1202,fy:'FY2025',calYear:'2026',month:'3',week:'第一周',type:'新成交',client:'E-POWER SERVICE CO.,LTD',amount:0,note:'',noAmount:true},
+{id:2001,fy:'FY2025',calYear:'2026',month:'3',week:'第二周',type:'业绩',client:'上海来贺自动化设备有限公司',amount:42500,note:'',noAmount:false},
+{id:2002,fy:'FY2025',calYear:'2026',month:'3',week:'第二周',type:'业绩',client:'上海迦锐自动化检测科技有限公司',amount:11250,note:'',noAmount:false},
+{id:2003,fy:'FY2025',calYear:'2026',month:'3',week:'第二周',type:'业绩',client:'D.C. Engineering And Trading',amount:5451,note:'',noAmount:false},
+{id:2004,fy:'FY2025',calYear:'2026',month:'3',week:'第二周',type:'业绩',client:'PT MEKANIKA DIGITAL PRATAMA',amount:116515,note:'',noAmount:false},
+{id:2005,fy:'FY2025',calYear:'2026',month:'3',week:'第二周',type:'业绩',client:'ENT GROUP COMPANY LIMITED',amount:27370,note:'',noAmount:false},
+{id:2101,fy:'FY2025',calYear:'2026',month:'3',week:'第二周',type:'回款',client:'RA Robotics & Automation Sdn. Bhd.',amount:10080,note:'',noAmount:false},
+{id:2102,fy:'FY2025',calYear:'2026',month:'3',week:'第二周',type:'回款',client:'NPK Magnit',amount:12740,note:'',noAmount:false},
+{id:2103,fy:'FY2025',calYear:'2026',month:'3',week:'第二周',type:'回款',client:'E-POWER SERVICE CO.,LTD',amount:3570,note:'',noAmount:false},
+{id:2104,fy:'FY2025',calYear:'2026',month:'3',week:'第二周',type:'回款',client:'上海来贺自动化设备有限公司',amount:27000,note:'',noAmount:false},
+{id:2105,fy:'FY2025',calYear:'2026',month:'3',week:'第二周',type:'回款',client:'PT MEKANIKA DIGITAL PRATAMA',amount:59395,note:'',noAmount:false},
+{id:2106,fy:'FY2025',calYear:'2026',month:'3',week:'第二周',type:'回款',client:'D.C. Engineering And Trading',amount:5900,note:'',noAmount:false},
+{id:3001,fy:'FY2025',calYear:'2026',month:'3',week:'第三周',type:'业绩',client:'Centric Process Automation Pty Ltd',amount:7280,note:'',noAmount:false},
+{id:3002,fy:'FY2025',calYear:'2026',month:'3',week:'第三周',type:'业绩',client:'ADTECH VIETNAM TECHNOLOGY DEVELOPMENT COMPANY LIMITED',amount:6650,note:'',noAmount:false},
+{id:3101,fy:'FY2025',calYear:'2026',month:'3',week:'第三周',type:'回款',client:'STW service engineering co.ltd',amount:4830,note:'',noAmount:false},
+{id:3102,fy:'FY2025',calYear:'2026',month:'3',week:'第三周',type:'回款',client:'上海来贺自动化设备有限公司',amount:25050,note:'',noAmount:false},
+{id:3103,fy:'FY2025',calYear:'2026',month:'3',week:'第三周',type:'回款',client:'PT MEKANIKA DIGITAL PRATAMA',amount:116515,note:'',noAmount:false},
+{id:3104,fy:'FY2025',calYear:'2026',month:'3',week:'第三周',type:'回款',client:'ENT GROUP COMPANY LIMITED',amount:77520,note:'50150+27370',noAmount:false},
+{id:3105,fy:'FY2025',calYear:'2026',month:'3',week:'第三周',type:'回款',client:'RONAV FZE',amount:38500,note:'',noAmount:false},
+{id:3106,fy:'FY2025',calYear:'2026',month:'3',week:'第三周',type:'回款',client:'Centric Process Automation Pty Ltd',amount:7280,note:'',noAmount:false},
+{id:3107,fy:'FY2025',calYear:'2026',month:'3',week:'第三周',type:'回款',client:'ADTECH VIETNAM TECHNOLOGY DEVELOPMENT COMPANY LIMITED',amount:6650,note:'',noAmount:false},
+{id:3201,fy:'FY2025',calYear:'2026',month:'3',week:'第三周',type:'新成交',client:'ADTECH VIETNAM TECHNOLOGY DEVELOPMENT COMPANY LIMITED',amount:0,note:'',noAmount:true},
+{id:4001,fy:'FY2025',calYear:'2026',month:'3',week:'第四周',type:'业绩',client:'ENT GROUP COMPANY LIMITED',amount:28873,note:'',noAmount:false},
+{id:4101,fy:'FY2025',calYear:'2026',month:'3',week:'第四周',type:'回款',client:'ENT GROUP COMPANY LIMITED',amount:127225,note:'',noAmount:false},
+{id:5001,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'业绩',client:'Centric Process Automation Pty Ltd',amount:11900,note:'',noAmount:false},
+{id:5002,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'业绩',client:'昆明途恒科技有限公司',amount:5000,note:'',noAmount:false},
+{id:5003,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'业绩',client:'Centra Technology',amount:546000,note:'',noAmount:false},
+{id:5004,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'业绩',client:'来贺自动化设备有限公司销售',amount:110000,note:'',noAmount:false},
+{id:5005,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'业绩',client:'KVA Master Power Tech',amount:99400,note:'',noAmount:false},
+{id:5006,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'业绩',client:'iLED Ivan Potter',amount:1680,note:'',noAmount:false},
+{id:5007,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'业绩',client:'RONAV FZE',amount:34300,note:'',noAmount:false},
+{id:5008,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'业绩',client:'ENT GROUP COMPANY LIMITED',amount:35525,note:'',noAmount:false},
+{id:5101,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'回款',client:'昆明途恒科技有限公司',amount:5000,note:'',noAmount:false},
+{id:5102,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'回款',client:'来贺自动化设备有限公司销售',amount:12750,note:'',noAmount:false},
+{id:5103,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'回款',client:'Centric Process Automation Pty Ltd',amount:19740,note:'',noAmount:false},
+{id:5104,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'回款',client:'Centric Process Automation Pty Ltd',amount:11900,note:'',noAmount:false},
+{id:5105,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'回款',client:'iLED Ivan Potter',amount:1680,note:'',noAmount:false},
+{id:5106,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'回款',client:'上海迦锐自动化检测科技有限公司',amount:11250,note:'',noAmount:false},
+{id:5201,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'新成交',client:'昆明途恒科技有限公司',amount:0,note:'',noAmount:true},
 ];
 
-let state={perf:[],projects:[],weeklies:[]};
-function save(){try{localStorage.setItem('ws4',JSON.stringify(state))}catch(e){}}
+let state={perf:[],projects:[],weeklies:[],monthlies:[]};
+function save(){try{localStorage.setItem('ws5',JSON.stringify(state))}catch(e){}}
 function load(){
   try{
-    const d=localStorage.getItem('ws4');
-    if(d){state=JSON.parse(d);SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});save();}
-    else{state.perf=SEED.slice();save();}
-  }catch(e){state.perf=SEED.slice();save();}
+    const d=localStorage.getItem('ws5');
+    if(d){state=JSON.parse(d);if(!state.monthlies)state.monthlies=[];SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});save();}
+    else{state.perf=SEED.slice();state.monthlies=[];save();}
+  }catch(e){state.perf=SEED.slice();state.monthlies=[];save();}
 }
 load();
 
 function fmt(n){return'¥'+Math.round(n).toLocaleString('zh-CN');}
+function todayStr(){const d=new Date();return d.toISOString().slice(0,10);}
+function calYearOfFYMonth(fy,month){
+  const y=parseInt(fy.replace('FY',''));const m=parseInt(month);
+  return m>=4?String(y):String(y+1);
+}
+
+function init(){
+  ['view-fy','perf-fy','pj-fy','w-fy','wm-fy','ew-fy','em-fy'].forEach(id=>buildFYOptions(id));
+  document.getElementById('d-date').value=todayStr();
+  renderPerf();renderPivot();renderSavedWeeklies();renderSavedMonthlies();
+  refreshProjDatalist();
+  // set perf-month to current
+  const now=new Date();const curM=now.getMonth()+1;
+  document.getElementById('perf-month').value=String(curM);
+  document.getElementById('view-month').value=String(curM);
+  document.getElementById('proj-date').value=todayStr();
+}
 
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -295,13 +364,23 @@ function switchTab(name){
   document.getElementById('panel-'+name).classList.add('active');
   if(name==='performance'){renderPerf();renderPivot();}
   if(name==='projects'){renderProjects();refreshProjDatalist();}
-  if(name==='export')renderSavedWeeklies();
+  if(name==='export'){renderSavedWeeklies();renderSavedMonthlies();}
 }
 
 function switchSub(id,btn){
-  document.querySelectorAll('.tab-sub-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.sub-panel').forEach(p=>p.classList.remove('active'));
+  btn.closest('.sub-tabs').querySelectorAll('.sub-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  const parent=btn.closest('.sub-panel,.panel');
+  if(parent){parent.querySelectorAll(':scope > .sub-panel').forEach(p=>p.classList.remove('active'));}
+  else{document.querySelectorAll('#panel-export > .sub-panel').forEach(p=>p.classList.remove('active'));}
+  document.getElementById(id).classList.add('active');
+}
+
+function switchWrite(id,btn){
+  btn.closest('.sub-tabs').querySelectorAll('.sub-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('write-weekly').classList.remove('active');
+  document.getElementById('write-monthly').classList.remove('active');
   document.getElementById(id).classList.add('active');
 }
 
@@ -314,21 +393,26 @@ function toggleAmt(){
 }
 
 function addPerf(){
-  const year=document.getElementById('perf-year').value,month=document.getElementById('perf-month').value,week=document.getElementById('perf-week').value;
-  const type=document.getElementById('perf-type').value,client=document.getElementById('perf-client').value.trim();
+  const fy=document.getElementById('perf-fy').value;
+  const month=document.getElementById('perf-month').value;
+  const calYear=calYearOfFYMonth(fy,month);
+  const week=document.getElementById('perf-week').value;
+  const type=document.getElementById('perf-type').value;
+  const client=document.getElementById('perf-client').value.trim();
   if(!client){alert('请填写客户名称');return;}
   const noAmt=type==='新成交'&&NO_AMT.some(c=>client.includes(c));
   const amount=noAmt?0:(parseFloat(document.getElementById('perf-amount').value)||0);
   const note=document.getElementById('perf-note').value.trim();
-  state.perf.push({id:Date.now(),year,month,week,type,client,amount,note,noAmount:noAmt});
+  state.perf.push({id:Date.now(),fy,calYear,month,week,type,client,amount,note,noAmount:noAmt});
   save();
   ['perf-client','perf-amount','perf-note'].forEach(id=>document.getElementById(id).value='');
   renderPerf();renderPivot();
 }
 
 function renderPerf(){
-  const year=document.getElementById('view-year').value,month=document.getElementById('view-month').value;
-  const md=state.perf.filter(p=>p.year===year&&p.month===month);
+  const fy=document.getElementById('view-fy').value;
+  const month=document.getElementById('view-month').value;
+  const md=state.perf.filter(p=>p.fy===fy&&p.month===month);
   const ts=md.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
   const tr=md.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
   const nd=md.filter(p=>p.type==='新成交');
@@ -344,7 +428,7 @@ function renderPerf(){
     const ws=wd.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
     const wr=wd.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
     const wn=wd.filter(p=>p.type==='新成交');
-    html+=`<div class="card"><div class="card-header"><span class="card-title">${year}年${month}月 ${w}</span>
+    html+=`<div class="card"><div class="card-header"><span class="card-title">${fy} ${month}月 ${w}</span>
       <span class="inline-flex">${ws?`<span class="badge badge-blue">业绩 ${fmt(ws)}</span>`:''}${wr?`<span class="badge badge-green">回款 ${fmt(wr)}</span>`:''}${wn.length?`<span class="badge badge-amber">新成交 ${wn.length}家</span>`:''}</span></div>`;
     wd.forEach(p=>{
       const dc=p.type==='业绩'?'dot-blue':p.type==='回款'?'dot-green':'dot-amber';
@@ -357,247 +441,267 @@ function renderPerf(){
     html+='</div>';
   });
   document.getElementById('perf-list').innerHTML=html||'<div style="text-align:center;padding:20px;color:var(--color-text-secondary);font-size:13px">暂无记录</div>';
-  renderPivot();
 }
 
 function delPerf(id){state.perf=state.perf.filter(p=>p.id!==id);save();renderPerf();}
 
 function renderPivot(){
-  const year=document.getElementById('view-year').value,month=document.getElementById('view-month').value;
+  const fy=document.getElementById('view-fy').value;
+  const month=document.getElementById('view-month').value;
   const type=document.getElementById('pivot-type').value;
-  const md=state.perf.filter(p=>p.year===year&&p.month===month&&p.type===type);
+  const md=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.type===type);
   const weeks=['第一周','第二周','第三周','第四周'];
   const clients=[...new Set(md.map(p=>p.client))];
   if(!clients.length){document.getElementById('pivot-wrap').innerHTML='<div style="font-size:12px;color:var(--color-text-secondary);padding:8px">暂无数据</div>';return;}
-  let html=`<table class="pivot-table"><thead><tr><th>客户</th>`;
-  weeks.forEach(w=>{if(md.some(p=>p.week===w))html+=`<th class="num">${w}</th>`;});
-  html+=`<th class="num">合计</th></tr></thead><tbody>`;
   const activeWeeks=weeks.filter(w=>md.some(p=>p.week===w));
-  let colTotals={};activeWeeks.forEach(w=>colTotals[w]=0);let grandTotal=0;
+  let html=`<table class="pivot-table"><thead><tr><th>客户</th>`;
+  activeWeeks.forEach(w=>{html+=`<th class="num">${w}</th>`;});
+  html+=`<th class="num">合计</th></tr></thead><tbody>`;
+  const colTotals={};activeWeeks.forEach(w=>colTotals[w]=0);let grand=0;
   clients.forEach(c=>{
     const rows=md.filter(p=>p.client===c);
-    const total=rows.reduce((a,b)=>a+b.amount,0);grandTotal+=total;
+    const total=rows.reduce((a,b)=>a+b.amount,0);grand+=total;
     html+=`<tr><td style="font-size:12px">${c}</td>`;
-    activeWeeks.forEach(w=>{
-      const amt=rows.filter(p=>p.week===w).reduce((a,b)=>a+b.amount,0);
-      colTotals[w]+=amt;
-      html+=`<td class="num" style="font-size:12px">${amt?fmt(amt):'—'}</td>`;
-    });
-    html+=type==='新成交'?`<td class="num" style="font-size:12px">1家</td>`:`<td class="num" style="font-size:12px;font-weight:500">${total?fmt(total):'—'}</td>`;
+    activeWeeks.forEach(w=>{const a=rows.filter(p=>p.week===w).reduce((x,b)=>x+b.amount,0);colTotals[w]+=a;html+=`<td class="num" style="font-size:12px">${a?fmt(a):'—'}</td>`;});
+    html+=type==='新成交'?`<td class="num" style="font-size:12px">✓</td>`:`<td class="num" style="font-size:12px;font-weight:500">${total?fmt(total):'—'}</td>`;
     html+='</tr>';
   });
-  html+=`<tr class="total"><td style="font-size:12px">合计</td>`;
+  html+=`<tr class="total-row"><td style="font-size:12px">合计</td>`;
   activeWeeks.forEach(w=>{html+=`<td class="num" style="font-size:12px">${colTotals[w]?fmt(colTotals[w]):'—'}</td>`;});
-  html+=type==='新成交'?`<td class="num" style="font-size:12px">${clients.length}家</td>`:`<td class="num" style="font-size:12px">${fmt(grandTotal)}</td>`;
+  html+=type==='新成交'?`<td class="num" style="font-size:12px">${clients.length}家</td>`:`<td class="num" style="font-size:12px">${fmt(grand)}</td>`;
   html+='</tr></tbody></table>';
   document.getElementById('pivot-wrap').innerHTML=html;
 }
 
 function refreshProjDatalist(){
   const names=[...new Set(state.projects.map(p=>p.name))];
-  document.getElementById('proj-names-list').innerHTML=names.map(n=>`<option value="${n}">`).join('');
+  document.getElementById('proj-dl').innerHTML=names.map(n=>`<option value="${n}">`).join('');
 }
 
 function addProject(){
-  const name=document.getElementById('proj-name').value.trim();
   const client=document.getElementById('proj-client').value.trim();
   if(!client){alert('请填写客户名称');return;}
-  const progress=document.getElementById('proj-progress').value.trim();
   const entry={
-    id:Date.now(),name:name||client,client,
+    id:Date.now(),
+    name:document.getElementById('proj-name').value.trim()||client,
+    client,
     model:document.getElementById('proj-model').value.trim(),
     status:document.getElementById('proj-status').value,
-    progress,
-    price:parseFloat(document.getElementById('proj-price').value)||0,
-    year:document.getElementById('proj-year').value,
-    month:document.getElementById('proj-month').value,
+    progress:document.getElementById('proj-progress').value.trim(),
+    recordDate:document.getElementById('proj-date').value||todayStr(),
     priority:document.getElementById('proj-priority').value,
-    date:new Date().toLocaleString('zh-CN')
+    savedAt:new Date().toLocaleString('zh-CN')
   };
-  state.projects.push(entry);
-  save();
-  ['proj-name','proj-client','proj-model','proj-progress','proj-price'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('proj-status').value='询价';
+  state.projects.push(entry);save();
+  ['proj-name','proj-client','proj-model','proj-progress'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('proj-date').value=todayStr();
   renderProjects();refreshProjDatalist();
 }
 
 function renderProjects(){
-  const fy=document.getElementById('pj-year').value,fm=document.getElementById('pj-month').value,fs=document.getElementById('pj-status').value;
+  const pjFY=document.getElementById('pj-fy').value;
+  const pjM=document.getElementById('pj-month').value;
+  const pjS=document.getElementById('pj-status').value;
   const grouped={};
-  state.projects.forEach(p=>{
-    const k=p.name||p.client;
-    if(!grouped[k])grouped[k]=[];
-    grouped[k].push(p);
-  });
+  state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
   const keys=Object.keys(grouped);
   if(!keys.length){document.getElementById('proj-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--color-text-secondary);font-size:13px">暂无项目</div>';return;}
   let html='';
   keys.forEach(k=>{
     const entries=grouped[k].sort((a,b)=>b.id-a.id);
     const latest=entries[0];
-    const ymOk=(fy==='all'||latest.year===fy)&&(fm==='all'||latest.month===fm);
-    const stOk=fs==='all'||latest.status===fs;
-    if(!ymOk||!stOk)return;
+    const stOk=pjS==='all'||latest.status===pjS;
+    if(!stOk)return;
     const sc=SC[latest.status]||{label:latest.status,badge:'badge-gray',dot:'dot-gray'};
     const pc=latest.priority==='高'?'badge-red':latest.priority==='中'?'badge-amber':'badge-gray';
+    const hid='h_'+k.replace(/[^a-zA-Z0-9]/g,'_');
     html+=`<div class="project-item">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
-        <div>
-          <div class="inline-flex" style="margin-bottom:3px"><span class="status-dot ${sc.dot}"></span><span class="project-name">${latest.client}</span></div>
-          ${latest.model?`<div style="font-size:12px;color:var(--color-text-secondary);margin-left:13px">${latest.model}</div>`:''}
-        </div>
-        <div class="inline-flex" style="flex-shrink:0"><span class="badge ${pc}">${latest.priority}优先</span><span class="badge ${sc.badge}">${sc.label}</span></div>
+        <div><div class="inline-flex" style="margin-bottom:3px"><span class="status-dot ${sc.dot}"></span><span style="font-weight:500;font-size:13px">${latest.client}</span></div>
+        ${latest.model?`<div style="font-size:12px;color:var(--color-text-secondary);margin-left:13px">${latest.model}</div>`:''}
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-left:13px">${latest.recordDate}</div></div>
+        <div class="inline-flex" style="flex-shrink:0"><span class="badge ${pc}">${latest.priority}</span><span class="badge ${sc.badge}">${sc.label}</span></div>
       </div>
-      ${latest.price?`<div style="font-size:13px;margin-bottom:6px">报价：<span style="font-weight:500;color:#185FA5">${fmt(latest.price)}</span></div>`:''}
-      <div style="font-size:12px;color:var(--color-text-secondary);background:var(--color-background-secondary);padding:6px 10px;border-radius:var(--border-radius-md);margin-bottom:6px;line-height:1.6">${latest.progress||'暂无进展'}</div>
-      ${entries.length>1?`<div style="margin-bottom:6px">
-        <button class="btn btn-xs" onclick="toggleHistory('hist_${k.replace(/[^a-zA-Z0-9]/g,'_')}')">历史记录 (${entries.length-1}条)</button>
-        <div id="hist_${k.replace(/[^a-zA-Z0-9]/g,'_')}" style="display:none;margin-top:6px">
-          ${entries.slice(1).map(e=>`<div class="history-item"><span style="font-size:11px;color:var(--color-text-secondary)">${e.date} · ${SC[e.status]?.label||e.status}</span><br>${e.progress||'—'}</div>`).join('')}
-        </div></div>`:''}
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:11px;color:var(--color-text-secondary)">${latest.year}年${latest.month}月 · ${latest.date}</span>
-        <div class="inline-flex">
-          <button class="btn btn-xs" onclick="fillEditProj('${k}')">追加进展</button>
-          <button class="btn btn-danger btn-xs" onclick="delProjGroup('${k}')">删除全部</button>
-        </div>
+      <div style="font-size:12px;color:var(--color-text-secondary);background:var(--color-background-secondary);padding:7px 10px;border-radius:var(--border-radius-md);margin-bottom:8px;line-height:1.6">${(latest.progress||'暂无进展').replace(/\n/g,'<br>')}</div>
+      ${entries.length>1?`<button class="btn btn-xs" onclick="document.getElementById('${hid}').style.display=document.getElementById('${hid}').style.display==='none'?'block':'none'">历史记录 (${entries.length-1}条)</button>
+        <div id="${hid}" style="display:none;margin-top:6px">${entries.slice(1).map(e=>`<div class="history-item"><span style="font-size:11px">${e.recordDate} · ${SC[e.status]?.label||e.status}</span><br>${e.progress||'—'}</div>`).join('')}</div>`:''}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+        <span style="font-size:11px;color:var(--color-text-secondary)">${latest.name}</span>
+        <div class="inline-flex"><button class="btn btn-xs" onclick="fillEdit('${k}')">追加进展</button><button class="btn btn-danger btn-xs" onclick="delGroup('${k}')">删除</button></div>
       </div>
     </div>`;
   });
   document.getElementById('proj-list').innerHTML=html||'<div style="text-align:center;padding:20px;color:var(--color-text-secondary);font-size:13px">暂无符合条件的项目</div>';
 }
 
-function toggleHistory(id){const el=document.getElementById(id);if(el)el.style.display=el.style.display==='none'?'block':'none';}
-
-function fillEditProj(name){
+function fillEdit(name){
   const entries=state.projects.filter(p=>(p.name||p.client)===name).sort((a,b)=>b.id-a.id);
   if(!entries.length)return;
-  const latest=entries[0];
-  document.getElementById('proj-name').value=latest.name||latest.client;
-  document.getElementById('proj-client').value=latest.client;
-  document.getElementById('proj-model').value=latest.model||'';
-  document.getElementById('proj-status').value=latest.status;
+  const l=entries[0];
+  document.getElementById('proj-name').value=l.name||l.client;
+  document.getElementById('proj-client').value=l.client;
+  document.getElementById('proj-model').value=l.model||'';
+  document.getElementById('proj-status').value=l.status;
   document.getElementById('proj-progress').value='';
-  document.getElementById('proj-price').value=latest.price||'';
-  document.getElementById('proj-year').value=latest.year||'2026';
-  document.getElementById('proj-month').value=latest.month||'4';
-  document.getElementById('proj-priority').value=latest.priority||'中';
-  window.scrollTo(0,0);
+  document.getElementById('proj-date').value=todayStr();
+  document.getElementById('proj-priority').value=l.priority||'中';
+  switchTab('projects');window.scrollTo(0,0);
 }
 
-function delProjGroup(name){
-  if(!confirm(`确认删除项目"${name}"的所有记录？`))return;
+function delGroup(name){
+  if(!confirm(`确认删除"${name}"的所有记录？`))return;
   state.projects=state.projects.filter(p=>(p.name||p.client)!==name);
   save();renderProjects();refreshProjDatalist();
 }
 
 function saveWeekly(){
-  const year=document.getElementById('w-year').value,month=document.getElementById('w-month').value,week=document.getElementById('w-week').value;
-  const data={id:Date.now(),year,month,week,
+  const fy=document.getElementById('w-fy').value,month=document.getElementById('w-month').value,week=document.getElementById('w-week').value;
+  const data={id:Date.now(),fy,month,week,
     mid:document.getElementById('w-mid').value,long:document.getElementById('w-long').value,newClients:document.getElementById('w-new').value,
     orders:document.getElementById('w-orders').value,quoted:document.getElementById('w-quoted').value,pending:document.getElementById('w-pending').value,
     keyorders:document.getElementById('w-keyorders').value,aftersales:document.getElementById('w-aftersales').value,plan:document.getElementById('w-plan').value,
     savedAt:new Date().toLocaleString('zh-CN')};
-  const ex=state.weeklies.findIndex(w=>w.year===year&&w.month===month&&w.week===week);
+  const ex=state.weeklies.findIndex(w=>w.fy===fy&&w.month===month&&w.week===week);
   if(ex>=0)state.weeklies[ex]=data;else state.weeklies.push(data);
-  save();
-  const a=document.createElement('div');a.className='alert-success';a.textContent='周报已保存！';
-  document.getElementById('sub-write').prepend(a);setTimeout(()=>a.remove(),2000);
+  save();const a=document.createElement('div');a.className='alert-s';a.textContent='已保存！';
+  document.getElementById('write-weekly').prepend(a);setTimeout(()=>a.remove(),1800);
   renderSavedWeeklies();
 }
 
 function renderSavedWeeklies(){
   const list=state.weeklies.slice().reverse();
   const el=document.getElementById('saved-weeklies');
-  if(!list.length){el.innerHTML='<div style="text-align:center;padding:16px;color:var(--color-text-secondary);font-size:13px">暂无已保存的周报</div>';return;}
-  el.innerHTML=list.map(w=>`
-    <div class="card" style="margin-top:10px">
-      <div class="card-header"><span class="card-title">${w.year}年${w.month}月 ${w.week}</span>
-        <div class="inline-flex"><button class="btn btn-sm" onclick="loadWeekly(${w.id})">加载编辑</button><button class="btn btn-danger btn-sm" onclick="delWeekly(${w.id})">删除</button></div>
-      </div>
-      <div style="font-size:13px;line-height:1.7">
-        <div style="color:var(--color-text-secondary);font-size:12px">中等投入${w.mid||0}个 · 长期投入${w.long||0}个 · 新增背调${w.newClients||0}个</div>
-        ${w.orders?`<div style="margin-top:4px"><span style="font-size:11px;color:var(--color-text-secondary)">已确认订单：</span>${w.orders}</div>`:''}
-        ${w.plan?`<div style="margin-top:4px"><span style="font-size:11px;color:var(--color-text-secondary)">下周计划：</span>${w.plan}</div>`:''}
-      </div>
-    </div>`).join('');
+  if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--color-text-secondary);font-size:12px">暂无已保存的周报内容</div>';return;}
+  el.innerHTML=list.map(w=>`<div class="card" style="margin-top:8px">
+    <div class="card-header" style="margin-bottom:6px"><span style="font-size:13px;font-weight:500">${w.fy} ${w.month}月 ${w.week}</span>
+      <div class="inline-flex"><button class="btn btn-sm" onclick="loadWeekly(${w.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delWeekly(${w.id})">删除</button></div>
+    </div>
+    <div style="font-size:12px;color:var(--color-text-secondary)">中等${w.mid||0}个 · 长期${w.long||0}个 · 背调${w.newClients||0}个${w.plan?'  |  下周：'+w.plan.slice(0,30)+'…':''}</div>
+  </div>`).join('');
 }
 
 function loadWeekly(id){
   const w=state.weeklies.find(x=>x.id===id);if(!w)return;
-  document.getElementById('w-year').value=w.year||'2026';
-  document.getElementById('w-month').value=w.month;
-  document.getElementById('w-week').value=w.week;
-  document.getElementById('w-mid').value=w.mid||'';
-  document.getElementById('w-long').value=w.long||'';
-  document.getElementById('w-new').value=w.newClients||'';
-  document.getElementById('w-orders').value=w.orders||'';
-  document.getElementById('w-quoted').value=w.quoted||'';
-  document.getElementById('w-pending').value=w.pending||'';
-  document.getElementById('w-keyorders').value=w.keyorders||'';
-  document.getElementById('w-aftersales').value=w.aftersales||'';
-  document.getElementById('w-plan').value=w.plan||'';
+  document.getElementById('w-fy').value=w.fy||document.getElementById('w-fy').value;
+  document.getElementById('w-month').value=w.month;document.getElementById('w-week').value=w.week;
+  ['mid','long','new','orders','quoted','pending','keyorders','aftersales','plan'].forEach(f=>{
+    const el=document.getElementById('w-'+f);if(el)el.value=w[f==='new'?'newClients':f]||'';
+  });
 }
-
 function delWeekly(id){if(!confirm('确认删除？'))return;state.weeklies=state.weeklies.filter(x=>x.id!==id);save();renderSavedWeeklies();}
 
+function saveMonthly(){
+  const fy=document.getElementById('wm-fy').value,month=document.getElementById('wm-month').value;
+  const data={id:Date.now(),fy,month,
+    mid:document.getElementById('wm-mid').value,long:document.getElementById('wm-long').value,newClients:document.getElementById('wm-new').value,
+    orders:document.getElementById('wm-orders').value,quoted:document.getElementById('wm-quoted').value,pending:document.getElementById('wm-pending').value,
+    keyorders:document.getElementById('wm-keyorders').value,aftersales:document.getElementById('wm-aftersales').value,plan:document.getElementById('wm-plan').value,
+    savedAt:new Date().toLocaleString('zh-CN')};
+  const ex=state.monthlies.findIndex(m=>m.fy===fy&&m.month===month);
+  if(ex>=0)state.monthlies[ex]=data;else state.monthlies.push(data);
+  save();const a=document.createElement('div');a.className='alert-s';a.textContent='已保存！';
+  document.getElementById('write-monthly').prepend(a);setTimeout(()=>a.remove(),1800);
+  renderSavedMonthlies();
+}
+
+function renderSavedMonthlies(){
+  const list=(state.monthlies||[]).slice().reverse();
+  const el=document.getElementById('saved-monthlies');
+  if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--color-text-secondary);font-size:12px">暂无已保存的月报内容</div>';return;}
+  el.innerHTML=list.map(m=>`<div class="card" style="margin-top:8px">
+    <div class="card-header" style="margin-bottom:6px"><span style="font-size:13px;font-weight:500">${m.fy} ${m.month}月月报</span>
+      <div class="inline-flex"><button class="btn btn-sm" onclick="loadMonthly(${m.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delMonthly(${m.id})">删除</button></div>
+    </div>
+    <div style="font-size:12px;color:var(--color-text-secondary)">中等${m.mid||0}个 · 长期${m.long||0}个 · 背调${m.newClients||0}个${m.plan?'  |  下月：'+m.plan.slice(0,30)+'…':''}</div>
+  </div>`).join('');
+}
+function loadMonthly(id){
+  const m=(state.monthlies||[]).find(x=>x.id===id);if(!m)return;
+  document.getElementById('wm-fy').value=m.fy||document.getElementById('wm-fy').value;
+  document.getElementById('wm-month').value=m.month;
+  ['mid','long','new','orders','quoted','pending','keyorders','aftersales','plan'].forEach(f=>{
+    const el=document.getElementById('wm-'+f);if(el)el.value=m[f==='new'?'newClients':f]||'';
+  });
+}
+function delMonthly(id){if(!confirm('确认删除？'))return;state.monthlies=state.monthlies.filter(x=>x.id!==id);save();renderSavedMonthlies();}
+
 function genDaily(){
-  const year=document.getElementById('d-year').value,date=document.getElementById('d-date').value;
-  const perf=document.getElementById('d-perf').value.trim();
-  const recov=document.getElementById('d-recov').value.trim();
-  const deal=document.getElementById('d-deal').value.trim();
-  const proj=document.getElementById('d-proj').value.trim();
-  const other=document.getElementById('d-other').value.trim();
-  let r=`【${year}年${date} 日报】\n${'─'.repeat(30)}\n\n`;
-  r+=`1. 今日业绩\n${perf?perf.split('\n').map(l=>'  '+l).join('\n'):'  （无）'}\n\n`;
-  r+=`2. 今日回款\n${recov?recov.split('\n').map(l=>'  '+l).join('\n'):'  （无）'}\n\n`;
-  if(deal)r+=`3. 今日新成交\n${deal.split('\n').map(l=>'  '+l).join('\n')}\n\n`;
-  if(proj)r+=`4. 项目进展\n${proj.split('\n').map(l=>'  '+l).join('\n')}\n\n`;
-  if(other)r+=`5. 其他\n${other.split('\n').map(l=>'  '+l).join('\n')}\n`;
-  window._dailyText=r;
+  const date=document.getElementById('d-date').value;
+  if(!date){alert('请选择日期');return;}
+  const projs=state.projects.filter(p=>p.recordDate===date);
+  let r=`【日报 ${date}】\n${'─'.repeat(28)}\n\n`;
+  if(!projs.length){r+='今日无项目进展记录。';}
+  else{
+    projs.forEach(p=>{
+      const sc=SC[p.status]||{label:p.status};
+      r+=`【${p.client}】${p.model?'  '+p.model:''}  [${sc.label}]\n${p.progress||'无'}\n\n`;
+    });
+  }
+  window._dailyTxt=r;
   document.getElementById('daily-out').innerHTML=`<div class="export-area">${r}</div>`;
 }
 
+function groupByClient(arr){
+  const m={};arr.forEach(p=>{if(!m[p.client])m[p.client]={client:p.client,amount:0,noAmount:p.noAmount};m[p.client].amount+=p.amount;if(p.noAmount)m[p.client].noAmount=true;});
+  return Object.values(m);
+}
+const fl=p=>p.noAmount?`  ${p.client}`:`  ${p.client} ${fmt(p.amount)}`;
+
 function genWeekly(){
-  const year=document.getElementById('ew-year').value,month=document.getElementById('ew-month').value,week=document.getElementById('ew-week').value;
-  const wd=state.weeklies.find(w=>w.year===year&&w.month===month&&w.week===week);
-  const pd=state.perf.filter(p=>p.year===year&&p.month===month&&p.week===week);
-  const ws=pd.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
-  const wr=pd.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
-  const wn=pd.filter(p=>p.type==='新成交');
+  const fy=document.getElementById('ew-fy').value;
+  const month=document.getElementById('ew-month').value;
+  const week=document.getElementById('ew-week').value;
+  const pd=state.perf.filter(p=>p.fy===fy&&p.month===month);
+  const wd_data=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.week===week);
+  const wr=state.weeklies.find(w=>w.fy===fy&&w.month===month&&w.week===week);
 
-  function groupByClient(arr){const m={};arr.forEach(p=>{if(!m[p.client])m[p.client]={client:p.client,amount:0,noAmount:p.noAmount};m[p.client].amount+=p.amount;});return Object.values(m);}
+  const weekSales=wd_data.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
+  const weekRecov=wd_data.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
+  const weekDeals=wd_data.filter(p=>p.type==='新成交');
+  const monthSales=pd.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
+  const monthRecov=pd.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
+  const monthDeals=pd.filter(p=>p.type==='新成交');
 
-  let r=`【${year}年${month}月 ${week} 周报】\n${'─'.repeat(30)}\n\n`;
-  r+=`1. 本周业绩：${fmt(ws)}\n`;
-  groupByClient(pd.filter(p=>p.type==='业绩')).forEach(p=>{r+=`  ${p.client} ${fmt(p.amount)}\n`;});
+  let r=`【${fy} ${month}月 ${week} 周报】\n${'─'.repeat(30)}\n\n`;
+  r+=`1. 本周业绩：${fmt(weekSales)}\n`;
+  groupByClient(wd_data.filter(p=>p.type==='业绩')).forEach(p=>{r+=fl(p)+'\n';});
+  r+=`本月总业绩：${fmt(monthSales)}\n`;
+  groupByClient(pd.filter(p=>p.type==='业绩')).forEach(p=>{r+=fl(p)+'\n';});
   r+='\n';
-  r+=`2. 本周回款：${fmt(wr)}\n`;
-  groupByClient(pd.filter(p=>p.type==='回款')).forEach(p=>{r+=`  ${p.client} ${fmt(p.amount)}\n`;});
+  r+=`2. 本周回款：${fmt(weekRecov)}\n`;
+  groupByClient(wd_data.filter(p=>p.type==='回款')).forEach(p=>{r+=fl(p)+'\n';});
+  r+=`本月总回款：${fmt(monthRecov)}\n`;
+  groupByClient(pd.filter(p=>p.type==='回款')).forEach(p=>{r+=fl(p)+'\n';});
   r+='\n';
-  if(wn.length){r+=`3. 本周新成交：${wn.length}家\n`;wn.forEach(p=>{r+=`  ${p.client}\n`;});r+='\n';}
-  if(wd){
-    if(wd.mid||wd.long||wd.newClients)r+=`4. 客户投入\n  中等投入：${wd.mid||0}个 | 长期投入：${wd.long||0}个 | 新增背调：${wd.newClients||0}个\n\n`;
-    if(wd.orders)r+=`5. 已确认订单\n  ${wd.orders}\n\n`;
-    if(wd.quoted)r+=`6. 已报价/已提供方案\n  ${wd.quoted}\n\n`;
-    if(wd.pending)r+=`7. 方案确认中\n  ${wd.pending}\n\n`;
-    if(wd.keyorders)r+=`8. 重点订单情况\n  ${wd.keyorders}\n\n`;
-    if(wd.aftersales)r+=`9. 售后情况\n  ${wd.aftersales}\n\n`;
-    if(wd.plan)r+=`10. 下周计划\n  ${wd.plan}\n`;
+  r+=`3. 新成交：${weekDeals.length}家\n`;
+  weekDeals.forEach(p=>{r+=`  ${p.client}\n`;});
+  r+=`本月总新成交：${monthDeals.length}家\n`;
+  monthDeals.forEach(p=>{r+=`  ${p.client}\n`;});
+  if(wr){
+    r+='\n';
+    if(wr.mid||wr.long||wr.newClients)r+=`4. 客户投入情况\n  截至本周：中等投入${wr.mid||0}个，长期投入${wr.long||0}个，新增背调${wr.newClients||0}个\n\n`;
+    if(wr.orders||wr.quoted||wr.pending){
+      r+=`5. 重点项目状态\n`;
+      if(wr.orders)r+=`  3-1 已确认订单：${wr.orders}\n`;
+      if(wr.quoted)r+=`  3-2 已报价/已提供方案：${wr.quoted}\n`;
+      if(wr.pending)r+=`  3-3 方案确认中：${wr.pending}\n`;
+      r+='\n';
+    }
+    if(wr.keyorders)r+=`6. 重点订单情况\n  ${wr.keyorders}\n\n`;
+    if(wr.aftersales)r+=`7. 售后情况\n  ${wr.aftersales}\n\n`;
+    if(wr.plan)r+=`8. 下周计划\n  ${wr.plan}\n`;
   }
-  window._weeklyText=r;
+  window._weeklyTxt=r;
   document.getElementById('weekly-out').innerHTML=`<div class="export-area">${r}</div>`;
 }
 
 function genMonthly(){
-  const year=document.getElementById('em-year').value,month=document.getElementById('em-month').value;
-  const cumulMode=document.getElementById('em-cumul').value;
-  const mNum=parseInt(month);
-  const md=state.perf.filter(p=>p.year===year&&p.month===month);
-  const cd=state.perf.filter(p=>cumulMode==='year'?(p.year===year&&parseInt(p.month)<=mNum):(parseInt(p.year)<parseInt(year)||(p.year===year&&parseInt(p.month)<=mNum)));
-
-  function groupByClient(arr){const m={};arr.forEach(p=>{if(!m[p.client])m[p.client]={client:p.client,amount:0,noAmount:p.noAmount};m[p.client].amount+=p.amount;if(p.noAmount)m[p.client].noAmount=true;});return Object.values(m);}
-  const fl=p=>p.noAmount?`  ${p.client}`:`  ${p.client} ${fmt(p.amount)}`;
+  const fy=document.getElementById('em-fy').value;
+  const month=document.getElementById('em-month').value;
+  const mIdx=fyMonthIndex(month);
+  const md=state.perf.filter(p=>p.fy===fy&&p.month===month);
+  const cd=state.perf.filter(p=>p.fy===fy&&fyMonthIndex(p.month)<=mIdx);
+  const mm=state.monthlies&&state.monthlies.find(m=>m.fy===fy&&m.month===month);
 
   const sM=md.filter(p=>p.type==='业绩'),sC=cd.filter(p=>p.type==='业绩');
   const rM=md.filter(p=>p.type==='回款'),rC=cd.filter(p=>p.type==='回款');
@@ -618,21 +722,30 @@ function genMonthly(){
   if(dM.length)dM.forEach(p=>{r+=fl(p)+'\n';});else r+=`  （暂无）\n`;
   r+=`截至本月总新成交：${dC.length}家\n`;
   dC.forEach(p=>{r+=fl(p)+'\n';});
-
-  window._monthlyText=r;
+  if(mm){
+    r+='\n';
+    if(mm.mid||mm.long||mm.newClients)r+=`4. 客户投入情况\n  中等投入${mm.mid||0}个，长期投入${mm.long||0}个，新增背调${mm.newClients||0}个\n\n`;
+    if(mm.orders||mm.quoted||mm.pending){
+      r+=`5. 重点项目状态\n`;
+      if(mm.orders)r+=`  已确认订单：${mm.orders}\n`;
+      if(mm.quoted)r+=`  已报价/提供方案：${mm.quoted}\n`;
+      if(mm.pending)r+=`  方案确认中：${mm.pending}\n`;
+      r+='\n';
+    }
+    if(mm.keyorders)r+=`6. 重点订单情况\n  ${mm.keyorders}\n\n`;
+    if(mm.aftersales)r+=`7. 售后情况\n  ${mm.aftersales}\n\n`;
+    if(mm.plan)r+=`8. 下月计划\n  ${mm.plan}\n`;
+  }
+  window._monthlyTxt=r;
   document.getElementById('monthly-out').innerHTML=`<div class="export-area">${r}</div>`;
 }
 
-function copyOut(id){
-  const map={daily:window._dailyText,weekly:window._weeklyText,monthly:window._monthlyText};
-  const key=id.replace('-out','');
-  const txt=map[key];
-  if(!txt){if(key==='daily')genDaily();else if(key==='weekly')genWeekly();else genMonthly();return;}
-  navigator.clipboard.writeText(txt).then(()=>{
-    const el=event.target;const o=el.textContent;el.textContent='已复制！';setTimeout(()=>el.textContent=o,1500);
-  });
+function copyTxt(id){
+  const map={'daily-out':window._dailyTxt,'weekly-out':window._weeklyTxt,'monthly-out':window._monthlyTxt};
+  const txt=map[id];
+  if(!txt){alert('请先生成报告');return;}
+  navigator.clipboard.writeText(txt).then(()=>{const b=event.target;const o=b.textContent;b.textContent='已复制！';setTimeout(()=>b.textContent=o,1500);});
 }
 
-renderPerf();
-renderPivot();
+init();
 </script>
