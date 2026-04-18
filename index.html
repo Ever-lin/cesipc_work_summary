@@ -74,7 +74,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
       <div class="inline-flex">
         <select class="ym-s" id="perf-fy"></select>
         <select class="ym-s" id="perf-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select>
-        <select class="ym-s" id="perf-week"><option>第一周</option><option>第二周</option><option>第三周</option><option>第四周</option></select>
+        <select class="ym-s" id="perf-week"><option>第一周</option><option>第二周</option><option>第三周</option><option>第四周</option><option>第五周</option></select>
       </div>
     </div>
     <div class="grid2">
@@ -152,7 +152,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
           <div class="inline-flex">
             <select class="ym-s" id="w-fy"></select>
             <select class="ym-s" id="w-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select>
-            <select class="ym-s" id="w-week"><option>第一周</option><option selected>第二周</option><option>第三周</option><option>第四周</option></select>
+            <select class="ym-s" id="w-week" onchange="fillProjTextareas('w')"><option>第一周</option><option selected>第二周</option><option>第三周</option><option>第四周</option><option>第五周</option></select>
           </div>
         </div>
         <div class="slabel">客户投入情况</div>
@@ -225,7 +225,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
       <div class="grid3">
         <div class="field"><label>财年</label><select id="ew-fy"></select></div>
         <div class="field"><label>月份</label><select id="ew-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select></div>
-        <div class="field"><label>周次</label><select id="ew-week"><option>第一周</option><option selected>第二周</option><option>第三周</option><option>第四周</option></select></div>
+        <div class="field"><label>周次</label><select id="ew-week"><option>第一周</option><option selected>第二周</option><option>第三周</option><option>第四周</option><option>第五周</option></select></div>
       </div>
       <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="genWeekly()">生成周报</button><button class="btn" onclick="copyTxt('weekly-out')">复制</button></div>
     </div>
@@ -398,7 +398,7 @@ function renderPerf(){
     <div class="metric"><div class="metric-label">${month}月总回款</div><div class="metric-value" style="color:#1D9E75">${fmt(tr)}</div></div>
     <div class="metric"><div class="metric-label">本月新成交</div><div class="metric-value" style="color:#BA7517">${nd.length}家</div></div>
     <div class="metric"><div class="metric-label">记录条数</div><div class="metric-value">${md.length}</div></div>`;
-  const weeks=['第一周','第二周','第三周','第四周'];
+  const weeks=['第一周','第二周','第三周','第四周','第五周'];
   let html='';
   weeks.forEach(w=>{
     const wd=md.filter(p=>p.week===w);if(!wd.length)return;
@@ -431,7 +431,7 @@ function renderPivot(){
   let html='';
   if(mode==='week'){
     const md=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.type===type);
-    const weeks=['第一周','第二周','第三周','第四周'];
+    const weeks=['第一周','第二周','第三周','第四周','第五周'];
     const clients=[...new Set(md.map(p=>p.client))];
     if(!clients.length){document.getElementById('pivot-wrap').innerHTML='<div style="font-size:12px;color:var(--color-text-secondary);padding:8px">暂无数据</div>';return;}
     const activeWeeks=weeks.filter(w=>md.some(p=>p.week===w));
@@ -569,6 +569,12 @@ function delGroup(name){
 }
 
 // 自动填充4个项目文本框
+// 根据日期中的「日」推算第几周（1-7→第一周, 8-14→第二周, 15-21→第三周, 22-28→第四周, 29+→第五周）
+function weekOfDay(dateStr){
+  if(!dateStr)return null;
+  const d=parseInt(dateStr.split('-')[2],10);
+  if(d<=7)return'第一周';if(d<=14)return'第二周';if(d<=21)return'第三周';if(d<=28)return'第四周';return'第五周';
+}
 function fillProjTextareas(prefix){
   const CATS=[
     {id:'p1',statuses:['成交','确认订单']},
@@ -578,25 +584,33 @@ function fillProjTextareas(prefix){
   ];
   const grouped={};
   state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
-  // For weekly prefix, filter by selected week's date range
-  let weekFilter=null;
+  let selWeek=null,selMonth=null;
   if(prefix==='w'){
-    const selWeek=document.getElementById('w-week')?.value;
-    const selMonth=document.getElementById('w-month')?.value;
-    if(selWeek&&selMonth){weekFilter={week:selWeek,month:selMonth};}
+    selWeek=document.getElementById('w-week')?.value;
+    selMonth=document.getElementById('w-month')?.value;
   }
   CATS.forEach(cat=>{
     const el=document.getElementById(prefix+'-'+cat.id);if(!el)return;
-    let items=Object.keys(grouped).map(k=>grouped[k].sort((a,b)=>b.id-a.id)[0]).filter(p=>cat.statuses.includes(p.status));
-    // For weekly, also filter to projects recorded in same week+month
-    if(weekFilter){
-      const allInWeek=state.projects.filter(p=>p.week===weekFilter.week&&p.month===weekFilter.month);
-      const weekNames=new Set(allInWeek.map(p=>p.name||p.client));
-      // Include all active projects (not just those recorded this week) — but prefer week-matching projects
-      // Show all projects, but mark week-specific ones first
-      const weekItems=items.filter(p=>weekNames.has(p.name||p.client));
-      const otherItems=items.filter(p=>!weekNames.has(p.name||p.client));
-      items=[...weekItems,...otherItems];
+    let items;
+    if(selWeek&&selMonth){
+      const matchingGroups=[];
+      Object.keys(grouped).forEach(k=>{
+        const entries=grouped[k].sort((a,b)=>b.id-a.id);
+        const inMonth=entries.filter(p=>{
+          if(!p.recordDate)return false;
+          const parts=p.recordDate.split('-');
+          return String(parseInt(parts[1],10))===String(selMonth);
+        });
+        if(inMonth.length>0){
+          const latest=inMonth[0];
+          if(weekOfDay(latest.recordDate)===selWeek&&cat.statuses.includes(latest.status)){
+            matchingGroups.push(latest);
+          }
+        }
+      });
+      items=matchingGroups;
+    } else {
+      items=Object.keys(grouped).map(k=>grouped[k].sort((a,b)=>b.id-a.id)[0]).filter(p=>cat.statuses.includes(p.status));
     }
     el.value=items.map(p=>`客户：${p.client}\n${projIcon(p.status)} ${p.name}\n${p.progress||''}`).join('\n\n');
   });
