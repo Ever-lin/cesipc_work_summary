@@ -178,10 +178,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <div class="field"><label style="color:var(--color-text-secondary)">　↳ 其中长期投入</label><input id="w-new-long" type="number" placeholder="0"></div>
         </div>
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目状态（从项目情况同步）<button class="btn btn-sm" onclick="fillProjTextareas('w')">↻ 刷新项目</button></div>
-        <div class="field"><label>3-1 已确认订单（已成交 / 已确认订单）</label><textarea id="w-p1" class="auto-resize"></textarea></div>
-        <div class="field"><label>3-2 已报价/已提供方案（已报价 / 已报价跟进中 / 已提供方案）</label><textarea id="w-p2" class="auto-resize"></textarea></div>
-        <div class="field"><label>3-3 方案确认中（方案确认中）</label><textarea id="w-p3" class="auto-resize"></textarea></div>
-        <div class="field"><label>3-4 其他（长期跟进项目 / 丢单）</label><textarea id="w-p4" class="auto-resize"></textarea></div>
+        <div class="field"><label>➡️ 已确认订单（已成交 / 已确认订单）</label><textarea id="w-p1" class="auto-resize"></textarea></div>
+        <div class="field"><label>➡️ 已报价/已提供方案（已报价 / 已报价跟进中 / 已提供方案）</label><textarea id="w-p2" class="auto-resize"></textarea></div>
+        <div class="field"><label>➡️ 方案确认中（方案确认中）</label><textarea id="w-p3" class="auto-resize"></textarea></div>
+        <div class="field"><label>➡️ 其他（长期跟进项目 / 丢单）</label><textarea id="w-p4" class="auto-resize"></textarea></div>
         <div class="slabel">其他</div>
         <div class="field"><label>重点订单情况</label><textarea id="w-keyorders"></textarea></div>
         <div class="field"><label>售后情况</label><textarea id="w-aftersales"></textarea></div>
@@ -209,10 +209,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <div class="field"><label style="color:var(--color-text-secondary)">　↳ 其中长期投入</label><input id="wm-new-long" type="number" placeholder="0"></div>
         </div>
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目状态（从项目情况同步）<button class="btn btn-sm" onclick="fillProjTextareas('wm')">↻ 刷新项目</button></div>
-        <div class="field"><label>3-1 已确认订单（已成交 / 已确认订单）</label><textarea id="wm-p1" class="auto-resize"></textarea></div>
-        <div class="field"><label>3-2 已报价/已提供方案（已报价 / 已报价跟进中 / 已提供方案）</label><textarea id="wm-p2" class="auto-resize"></textarea></div>
-        <div class="field"><label>3-3 方案确认中（方案确认中）</label><textarea id="wm-p3" class="auto-resize"></textarea></div>
-        <div class="field"><label>3-4 其他（长期跟进项目 / 丢单）</label><textarea id="wm-p4" class="auto-resize"></textarea></div>
+        <div class="field"><label>➡️ 已确认订单（已成交 / 已确认订单）</label><textarea id="wm-p1" class="auto-resize"></textarea></div>
+        <div class="field"><label>➡️ 已报价/已提供方案（已报价 / 已报价跟进中 / 已提供方案）</label><textarea id="wm-p2" class="auto-resize"></textarea></div>
+        <div class="field"><label>➡️ 方案确认中（方案确认中）</label><textarea id="wm-p3" class="auto-resize"></textarea></div>
+        <div class="field"><label>➡️ 其他（长期跟进项目 / 丢单）</label><textarea id="wm-p4" class="auto-resize"></textarea></div>
         <div class="slabel">其他</div>
         <div class="field"><label>重点订单情况</label><textarea id="wm-keyorders"></textarea></div>
         <div class="field"><label>售后情况</label><textarea id="wm-aftersales"></textarea></div>
@@ -752,10 +752,10 @@ function getCheckedProjects(){return[];}
 
 function buildProjSection(projects,forMonthly){
   const cats=[
-    {label:'3-1 已确认订单',statuses:['成交','确认订单']},
-    {label:'3-2 已报价/已提供方案',statuses:['报价','报价跟进','方案']},
-    {label:'3-3 方案确认中',statuses:['确认']},
-    {label:'3-4 其他',statuses:['长期','丢单']},
+    {label:'➡️ 已确认订单',statuses:['成交','确认订单']},
+    {label:'➡️ 已报价/已提供方案',statuses:['报价','报价跟进','方案']},
+    {label:'➡️ 方案确认中',statuses:['确认']},
+    {label:'➡️ 其他',statuses:['长期','丢单']},
   ];
   let r='';
   cats.forEach(cat=>{
@@ -788,7 +788,7 @@ function renderSavedWeeklies(){
   if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--color-text-secondary);font-size:12px">暂无已保存的周报内容</div>';return;}
   el.innerHTML=list.map(w=>{
     const p1=w.p1||'',p2=w.p2||'',p3=w.p3||'',p4=w.p4||'';
-    const projTxt=`3-1 已确认订单：\n${p1||'（暂无）'}\n\n3-2 已报价/已提供方案：\n${p2||'（暂无）'}\n\n3-3 方案确认中：\n${p3||'（暂无）'}\n\n3-4 其他：\n${p4||'（暂无）'}`;
+    const projTxt=`➡️ 已确认订单：\n${p1||'（暂无）'}\n\n➡️ 已报价/已提供方案：\n${p2||'（暂无）'}\n\n➡️ 方案确认中：\n${p3||'（暂无）'}\n\n➡️ 其他：\n${p4||'（暂无）'}`;
     const infoRow=(label,val)=>val?`<div style="margin:6px 0"><span style="font-size:12px;color:var(--color-text-secondary);font-weight:500">${label}：</span><span style="font-size:12px">${val}</span></div>`:'';
     return`<div class="card" style="margin-top:8px">
       <div class="card-header" style="margin-bottom:8px"><span style="font-size:13px;font-weight:500">${w.fy} ${w.month}月 ${w.week}</span>
@@ -852,7 +852,7 @@ function renderSavedMonthlies(){
   if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--color-text-secondary);font-size:12px">暂无已保存的月报内容</div>';return;}
   el.innerHTML=list.map(m=>{
     const p1=m.p1||'',p2=m.p2||'',p3=m.p3||'',p4=m.p4||'';
-    const projTxt=`3-1 已确认订单：\n${p1||'（暂无）'}\n\n3-2 已报价/已提供方案：\n${p2||'（暂无）'}\n\n3-3 方案确认中：\n${p3||'（暂无）'}\n\n3-4 其他：\n${p4||'（暂无）'}`;
+    const projTxt=`➡️ 已确认订单：\n${p1||'（暂无）'}\n\n➡️ 已报价/已提供方案：\n${p2||'（暂无）'}\n\n➡️ 方案确认中：\n${p3||'（暂无）'}\n\n➡️ 其他：\n${p4||'（暂无）'}`;
     const infoRow=(label,val)=>val?`<div style="margin:6px 0"><span style="font-size:12px;color:var(--color-text-secondary);font-weight:500">${label}：</span><span style="font-size:12px">${val}</span></div>`:'';
     return`<div class="card" style="margin-top:8px">
       <div class="card-header" style="margin-bottom:8px"><span style="font-size:13px;font-weight:500">${m.fy} ${m.month}月月报</span>
@@ -921,36 +921,34 @@ function genWeekly(){
   const monthRecov=pd.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
   const monthDeals=pd.filter(p=>p.type==='新成交');
   let r=`【${fy} ${month}月 ${week} 周报】\n${'─'.repeat(30)}\n\n`;
-  r+=`1. 本周业绩：${fmt(weekSales)}\n`;
+  r+=`➡️ 本周业绩：${fmt(weekSales)}\n`;
   groupByClient(wd.filter(p=>p.type==='业绩')).forEach(p=>{r+=fl(p)+'\n';});
-  r+=`本月总业绩：${fmt(monthSales)}\n`;
+  r+=`➡️ 本月总业绩：${fmt(monthSales)}\n`;
   groupByClient(pd.filter(p=>p.type==='业绩')).forEach(p=>{r+=fl(p)+'\n';});
   r+='\n';
-  r+=`2. 本周回款：${fmt(weekRecov)}\n`;
+  r+=`➡️ 本周回款：${fmt(weekRecov)}\n`;
   groupByClient(wd.filter(p=>p.type==='回款')).forEach(p=>{r+=fl(p)+'\n';});
-  r+=`本月总回款：${fmt(monthRecov)}\n`;
+  r+=`➡️ 本月总回款：${fmt(monthRecov)}\n`;
   groupByClient(pd.filter(p=>p.type==='回款')).forEach(p=>{r+=fl(p)+'\n';});
   r+='\n';
-  r+=`3. 新成交：${weekDeals.length}家\n`;
+  r+=`➡️ 新成交：${weekDeals.length}家\n`;
   weekDeals.forEach(p=>{r+=`  ${p.client}\n`;});
-  r+=`本月总新成交：${monthDeals.length}家\n`;
+  r+=`➡️ 本月总新成交：${monthDeals.length}家\n`;
   monthDeals.forEach(p=>{r+=`  ${p.client}\n`;});
-  // 4. 客户投入
   r+='\n';
   if(wr&&(wr.mid||wr.long||wr.newClients)){
     let newBreakdown='';
     if(wr.newClients&&(wr.newMid||wr.newLong))newBreakdown=`（其中中等投入${wr.newMid||0}个，长期投入${wr.newLong||0}个）`;
-    r+=`4. 客户投入情况\n  中等投入${wr.mid||0}个，长期投入${wr.long||0}个，新增背调${wr.newClients||0}个${newBreakdown}\n\n`;
+    r+=`➡️ 客户投入情况\n  中等投入${wr.mid||0}个，长期投入${wr.long||0}个，新增背调${wr.newClients||0}个${newBreakdown}\n\n`;
   }
-  // 5. 重点项目状态 — 始终显示
-  r+=`5. 重点项目状态\n`;
-  r+=`3-1 已确认订单：\n${(wr&&wr.p1)||'（暂无）'}\n\n`;
-  r+=`3-2 已报价/已提供方案：\n${(wr&&wr.p2)||'（暂无）'}\n\n`;
-  r+=`3-3 方案确认中：\n${(wr&&wr.p3)||'（暂无）'}\n\n`;
-  r+=`3-4 其他：\n${(wr&&wr.p4)||'（暂无）'}\n\n`;
-  if(wr&&wr.keyorders)r+=`6. 重点订单情况\n  ${wr.keyorders}\n\n`;
-  if(wr&&wr.aftersales)r+=`7. 售后情况\n  ${wr.aftersales}\n\n`;
-  if(wr&&wr.plan)r+=`8. 下周计划\n  ${wr.plan}\n`;
+  r+=`➡️ 重点项目状态\n`;
+  r+=`➡️ 已确认订单：\n${(wr&&wr.p1)||'（暂无）'}\n\n`;
+  r+=`➡️ 已报价/已提供方案：\n${(wr&&wr.p2)||'（暂无）'}\n\n`;
+  r+=`➡️ 方案确认中：\n${(wr&&wr.p3)||'（暂无）'}\n\n`;
+  r+=`➡️ 其他：\n${(wr&&wr.p4)||'（暂无）'}\n\n`;
+  if(wr&&wr.keyorders)r+=`➡️ 重点订单情况\n  ${wr.keyorders}\n\n`;
+  if(wr&&wr.aftersales)r+=`➡️ 售后情况\n  ${wr.aftersales}\n\n`;
+  if(wr&&wr.plan)r+=`➡️ 下周计划\n  ${wr.plan}\n`;
   window._weeklyTxt=r;document.getElementById('weekly-out').innerHTML=`<div class="export-area">${r}</div>`;
 }
 
@@ -964,36 +962,34 @@ function genMonthly(){
   const rM=md.filter(p=>p.type==='回款'),rC=cd.filter(p=>p.type==='回款');
   const dM=md.filter(p=>p.type==='新成交'),dC=cd.filter(p=>p.type==='新成交');
   let r='';
-  r+=`1. 本月业绩：${fmt(sM.reduce((a,b)=>a+b.amount,0))}\n`;
+  r+=`➡️ 本月业绩：${fmt(sM.reduce((a,b)=>a+b.amount,0))}\n`;
   if(sM.length)groupByClient(sM).forEach(p=>{r+=fl(p)+'\n';});else r+=`  （暂无）\n`;
-  r+=`截至本月总业绩：${fmt(sC.reduce((a,b)=>a+b.amount,0))}\n`;
+  r+=`➡️ 截至本月总业绩：${fmt(sC.reduce((a,b)=>a+b.amount,0))}\n`;
   groupByClient(sC).forEach(p=>{r+=fl(p)+'\n';});
   r+='\n';
-  r+=`2. 本月回款：${fmt(rM.reduce((a,b)=>a+b.amount,0))}\n`;
+  r+=`➡️ 本月回款：${fmt(rM.reduce((a,b)=>a+b.amount,0))}\n`;
   if(rM.length)groupByClient(rM).forEach(p=>{r+=fl(p)+'\n';});else r+=`  （暂无）\n`;
-  r+=`截至本月总回款：${fmt(rC.reduce((a,b)=>a+b.amount,0))}\n`;
+  r+=`➡️ 截至本月总回款：${fmt(rC.reduce((a,b)=>a+b.amount,0))}\n`;
   groupByClient(rC).forEach(p=>{r+=fl(p)+'\n';});
   r+='\n';
-  r+=`3. 本月新成交：${dM.length}家\n`;
+  r+=`➡️ 本月新成交：${dM.length}家\n`;
   if(dM.length)dM.forEach(p=>{r+=fl(p)+'\n';});else r+=`  （暂无）\n`;
-  r+=`截至本月总新成交：${dC.length}家\n`;
+  r+=`➡️ 截至本月总新成交：${dC.length}家\n`;
   dC.forEach(p=>{r+=fl(p)+'\n';});
-  // 4. 客户投入
   r+='\n';
   if(mm&&(mm.mid||mm.long||mm.newClients)){
     let newBreakdown='';
     if(mm.newClients&&(mm.newMid||mm.newLong))newBreakdown=`（其中中等投入${mm.newMid||0}个，长期投入${mm.newLong||0}个）`;
-    r+=`4. 客户投入情况\n  中等投入${mm.mid||0}个，长期投入${mm.long||0}个，新增背调${mm.newClients||0}个${newBreakdown}\n\n`;
+    r+=`➡️ 客户投入情况\n  中等投入${mm.mid||0}个，长期投入${mm.long||0}个，新增背调${mm.newClients||0}个${newBreakdown}\n\n`;
   }
-  // 5. 重点项目状态 — 始终显示
-  r+=`5. 重点项目状态\n`;
-  r+=`3-1 已确认订单：\n${(mm&&mm.p1)||'（暂无）'}\n\n`;
-  r+=`3-2 已报价/已提供方案：\n${(mm&&mm.p2)||'（暂无）'}\n\n`;
-  r+=`3-3 方案确认中：\n${(mm&&mm.p3)||'（暂无）'}\n\n`;
-  r+=`3-4 其他：\n${(mm&&mm.p4)||'（暂无）'}\n\n`;
-  if(mm&&mm.keyorders)r+=`6. 重点订单情况\n  ${mm.keyorders}\n\n`;
-  if(mm&&mm.aftersales)r+=`7. 售后情况\n  ${mm.aftersales}\n\n`;
-  if(mm&&mm.plan)r+=`8. 下月计划\n  ${mm.plan}\n`;
+  r+=`➡️ 重点项目状态\n`;
+  r+=`➡️ 已确认订单：\n${(mm&&mm.p1)||'（暂无）'}\n\n`;
+  r+=`➡️ 已报价/已提供方案：\n${(mm&&mm.p2)||'（暂无）'}\n\n`;
+  r+=`➡️ 方案确认中：\n${(mm&&mm.p3)||'（暂无）'}\n\n`;
+  r+=`➡️ 其他：\n${(mm&&mm.p4)||'（暂无）'}\n\n`;
+  if(mm&&mm.keyorders)r+=`➡️ 重点订单情况\n  ${mm.keyorders}\n\n`;
+  if(mm&&mm.aftersales)r+=`➡️ 售后情况\n  ${mm.aftersales}\n\n`;
+  if(mm&&mm.plan)r+=`➡️ 下月计划\n  ${mm.plan}\n`;
   window._monthlyTxt=r;document.getElementById('monthly-out').innerHTML=`<div class="export-area">${r}</div>`;
 }
 
