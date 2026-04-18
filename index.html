@@ -127,8 +127,11 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
   </div>
   <div class="filter-bar">
     <select class="ym-s" id="pj-fy" onchange="renderProjects()"></select>
+    <select class="ym-s" id="pj-month" onchange="renderProjects()"><option value="all">全部月份</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select>
+    <select class="ym-s" id="pj-week" onchange="renderProjects()"><option value="all">全部周次</option><option value="第一周">第一周</option><option value="第二周">第二周</option><option value="第三周">第三周</option><option value="第四周">第四周</option><option value="第五周">第五周</option></select>
     <select class="ym-s" id="pj-status" onchange="renderProjects()"><option value="all">全部状态</option><option value="报价">已报价</option><option value="方案">已提供方案</option><option value="确认">方案确认中</option><option value="报价跟进">已报价跟进中</option><option value="长期">长期跟进项目</option><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="丢单">丢单</option></select>
   </div>
+  <div id="proj-status-counts" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
   <div id="proj-list"></div>
 </div>
 
@@ -337,6 +340,7 @@ function init(){
   const now=new Date();const cm=now.getMonth()+1;
   document.getElementById('view-month').value=String(cm);
   document.getElementById('perf-month').value=String(cm);
+  document.getElementById('pj-month').value=String(cm);
   renderPerf();renderPivot();refreshProjDatalist();renderSavedWeeklies();renderSavedMonthlies();fillProjTextareas('w');fillProjTextareas('wm');
 }
 
@@ -516,14 +520,63 @@ function addProject(){
 
 function renderProjects(){
   const pjFY=document.getElementById('pj-fy').value,pjS=document.getElementById('pj-status').value;
+  const pjMonth=document.getElementById('pj-month').value;
+  const pjWeek=document.getElementById('pj-week').value;
   const grouped={};
   state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
   const keys=Object.keys(grouped);
+  // Compute status counts (across all filters except status)
+  const statusDefs=[
+    {key:'报价',label:'已报价',cls:'badge-blue'},
+    {key:'方案',label:'已提供方案',cls:'badge-blue'},
+    {key:'确认',label:'方案确认中',cls:'badge-amber'},
+    {key:'报价跟进',label:'已报价跟进中',cls:'badge-blue'},
+    {key:'长期',label:'长期跟进',cls:'badge-teal'},
+    {key:'确认订单',label:'已确认订单',cls:'badge-green'},
+    {key:'成交',label:'已成交',cls:'badge-green'},
+    {key:'丢单',label:'丢单',cls:'badge-red'},
+  ];
+  const counts={};
+  keys.forEach(k=>{
+    const entries=grouped[k].sort((a,b)=>b.id-a.id);
+    const latest=entries[0];
+    // apply month/week filter on latest record date
+    if(pjMonth!=='all'){
+      const rd=latest.recordDate||'';
+      const m=rd?String(parseInt(rd.split('-')[1],10)):'';
+      if(m!==pjMonth)return;
+    }
+    if(pjWeek!=='all'){
+      if(weekOfDay(latest.recordDate)!==pjWeek)return;
+    }
+    counts[latest.status]=(counts[latest.status]||0)+1;
+  });
+  const countEl=document.getElementById('proj-status-counts');
+  if(countEl){
+    let ctHtml='<span style="font-size:12px;color:var(--color-text-secondary);align-self:center">各状态：</span>';
+    statusDefs.forEach(sd=>{
+      const n=counts[sd.key]||0;
+      if(n>0)ctHtml+=`<span class="badge ${sd.cls}" style="cursor:pointer" onclick="document.getElementById('pj-status').value='${sd.key}';renderProjects()">${sd.label} <b>${n}</b></span>`;
+    });
+    const total=Object.values(counts).reduce((a,b)=>a+b,0);
+    ctHtml+=`<span class="badge badge-gray">合计 <b>${total}</b></span>`;
+    countEl.innerHTML=ctHtml;
+  }
   if(!keys.length){document.getElementById('proj-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--color-text-secondary);font-size:13px">暂无项目</div>';return;}
   let html='';
   keys.forEach(k=>{
     const entries=grouped[k].sort((a,b)=>b.id-a.id);
     const latest=entries[0];
+    // month filter
+    if(pjMonth!=='all'){
+      const rd=latest.recordDate||'';
+      const m=rd?String(parseInt(rd.split('-')[1],10)):'';
+      if(m!==pjMonth)return;
+    }
+    // week filter
+    if(pjWeek!=='all'){
+      if(weekOfDay(latest.recordDate)!==pjWeek)return;
+    }
     const stOk=pjS==='all'||latest.status===pjS;
     if(!stOk)return;
     const icon=projIcon(latest.status);
@@ -543,7 +596,7 @@ function renderProjects(){
         <div id="${hid}" style="display:none;margin-bottom:6px">${entries.slice(1).map(e=>`<div class="history-item"><span style="font-size:11px">${e.recordDate} · ${SC[e.status]?.label||e.status}</span><br>${e.progress||'—'}</div>`).join('')}</div>`:''}
       <div style="display:flex;justify-content:space-between;align-items:center">
         <span style="font-size:11px;color:var(--color-text-secondary)">${latest.savedAt}</span>
-        <div class="inline-flex"><button class="btn btn-xs" onclick="fillEdit('${k.replace(/'/g,"\\'")}')">追加进展</button><button class="btn btn-danger btn-xs" onclick="delGroup('${k.replace(/'/g,"\\'")}')">删除</button></div>
+        <div class="inline-flex"><button class="btn btn-xs" onclick="fillEdit('${k.replace(/'/g,"\\'")}')">追加进展</button><button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="editLatestProgress('${k.replace(/'/g,"\\'")}',${latest.id})">编辑进展</button><button class="btn btn-danger btn-xs" onclick="delGroup('${k.replace(/'/g,"\\'")}')">删除</button></div>
       </div>
     </div>`;
   });
@@ -560,6 +613,16 @@ function fillEdit(name){
   document.getElementById('proj-date').value=todayStr();
   document.getElementById('proj-priority').value=l.priority||'中';
   switchTab('projects');window.scrollTo(0,0);
+}
+
+function editLatestProgress(name,id){
+  const entry=state.projects.find(p=>p.id===id);
+  if(!entry)return;
+  const newProg=prompt('编辑最新进展记录：',entry.progress||'');
+  if(newProg===null)return; // cancelled
+  entry.progress=newProg;
+  entry.savedAt=new Date().toLocaleString('zh-CN');
+  save();renderProjects();
 }
 
 function delGroup(name){
