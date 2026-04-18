@@ -116,7 +116,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
       <div class="field"><label>客户名称</label><input id="proj-client" placeholder="如：Orange Ltd"></div>
     </div>
     <div class="field"><label>当前状态</label>
-      <select id="proj-status"><option value="报价">已报价</option><option value="方案">已提供方案</option><option value="确认">方案确认中</option><option value="报价跟进">已报价跟进中</option><option value="长期">长期跟进项目</option><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="丢单">丢单</option><option value="询价">询价中</option><option value="跟进">跟进中</option></select>
+      <select id="proj-status"><option value="报价">已报价</option><option value="方案">已提供方案</option><option value="确认">方案确认中</option><option value="报价跟进">已报价跟进中</option><option value="长期">长期跟进项目</option><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="丢单">丢单</option></select>
     </div>
     <div class="field"><label>本次进展记录（含日期、报价、沟通内容）</label><textarea id="proj-progress" placeholder="如：2026/4/18 报价 ¥9800，客户表示需内部确认"></textarea></div>
     <div class="grid2">
@@ -127,7 +127,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
   </div>
   <div class="filter-bar">
     <select class="ym-s" id="pj-fy" onchange="renderProjects()"></select>
-    <select class="ym-s" id="pj-status" onchange="renderProjects()"><option value="all">全部状态</option><option value="报价">已报价</option><option value="方案">已提供方案</option><option value="确认">方案确认中</option><option value="报价跟进">已报价跟进中</option><option value="长期">长期跟进项目</option><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="丢单">丢单</option><option value="询价">询价中</option><option value="跟进">跟进中</option></select>
+    <select class="ym-s" id="pj-status" onchange="renderProjects()"><option value="all">全部状态</option><option value="报价">已报价</option><option value="方案">已提供方案</option><option value="确认">方案确认中</option><option value="报价跟进">已报价跟进中</option><option value="长期">长期跟进项目</option><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="丢单">丢单</option></select>
   </div>
   <div id="proj-list"></div>
 </div>
@@ -250,7 +250,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
 
 <script>
 const NO_AMT=['昆明途恒科技有限公司'];
-const SC={报价:{label:'已报价'},报价跟进:{label:'已报价跟进中'},方案:{label:'已提供方案'},确认:{label:'方案确认中'},长期:{label:'长期跟进项目'},确认订单:{label:'已确认订单'},成交:{label:'已成交'},丢单:{label:'丢单'},询价:{label:'询价中'},跟进:{label:'跟进中'}};
+const SC={报价:{label:'已报价'},报价跟进:{label:'已报价跟进中'},方案:{label:'已提供方案'},确认:{label:'方案确认中'},长期:{label:'长期跟进项目'},确认订单:{label:'已确认订单'},成交:{label:'已成交'},丢单:{label:'丢单'}};
 const MONTHS_ORDER=['4','5','6','7','8','9','10','11','12','1','2','3'];
 const MONTH_NAMES={1:'1月',2:'2月',3:'3月',4:'4月',5:'5月',6:'6月',7:'7月',8:'8月',9:'9月',10:'10月',11:'11月',12:'12月'};
 function fyMonthIdx(m){return MONTHS_ORDER.indexOf(String(m));}
@@ -580,13 +580,10 @@ function renderProjSync(containerId){
   if(!keys.length){el.innerHTML='<div style="font-size:12px;color:var(--color-text-secondary);padding:8px">暂无项目数据</div>';return;}
   // group by status category
   const cats=[
-    {label:'✅ 已成交',statuses:['成交']},
-    {label:'⭕️ 已确认订单',statuses:['确认订单']},
-    {label:'⭕️ 已报价/已提供方案',statuses:['报价','方案']},
+    {label:'✅ 已确认订单（已成交 / 已确认订单）',statuses:['成交','确认订单']},
+    {label:'⭕️ 已报价/已提供方案（含跟进中）',statuses:['报价','报价跟进','方案']},
     {label:'⭕️ 方案确认中',statuses:['确认']},
-    {label:'⭕️ 长期跟进项目/已报价跟进中',statuses:['长期','报价跟进']},
-    {label:'⭕️ 询价/跟进中',statuses:['询价','跟进']},
-    {label:'❌ 丢单',statuses:['丢单']}
+    {label:'⭕️ / ❌ 其他（长期跟进 / 丢单）',statuses:['长期','丢单']}
   ];
   let html='';
   cats.forEach(cat=>{
@@ -629,14 +626,12 @@ function getCheckedProjects(containerId){
 function buildProjSection(projects,forMonthly){
   if(!projects.length)return'';
   const cats=[
-    {label:'已成交',statuses:['成交'],icon:'✅'},
-    {label:'已确认订单',statuses:['确认订单'],icon:'⭕️'},
-    {label:'已报价/已提供方案',statuses:['报价','方案'],icon:'⭕️'},
-    {label:'方案确认中',statuses:['确认'],icon:'⭕️'},
-    {label:'长期跟进项目/已报价跟进中',statuses:['长期','报价跟进'],icon:'⭕️'},
-    {label:'其他（丢单）',statuses:['丢单'],icon:'❌'},
+    {label:'3-1 已确认订单',statuses:['成交','确认订单']},
+    {label:'3-2 已报价/已提供方案',statuses:['报价','报价跟进','方案']},
+    {label:'3-3 方案确认中',statuses:['确认']},
+    {label:'3-4 其他',statuses:['长期','丢单']},
   ];
-  if(!forMonthly){cats[1].label='3-1 已确认订单';cats[2].label='3-2 已报价/已提供方案';cats[3].label='3-3 方案确认中';cats[4].label='3-4 长期跟进/报价跟进中';cats[5].label='3-5 其他（丢单）';}
+  if(forMonthly){cats[0].label='3-1 已确认订单';cats[1].label='3-2 已报价/已提供方案';cats[2].label='3-3 方案确认中';cats[3].label='3-4 其他';}
   let r='';
   cats.forEach(cat=>{
     const items=projects.filter(p=>cat.statuses.includes(p.status));
