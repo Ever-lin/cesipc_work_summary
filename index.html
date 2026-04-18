@@ -161,12 +161,9 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
           <div class="field"><label>长期投入客户数</label><input id="w-long" type="number"></div>
           <div class="field"><label>新增背调客户数</label><input id="w-new" type="number"></div>
         </div>
-        <div class="slabel">重点项目状态（从项目情况同步）</div>
-        <div class="hint" style="margin-bottom:8px">勾选要包含在周报中的项目，状态和进展自动同步。也可在下方手动补充。</div>
+        <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目状态（从项目情况同步）<button class="btn btn-sm" onclick="renderProjSync('w-proj-sync')">↻ 刷新项目</button></div>
+        <div class="hint" style="margin-bottom:8px">勾选要包含在周报中的项目，将按 3-1～3-4 自动分类生成，无需手动补充。</div>
         <div id="w-proj-sync" style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px;margin-bottom:10px;max-height:200px;overflow-y:auto"></div>
-        <div class="field"><label>3-1 已确认订单（手动补充）</label><textarea id="w-orders"></textarea></div>
-        <div class="field"><label>3-2 已报价/已提供方案（手动补充）</label><textarea id="w-quoted"></textarea></div>
-        <div class="field"><label>3-3 方案确认中（手动补充）</label><textarea id="w-pending"></textarea></div>
         <div class="slabel">其他</div>
         <div class="field"><label>重点订单情况</label><textarea id="w-keyorders"></textarea></div>
         <div class="field"><label>售后情况</label><textarea id="w-aftersales"></textarea></div>
@@ -189,12 +186,9 @@ textarea{resize:vertical;min-height:60px;line-height:1.5}
           <div class="field"><label>长期投入客户数</label><input id="wm-long" type="number"></div>
           <div class="field"><label>新增背调客户数</label><input id="wm-new" type="number"></div>
         </div>
-        <div class="slabel">重点项目状态（从项目情况同步）</div>
-        <div class="hint" style="margin-bottom:8px">勾选要包含在月报中的项目，状态自动同步。</div>
+        <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目状态（从项目情况同步）<button class="btn btn-sm" onclick="renderProjSync('wm-proj-sync')">↻ 刷新项目</button></div>
+        <div class="hint" style="margin-bottom:8px">勾选要包含在月报中的项目，将按 3-1～3-4 自动分类生成，无需手动补充。</div>
         <div id="wm-proj-sync" style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px;margin-bottom:10px;max-height:200px;overflow-y:auto"></div>
-        <div class="field"><label>已确认订单（手动补充）</label><textarea id="wm-orders"></textarea></div>
-        <div class="field"><label>已报价/已提供方案（手动补充）</label><textarea id="wm-quoted"></textarea></div>
-        <div class="field"><label>方案确认中（手动补充）</label><textarea id="wm-pending"></textarea></div>
         <div class="slabel">其他</div>
         <div class="field"><label>重点订单情况</label><textarea id="wm-keyorders"></textarea></div>
         <div class="field"><label>售后情况</label><textarea id="wm-aftersales"></textarea></div>
@@ -647,7 +641,6 @@ function saveWeekly(){
   const checkedProjs=getCheckedProjects('w-proj-sync').map(p=>p.name||p.client);
   const data={id:Date.now(),fy,month,week,checkedProjs,
     mid:document.getElementById('w-mid').value,long:document.getElementById('w-long').value,newClients:document.getElementById('w-new').value,
-    orders:document.getElementById('w-orders').value,quoted:document.getElementById('w-quoted').value,pending:document.getElementById('w-pending').value,
     keyorders:document.getElementById('w-keyorders').value,aftersales:document.getElementById('w-aftersales').value,plan:document.getElementById('w-plan').value,
     savedAt:new Date().toLocaleString('zh-CN')};
   const ex=state.weeklies.findIndex(w=>w.fy===fy&&w.month===month&&w.week===week);
@@ -672,7 +665,7 @@ function loadWeekly(id){
   const w=state.weeklies.find(x=>x.id===id);if(!w)return;
   document.getElementById('w-fy').value=w.fy||document.getElementById('w-fy').value;
   document.getElementById('w-month').value=w.month;document.getElementById('w-week').value=w.week;
-  ['mid','long','orders','quoted','pending','keyorders','aftersales','plan'].forEach(f=>{const el=document.getElementById('w-'+f);if(el)el.value=w[f]||'';});
+  ['mid','long','keyorders','aftersales','plan'].forEach(f=>{const el=document.getElementById('w-'+f);if(el)el.value=w[f]||'';});
   document.getElementById('w-new').value=w.newClients||'';
 }
 function delWeekly(id){if(!confirm('确认删除？'))return;state.weeklies=state.weeklies.filter(x=>x.id!==id);save();renderSavedWeeklies();}
@@ -682,7 +675,6 @@ function saveMonthly(){
   const checkedProjs=getCheckedProjects('wm-proj-sync').map(p=>p.name||p.client);
   const data={id:Date.now(),fy,month,checkedProjs,
     mid:document.getElementById('wm-mid').value,long:document.getElementById('wm-long').value,newClients:document.getElementById('wm-new').value,
-    orders:document.getElementById('wm-orders').value,quoted:document.getElementById('wm-quoted').value,pending:document.getElementById('wm-pending').value,
     keyorders:document.getElementById('wm-keyorders').value,aftersales:document.getElementById('wm-aftersales').value,plan:document.getElementById('wm-plan').value,
     savedAt:new Date().toLocaleString('zh-CN')};
   const ex=(state.monthlies||[]).findIndex(m=>m.fy===fy&&m.month===month);
@@ -763,9 +755,6 @@ function genWeekly(){
     const latestProjs=syncedProjs.map(n=>{const entries=(grouped[n]||[]).sort((a,b)=>b.id-a.id);return entries[0];}).filter(Boolean);
     const projSection=buildProjSection(latestProjs,false);
     if(projSection)r+=`5. 重点项目状态\n${projSection}\n`;
-    if(wr.orders)r+=`  3-1 已确认订单（补充）：${wr.orders}\n`;
-    if(wr.quoted)r+=`  3-2 已报价（补充）：${wr.quoted}\n`;
-    if(wr.pending)r+=`  3-3 确认中（补充）：${wr.pending}\n`;
     if(wr.keyorders)r+=`\n6. 重点订单情况\n  ${wr.keyorders}\n`;
     if(wr.aftersales)r+=`\n7. 售后情况\n  ${wr.aftersales}\n`;
     if(wr.plan)r+=`\n8. 下周计划\n  ${wr.plan}\n`;
@@ -805,9 +794,6 @@ function genMonthly(){
     const latestProjs=syncedProjs.map(n=>{const entries=(grouped[n]||[]).sort((a,b)=>b.id-a.id);return entries[0];}).filter(Boolean);
     const projSection=buildProjSection(latestProjs,true);
     if(projSection)r+=`5. 重点项目状态\n${projSection}\n`;
-    if(mm.orders)r+=`  已成交（补充）：${mm.orders}\n`;
-    if(mm.quoted)r+=`  已报价（补充）：${mm.quoted}\n`;
-    if(mm.pending)r+=`  确认中（补充）：${mm.pending}\n`;
     if(mm.keyorders)r+=`\n6. 重点订单情况\n  ${mm.keyorders}\n`;
     if(mm.aftersales)r+=`\n7. 售后情况\n  ${mm.aftersales}\n`;
     if(mm.plan)r+=`\n8. 下月计划\n  ${mm.plan}\n`;
