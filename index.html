@@ -12,7 +12,7 @@ body{font-family:var(--font-sans);font-size:14px;color:var(--color-text-primary)
 .badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500}
 .badge-blue{background:#E6F1FB;color:#0C447C}.badge-green{background:#EAF3DE;color:#27500A}.badge-amber{background:#FAEEDA;color:#633806}.badge-red{background:#FCEBEB;color:#791F1F}.badge-gray{background:#F1EFE8;color:#444441}.badge-teal{background:#E1F5EE;color:#085041}
 label{font-size:12px;color:var(--color-text-secondary);display:block;margin-bottom:4px}
-input,select,textarea{width:100%;padding:7px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;font-family:var(--font-sans);background:var(--color-background-primary);color:var(--color-text-primary);outline:none}
+input,select,textarea{width:100%;padding:7px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;font-family:var(--font-sans);background:#F5F4F0;color:var(--color-text-primary);outline:none}
 input:focus,select:focus,textarea:focus{border-color:#378ADD;box-shadow:0 0 0 2px #E6F1FB}
 textarea{resize:vertical;min-height:60px;line-height:1.5}
 .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
@@ -535,7 +535,6 @@ function renderProjects(){
         <div>
           <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:2px">${latest.client}</div>
           <div style="font-size:13px;font-weight:500;margin-bottom:2px">${icon} ${latest.name}</div>
-          <div style="font-size:11px;color:var(--color-text-secondary)">${latest.recordDate}</div>
         </div>
         <div class="inline-flex" style="flex-shrink:0"><span class="badge ${pc}">${latest.priority}</span><span class="badge badge-gray">${sc.label}</span></div>
       </div>
@@ -579,10 +578,27 @@ function fillProjTextareas(prefix){
   ];
   const grouped={};
   state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
+  // For weekly prefix, filter by selected week's date range
+  let weekFilter=null;
+  if(prefix==='w'){
+    const selWeek=document.getElementById('w-week')?.value;
+    const selMonth=document.getElementById('w-month')?.value;
+    if(selWeek&&selMonth){weekFilter={week:selWeek,month:selMonth};}
+  }
   CATS.forEach(cat=>{
     const el=document.getElementById(prefix+'-'+cat.id);if(!el)return;
-    const items=Object.keys(grouped).map(k=>grouped[k].sort((a,b)=>b.id-a.id)[0]).filter(p=>cat.statuses.includes(p.status));
-    el.value=items.map(p=>`${projIcon(p.status)} ${p.client}\n${p.name}\n${p.progress||''}`).join('\n\n');
+    let items=Object.keys(grouped).map(k=>grouped[k].sort((a,b)=>b.id-a.id)[0]).filter(p=>cat.statuses.includes(p.status));
+    // For weekly, also filter to projects recorded in same week+month
+    if(weekFilter){
+      const allInWeek=state.projects.filter(p=>p.week===weekFilter.week&&p.month===weekFilter.month);
+      const weekNames=new Set(allInWeek.map(p=>p.name||p.client));
+      // Include all active projects (not just those recorded this week) — but prefer week-matching projects
+      // Show all projects, but mark week-specific ones first
+      const weekItems=items.filter(p=>weekNames.has(p.name||p.client));
+      const otherItems=items.filter(p=>!weekNames.has(p.name||p.client));
+      items=[...weekItems,...otherItems];
+    }
+    el.value=items.map(p=>`客户：${p.client}\n${projIcon(p.status)} ${p.name}\n${p.progress||''}`).join('\n\n');
   });
 }
 // 兼容旧代码
@@ -600,7 +616,7 @@ function buildProjSection(projects,forMonthly){
   cats.forEach(cat=>{
     const items=projects.filter(p=>cat.statuses.includes(p.status));
     r+=`${cat.label}：\n`;
-    if(items.length){items.forEach(p=>{r+=`  ${projIcon(p.status)} ${p.client}\n  ${p.name}\n  ${p.progress||''}\n`;});}
+    if(items.length){items.forEach(p=>{r+=`  客户：${p.client}\n  ${projIcon(p.status)} ${p.name}\n  ${p.progress||''}\n`;});}
     else{r+=`  （暂无）\n`;}
   });
   return r;
@@ -629,14 +645,14 @@ function renderSavedWeeklies(){
     const projTxt=`3-1 已确认订单：\n${p1||'（暂无）'}\n\n3-2 已报价/已提供方案：\n${p2||'（暂无）'}\n\n3-3 方案确认中：\n${p3||'（暂无）'}\n\n3-4 其他：\n${p4||'（暂无）'}`;
     return`<div class="card" style="margin-top:8px">
       <div class="card-header" style="margin-bottom:8px"><span style="font-size:13px;font-weight:500">${w.fy} ${w.month}月 ${w.week}</span>
-        <div class="inline-flex"><button class="btn btn-sm" onclick="loadWeekly(${w.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delWeekly(${w.id})">删除</button></div>
+        <div class="inline-flex"><button class="btn btn-primary btn-sm" onclick="editWeekly(${w.id})">编辑</button><button class="btn btn-sm" onclick="loadWeekly(${w.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delWeekly(${w.id})">删除</button></div>
       </div>
       <div class="summary-row"><span style="font-size:12px;color:var(--color-text-secondary)">客户投入</span><span style="font-size:12px">中等${w.mid||0}个 · 长期${w.long||0}个 · 背调${w.newClients||0}个</span></div>
       <div style="margin:8px 0 4px;font-size:12px;font-weight:500;color:var(--color-text-secondary)">重点项目状态</div>
       <div style="font-size:12px;background:var(--color-background-secondary);padding:8px 10px;border-radius:var(--border-radius-md);white-space:pre-wrap;line-height:1.7;font-family:var(--font-mono)">${projTxt}</div>
-      <div class="summary-row"><span style="font-size:12px;color:var(--color-text-secondary)">重点订单</span><span style="font-size:12px">${w.keyorders||'—'}</span></div>
-      <div class="summary-row"><span style="font-size:12px;color:var(--color-text-secondary)">售后情况</span><span style="font-size:12px">${w.aftersales||'—'}</span></div>
-      <div class="summary-row"><span style="font-size:12px;color:var(--color-text-secondary)">下周计划</span><span style="font-size:12px">${w.plan||'—'}</span></div>
+      <div class="summary-row"><span style="font-size:12px;color:var(--color-text-secondary);font-weight:600">重点订单</span><span style="font-size:12px">${w.keyorders||'—'}</span></div>
+      <div class="summary-row"><span style="font-size:12px;color:var(--color-text-secondary);font-weight:600">售后情况</span><span style="font-size:12px">${w.aftersales||'—'}</span></div>
+      <div class="summary-row"><span style="font-size:12px;color:var(--color-text-secondary);font-weight:600">下周计划</span><span style="font-size:12px">${w.plan||'—'}</span></div>
       <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px">${w.savedAt}</div>
     </div>`;
   }).join('');
@@ -650,6 +666,21 @@ function loadWeekly(id){
   document.getElementById('w-new').value=w.newClients||'';
 }
 function delWeekly(id){if(!confirm('确认删除？'))return;state.weeklies=state.weeklies.filter(x=>x.id!==id);save();renderSavedWeeklies();}
+function editWeekly(id){
+  loadWeekly(id);
+  // Switch to the write-weekly tab
+  switchSub('sw-write',document.querySelector('.sub-tab'));
+  document.querySelectorAll('#panel-export > .sub-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('sw-write').classList.add('active');
+  document.querySelectorAll('#panel-export .sub-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelector('[onclick="switchSub(\'sw-write\',this)"]').classList.add('active');
+  // Switch to write-weekly sub tab
+  ['write-weekly','write-monthly'].forEach(i=>document.getElementById(i).classList.remove('active'));
+  document.getElementById('write-weekly').classList.add('active');
+  document.querySelectorAll('#sw-write .sub-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelector('[onclick="switchWrite(\'write-weekly\',this)"]').classList.add('active');
+  window.scrollTo(0,0);
+}
 
 function saveMonthly(){
   const fy=document.getElementById('wm-fy').value,month=document.getElementById('wm-month').value;
@@ -673,14 +704,14 @@ function renderSavedMonthlies(){
     const projTxt=`3-1 已确认订单：\n${p1||'（暂无）'}\n\n3-2 已报价/已提供方案：\n${p2||'（暂无）'}\n\n3-3 方案确认中：\n${p3||'（暂无）'}\n\n3-4 其他：\n${p4||'（暂无）'}`;
     return`<div class="card" style="margin-top:8px">
       <div class="card-header" style="margin-bottom:8px"><span style="font-size:13px;font-weight:500">${m.fy} ${m.month}月月报</span>
-        <div class="inline-flex"><button class="btn btn-sm" onclick="loadMonthly(${m.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delMonthly(${m.id})">删除</button></div>
+        <div class="inline-flex"><button class="btn btn-primary btn-sm" onclick="editMonthly(${m.id})">编辑</button><button class="btn btn-sm" onclick="loadMonthly(${m.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delMonthly(${m.id})">删除</button></div>
       </div>
       <div class="summary-row"><span style="font-size:12px;color:var(--color-text-secondary)">客户投入</span><span style="font-size:12px">中等${m.mid||0}个 · 长期${m.long||0}个 · 背调${m.newClients||0}个</span></div>
       <div style="margin:8px 0 4px;font-size:12px;font-weight:500;color:var(--color-text-secondary)">重点项目状态</div>
       <div style="font-size:12px;background:var(--color-background-secondary);padding:8px 10px;border-radius:var(--border-radius-md);white-space:pre-wrap;line-height:1.7;font-family:var(--font-mono)">${projTxt}</div>
-      <div class="summary-row"><span style="font-size:12px;color:var(--color-text-secondary)">重点订单</span><span style="font-size:12px">${m.keyorders||'—'}</span></div>
-      <div class="summary-row"><span style="font-size:12px;color:var(--color-text-secondary)">售后情况</span><span style="font-size:12px">${m.aftersales||'—'}</span></div>
-      <div class="summary-row"><span style="font-size:12px;color:var(--color-text-secondary)">下月计划</span><span style="font-size:12px">${m.plan||'—'}</span></div>
+      <div class="summary-row"><span style="font-size:12px;color:var(--color-text-secondary);font-weight:600">重点订单</span><span style="font-size:12px">${m.keyorders||'—'}</span></div>
+      <div class="summary-row"><span style="font-size:12px;color:var(--color-text-secondary);font-weight:600">售后情况</span><span style="font-size:12px">${m.aftersales||'—'}</span></div>
+      <div class="summary-row"><span style="font-size:12px;color:var(--color-text-secondary);font-weight:600">下月计划</span><span style="font-size:12px">${m.plan||'—'}</span></div>
       <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px">${m.savedAt}</div>
     </div>`;
   }).join('');
@@ -694,6 +725,18 @@ function loadMonthly(id){
   document.getElementById('wm-new').value=m.newClients||'';
 }
 function delMonthly(id){if(!confirm('确认删除？'))return;state.monthlies=state.monthlies.filter(x=>x.id!==id);save();renderSavedMonthlies();}
+function editMonthly(id){
+  loadMonthly(id);
+  document.querySelectorAll('#panel-export > .sub-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('sw-write').classList.add('active');
+  document.querySelectorAll('#panel-export .sub-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelector('[onclick="switchSub(\'sw-write\',this)"]').classList.add('active');
+  ['write-weekly','write-monthly'].forEach(i=>document.getElementById(i).classList.remove('active'));
+  document.getElementById('write-monthly').classList.add('active');
+  document.querySelectorAll('#sw-write .sub-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelector('[onclick="switchWrite(\'write-monthly\',this)"]').classList.add('active');
+  window.scrollTo(0,0);
+}
 
 function genDaily(){
   const date=document.getElementById('d-date').value;
@@ -701,7 +744,7 @@ function genDaily(){
   const projs=state.projects.filter(p=>p.recordDate===date).sort((a,b)=>a.name>b.name?1:-1);
   let r=`【日报 ${date}】\n${'─'.repeat(28)}\n\n`;
   if(!projs.length){r+='今日无项目进展记录。';}
-  else{projs.forEach(p=>{const sc=SC[p.status]||{label:p.status};r+=`${projIcon(p.status)} ${p.name}\n客户：${p.client}  状态：${sc.label}\n${p.progress||'无进展记录'}\n\n`;});}
+  else{projs.forEach(p=>{const sc=SC[p.status]||{label:p.status};r+=`客户：${p.client}  状态：${sc.label}\n${projIcon(p.status)} ${p.name}\n${p.progress||'无进展记录'}\n\n`;});}
   window._dailyTxt=r;document.getElementById('daily-out').innerHTML=`<div class="export-area">${r}</div>`;
 }
 
