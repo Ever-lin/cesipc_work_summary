@@ -139,6 +139,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <input id="pj-search" placeholder="🔍 搜索项目名/客户名" oninput="renderProjects()" style="width:100%;padding:5px 28px 5px 10px;font-size:13px;background:#F5F4F0;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md)">
       <span id="pj-search-clear" onclick="document.getElementById('pj-search').value='';renderProjects()" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--color-text-secondary);font-size:14px;line-height:1">✕</span>
     </div>
+    <button class="btn btn-sm" onclick="exportProjectsExcel()" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97;white-space:nowrap">📥 导出Excel</button>
   </div>
   <div id="proj-status-counts" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
   <div id="proj-list"></div>
@@ -236,8 +237,19 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <button class="btn" onclick="copyTxt('daily-out')">复制</button>
         </div>
       </div>
+      <div class="slabel">客户投入情况（可选）</div>
+      <div class="grid3">
+        <div class="field"><label>中等投入客户数</label><input id="d-mid" type="number" placeholder="0"></div>
+        <div class="field"><label>长期投入客户数</label><input id="d-long" type="number" placeholder="0"></div>
+        <div class="field"><label>新增背调客户数</label><input id="d-new" type="number" placeholder="0"></div>
+      </div>
+      <div class="grid2" style="margin-top:-4px">
+        <div class="field"><label style="color:var(--color-text-secondary)">　↳ 其中中等投入</label><input id="d-new-mid" type="number" placeholder="0"></div>
+        <div class="field"><label style="color:var(--color-text-secondary)">　↳ 其中长期投入</label><input id="d-new-long" type="number" placeholder="0"></div>
+      </div>
     </div>
     <div id="daily-out"></div>
+    <div id="saved-dailies" style="margin-top:4px"></div>
   </div>
 
   <div id="sw-weekly" class="sub-panel">
@@ -341,14 +353,14 @@ const SEED=[
 {id:5201,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'新成交',client:'昆明途恒科技有限公司',amount:0,note:'',noAmount:true},
 ];
 
-let state={perf:[],projects:[],weeklies:[],monthlies:[]};
+let state={perf:[],projects:[],weeklies:[],monthlies:[],dailies:[]};
 function save(){try{localStorage.setItem('ws6',JSON.stringify(state))}catch(e){}}
 function load(){
   try{
     const d=localStorage.getItem('ws6');
-    if(d){state=JSON.parse(d);if(!state.monthlies)state.monthlies=[];SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});save();}
-    else{state.perf=SEED.slice();state.monthlies=[];save();}
-  }catch(e){state.perf=SEED.slice();state.monthlies=[];save();}
+    if(d){state=JSON.parse(d);if(!state.monthlies)state.monthlies=[];if(!state.dailies)state.dailies=[];SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});save();}
+    else{state.perf=SEED.slice();state.monthlies=[];state.dailies=[];save();}
+  }catch(e){state.perf=SEED.slice();state.monthlies=[];state.dailies=[];save();}
 }
 load();
 
@@ -360,7 +372,7 @@ function init(){
   document.getElementById('view-month').value=String(cm);
   document.getElementById('perf-month').value=String(cm);
   document.getElementById('pj-month').value=String(cm);
-  renderPerf();renderPivot();refreshProjDatalist();renderSavedWeeklies();renderSavedMonthlies();fillProjTextareas('w');fillProjTextareas('wm');
+  renderPerf();renderPivot();refreshProjDatalist();renderSavedWeeklies();renderSavedMonthlies();renderSavedDailies();fillProjTextareas('w');fillProjTextareas('wm');
 }
 
 function switchTab(name){
@@ -794,17 +806,21 @@ function renderSavedWeeklies(){
     const p1=w.p1||'',p2=w.p2||'',p3=w.p3||'',p4=w.p4||'',p5=w.p5||'';
     const projTxt=`➡️ 已确认订单 / 已成交：\n${p1||'（暂无）'}\n\n➡️ 已报价跟进中 / 已提供方案：\n${p2||'（暂无）'}\n\n➡️ 方案确认中：\n${p3||'（暂无）'}\n\n➡️ 长期跟进项目 / 暂无进展：\n${p4||'（暂无）'}\n\n➡️ 丢单：\n${p5||'（暂无）'}`;
     const infoRow=(label,val)=>val?`<div style="margin:6px 0"><span style="font-size:12px;color:var(--color-text-secondary);font-weight:500">${label}：</span><span style="font-size:12px">${val}</span></div>`:'';
+    const hid='wh_'+w.id;
     return`<div class="card" style="margin-top:8px">
-      <div class="card-header" style="margin-bottom:8px"><span style="font-size:13px;font-weight:500">${w.fy} ${w.month}月 ${w.week}</span>
-        <div class="inline-flex"><button class="btn btn-primary btn-sm" onclick="editWeekly(${w.id})">编辑</button><button class="btn btn-sm" onclick="loadWeekly(${w.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delWeekly(${w.id})">删除</button></div>
+      <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var el=document.getElementById('${hid}');el.style.display=el.style.display==='none'?'block':'none';var ic=document.getElementById('${hid}_ic');ic.textContent=el.style.display==='none'?'▶':'▼'})()">
+        <span style="font-size:13px;font-weight:500"><span id="${hid}_ic">▶</span> ${w.fy} ${w.month}月 ${w.week} 周报</span>
+        <div class="inline-flex" onclick="event.stopPropagation()"><button class="btn btn-primary btn-sm" onclick="editWeekly(${w.id})">编辑</button><button class="btn btn-sm" onclick="loadWeekly(${w.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delWeekly(${w.id})">删除</button></div>
       </div>
-      <div style="margin:4px 0 8px;font-size:12px"><span style="color:var(--color-text-secondary);font-weight:500">客户投入：</span>中等${w.mid||0}个 · 长期${w.long||0}个 · 背调${w.newClients||0}个${(w.newMid||w.newLong)?`（其中中等${w.newMid||0}个，长期${w.newLong||0}个）`:''}</div>
-      <div style="margin:6px 0 4px;font-size:12px;font-weight:500;color:var(--color-text-secondary)">重点项目状态</div>
-      <div style="font-size:12px;background:var(--color-background-secondary);padding:8px 10px;border-radius:var(--border-radius-md);white-space:pre-wrap;line-height:1.7;font-family:var(--font-mono);margin-bottom:6px">${projTxt}</div>
-      ${infoRow('重点订单',w.keyorders)}
-      ${infoRow('售后情况',w.aftersales)}
-      ${infoRow('下周计划',w.plan)}
-      <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px">${w.savedAt}</div>
+      <div id="${hid}" style="display:none;margin-top:8px">
+        <div style="margin:4px 0 8px;font-size:12px"><span style="color:var(--color-text-secondary);font-weight:500">客户投入：</span>中等${w.mid||0}个 · 长期${w.long||0}个 · 背调${w.newClients||0}个${(w.newMid||w.newLong)?`（其中中等${w.newMid||0}个，长期${w.newLong||0}个）`:''}</div>
+        <div style="margin:6px 0 4px;font-size:12px;font-weight:500;color:var(--color-text-secondary)">重点项目状态</div>
+        <div style="font-size:12px;background:var(--color-background-secondary);padding:8px 10px;border-radius:var(--border-radius-md);white-space:pre-wrap;line-height:1.7;font-family:var(--font-mono);margin-bottom:6px">${projTxt}</div>
+        ${infoRow('重点订单',w.keyorders)}
+        ${infoRow('售后情况',w.aftersales)}
+        ${infoRow('下周计划',w.plan)}
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px">${w.savedAt}</div>
+      </div>
     </div>`;
   }).join('');
 }
@@ -858,17 +874,21 @@ function renderSavedMonthlies(){
     const p1=m.p1||'',p2=m.p2||'',p3=m.p3||'',p4=m.p4||'',p5=m.p5||'';
     const projTxt=`➡️ 已确认订单 / 已成交：\n${p1||'（暂无）'}\n\n➡️ 已报价跟进中 / 已提供方案：\n${p2||'（暂无）'}\n\n➡️ 方案确认中：\n${p3||'（暂无）'}\n\n➡️ 长期跟进项目 / 暂无进展：\n${p4||'（暂无）'}\n\n➡️ 丢单：\n${p5||'（暂无）'}`;
     const infoRow=(label,val)=>val?`<div style="margin:6px 0"><span style="font-size:12px;color:var(--color-text-secondary);font-weight:500">${label}：</span><span style="font-size:12px">${val}</span></div>`:'';
+    const hid='mh_'+m.id;
     return`<div class="card" style="margin-top:8px">
-      <div class="card-header" style="margin-bottom:8px"><span style="font-size:13px;font-weight:500">${m.fy} ${m.month}月月报</span>
-        <div class="inline-flex"><button class="btn btn-primary btn-sm" onclick="editMonthly(${m.id})">编辑</button><button class="btn btn-sm" onclick="loadMonthly(${m.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delMonthly(${m.id})">删除</button></div>
+      <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var el=document.getElementById('${hid}');el.style.display=el.style.display==='none'?'block':'none';var ic=document.getElementById('${hid}_ic');ic.textContent=el.style.display==='none'?'▶':'▼'})()">
+        <span style="font-size:13px;font-weight:500"><span id="${hid}_ic">▶</span> ${m.fy} ${m.month}月 月报</span>
+        <div class="inline-flex" onclick="event.stopPropagation()"><button class="btn btn-primary btn-sm" onclick="editMonthly(${m.id})">编辑</button><button class="btn btn-sm" onclick="loadMonthly(${m.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delMonthly(${m.id})">删除</button></div>
       </div>
-      <div style="margin:4px 0 8px;font-size:12px"><span style="color:var(--color-text-secondary);font-weight:500">客户投入：</span>中等${m.mid||0}个 · 长期${m.long||0}个 · 背调${m.newClients||0}个${(m.newMid||m.newLong)?`（其中中等${m.newMid||0}个，长期${m.newLong||0}个）`:''}</div>
-      <div style="margin:6px 0 4px;font-size:12px;font-weight:500;color:var(--color-text-secondary)">重点项目状态</div>
-      <div style="font-size:12px;background:var(--color-background-secondary);padding:8px 10px;border-radius:var(--border-radius-md);white-space:pre-wrap;line-height:1.7;font-family:var(--font-mono);margin-bottom:6px">${projTxt}</div>
-      ${infoRow('重点订单',m.keyorders)}
-      ${infoRow('售后情况',m.aftersales)}
-      ${infoRow('下月计划',m.plan)}
-      <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px">${m.savedAt}</div>
+      <div id="${hid}" style="display:none;margin-top:8px">
+        <div style="margin:4px 0 8px;font-size:12px"><span style="color:var(--color-text-secondary);font-weight:500">客户投入：</span>中等${m.mid||0}个 · 长期${m.long||0}个 · 背调${m.newClients||0}个${(m.newMid||m.newLong)?`（其中中等${m.newMid||0}个，长期${m.newLong||0}个）`:''}</div>
+        <div style="margin:6px 0 4px;font-size:12px;font-weight:500;color:var(--color-text-secondary)">重点项目状态</div>
+        <div style="font-size:12px;background:var(--color-background-secondary);padding:8px 10px;border-radius:var(--border-radius-md);white-space:pre-wrap;line-height:1.7;font-family:var(--font-mono);margin-bottom:6px">${projTxt}</div>
+        ${infoRow('重点订单',m.keyorders)}
+        ${infoRow('售后情况',m.aftersales)}
+        ${infoRow('下月计划',m.plan)}
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px">${m.savedAt}</div>
+      </div>
     </div>`;
   }).join('');
 }
@@ -901,13 +921,55 @@ function genDaily(){
   const date=document.getElementById('d-date').value;
   if(!date){alert('请选择日期');return;}
   const projs=state.projects.filter(p=>p.recordDate===date).sort((a,b)=>a.name>b.name?1:-1);
+  const mid=parseInt(document.getElementById('d-mid').value)||0;
+  const long_=parseInt(document.getElementById('d-long').value)||0;
+  const newC=parseInt(document.getElementById('d-new').value)||0;
+  const newMid=parseInt(document.getElementById('d-new-mid').value)||0;
+  const newLong=parseInt(document.getElementById('d-new-long').value)||0;
   let r=`【日报 ${date}】\n${'─'.repeat(28)}\n\n`;
+  if(mid||long_||newC){
+    let newBreakdown='';
+    if(newC&&(newMid||newLong))newBreakdown=`（其中中等投入${newMid}个，长期投入${newLong}个）`;
+    r+=`➡️ 客户投入情况\n  中等投入${mid}个，长期投入${long_}个，新增背调${newC}个${newBreakdown}\n\n`;
+  }
   if(!projs.length){r+='今日无项目进展记录。';}
   else{projs.forEach(p=>{const sc=SC[p.status]||{label:p.status};r+=`客户：${p.client}  状态：${sc.label}\n${projIcon(p.status)} ${p.name}\n${p.progress||'无进展记录'}\n\n`;});}
+  // Save daily report
+  const dailyData={id:Date.now(),date,mid,long:long_,newClients:newC,newMid,newLong,projCount:projs.length,savedAt:new Date().toLocaleString('zh-CN')};
+  if(!state.dailies)state.dailies=[];
+  const ex=state.dailies.findIndex(d=>d.date===date);
+  if(ex>=0)state.dailies[ex]={...state.dailies[ex],...dailyData,id:state.dailies[ex].id};else state.dailies.push(dailyData);
+  save();renderSavedDailies();
   window._dailyTxt=r;document.getElementById('daily-out').innerHTML=`<div class="export-area">${r}</div>`;
 }
 
-function groupByClient(arr){
+function renderSavedDailies(){
+  if(!state.dailies)state.dailies=[];
+  const list=state.dailies.slice().sort((a,b)=>b.date>a.date?1:-1);
+  let el=document.getElementById('saved-dailies');
+  if(!el)return;
+  if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--color-text-secondary);font-size:12px">暂无已保存的日报</div>';return;}
+  el.innerHTML=list.map(d=>{
+    const hid='dh_'+d.date.replace(/-/g,'_');
+    const hasInvest=d.mid||d.long||d.newClients;
+    return`<div class="card" style="margin-top:8px">
+      <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var el=document.getElementById('${hid}');el.style.display=el.style.display==='none'?'block':'none';var ic=document.getElementById('${hid}_ic');ic.textContent=el.style.display==='none'?'▶':'▼'})()">
+        <span style="font-size:13px;font-weight:500"><span id="${hid}_ic">▶</span> 日报 ${d.date}</span>
+        <div class="inline-flex">
+          ${hasInvest?`<span class="badge badge-teal" style="font-size:10px">含客户投入</span>`:''}
+          <span class="badge badge-gray" style="font-size:10px">项目${d.projCount||0}条</span>
+          <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delDaily('${d.date}')">删除</button>
+        </div>
+      </div>
+      <div id="${hid}" style="display:none;margin-top:8px">
+        ${hasInvest?`<div style="font-size:12px;margin-bottom:6px"><span style="color:var(--color-text-secondary);font-weight:500">客户投入：</span>中等${d.mid||0}个 · 长期${d.long||0}个 · 背调${d.newClients||0}个${(d.newMid||d.newLong)?`（其中中等${d.newMid||0}个，长期${d.newLong||0}个）`:''}</div>`:''}
+        <div style="font-size:11px;color:var(--color-text-secondary)">${d.savedAt}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function delDaily(date){if(!confirm('确认删除该日报记录？'))return;state.dailies=(state.dailies||[]).filter(d=>d.date!==date);save();renderSavedDailies();}
+
   const m={};arr.forEach(p=>{if(!m[p.client])m[p.client]={client:p.client,amount:0,noAmount:p.noAmount};m[p.client].amount+=p.amount;if(p.noAmount)m[p.client].noAmount=true;});
   return Object.values(m);
 }
@@ -1005,7 +1067,47 @@ function copyTxt(id){
   navigator.clipboard.writeText(txt).then(()=>{const b=event.target;const o=b.textContent;b.textContent='已复制！';setTimeout(()=>b.textContent=o,1500);});
 }
 
-function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
+function exportProjectsExcel(){
+  // Build visible projects based on current filters
+  const pjFY=document.getElementById('pj-fy').value,pjS=document.getElementById('pj-status').value;
+  const pjMonth=document.getElementById('pj-month').value,pjWeek=document.getElementById('pj-week').value;
+  const pjQ=(document.getElementById('pj-search').value||'').trim().toLowerCase();
+  const grouped={};
+  state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
+  const rows=[];
+  Object.keys(grouped).forEach(k=>{
+    const entries=grouped[k].sort((a,b)=>b.id-a.id);
+    const latest=entries[0];
+    if(pjMonth!=='all'){const rd=latest.recordDate||'';const m=rd?String(parseInt(rd.split('-')[1],10)):'';if(m!==pjMonth)return;}
+    if(pjWeek!=='all'){if(weekOfDay(latest.recordDate)!==pjWeek)return;}
+    if(pjS!=='all'&&latest.status!==pjS)return;
+    if(pjQ){const hay=(k+' '+(latest.client||'')+' '+(latest.progress||'')).toLowerCase();if(!hay.includes(pjQ))return;}
+    const sc=SC[latest.status]||{label:latest.status};
+    rows.push({
+      '项目名称':latest.name||k,
+      '客户名称':latest.client||'',
+      '当前状态':sc.label,
+      '优先级':latest.priority||'',
+      '最新进展':latest.progress||'',
+      '记录日期':latest.recordDate||'',
+      '历史记录数':entries.length,
+      '保存时间':latest.savedAt||''
+    });
+  });
+  if(!rows.length){alert('当前筛选条件下无项目数据');return;}
+  // Generate CSV with BOM for Excel Chinese support
+  const headers=Object.keys(rows[0]);
+  const esc=v=>'"'+String(v||'').replace(/"/g,'""')+'"';
+  const csv='\uFEFF'+headers.join(',')+'\n'+rows.map(r=>headers.map(h=>esc(r[h])).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  const now=new Date();const ds=now.toISOString().slice(0,10);
+  a.download=`项目情况_${pjFY}_${ds}.csv`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+
 function autoResizeAll(){document.querySelectorAll('textarea.auto-resize').forEach(autoResize);}
 document.addEventListener('input',e=>{if(e.target.classList.contains('auto-resize'))autoResize(e.target);});
 
