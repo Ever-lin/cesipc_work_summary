@@ -1,59 +1,91 @@
-
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>工作总结管理工具 v6</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font-sans);font-size:14px;color:var(--color-text-primary)}
-.tabs{display:flex;gap:4px;padding:10px 14px 0;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);flex-wrap:wrap}
-.tab{padding:7px 14px;border-radius:6px 6px 0 0;cursor:pointer;font-size:13px;border:0.5px solid transparent;color:var(--color-text-secondary);background:transparent;white-space:nowrap}
-.tab.active{background:var(--color-background-primary);border-color:var(--color-border-tertiary);border-bottom-color:var(--color-background-primary);color:var(--color-text-primary);font-weight:500}
+:root{
+  --bg:#ffffff;--bg2:#f5f4f0;--bg3:#efefeb;
+  --text:#1a1a18;--text2:#666660;--text3:#999993;
+  --border:#d8d6ce;--border2:#e8e6de;
+  --blue:#185FA5;--blue-bg:#E6F1FB;--blue-text:#0C447C;
+  --green:#1D9E75;--green-bg:#EAF3DE;--green-text:#27500A;
+  --amber:#EF9F27;--amber-bg:#FAEEDA;--amber-text:#633806;
+  --red-bg:#FCEBEB;--red-text:#791F1F;--red-border:#F7C1C1;
+  --gray-bg:#F1EFE8;--gray-text:#444441;
+  --teal-bg:#E1F5EE;--teal-text:#085041;
+  --radius:8px;--radius-sm:6px;--radius-xs:4px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;font-size:14px;color:var(--text);background:var(--bg2);min-height:100vh}
+.tabs{display:flex;gap:4px;padding:10px 14px 0;border-bottom:1px solid var(--border2);background:var(--bg2);flex-wrap:wrap}
+.tab{padding:7px 14px;border-radius:6px 6px 0 0;cursor:pointer;font-size:13px;border:1px solid transparent;color:var(--text2);background:transparent;white-space:nowrap}
+.tab.active{background:var(--bg);border-color:var(--border2);border-bottom-color:var(--bg);color:var(--text);font-weight:500}
 .panel{display:none;padding:14px}.panel.active{display:block}
-.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;margin-bottom:12px}
+.card{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:14px;margin-bottom:12px}
 .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;flex-wrap:wrap}
 .card-title{font-weight:500;font-size:14px}
 .badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500}
-.badge-blue{background:#E6F1FB;color:#0C447C}.badge-green{background:#EAF3DE;color:#27500A}.badge-amber{background:#FAEEDA;color:#633806}.badge-red{background:#FCEBEB;color:#791F1F}.badge-gray{background:#F1EFE8;color:#444441}.badge-teal{background:#E1F5EE;color:#085041}
-label{font-size:12px;color:var(--color-text-secondary);display:block;margin-bottom:4px}
-input,select,textarea{width:100%;padding:7px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;font-family:var(--font-sans);background:#F5F4F0;color:var(--color-text-primary);outline:none}
-input:focus,select:focus,textarea:focus{border-color:#378ADD;box-shadow:0 0 0 2px #E6F1FB}
+.badge-blue{background:var(--blue-bg);color:var(--blue-text)}.badge-green{background:var(--green-bg);color:var(--green-text)}.badge-amber{background:var(--amber-bg);color:var(--amber-text)}.badge-red{background:var(--red-bg);color:var(--red-text)}.badge-gray{background:var(--gray-bg);color:var(--gray-text)}.badge-teal{background:var(--teal-bg);color:var(--teal-text)}
+label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
+input,select,textarea{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;font-family:inherit;background:var(--bg2);color:var(--text);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg)}
 textarea{resize:vertical;min-height:60px;line-height:1.5}
 textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 .grid3{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:10px}
 .field{margin-bottom:10px}
-.btn{padding:7px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);font-size:13px;cursor:pointer;font-family:var(--font-sans)}
-.btn:hover{background:var(--color-background-secondary)}
-.btn-primary{background:#185FA5;color:#fff;border-color:#185FA5}.btn-primary:hover{background:#0C447C}
-.btn-danger{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
+.btn{padding:7px 14px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;cursor:pointer;font-family:inherit;transition:background .15s}
+.btn:hover{background:var(--bg2)}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}.btn-primary:hover{background:var(--blue-text)}
+.btn-danger{background:var(--red-bg);color:var(--red-text);border-color:var(--red-border)}
 .btn-sm{padding:4px 10px;font-size:12px}.btn-xs{padding:2px 8px;font-size:11px}
-.summary-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary);gap:8px;flex-wrap:wrap}
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border2);gap:8px;flex-wrap:wrap}
 .summary-row:last-child{border-bottom:none}
 .metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
-.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px}
-.metric-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
+.metric{background:var(--bg2);border-radius:var(--radius-sm);padding:12px}
+.metric-label{font-size:12px;color:var(--text2);margin-bottom:4px}
 .metric-value{font-size:19px;font-weight:500}
-.project-item{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px;background:var(--color-background-primary);margin-bottom:8px}
+.project-item{border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;background:var(--bg);margin-bottom:8px}
 .inline-flex{display:flex;align-items:center;gap:8px}
 .filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
 .ym-s{width:auto;padding:5px 10px;font-size:13px}
-.slabel{font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:6px;margin-top:12px;padding-top:8px;border-top:0.5px solid var(--color-border-tertiary)}
-.alert-s{background:#EAF3DE;color:#27500A;border:0.5px solid #C0DD97;padding:8px 12px;border-radius:var(--border-radius-md);font-size:12px;margin-bottom:10px}
+.slabel{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;margin-top:12px;padding-top:8px;border-top:1px solid var(--border2)}
+.alert-s{background:var(--green-bg);color:var(--green-text);border:1px solid #C0DD97;padding:8px 12px;border-radius:var(--radius-xs);font-size:12px;margin-bottom:10px}
 .pivot-tbl{width:100%;border-collapse:collapse;font-size:12px}
-.pivot-tbl th{background:var(--color-background-secondary);padding:7px 10px;text-align:left;font-weight:500;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary);white-space:nowrap}
-.pivot-tbl td{padding:6px 10px;border:0.5px solid var(--color-border-tertiary);white-space:nowrap}
-.pivot-tbl tr:hover td{background:var(--color-background-secondary)}
+.pivot-tbl th{background:var(--bg2);padding:7px 10px;text-align:left;font-weight:500;border:1px solid var(--border2);color:var(--text2);white-space:nowrap}
+.pivot-tbl td{padding:6px 10px;border:1px solid var(--border2);white-space:nowrap}
+.pivot-tbl tr:hover td{background:var(--bg2)}
 .pivot-tbl .nr{text-align:right;font-variant-numeric:tabular-nums}
-.pivot-tbl .tr{font-weight:500;background:var(--color-background-secondary)}
-.history-item{padding:5px 10px;border-left:2px solid var(--color-border-tertiary);margin:4px 0;font-size:12px;color:var(--color-text-secondary);line-height:1.5}
-.export-area{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px;font-size:13px;line-height:1.9;white-space:pre-wrap;font-family:var(--font-mono);overflow-y:auto;margin-top:10px;border:0.5px solid var(--color-border-tertiary)}
+.pivot-tbl .tr{font-weight:500;background:var(--bg2)}
+.history-item{padding:5px 10px;border-left:2px solid var(--border2);margin:4px 0;font-size:12px;color:var(--text2);line-height:1.5}
+.export-area{background:var(--bg2);border-radius:var(--radius-sm);padding:14px;font-size:13px;line-height:1.9;white-space:pre-wrap;font-family:'SF Mono','Fira Code',monospace;overflow-y:auto;margin-top:10px;border:1px solid var(--border2)}
 .sub-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
-.sub-tab{padding:5px 14px;border:0.5px solid var(--color-border-tertiary);border-radius:20px;font-size:12px;cursor:pointer;background:transparent;color:var(--color-text-secondary)}
-.sub-tab.active{background:#185FA5;color:#fff;border-color:#185FA5}
+.sub-tab{padding:5px 14px;border:1px solid var(--border2);border-radius:20px;font-size:12px;cursor:pointer;background:transparent;color:var(--text2)}
+.sub-tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
 .sub-panel{display:none}.sub-panel.active{display:block}
-.hint{font-size:12px;color:var(--color-text-secondary);background:var(--color-background-secondary);padding:8px 10px;border-radius:var(--border-radius-md);margin-bottom:10px;line-height:1.6}
-.proj-sync-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px}
+.hint{font-size:12px;color:var(--text2);background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:10px;line-height:1.6}
+.proj-sync-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border2);font-size:12px}
 .proj-sync-item:last-child{border-bottom:none}
 .proj-sync-item input[type=checkbox]{width:auto;margin-top:2px;flex-shrink:0}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.page-header{background:var(--bg);border-bottom:1px solid var(--border2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.page-title{font-size:15px;font-weight:600;color:var(--text)}
+.collapse-hdr{cursor:pointer;user-select:none}
+.collapse-hdr:hover{opacity:.85}
+@media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr}.metric-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
-<h2 class="sr-only">工作总结管理工具 v6</h2>
+</head>
+<body>
+
+<div class="page-header">
+  <span class="page-title">工作总结管理工具 v6</span>
+  <div class="inline-flex">
+    <button class="btn btn-sm" onclick="exportBackup()" title="导出全部数据为JSON备份">💾 备份数据</button>
+    <label class="btn btn-sm" style="cursor:pointer;margin:0" title="从JSON文件恢复数据">📂 恢复数据<input type="file" accept=".json" onchange="importBackup(event)" style="display:none"></label>
+  </div>
+</div>
 
 <div class="tabs">
   <div class="tab active" onclick="switchTab('performance')">业绩&回款</div>
@@ -86,7 +118,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="field"><label>金额（¥）</label><input id="perf-amount" type="number" placeholder="如：19740"></div>
       <div class="field"><label>备注</label><input id="perf-note" placeholder="可选"></div>
     </div>
-    <div id="noamt-hint" style="display:none;font-size:12px;color:#0C447C;background:#E6F1FB;padding:6px 10px;border-radius:var(--border-radius-md);margin-bottom:8px">昆明途恒科技有限公司 — 无需填写金额</div>
+    <div id="noamt-hint" style="display:none;font-size:12px;color:#0C447C;background:#E6F1FB;padding:6px 10px;border-radius:var(--radius-xs);margin-bottom:8px">昆明途恒科技有限公司 — 无需填写金额</div>
     <button class="btn btn-primary" onclick="addPerf()">+ 添加</button>
   </div>
   <div id="perf-list"></div>
@@ -136,8 +168,8 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <select class="ym-s" id="pj-week" onchange="renderProjects()"><option value="all">全部周次</option><option value="第一周">第一周</option><option value="第二周">第二周</option><option value="第三周">第三周</option><option value="第四周">第四周</option><option value="第五周">第五周</option></select>
     <select class="ym-s" id="pj-status" onchange="renderProjects()"><option value="all">全部状态</option><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="报价跟进">已报价跟进中</option><option value="方案">已提供方案</option><option value="确认">方案确认中</option><option value="长期">长期跟进项目</option><option value="暂无进展">暂无进展</option><option value="丢单">丢单</option></select>
     <div style="position:relative;flex:1;min-width:140px;max-width:260px">
-      <input id="pj-search" placeholder="🔍 搜索项目名/客户名" oninput="renderProjects()" style="width:100%;padding:5px 28px 5px 10px;font-size:13px;background:#F5F4F0;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md)">
-      <span id="pj-search-clear" onclick="document.getElementById('pj-search').value='';renderProjects()" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--color-text-secondary);font-size:14px;line-height:1">✕</span>
+      <input id="pj-search" placeholder="🔍 搜索项目名/客户名" oninput="renderProjects()" style="width:100%;padding:5px 28px 5px 10px;font-size:13px;background:#F5F4F0;border:0.5px solid var(--border);border-radius:var(--radius-xs)">
+      <span id="pj-search-clear" onclick="document.getElementById('pj-search').value='';renderProjects()" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text2);font-size:14px;line-height:1">✕</span>
     </div>
     <button class="btn btn-sm" onclick="exportProjectsExcel()" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97;white-space:nowrap">📥 导出Excel</button>
   </div>
@@ -175,8 +207,8 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <div class="field"><label>新增背调客户数</label><input id="w-new" type="number"></div>
         </div>
         <div class="grid2" style="margin-top:-4px">
-          <div class="field"><label style="color:var(--color-text-secondary)">　↳ 其中中等投入</label><input id="w-new-mid" type="number" placeholder="0"></div>
-          <div class="field"><label style="color:var(--color-text-secondary)">　↳ 其中长期投入</label><input id="w-new-long" type="number" placeholder="0"></div>
+          <div class="field"><label style="color:var(--text2)">　↳ 其中中等投入</label><input id="w-new-mid" type="number" placeholder="0"></div>
+          <div class="field"><label style="color:var(--text2)">　↳ 其中长期投入</label><input id="w-new-long" type="number" placeholder="0"></div>
         </div>
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目状态（从项目情况同步）<button class="btn btn-sm" onclick="fillProjTextareas('w')">↻ 刷新项目</button></div>
         <div class="field"><label>➡️ 已确认订单 / 已成交</label><textarea id="w-p1" class="auto-resize"></textarea></div>
@@ -207,8 +239,8 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <div class="field"><label>新增背调客户数</label><input id="wm-new" type="number"></div>
         </div>
         <div class="grid2" style="margin-top:-4px">
-          <div class="field"><label style="color:var(--color-text-secondary)">　↳ 其中中等投入</label><input id="wm-new-mid" type="number" placeholder="0"></div>
-          <div class="field"><label style="color:var(--color-text-secondary)">　↳ 其中长期投入</label><input id="wm-new-long" type="number" placeholder="0"></div>
+          <div class="field"><label style="color:var(--text2)">　↳ 其中中等投入</label><input id="wm-new-mid" type="number" placeholder="0"></div>
+          <div class="field"><label style="color:var(--text2)">　↳ 其中长期投入</label><input id="wm-new-long" type="number" placeholder="0"></div>
         </div>
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目状态（从项目情况同步）<button class="btn btn-sm" onclick="fillProjTextareas('wm')">↻ 刷新项目</button></div>
         <div class="field"><label>➡️ 已确认订单 / 已成交</label><textarea id="wm-p1" class="auto-resize"></textarea></div>
@@ -244,8 +276,8 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>新增背调客户数</label><input id="d-new" type="number" placeholder="0"></div>
       </div>
       <div class="grid2" style="margin-top:-4px">
-        <div class="field"><label style="color:var(--color-text-secondary)">　↳ 其中中等投入</label><input id="d-new-mid" type="number" placeholder="0"></div>
-        <div class="field"><label style="color:var(--color-text-secondary)">　↳ 其中长期投入</label><input id="d-new-long" type="number" placeholder="0"></div>
+        <div class="field"><label style="color:var(--text2)">　↳ 其中中等投入</label><input id="d-new-mid" type="number" placeholder="0"></div>
+        <div class="field"><label style="color:var(--text2)">　↳ 其中长期投入</label><input id="d-new-long" type="number" placeholder="0"></div>
       </div>
     </div>
     <div id="daily-out"></div>
@@ -447,12 +479,12 @@ function renderPerf(){
       const bc=p.type==='业绩'?'badge-blue':p.type==='回款'?'badge-green':'badge-amber';
       html+=`<div class="summary-row">
         <span class="inline-flex"><span style="width:8px;height:8px;border-radius:50%;background:${dc};display:inline-block;margin-right:5px;flex-shrink:0"></span><span class="badge ${bc}" style="font-size:10px">${p.type}</span><span style="font-size:13px">${p.client}</span>${p.noAmount?'<span class="badge badge-gray" style="font-size:10px">无金额</span>':''}</span>
-        <span class="inline-flex">${(!p.noAmount&&p.amount)?`<span style="font-weight:500">${fmt(p.amount)}</span>`:''}${p.note?`<span style="color:var(--color-text-secondary);font-size:12px">${p.note}</span>`:''}<button class="btn btn-danger btn-xs" onclick="delPerf(${p.id})">删</button></span>
+        <span class="inline-flex">${(!p.noAmount&&p.amount)?`<span style="font-weight:500">${fmt(p.amount)}</span>`:''}${p.note?`<span style="color:var(--text2);font-size:12px">${p.note}</span>`:''}<button class="btn btn-danger btn-xs" onclick="delPerf(${p.id})">删</button></span>
       </div>`;
     });
     html+='</div>';
   });
-  document.getElementById('perf-list').innerHTML=html||'<div style="text-align:center;padding:20px;color:var(--color-text-secondary);font-size:13px">暂无记录</div>';
+  document.getElementById('perf-list').innerHTML=html||'<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">暂无记录</div>';
   renderPivot();
 }
 
@@ -468,7 +500,7 @@ function renderPivot(){
     const md=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.type===type);
     const weeks=['第一周','第二周','第三周','第四周','第五周'];
     const clients=[...new Set(md.map(p=>p.client))];
-    if(!clients.length){document.getElementById('pivot-wrap').innerHTML='<div style="font-size:12px;color:var(--color-text-secondary);padding:8px">暂无数据</div>';return;}
+    if(!clients.length){document.getElementById('pivot-wrap').innerHTML='<div style="font-size:12px;color:var(--text2);padding:8px">暂无数据</div>';return;}
     const activeWeeks=weeks.filter(w=>md.some(p=>p.week===w));
     html=`<table class="pivot-tbl"><thead><tr><th>${fy} ${month}月</th>`;
     activeWeeks.forEach(w=>{html+=`<th class="nr">${w}</th>`;});
@@ -487,7 +519,7 @@ function renderPivot(){
   } else if(mode==='month'){
     const fyData=state.perf.filter(p=>p.fy===fy&&p.type===type);
     const activeMonths=MONTHS_ORDER.filter(m=>fyData.some(p=>p.month===m));
-    if(!activeMonths.length){document.getElementById('pivot-wrap').innerHTML='<div style="font-size:12px;color:var(--color-text-secondary);padding:8px">暂无数据</div>';return;}
+    if(!activeMonths.length){document.getElementById('pivot-wrap').innerHTML='<div style="font-size:12px;color:var(--text2);padding:8px">暂无数据</div>';return;}
     html=`<table class="pivot-tbl"><thead><tr><th>${fy} 各月</th>`;
     activeMonths.forEach(m=>{html+=`<th class="nr">${m}月</th>`;});
     html+=`<th class="nr">年度合计</th></tr></thead><tbody>`;
@@ -503,7 +535,7 @@ function renderPivot(){
   } else {
     // FY对比
     const allFYs=[...new Set(state.perf.map(p=>p.fy))].sort();
-    if(!allFYs.length){document.getElementById('pivot-wrap').innerHTML='<div style="font-size:12px;color:var(--color-text-secondary);padding:8px">暂无数据</div>';return;}
+    if(!allFYs.length){document.getElementById('pivot-wrap').innerHTML='<div style="font-size:12px;color:var(--text2);padding:8px">暂无数据</div>';return;}
     const activeMonths=MONTHS_ORDER.filter(m=>state.perf.some(p=>p.type===type&&p.month===m));
     html=`<table class="pivot-tbl"><thead><tr><th>财年对比</th>`;
     activeMonths.forEach(m=>{html+=`<th class="nr">${m}月</th>`;});
@@ -571,7 +603,7 @@ function renderProjects(){
   });
   const countEl=document.getElementById('proj-status-counts');
   if(countEl){
-    let ctHtml='<span style="font-size:12px;color:var(--color-text-secondary);align-self:center">各状态：</span>';
+    let ctHtml='<span style="font-size:12px;color:var(--text2);align-self:center">各状态：</span>';
     statusDefs.forEach(sd=>{
       const n=counts[sd.key]||0;
       if(n>0)ctHtml+=`<span class="badge ${sd.cls}" style="cursor:pointer" onclick="document.getElementById('pj-status').value='${sd.key}';renderProjects()">${sd.label} <b>${n}</b></span>`;
@@ -580,7 +612,7 @@ function renderProjects(){
     ctHtml+=`<span class="badge badge-gray">合计 <b>${total}</b></span>`;
     countEl.innerHTML=ctHtml;
   }
-  if(!keys.length){document.getElementById('proj-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--color-text-secondary);font-size:13px">暂无项目</div>';return;}
+  if(!keys.length){document.getElementById('proj-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">暂无项目</div>';return;}
   let html='';
   keys.forEach(k=>{
     const entries=grouped[k].sort((a,b)=>b.id-a.id);
@@ -609,21 +641,21 @@ function renderProjects(){
     html+=`<div class="project-item">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
         <div>
-          <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:2px">${latest.client}</div>
+          <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:2px">${latest.client}</div>
           <div style="font-size:13px;font-weight:500;margin-bottom:2px">${icon} ${latest.name}</div>
         </div>
         <div class="inline-flex" style="flex-shrink:0"><span class="badge ${pc}">${latest.priority}</span><span class="badge badge-gray">${sc.label}</span></div>
       </div>
-      <div style="font-size:12px;background:var(--color-background-secondary);padding:7px 10px;border-radius:var(--border-radius-md);margin-bottom:8px;line-height:1.6;color:var(--color-text-secondary)">${(latest.progress||'暂无进展').replace(/\n/g,'<br>')}</div>
+      <div style="font-size:12px;background:var(--bg2);padding:7px 10px;border-radius:var(--radius-xs);margin-bottom:8px;line-height:1.6;color:var(--text2)">${(latest.progress||'暂无进展').replace(/\n/g,'<br>')}</div>
       ${entries.length>1?`<button class="btn btn-xs" style="margin-bottom:6px" onclick="(function(){var el=document.getElementById('${hid}');el.style.display=el.style.display==='none'?'block':'none'})()">历史记录 (${entries.length-1}条)</button>
         <div id="${hid}" style="display:none;margin-bottom:6px">${entries.slice(1).map(e=>`<div class="history-item"><span style="font-size:11px">${e.recordDate} · ${SC[e.status]?.label||e.status}</span><br>${e.progress||'—'}</div>`).join('')}</div>`:''}
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:11px;color:var(--color-text-secondary)">${latest.savedAt}</span>
+        <span style="font-size:11px;color:var(--text2)">${latest.savedAt}</span>
         <div class="inline-flex"><button class="btn btn-xs" onclick="fillEdit('${k.replace(/'/g,"\\'")}')">追加进展</button><button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="editLatestProgress('${k.replace(/'/g,"\\'")}',${latest.id})">编辑记录</button><button class="btn btn-danger btn-xs" onclick="delGroup('${k.replace(/'/g,"\\'")}')">删除</button></div>
       </div>
     </div>`;
   });
-  document.getElementById('proj-list').innerHTML=html||'<div style="text-align:center;padding:20px;color:var(--color-text-secondary);font-size:13px">暂无项目</div>';
+  document.getElementById('proj-list').innerHTML=html||'<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">暂无项目</div>';
 }
 
 function submitProject(){
@@ -801,11 +833,11 @@ function saveWeekly(){
 function renderSavedWeeklies(){
   const list=state.weeklies.slice().reverse();
   const el=document.getElementById('saved-weeklies');
-  if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--color-text-secondary);font-size:12px">暂无已保存的周报内容</div>';return;}
+  if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--text2);font-size:12px">暂无已保存的周报内容</div>';return;}
   el.innerHTML=list.map(w=>{
     const p1=w.p1||'',p2=w.p2||'',p3=w.p3||'',p4=w.p4||'',p5=w.p5||'';
     const projTxt=`➡️ 已确认订单 / 已成交：\n${p1||'（暂无）'}\n\n➡️ 已报价跟进中 / 已提供方案：\n${p2||'（暂无）'}\n\n➡️ 方案确认中：\n${p3||'（暂无）'}\n\n➡️ 长期跟进项目 / 暂无进展：\n${p4||'（暂无）'}\n\n➡️ 丢单：\n${p5||'（暂无）'}`;
-    const infoRow=(label,val)=>val?`<div style="margin:6px 0"><span style="font-size:12px;color:var(--color-text-secondary);font-weight:500">${label}：</span><span style="font-size:12px">${val}</span></div>`:'';
+    const infoRow=(label,val)=>val?`<div style="margin:6px 0"><span style="font-size:12px;color:var(--text2);font-weight:500">${label}：</span><span style="font-size:12px">${val}</span></div>`:'';
     const hid='wh_'+w.id;
     return`<div class="card" style="margin-top:8px">
       <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var el=document.getElementById('${hid}');el.style.display=el.style.display==='none'?'block':'none';var ic=document.getElementById('${hid}_ic');ic.textContent=el.style.display==='none'?'▶':'▼'})()">
@@ -813,13 +845,13 @@ function renderSavedWeeklies(){
         <div class="inline-flex" onclick="event.stopPropagation()"><button class="btn btn-primary btn-sm" onclick="editWeekly(${w.id})">编辑</button><button class="btn btn-sm" onclick="loadWeekly(${w.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delWeekly(${w.id})">删除</button></div>
       </div>
       <div id="${hid}" style="display:none;margin-top:8px">
-        <div style="margin:4px 0 8px;font-size:12px"><span style="color:var(--color-text-secondary);font-weight:500">客户投入：</span>中等${w.mid||0}个 · 长期${w.long||0}个 · 背调${w.newClients||0}个${(w.newMid||w.newLong)?`（其中中等${w.newMid||0}个，长期${w.newLong||0}个）`:''}</div>
-        <div style="margin:6px 0 4px;font-size:12px;font-weight:500;color:var(--color-text-secondary)">重点项目状态</div>
-        <div style="font-size:12px;background:var(--color-background-secondary);padding:8px 10px;border-radius:var(--border-radius-md);white-space:pre-wrap;line-height:1.7;font-family:var(--font-mono);margin-bottom:6px">${projTxt}</div>
+        <div style="margin:4px 0 8px;font-size:12px"><span style="color:var(--text2);font-weight:500">客户投入：</span>中等${w.mid||0}个 · 长期${w.long||0}个 · 背调${w.newClients||0}个${(w.newMid||w.newLong)?`（其中中等${w.newMid||0}个，长期${w.newLong||0}个）`:''}</div>
+        <div style="margin:6px 0 4px;font-size:12px;font-weight:500;color:var(--text2)">重点项目状态</div>
+        <div style="font-size:12px;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);white-space:pre-wrap;line-height:1.7;font-family:monospace;margin-bottom:6px">${projTxt}</div>
         ${infoRow('重点订单',w.keyorders)}
         ${infoRow('售后情况',w.aftersales)}
         ${infoRow('下周计划',w.plan)}
-        <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px">${w.savedAt}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:6px">${w.savedAt}</div>
       </div>
     </div>`;
   }).join('');
@@ -869,11 +901,11 @@ function saveMonthly(){
 function renderSavedMonthlies(){
   const list=(state.monthlies||[]).slice().reverse();
   const el=document.getElementById('saved-monthlies');
-  if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--color-text-secondary);font-size:12px">暂无已保存的月报内容</div>';return;}
+  if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--text2);font-size:12px">暂无已保存的月报内容</div>';return;}
   el.innerHTML=list.map(m=>{
     const p1=m.p1||'',p2=m.p2||'',p3=m.p3||'',p4=m.p4||'',p5=m.p5||'';
     const projTxt=`➡️ 已确认订单 / 已成交：\n${p1||'（暂无）'}\n\n➡️ 已报价跟进中 / 已提供方案：\n${p2||'（暂无）'}\n\n➡️ 方案确认中：\n${p3||'（暂无）'}\n\n➡️ 长期跟进项目 / 暂无进展：\n${p4||'（暂无）'}\n\n➡️ 丢单：\n${p5||'（暂无）'}`;
-    const infoRow=(label,val)=>val?`<div style="margin:6px 0"><span style="font-size:12px;color:var(--color-text-secondary);font-weight:500">${label}：</span><span style="font-size:12px">${val}</span></div>`:'';
+    const infoRow=(label,val)=>val?`<div style="margin:6px 0"><span style="font-size:12px;color:var(--text2);font-weight:500">${label}：</span><span style="font-size:12px">${val}</span></div>`:'';
     const hid='mh_'+m.id;
     return`<div class="card" style="margin-top:8px">
       <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var el=document.getElementById('${hid}');el.style.display=el.style.display==='none'?'block':'none';var ic=document.getElementById('${hid}_ic');ic.textContent=el.style.display==='none'?'▶':'▼'})()">
@@ -881,13 +913,13 @@ function renderSavedMonthlies(){
         <div class="inline-flex" onclick="event.stopPropagation()"><button class="btn btn-primary btn-sm" onclick="editMonthly(${m.id})">编辑</button><button class="btn btn-sm" onclick="loadMonthly(${m.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delMonthly(${m.id})">删除</button></div>
       </div>
       <div id="${hid}" style="display:none;margin-top:8px">
-        <div style="margin:4px 0 8px;font-size:12px"><span style="color:var(--color-text-secondary);font-weight:500">客户投入：</span>中等${m.mid||0}个 · 长期${m.long||0}个 · 背调${m.newClients||0}个${(m.newMid||m.newLong)?`（其中中等${m.newMid||0}个，长期${m.newLong||0}个）`:''}</div>
-        <div style="margin:6px 0 4px;font-size:12px;font-weight:500;color:var(--color-text-secondary)">重点项目状态</div>
-        <div style="font-size:12px;background:var(--color-background-secondary);padding:8px 10px;border-radius:var(--border-radius-md);white-space:pre-wrap;line-height:1.7;font-family:var(--font-mono);margin-bottom:6px">${projTxt}</div>
+        <div style="margin:4px 0 8px;font-size:12px"><span style="color:var(--text2);font-weight:500">客户投入：</span>中等${m.mid||0}个 · 长期${m.long||0}个 · 背调${m.newClients||0}个${(m.newMid||m.newLong)?`（其中中等${m.newMid||0}个，长期${m.newLong||0}个）`:''}</div>
+        <div style="margin:6px 0 4px;font-size:12px;font-weight:500;color:var(--text2)">重点项目状态</div>
+        <div style="font-size:12px;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);white-space:pre-wrap;line-height:1.7;font-family:monospace;margin-bottom:6px">${projTxt}</div>
         ${infoRow('重点订单',m.keyorders)}
         ${infoRow('售后情况',m.aftersales)}
         ${infoRow('下月计划',m.plan)}
-        <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px">${m.savedAt}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:6px">${m.savedAt}</div>
       </div>
     </div>`;
   }).join('');
@@ -948,7 +980,7 @@ function renderSavedDailies(){
   const list=state.dailies.slice().sort((a,b)=>b.date>a.date?1:-1);
   let el=document.getElementById('saved-dailies');
   if(!el)return;
-  if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--color-text-secondary);font-size:12px">暂无已保存的日报</div>';return;}
+  if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--text2);font-size:12px">暂无已保存的日报</div>';return;}
   el.innerHTML=list.map(d=>{
     const hid='dh_'+d.date.replace(/-/g,'_');
     const hasInvest=d.mid||d.long||d.newClients;
@@ -962,14 +994,15 @@ function renderSavedDailies(){
         </div>
       </div>
       <div id="${hid}" style="display:none;margin-top:8px">
-        ${hasInvest?`<div style="font-size:12px;margin-bottom:6px"><span style="color:var(--color-text-secondary);font-weight:500">客户投入：</span>中等${d.mid||0}个 · 长期${d.long||0}个 · 背调${d.newClients||0}个${(d.newMid||d.newLong)?`（其中中等${d.newMid||0}个，长期${d.newLong||0}个）`:''}</div>`:''}
-        <div style="font-size:11px;color:var(--color-text-secondary)">${d.savedAt}</div>
+        ${hasInvest?`<div style="font-size:12px;margin-bottom:6px"><span style="color:var(--text2);font-weight:500">客户投入：</span>中等${d.mid||0}个 · 长期${d.long||0}个 · 背调${d.newClients||0}个${(d.newMid||d.newLong)?`（其中中等${d.newMid||0}个，长期${d.newLong||0}个）`:''}</div>`:''}
+        <div style="font-size:11px;color:var(--text2)">${d.savedAt}</div>
       </div>
     </div>`;
   }).join('');
 }
 function delDaily(date){if(!confirm('确认删除该日报记录？'))return;state.dailies=(state.dailies||[]).filter(d=>d.date!==date);save();renderSavedDailies();}
 
+function groupByClient(arr){
   const m={};arr.forEach(p=>{if(!m[p.client])m[p.client]={client:p.client,amount:0,noAmount:p.noAmount};m[p.client].amount+=p.amount;if(p.noAmount)m[p.client].noAmount=true;});
   return Object.values(m);
 }
@@ -1108,8 +1141,45 @@ function exportProjectsExcel(){
 }
 
 
+function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
 function autoResizeAll(){document.querySelectorAll('textarea.auto-resize').forEach(autoResize);}
 document.addEventListener('input',e=>{if(e.target.classList.contains('auto-resize'))autoResize(e.target);});
 
+function exportBackup(){
+  const json=JSON.stringify(state,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  const ds=new Date().toISOString().slice(0,10);
+  a.download=`工作总结备份_${ds}.json`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+function importBackup(evt){
+  const file=evt.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const imported=JSON.parse(e.target.result);
+      if(!imported.perf&&!imported.projects){alert('文件格式不正确，请选择正确的备份文件');return;}
+      if(!confirm('即将恢复备份数据（包含 '+(imported.perf||[]).length+' 条业绩记录、'+(imported.projects||[]).length+' 条项目记录）。\n\n当前数据将被覆盖，确认继续？'))return;
+      state=imported;
+      if(!state.monthlies)state.monthlies=[];
+      if(!state.dailies)state.dailies=[];
+      if(!state.weeklies)state.weeklies=[];
+      SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});
+      save();
+      renderPerf();renderPivot();renderProjects();refreshProjDatalist();
+      renderSavedWeeklies();renderSavedMonthlies();renderSavedDailies();
+      fillProjTextareas('w');fillProjTextareas('wm');
+      alert('数据恢复成功！');
+    }catch(err){alert('文件解析失败：'+err.message);}
+    evt.target.value='';
+  };
+  reader.readAsText(file);
+}
+
 init();
 </script>
+</body>
+</html>
