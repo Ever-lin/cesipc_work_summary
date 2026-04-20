@@ -261,12 +261,12 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div id="sw-daily" class="sub-panel active">
     <div class="card">
       <div class="card-header"><span class="card-title">导出日报</span></div>
-      <div class="hint">自动提取「项目情况」中所选日期的进展记录。</div>
+      <div class="hint">自动提取「项目情况」中所选日期的进展记录，填写后点击生成日报保存并显示。</div>
       <div class="grid2">
         <div class="field"><label>日期</label><input id="d-date" type="date"></div>
         <div class="field" style="display:flex;align-items:flex-end;gap:8px">
           <button class="btn btn-primary" onclick="genDaily()" style="flex:1">生成日报</button>
-          <button class="btn" onclick="copyTxt('daily-out')">复制</button>
+          <button class="btn" onclick="copyLastDaily()">复制</button>
         </div>
       </div>
       <div class="slabel">客户投入情况（可选）</div>
@@ -279,8 +279,17 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label style="color:var(--text2)">　↳ 其中中等投入</label><input id="d-new-mid" type="number" placeholder="0"></div>
         <div class="field"><label style="color:var(--text2)">　↳ 其中长期投入</label><input id="d-new-long" type="number" placeholder="0"></div>
       </div>
+      <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目状态（从项目情况同步）<button class="btn btn-sm" onclick="fillDailyProjects()">↻ 刷新项目</button></div>
+      <div class="field"><label>➡️ 已确认订单 / 已成交</label><textarea id="d-p1" class="auto-resize"></textarea></div>
+      <div class="field"><label>➡️ 已报价跟进中 / 已提供方案</label><textarea id="d-p2" class="auto-resize"></textarea></div>
+      <div class="field"><label>➡️ 方案确认中</label><textarea id="d-p3" class="auto-resize"></textarea></div>
+      <div class="field"><label>➡️ 长期跟进项目 / 暂无进展</label><textarea id="d-p4" class="auto-resize"></textarea></div>
+      <div class="field"><label>➡️ 丢单</label><textarea id="d-p5" class="auto-resize"></textarea></div>
+      <div class="slabel">其他</div>
+      <div class="field"><label>重点订单情况</label><textarea id="d-keyorders" class="auto-resize"></textarea></div>
+      <div class="field"><label>售后情况</label><textarea id="d-aftersales" class="auto-resize"></textarea></div>
+      <div class="field"><label>明日计划</label><textarea id="d-plan" class="auto-resize"></textarea></div>
     </div>
-    <div id="daily-out"></div>
     <div id="saved-dailies" style="margin-top:4px"></div>
   </div>
 
@@ -293,9 +302,9 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>月份</label><select id="ew-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select></div>
         <div class="field"><label>周次</label><select id="ew-week"><option>第一周</option><option selected>第二周</option><option>第三周</option><option>第四周</option><option>第五周</option></select></div>
       </div>
-      <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="genWeekly()">生成周报</button><button class="btn" onclick="copyTxt('weekly-out')">复制</button></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="genWeekly()">生成周报</button></div>
     </div>
-    <div id="weekly-out"></div>
+    <div id="generated-weeklies"></div>
   </div>
 
   <div id="sw-monthly" class="sub-panel">
@@ -306,9 +315,9 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>财年</label><select id="em-fy"></select></div>
         <div class="field"><label>月份</label><select id="em-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select></div>
       </div>
-      <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="genMonthly()">生成月报</button><button class="btn" onclick="copyTxt('monthly-out')">复制</button></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="genMonthly()">生成月报</button></div>
     </div>
-    <div id="monthly-out"></div>
+    <div id="generated-monthlies"></div>
   </div>
 </div>
 
@@ -385,14 +394,14 @@ const SEED=[
 {id:5201,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'新成交',client:'昆明途恒科技有限公司',amount:0,note:'',noAmount:true},
 ];
 
-let state={perf:[],projects:[],weeklies:[],monthlies:[],dailies:[]};
+let state={perf:[],projects:[],weeklies:[],monthlies:[],dailies:[],genWeeklies:[],genMonthlies:[]};
 function save(){try{localStorage.setItem('ws6',JSON.stringify(state))}catch(e){}}
 function load(){
   try{
     const d=localStorage.getItem('ws6');
-    if(d){state=JSON.parse(d);if(!state.monthlies)state.monthlies=[];if(!state.dailies)state.dailies=[];SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});save();}
-    else{state.perf=SEED.slice();state.monthlies=[];state.dailies=[];save();}
-  }catch(e){state.perf=SEED.slice();state.monthlies=[];state.dailies=[];save();}
+    if(d){state=JSON.parse(d);if(!state.monthlies)state.monthlies=[];if(!state.dailies)state.dailies=[];if(!state.genWeeklies)state.genWeeklies=[];if(!state.genMonthlies)state.genMonthlies=[];SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});save();}
+    else{state.perf=SEED.slice();state.monthlies=[];state.dailies=[];state.genWeeklies=[];state.genMonthlies=[];save();}
+  }catch(e){state.perf=SEED.slice();state.monthlies=[];state.dailies=[];state.genWeeklies=[];state.genMonthlies=[];save();}
 }
 load();
 
@@ -404,7 +413,9 @@ function init(){
   document.getElementById('view-month').value=String(cm);
   document.getElementById('perf-month').value=String(cm);
   document.getElementById('pj-month').value=String(cm);
-  renderPerf();renderPivot();refreshProjDatalist();renderSavedWeeklies();renderSavedMonthlies();renderSavedDailies();fillProjTextareas('w');fillProjTextareas('wm');
+  renderPerf();renderPivot();refreshProjDatalist();renderSavedWeeklies();renderSavedMonthlies();renderSavedDailies();
+  renderGeneratedWeeklies();renderGeneratedMonthlies();
+  fillProjTextareas('w');fillProjTextareas('wm');fillDailyProjects();
 }
 
 function switchTab(name){
@@ -415,7 +426,7 @@ function switchTab(name){
   document.getElementById('panel-'+name).classList.add('active');
   if(name==='performance'){renderPerf();renderPivot();}
   if(name==='projects'){renderProjects();refreshProjDatalist();}
-  if(name==='export'){fillProjTextareas('w');fillProjTextareas('wm');}
+  if(name==='export'){fillProjTextareas('w');fillProjTextareas('wm');fillDailyProjects();renderGeneratedWeeklies();renderGeneratedMonthlies();}
 }
 
 function switchSub(id,btn){
@@ -949,56 +960,144 @@ function editMonthly(id){
   window.scrollTo(0,0);
 }
 
+function fillDailyProjects(){
+  const date=document.getElementById('d-date').value;
+  const CATS=[
+    {id:'d-p1',statuses:['确认订单','成交']},
+    {id:'d-p2',statuses:['报价跟进','方案','报价']},
+    {id:'d-p3',statuses:['确认']},
+    {id:'d-p4',statuses:['长期','暂无进展']},
+    {id:'d-p5',statuses:['丢单']},
+  ];
+  const grouped={};
+  state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
+  CATS.forEach(cat=>{
+    const el=document.getElementById(cat.id);if(!el)return;
+    let items=[];
+    if(date){
+      Object.keys(grouped).forEach(k=>{
+        const entries=grouped[k].sort((a,b)=>b.id-a.id);
+        const dayEntries=entries.filter(p=>p.recordDate===date);
+        if(dayEntries.length>0&&cat.statuses.includes(dayEntries[0].status))items.push(dayEntries[0]);
+        else if(!date&&cat.statuses.includes(entries[0].status))items.push(entries[0]);
+      });
+    } else {
+      items=Object.keys(grouped).map(k=>grouped[k].sort((a,b)=>b.id-a.id)[0]).filter(p=>cat.statuses.includes(p.status));
+    }
+    el.value=items.map(p=>`客户：${p.client}\n${projIcon(p.status)} ${p.name}\n${p.progress||''}`).join('\n\n');
+    autoResize(el);
+  });
+}
+
 function genDaily(){
   const date=document.getElementById('d-date').value;
   if(!date){alert('请选择日期');return;}
-  const projs=state.projects.filter(p=>p.recordDate===date).sort((a,b)=>a.name>b.name?1:-1);
   const mid=parseInt(document.getElementById('d-mid').value)||0;
   const long_=parseInt(document.getElementById('d-long').value)||0;
   const newC=parseInt(document.getElementById('d-new').value)||0;
   const newMid=parseInt(document.getElementById('d-new-mid').value)||0;
   const newLong=parseInt(document.getElementById('d-new-long').value)||0;
+  const p1=document.getElementById('d-p1').value.trim();
+  const p2=document.getElementById('d-p2').value.trim();
+  const p3=document.getElementById('d-p3').value.trim();
+  const p4=document.getElementById('d-p4').value.trim();
+  const p5=document.getElementById('d-p5').value.trim();
+  const keyorders=document.getElementById('d-keyorders').value.trim();
+  const aftersales=document.getElementById('d-aftersales').value.trim();
+  const plan=document.getElementById('d-plan').value.trim();
+  const projs=state.projects.filter(p=>p.recordDate===date);
   let r=`【日报 ${date}】\n${'─'.repeat(28)}\n\n`;
   if(mid||long_||newC){
-    let newBreakdown='';
-    if(newC&&(newMid||newLong))newBreakdown=`（其中中等投入${newMid}个，长期投入${newLong}个）`;
-    r+=`➡️ 客户投入情况\n  中等投入${mid}个，长期投入${long_}个，新增背调${newC}个${newBreakdown}\n\n`;
+    let nb='';if(newC&&(newMid||newLong))nb=`（其中中等投入${newMid}个，长期投入${newLong}个）`;
+    r+=`➡️ 客户投入情况\n  中等投入${mid}个，长期投入${long_}个，新增背调${newC}个${nb}\n\n`;
   }
-  if(!projs.length){r+='今日无项目进展记录。';}
-  else{projs.forEach(p=>{const sc=SC[p.status]||{label:p.status};r+=`客户：${p.client}  状态：${sc.label}\n${projIcon(p.status)} ${p.name}\n${p.progress||'无进展记录'}\n\n`;});}
-  // Save daily report
-  const dailyData={id:Date.now(),date,mid,long:long_,newClients:newC,newMid,newLong,projCount:projs.length,savedAt:new Date().toLocaleString('zh-CN')};
+  r+=`➡️ 重点项目状态\n`;
+  r+=`➡️ 已确认订单 / 已成交：\n${p1||'（暂无）'}\n\n`;
+  r+=`➡️ 已报价跟进中 / 已提供方案：\n${p2||'（暂无）'}\n\n`;
+  r+=`➡️ 方案确认中：\n${p3||'（暂无）'}\n\n`;
+  r+=`➡️ 长期跟进项目 / 暂无进展：\n${p4||'（暂无）'}\n\n`;
+  r+=`➡️ 丢单：\n${p5||'（暂无）'}\n\n`;
+  if(keyorders)r+=`➡️ 重点订单情况\n  ${keyorders}\n\n`;
+  if(aftersales)r+=`➡️ 售后情况\n  ${aftersales}\n\n`;
+  if(plan)r+=`➡️ 明日计划\n  ${plan}\n`;
+  // Save
   if(!state.dailies)state.dailies=[];
+  const dailyData={id:Date.now(),date,mid,long:long_,newClients:newC,newMid,newLong,
+    p1,p2,p3,p4,p5,keyorders,aftersales,plan,
+    projCount:projs.length,txt:r,savedAt:new Date().toLocaleString('zh-CN')};
   const ex=state.dailies.findIndex(d=>d.date===date);
-  if(ex>=0)state.dailies[ex]={...state.dailies[ex],...dailyData,id:state.dailies[ex].id};else state.dailies.push(dailyData);
-  save();renderSavedDailies();
-  window._dailyTxt=r;document.getElementById('daily-out').innerHTML=`<div class="export-area">${r}</div>`;
+  if(ex>=0){dailyData.id=state.dailies[ex].id;state.dailies[ex]=dailyData;}
+  else state.dailies.push(dailyData);
+  save();
+  window._lastDailyTxt=r;
+  renderSavedDailies(date);
 }
 
-function renderSavedDailies(){
+function copyLastDaily(){
+  if(!window._lastDailyTxt){alert('请先生成日报');return;}
+  navigator.clipboard.writeText(window._lastDailyTxt).then(()=>{
+    const b=event.target;const o=b.textContent;b.textContent='已复制！';setTimeout(()=>b.textContent=o,1500);
+  });
+}
+
+function loadDailyIntoForm(date){
+  const d=(state.dailies||[]).find(x=>x.date===date);if(!d)return;
+  document.getElementById('d-date').value=d.date;
+  document.getElementById('d-mid').value=d.mid||'';
+  document.getElementById('d-long').value=d.long||'';
+  document.getElementById('d-new').value=d.newClients||'';
+  document.getElementById('d-new-mid').value=d.newMid||'';
+  document.getElementById('d-new-long').value=d.newLong||'';
+  ['p1','p2','p3','p4','p5','keyorders','aftersales','plan'].forEach(f=>{
+    const el=document.getElementById('d-'+f);if(el){el.value=d[f]||'';autoResize(el);}
+  });
+  window._lastDailyTxt=d.txt||'';
+  window.scrollTo(0,0);
+}
+
+function renderSavedDailies(expandDate){
   if(!state.dailies)state.dailies=[];
   const list=state.dailies.slice().sort((a,b)=>b.date>a.date?1:-1);
-  let el=document.getElementById('saved-dailies');
+  const el=document.getElementById('saved-dailies');
   if(!el)return;
   if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--text2);font-size:12px">暂无已保存的日报</div>';return;}
   el.innerHTML=list.map(d=>{
     const hid='dh_'+d.date.replace(/-/g,'_');
+    const isNew=d.date===expandDate;
     const hasInvest=d.mid||d.long||d.newClients;
+    const projTxt=[
+      d.p1?`➡️ 已确认订单 / 已成交：\n${d.p1}`:'',
+      d.p2?`➡️ 已报价跟进中 / 已提供方案：\n${d.p2}`:'',
+      d.p3?`➡️ 方案确认中：\n${d.p3}`:'',
+      d.p4?`➡️ 长期跟进项目 / 暂无进展：\n${d.p4}`:'',
+      d.p5?`➡️ 丢单：\n${d.p5}`:'',
+    ].filter(Boolean).join('\n\n')||'（暂无项目记录）';
     return`<div class="card" style="margin-top:8px">
-      <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var el=document.getElementById('${hid}');el.style.display=el.style.display==='none'?'block':'none';var ic=document.getElementById('${hid}_ic');ic.textContent=el.style.display==='none'?'▶':'▼'})()">
-        <span style="font-size:13px;font-weight:500"><span id="${hid}_ic">▶</span> 日报 ${d.date}</span>
+      <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
+        <span style="font-size:13px;font-weight:500"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> 日报 ${d.date}</span>
         <div class="inline-flex">
           ${hasInvest?`<span class="badge badge-teal" style="font-size:10px">含客户投入</span>`:''}
           <span class="badge badge-gray" style="font-size:10px">项目${d.projCount||0}条</span>
+          <button class="btn btn-xs" onclick="event.stopPropagation();loadDailyIntoForm('${d.date}')">编辑</button>
+          <button class="btn btn-xs" onclick="event.stopPropagation();copyDailyTxt('${d.date}')">复制</button>
           <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delDaily('${d.date}')">删除</button>
         </div>
       </div>
-      <div id="${hid}" style="display:none;margin-top:8px">
-        ${hasInvest?`<div style="font-size:12px;margin-bottom:6px"><span style="color:var(--text2);font-weight:500">客户投入：</span>中等${d.mid||0}个 · 长期${d.long||0}个 · 背调${d.newClients||0}个${(d.newMid||d.newLong)?`（其中中等${d.newMid||0}个，长期${d.newLong||0}个）`:''}</div>`:''}
-        <div style="font-size:11px;color:var(--text2)">${d.savedAt}</div>
+      <div id="${hid}" style="display:${isNew?'block':'none'};margin-top:10px">
+        ${hasInvest?`<div style="font-size:12px;margin-bottom:8px;padding:6px 10px;background:var(--teal-bg);border-radius:var(--radius-xs)"><span style="color:var(--teal-text);font-weight:500">客户投入：</span>中等${d.mid||0}个 · 长期${d.long||0}个 · 背调${d.newClients||0}个${(d.newMid||d.newLong)?'（其中中等'+(d.newMid||0)+'个，长期'+(d.newLong||0)+'个）':''}</div>`:''}
+        <div style="font-size:12px;white-space:pre-wrap;line-height:1.7;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:6px">${projTxt}</div>
+        ${d.keyorders?`<div style="margin:4px 0;font-size:12px"><span style="color:var(--text2);font-weight:500">重点订单：</span>${d.keyorders}</div>`:''}
+        ${d.aftersales?`<div style="margin:4px 0;font-size:12px"><span style="color:var(--text2);font-weight:500">售后情况：</span>${d.aftersales}</div>`:''}
+        ${d.plan?`<div style="margin:4px 0;font-size:12px"><span style="color:var(--text2);font-weight:500">明日计划：</span>${d.plan}</div>`:''}
+        <div style="font-size:11px;color:var(--text2);margin-top:6px">${d.savedAt}</div>
       </div>
     </div>`;
   }).join('');
+}
+function copyDailyTxt(date){
+  const d=(state.dailies||[]).find(x=>x.date===date);
+  if(!d||!d.txt){alert('暂无报告内容');return;}
+  navigator.clipboard.writeText(d.txt).then(()=>alert('已复制！'));
 }
 function delDaily(date){if(!confirm('确认删除该日报记录？'))return;state.dailies=(state.dailies||[]).filter(d=>d.date!==date);save();renderSavedDailies();}
 
@@ -1036,9 +1135,8 @@ function genWeekly(){
   monthDeals.forEach(p=>{r+=`  ${p.client}\n`;});
   r+='\n';
   if(wr&&(wr.mid||wr.long||wr.newClients)){
-    let newBreakdown='';
-    if(wr.newClients&&(wr.newMid||wr.newLong))newBreakdown=`（其中中等投入${wr.newMid||0}个，长期投入${wr.newLong||0}个）`;
-    r+=`➡️ 客户投入情况\n  中等投入${wr.mid||0}个，长期投入${wr.long||0}个，新增背调${wr.newClients||0}个${newBreakdown}\n\n`;
+    let nb='';if(wr.newClients&&(wr.newMid||wr.newLong))nb=`（其中中等投入${wr.newMid||0}个，长期投入${wr.newLong||0}个）`;
+    r+=`➡️ 客户投入情况\n  中等投入${wr.mid||0}个，长期投入${wr.long||0}个，新增背调${wr.newClients||0}个${nb}\n\n`;
   }
   r+=`➡️ 重点项目状态\n`;
   r+=`➡️ 已确认订单 / 已成交：\n${(wr&&wr.p1)||'（暂无）'}\n\n`;
@@ -1049,8 +1147,41 @@ function genWeekly(){
   if(wr&&wr.keyorders)r+=`➡️ 重点订单情况\n  ${wr.keyorders}\n\n`;
   if(wr&&wr.aftersales)r+=`➡️ 售后情况\n  ${wr.aftersales}\n\n`;
   if(wr&&wr.plan)r+=`➡️ 下周计划\n  ${wr.plan}\n`;
-  window._weeklyTxt=r;document.getElementById('weekly-out').innerHTML=`<div class="export-area">${r}</div>`;
+  // Save generated report
+  if(!state.genWeeklies)state.genWeeklies=[];
+  const key=`${fy}_${month}_${week}`;
+  const entry={id:Date.now(),key,fy,month,week,txt:r,savedAt:new Date().toLocaleString('zh-CN')};
+  const ex=state.genWeeklies.findIndex(x=>x.key===key);
+  if(ex>=0){entry.id=state.genWeeklies[ex].id;state.genWeeklies[ex]=entry;}else state.genWeeklies.push(entry);
+  save();
+  renderGeneratedWeeklies(key);
 }
+
+function renderGeneratedWeeklies(expandKey){
+  if(!state.genWeeklies)state.genWeeklies=[];
+  const list=state.genWeeklies.slice().reverse();
+  const el=document.getElementById('generated-weeklies');if(!el)return;
+  if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--text2);font-size:12px">暂无已生成的周报</div>';return;}
+  el.innerHTML=list.map(w=>{
+    const hid='gw_'+w.id;
+    const isNew=w.key===expandKey;
+    return`<div class="card" style="margin-top:8px">
+      <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
+        <span style="font-size:13px;font-weight:500"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> ${w.fy} ${w.month}月 ${w.week} 周报</span>
+        <div class="inline-flex">
+          <button class="btn btn-xs" onclick="event.stopPropagation();copyGenTxt('genWeeklies',${w.id})">复制</button>
+          <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delGenWeekly(${w.id})">删除</button>
+        </div>
+      </div>
+      <div id="${hid}" style="display:${isNew?'block':'none'};margin-top:8px">
+        <div class="export-area" style="margin-top:0;max-height:420px">${w.txt}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:6px">${w.savedAt}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function delGenWeekly(id){if(!confirm('确认删除？'))return;state.genWeeklies=(state.genWeeklies||[]).filter(x=>x.id!==id);save();renderGeneratedWeeklies();}
+
 
 function genMonthly(){
   const fy=document.getElementById('em-fy').value,month=document.getElementById('em-month').value;
@@ -1061,7 +1192,7 @@ function genMonthly(){
   const sM=md.filter(p=>p.type==='业绩'),sC=cd.filter(p=>p.type==='业绩');
   const rM=md.filter(p=>p.type==='回款'),rC=cd.filter(p=>p.type==='回款');
   const dM=md.filter(p=>p.type==='新成交'),dC=cd.filter(p=>p.type==='新成交');
-  let r='';
+  let r=`【${fy} ${month}月 月报】\n${'─'.repeat(30)}\n\n`;
   r+=`➡️ 本月业绩：${fmt(sM.reduce((a,b)=>a+b.amount,0))}\n`;
   if(sM.length)groupByClient(sM).forEach(p=>{r+=fl(p)+'\n';});else r+=`  （暂无）\n`;
   r+=`➡️ 截至本月总业绩：${fmt(sC.reduce((a,b)=>a+b.amount,0))}\n`;
@@ -1078,9 +1209,8 @@ function genMonthly(){
   dC.forEach(p=>{r+=fl(p)+'\n';});
   r+='\n';
   if(mm&&(mm.mid||mm.long||mm.newClients)){
-    let newBreakdown='';
-    if(mm.newClients&&(mm.newMid||mm.newLong))newBreakdown=`（其中中等投入${mm.newMid||0}个，长期投入${mm.newLong||0}个）`;
-    r+=`➡️ 客户投入情况\n  中等投入${mm.mid||0}个，长期投入${mm.long||0}个，新增背调${mm.newClients||0}个${newBreakdown}\n\n`;
+    let nb='';if(mm.newClients&&(mm.newMid||mm.newLong))nb=`（其中中等投入${mm.newMid||0}个，长期投入${mm.newLong||0}个）`;
+    r+=`➡️ 客户投入情况\n  中等投入${mm.mid||0}个，长期投入${mm.long||0}个，新增背调${mm.newClients||0}个${nb}\n\n`;
   }
   r+=`➡️ 重点项目状态\n`;
   r+=`➡️ 已确认订单 / 已成交：\n${(mm&&mm.p1)||'（暂无）'}\n\n`;
@@ -1091,11 +1221,51 @@ function genMonthly(){
   if(mm&&mm.keyorders)r+=`➡️ 重点订单情况\n  ${mm.keyorders}\n\n`;
   if(mm&&mm.aftersales)r+=`➡️ 售后情况\n  ${mm.aftersales}\n\n`;
   if(mm&&mm.plan)r+=`➡️ 下月计划\n  ${mm.plan}\n`;
-  window._monthlyTxt=r;document.getElementById('monthly-out').innerHTML=`<div class="export-area">${r}</div>`;
+  // Save generated report
+  if(!state.genMonthlies)state.genMonthlies=[];
+  const key=`${fy}_${month}`;
+  const entry={id:Date.now(),key,fy,month,txt:r,savedAt:new Date().toLocaleString('zh-CN')};
+  const ex=state.genMonthlies.findIndex(x=>x.key===key);
+  if(ex>=0){entry.id=state.genMonthlies[ex].id;state.genMonthlies[ex]=entry;}else state.genMonthlies.push(entry);
+  save();
+  renderGeneratedMonthlies(key);
 }
 
+function renderGeneratedMonthlies(expandKey){
+  if(!state.genMonthlies)state.genMonthlies=[];
+  const list=state.genMonthlies.slice().reverse();
+  const el=document.getElementById('generated-monthlies');if(!el)return;
+  if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--text2);font-size:12px">暂无已生成的月报</div>';return;}
+  el.innerHTML=list.map(m=>{
+    const hid='gm_'+m.id;
+    const isNew=m.key===expandKey;
+    return`<div class="card" style="margin-top:8px">
+      <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
+        <span style="font-size:13px;font-weight:500"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> ${m.fy} ${m.month}月 月报</span>
+        <div class="inline-flex">
+          <button class="btn btn-xs" onclick="event.stopPropagation();copyGenTxt('genMonthlies',${m.id})">复制</button>
+          <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delGenMonthly(${m.id})">删除</button>
+        </div>
+      </div>
+      <div id="${hid}" style="display:${isNew?'block':'none'};margin-top:8px">
+        <div class="export-area" style="margin-top:0;max-height:420px">${m.txt}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:6px">${m.savedAt}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function delGenMonthly(id){if(!confirm('确认删除？'))return;state.genMonthlies=(state.genMonthlies||[]).filter(x=>x.id!==id);save();renderGeneratedMonthlies();}
+
+function copyGenTxt(stateKey,id){
+  const item=(state[stateKey]||[]).find(x=>x.id===id);
+  if(!item||!item.txt){alert('暂无内容');return;}
+  navigator.clipboard.writeText(item.txt).then(()=>alert('已复制！'));
+}
+
+
 function copyTxt(id){
-  const map={'daily-out':window._dailyTxt,'weekly-out':window._weeklyTxt,'monthly-out':window._monthlyTxt};
+  // legacy support — kept for any lingering calls
+  const map={'daily-out':window._lastDailyTxt,'weekly-out':window._weeklyTxt,'monthly-out':window._monthlyTxt};
   const txt=map[id];if(!txt){alert('请先生成报告');return;}
   navigator.clipboard.writeText(txt).then(()=>{const b=event.target;const o=b.textContent;b.textContent='已复制！';setTimeout(()=>b.textContent=o,1500);});
 }
