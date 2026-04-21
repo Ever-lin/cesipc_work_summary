@@ -1654,6 +1654,29 @@ function loadDailyIntoForm(date){
   window.scrollTo(0,0);
 }
 
+function copySavedDailySection(date,section){
+  const d=(state.dailies||[]).find(x=>x.date===date);
+  if(!d)return;
+  const followupArr=(d.followup||'').split('\n').filter(Boolean);
+  const visitArr=(d.visit||'').split('\n').filter(Boolean);
+  let txt='';
+  if(section==='projects'){
+    txt=[
+      `1）合同签订（含走流程）：\n${d.p1||'暂无'}`,
+      `2）产品报价：\n${d.p2||'暂无'}`,
+      `3）方案设计：\n${d.p3||'暂无'}`,
+      `4）需求确认：\n${d.p4||'暂无'}`,
+      `5）项目延期：\n${d.p5||'暂无'}`,
+      `6）丢单：\n${d.p6||'暂无'}`,
+    ].join('\n\n');
+  } else if(section==='longline'){
+    txt=`1）背调客户：${d.newClients?d.newClients+'个':'暂无'}\n\n2）长线客户跟进情况如下：\n  跟进：${d.followupCount?d.followupCount+'家'+(followupArr.length?'（'+followupArr.join('、')+'）':''):'暂无'}\n  拜访：${d.visitCount?d.visitCount+'家'+(visitArr.length?'（'+visitArr.join('、')+'）':''):'暂无'}\n\n3）重点订单情况：\n${d.keyorders||'暂无'}\n\n4）售后情况：\n${d.aftersales||'暂无'}`;
+  } else if(section==='plan'){
+    txt=`1）重点项目：\n${d.planProjects||d.plan||'暂无'}\n\n2）背调客户：${d.planBaodiao||'暂无'}\n\n3）日常事务：${d.planDaily||'暂无'}`;
+  }
+  if(!txt.trim()){alert('内容为空');return;}
+  navigator.clipboard.writeText(txt).then(()=>alert('已复制！'));
+}
 function renderSavedDailies(expandDate){
   if(!state.dailies)state.dailies=[];
   const list=state.dailies.slice().sort((a,b)=>b.date>a.date?1:-1);
@@ -1695,17 +1718,17 @@ function renderSavedDailies(expandDate){
       <div id="${hid}" style="display:${isNew?'block':'none'};margin-top:10px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
           <span style="font-size:12px;font-weight:500;color:var(--text2)">重点项目（按项目节点划分）</span>
-          <button class="btn btn-xs" onclick="navigator.clipboard.writeText(${JSON.stringify(projTxt)}).then(()=>alert('已复制！'))">复制</button>
+          <button class="btn btn-xs" onclick="copySavedDailySection('${did}','projects')">复制</button>
         </div>
         <div style="font-size:12px;white-space:pre-wrap;line-height:1.7;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:10px">${projTxt}</div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
           <span style="font-size:12px;font-weight:500;color:var(--text2)">长线工作 &amp; 日常事务</span>
-          <button class="btn btn-xs" onclick="navigator.clipboard.writeText(${JSON.stringify(longlineTxt)}).then(()=>alert('已复制！'))">复制</button>
+          <button class="btn btn-xs" onclick="copySavedDailySection('${did}','longline')">复制</button>
         </div>
         <div style="font-size:12px;white-space:pre-wrap;line-height:1.7;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:10px">${longlineTxt}</div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
           <span style="font-size:12px;font-weight:500;color:var(--text2)">明日计划</span>
-          <button class="btn btn-xs" onclick="navigator.clipboard.writeText(${JSON.stringify(planTxt)}).then(()=>alert('已复制！'))">复制</button>
+          <button class="btn btn-xs" onclick="copySavedDailySection('${did}','plan')">复制</button>
         </div>
         <div style="font-size:12px;white-space:pre-wrap;line-height:1.7;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:6px">${planTxt}</div>
         <div style="font-size:11px;color:var(--text2);margin-top:6px">${d.savedAt}</div>
