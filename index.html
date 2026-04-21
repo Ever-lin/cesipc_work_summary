@@ -1603,7 +1603,7 @@ function copyDailySection(section){
       ['5）项目延期',v('d-p5')],
       ['6）丢单',v('d-p6')],
     ];
-    txt=parts.filter(([,val])=>val.trim()).map(([label,val])=>`${label}：\n${val.trim()}`).join('\n\n');
+    txt=parts.map(([label,val])=>`${label}：\n${val.trim()||'暂无'}`).join('\n\n');
   } else if(section==='longline'){
     const newC=parseInt(v('d-new'))||0;
     const followupLines=v('d-followup').trim();
@@ -1613,24 +1613,24 @@ function copyDailySection(section){
     const keyorders=v('d-keyorders').trim();
     const aftersales=v('d-aftersales').trim();
     const parts=[];
-    if(newC)parts.push(`1）背调客户：${newC}个`);
-    if(followupLines||visitLines){
-      let s='2）长线客户跟进情况如下：';
-      if(followupCount)s+=`\n  跟进：${followupCount}家${followupLines?'（'+followupLines.split('\n').filter(Boolean).join('、')+'）':''}`;
-      if(visitCount)s+=`\n  拜访：${visitCount}家${visitLines?'（'+visitLines.split('\n').filter(Boolean).join('、')+'）':''}`;
-      parts.push(s);
-    }
-    if(keyorders)parts.push(`3）重点订单情况：\n${keyorders}`);
-    if(aftersales)parts.push(`4）售后情况：\n${aftersales}`);
+    parts.push(`1）背调客户：${newC?newC+'个':'暂无'}`);
+    let s='2）长线客户跟进情况如下：';
+    if(followupCount)s+=`\n  跟进：${followupCount}家${followupLines?'（'+followupLines.split('\n').filter(Boolean).join('、')+'）':''}`;
+    else s+=`\n  跟进：暂无`;
+    if(visitCount)s+=`\n  拜访：${visitCount}家${visitLines?'（'+visitLines.split('\n').filter(Boolean).join('、')+'）':''}`;
+    else s+=`\n  拜访：暂无`;
+    parts.push(s);
+    parts.push(`3）重点订单情况：\n${keyorders||'暂无'}`);
+    parts.push(`4）售后情况：\n${aftersales||'暂无'}`);
     txt=parts.join('\n\n');
   } else if(section==='plan'){
     const planProj=v('d-plan-projects').trim();
     const planBao=v('d-plan-baodiao').trim();
     const planDaily=v('d-plan-daily').trim();
     const parts=[];
-    if(planProj)parts.push(`1）重点项目：\n${planProj}`);
-    if(planBao)parts.push(`2）背调客户：${planBao}`);
-    if(planDaily)parts.push(`3）日常事务：${planDaily}`);
+    parts.push(`1）重点项目：\n${planProj||'暂无'}`);
+    parts.push(`2）背调客户：${planBao||'暂无'}`);
+    parts.push(`3）日常事务：${planDaily||'暂无'}`);
     txt=parts.join('\n\n');
   }
   if(!txt.trim()){alert('内容为空');return;}
