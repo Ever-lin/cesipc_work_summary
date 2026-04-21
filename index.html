@@ -1458,10 +1458,16 @@ function fillDailyTomorrowPlan(){
   const grouped={};
   state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
   const toFollow=[];
+  const projIcon=s=>{if(s==='成交')return'✅';if(s==='确认订单')return'🔶';if(s==='丢单')return'❌';if(s==='暂无进展')return'⏸️';return'⭕️';};
   Object.keys(grouped).forEach(k=>{
     const latest=grouped[k].sort((a,b)=>b.id-a.id)[0];
     if(latest.actionTime===tomorrow&&latest.actionContent){
-      toFollow.push(`🎯 ${latest.client||latest.name}\n   ${latest.actionContent}`);
+      const icon=projIcon(latest.status);
+      const sc=SC[latest.status]||{label:latest.status||''};
+      const clientLine=latest.client||'';
+      const projLine=`1. 项目名称：${icon} ${latest.name||k} ${sc.label?`[${sc.label}]`:''}`;
+      const actionLine=`行动内容：${latest.actionContent}`;
+      toFollow.push([clientLine,projLine,actionLine].filter(Boolean).join('\n'));
     }
   });
   // Fill 重点项目 box
