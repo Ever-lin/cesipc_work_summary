@@ -345,51 +345,48 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       </div>
 
       <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目（按项目节点划分）<button class="btn btn-sm" onclick="fillDailyProjects();fillDailyFollowup()">↻ 刷新项目</button></div>
-      <div class="field"><label>➡️ 合同签订（含走流程）<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：生产/交付、安装/验收、项目完结、合同签订</span></label><textarea id="d-p1" class="auto-resize"></textarea></div>
-      <div class="field"><label>➡️ 产品报价<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：产品报价</span></label><textarea id="d-p2" class="auto-resize"></textarea></div>
-      <div class="field"><label>➡️ 方案设计<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：方案设计</span></label><textarea id="d-p3" class="auto-resize"></textarea></div>
-      <div class="field"><label>➡️ 需求确认<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：需求确认</span></label><textarea id="d-p4" class="auto-resize"></textarea></div>
-      <div class="field"><label>➡️ 项目延期<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：项目延期</span></label><textarea id="d-p5" class="auto-resize"></textarea></div>
-      <div class="field"><label>➡️ 丢单<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：项目停止</span></label><textarea id="d-p6" class="auto-resize"></textarea></div>
+      <div class="field"><label style="display:flex;align-items:center;justify-content:space-between"><span>1）合同签订（含走流程）<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：生产/交付、安装/验收、项目完结、合同签订</span></span><button class="btn btn-xs" onclick="copyFieldTxt('d-p1')">复制</button></label><textarea id="d-p1" class="auto-resize"></textarea></div>
+      <div class="field"><label style="display:flex;align-items:center;justify-content:space-between"><span>2）产品报价<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：产品报价</span></span><button class="btn btn-xs" onclick="copyFieldTxt('d-p2')">复制</button></label><textarea id="d-p2" class="auto-resize"></textarea></div>
+      <div class="field"><label style="display:flex;align-items:center;justify-content:space-between"><span>3）方案设计<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：方案设计</span></span><button class="btn btn-xs" onclick="copyFieldTxt('d-p3')">复制</button></label><textarea id="d-p3" class="auto-resize"></textarea></div>
+      <div class="field"><label style="display:flex;align-items:center;justify-content:space-between"><span>4）需求确认<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：需求确认</span></span><button class="btn btn-xs" onclick="copyFieldTxt('d-p4')">复制</button></label><textarea id="d-p4" class="auto-resize"></textarea></div>
+      <div class="field"><label style="display:flex;align-items:center;justify-content:space-between"><span>5）项目延期<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：项目延期</span></span><button class="btn btn-xs" onclick="copyFieldTxt('d-p5')">复制</button></label><textarea id="d-p5" class="auto-resize"></textarea></div>
+      <div class="field"><label style="display:flex;align-items:center;justify-content:space-between"><span>6）丢单<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：项目停止</span></span><button class="btn btn-xs" onclick="copyFieldTxt('d-p6')">复制</button></label><textarea id="d-p6" class="auto-resize"></textarea></div>
 
-      <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">长线工作（中长期客户跟进、拜访）</div>
-      <div class="field">
-        <label>➡️ 新增背调客户数</label>
+      <div class="slabel">长线工作 &amp; 日常事务</div>
+      <input id="d-new-mid" type="hidden" value="0"><input id="d-new-long" type="hidden" value="0">
+      <div class="field"><label style="display:flex;align-items:center;justify-content:space-between"><span>1）背调客户数</span><button class="btn btn-xs" onclick="copyFieldTxt('d-new','num')">复制</button></label>
         <input id="d-new" type="number" placeholder="0" style="max-width:100px" oninput="fillDailyTomorrowPlan()">
-        <input id="d-new-mid" type="hidden" value="0">
-        <input id="d-new-long" type="hidden" value="0">
       </div>
+      <div class="field"><label style="display:flex;align-items:center;justify-content:space-between"><span>2）长线客户跟进情况如下</span></label></div>
       <div class="grid2">
         <div class="field">
           <label style="display:flex;align-items:center;justify-content:space-between">
-            <span>➡️ 跟进客户（每行一家）</span>
-            <span class="inline-flex"><span style="font-size:11px;color:var(--text2)">数量：<input id="d-followup-count" type="number" min="0" placeholder="自动" style="width:52px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onDailyCountInput('followup')"></span><button class="btn btn-sm" onclick="fillDailyFollowup()">↻ 刷新</button></span>
+            <span>跟进客户（每行一家）<span style="font-size:11px;color:var(--text2);margin-left:4px">数量：<input id="d-followup-count" type="number" min="0" placeholder="自动" style="width:48px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onDailyCountInput('followup')"></span></span>
+            <span class="inline-flex"><button class="btn btn-xs" onclick="fillDailyFollowup()">↻ 刷新</button><button class="btn btn-xs" onclick="copyFieldTxt('d-followup')">复制</button></span>
           </label>
           <textarea id="d-followup" class="auto-resize" placeholder="每行填写一家公司名称" oninput="onDailyListInput('followup')"></textarea>
         </div>
         <div class="field">
           <label style="display:flex;align-items:center;justify-content:space-between">
-            <span>➡️ 拜访客户（每行一家）</span>
-            <span style="font-size:11px;color:var(--text2)">数量：<input id="d-visit-count" type="number" min="0" placeholder="自动" style="width:52px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onDailyCountInput('visit')"></span>
+            <span>拜访客户（每行一家）<span style="font-size:11px;color:var(--text2);margin-left:4px">数量：<input id="d-visit-count" type="number" min="0" placeholder="自动" style="width:48px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onDailyCountInput('visit')"></span></span>
+            <button class="btn btn-xs" onclick="copyFieldTxt('d-visit')">复制</button>
           </label>
           <textarea id="d-visit" class="auto-resize" placeholder="每行填写一家公司名称" oninput="onDailyListInput('visit')"></textarea>
         </div>
       </div>
-
-      <div class="slabel">日常事务</div>
-      <div class="field"><label>➡️ 重点订单情况</label><textarea id="d-keyorders" class="auto-resize"></textarea></div>
-      <div class="field"><label>➡️ 售后情况</label><textarea id="d-aftersales" class="auto-resize"></textarea></div>
+      <div class="field"><label style="display:flex;align-items:center;justify-content:space-between"><span>3）重点订单情况</span><button class="btn btn-xs" onclick="copyFieldTxt('d-keyorders')">复制</button></label><textarea id="d-keyorders" class="auto-resize"></textarea></div>
+      <div class="field"><label style="display:flex;align-items:center;justify-content:space-between"><span>4）售后情况</span><button class="btn btn-xs" onclick="copyFieldTxt('d-aftersales')">复制</button></label><textarea id="d-aftersales" class="auto-resize"></textarea></div>
 
       <div class="slabel">明日计划</div>
       <div class="field">
         <label style="display:flex;align-items:center;justify-content:space-between">
-          <span>➡️ 重点项目</span>
-          <button class="btn btn-sm" onclick="fillDailyTomorrowPlan()">↻ 刷新</button>
+          <span>1）重点项目</span>
+          <span class="inline-flex"><button class="btn btn-sm" onclick="fillDailyTomorrowPlan()">↻ 刷新</button><button class="btn btn-xs" onclick="copyFieldTxt('d-plan-projects')">复制</button></span>
         </label>
         <textarea id="d-plan-projects" class="auto-resize" placeholder="根据行动时间自动填入，可手动修改" style="min-height:60px"></textarea>
       </div>
-      <div class="field"><label>➡️ 背调客户</label><textarea id="d-plan-baodiao" class="auto-resize" placeholder="如：背调3个客户" style="min-height:40px"></textarea></div>
-      <div class="field"><label>➡️ 日常事务</label><textarea id="d-plan-daily" class="auto-resize" placeholder="其他工作安排" style="min-height:40px"></textarea></div>
+      <div class="field"><label style="display:flex;align-items:center;justify-content:space-between"><span>2）背调客户</span><button class="btn btn-xs" onclick="copyFieldTxt('d-plan-baodiao')">复制</button></label><textarea id="d-plan-baodiao" class="auto-resize" placeholder="如：背调3个客户" style="min-height:40px"></textarea></div>
+      <div class="field"><label style="display:flex;align-items:center;justify-content:space-between"><span>3）日常事务</span><button class="btn btn-xs" onclick="copyFieldTxt('d-plan-daily')">复制</button></label><textarea id="d-plan-daily" class="auto-resize" placeholder="其他工作安排" style="min-height:40px"></textarea></div>
     </div>
     <div id="saved-dailies" style="margin-top:4px"></div>
   </div>
@@ -1591,6 +1588,18 @@ function genDaily(){
   renderSavedDailies(date);
 }
 
+function copyFieldTxt(id,type){
+  let txt='';
+  if(type==='num'){
+    const el=document.getElementById(id);
+    txt=el?String(el.value||'0'):'0';
+  } else {
+    const el=document.getElementById(id);
+    txt=el?el.value.trim():'';
+  }
+  if(!txt){alert('内容为空');return;}
+  navigator.clipboard.writeText(txt).then(()=>{alert('已复制！');});
+}
 function copyLastDaily(){
   if(!window._lastDailyTxt){alert('请先生成日报');return;}
   navigator.clipboard.writeText(window._lastDailyTxt).then(()=>{
