@@ -75,6 +75,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .collapse-hdr{cursor:pointer;user-select:none}
 .collapse-hdr:hover{opacity:.85}
 @media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr}.metric-grid{grid-template-columns:repeat(2,1fr)}}
+.term-item{padding:2px 4px;cursor:pointer;border-radius:3px}.term-item:hover{background:var(--blue-bg);color:var(--blue-text)}
 </style>
 </head>
 <body>
@@ -152,12 +153,68 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="field"><label>项目名称（唯一标识）</label><input id="proj-name" placeholder="如：Orange_项目10_260330_UTC-S1272A" list="proj-dl"><datalist id="proj-dl"></datalist></div>
       <div class="field"><label>客户名称</label><input id="proj-client" placeholder="如：Orange Ltd"></div>
     </div>
-    <div class="field"><label>当前状态</label>
-      <select id="proj-status"><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="报价跟进">已报价跟进中</option><option value="方案">已提供方案</option><option value="确认">方案确认中</option><option value="长期">长期跟进项目</option><option value="暂无进展">暂无进展</option><option value="丢单">丢单</option></select>
-    </div>
-    <div class="field"><label>进展记录（含日期、报价、沟通内容）</label><textarea id="proj-progress" placeholder="如：2026/4/18 报价 ¥9800，客户表示需内部确认"></textarea></div>
     <div class="grid2">
+      <div class="field"><label>当前状态</label>
+        <select id="proj-status"><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="报价跟进">已报价跟进中</option><option value="方案">已提供方案</option><option value="确认">方案确认中</option><option value="长期">长期跟进项目</option><option value="暂无进展">暂无进展</option><option value="丢单">丢单</option></select>
+      </div>
+      <div class="field">
+        <label>项目进度
+          <span id="progress-term-toggle" onclick="toggleTerms()" style="cursor:pointer;color:var(--blue);font-size:11px;margin-left:6px">📋 查看术语参考 ▾</span>
+        </label>
+        <input id="proj-progress-stage" placeholder="如：方案设计 / 拟标 / 产品报价…">
+        <div id="progress-terms-box" style="display:none;margin-top:6px;border:1px solid var(--border2);border-radius:var(--radius-xs);overflow:hidden">
+          <div style="display:flex;border-bottom:1px solid var(--border2)">
+            <button class="btn btn-xs" id="term-tab-regular" onclick="switchTermTab('regular')" style="flex:1;border-radius:0;border:none;background:var(--blue);color:#fff">常规项目</button>
+            <button class="btn btn-xs" id="term-tab-bid" onclick="switchTermTab('bid')" style="flex:1;border-radius:0;border:none">投标项目</button>
+          </div>
+          <div id="term-regular" style="padding:8px;font-size:11px;line-height:1.8;color:var(--text2)">
+            <div onclick="setStage('需求确认')" class="term-item">1. <b>需求确认</b>：客户初步确认需求，进入项目前期讨论阶段</div>
+            <div onclick="setStage('方案设计')" class="term-item">2. <b>方案设计</b>：基于需求提供初步解决方案或方案修改</div>
+            <div onclick="setStage('产品报价')" class="term-item">3. <b>产品报价</b>：提供正式报价单，包括产品或服务的价格和数量</div>
+            <div onclick="setStage('合同签订')" class="term-item">4. <b>合同签订</b>：双方确认并签订正式合同</div>
+            <div onclick="setStage('生产/交付')" class="term-item">5. <b>生产/交付</b>：产品开始生产或服务准备，客户需求已被满足，开始交付阶段</div>
+            <div onclick="setStage('安装/验收')" class="term-item">6. <b>安装/验收</b>：产品交付到客户后，进行安装或系统验收工作</div>
+            <div onclick="setStage('项目完结')" class="term-item">7. <b>项目完结</b>：项目完成，客户验收无异议，项目正式收尾</div>
+            <div onclick="setStage('项目延期')" class="term-item">8. <b>项目延期</b>：因为种种原因项目延期</div>
+            <div onclick="setStage('项目停止')" class="term-item">9. <b>项目停止</b>：因为种种原因项目停止</div>
+          </div>
+          <div id="term-bid" style="display:none;padding:8px;font-size:11px;line-height:1.8;color:var(--text2)">
+            <div onclick="setStage('拟标')" class="term-item">1. <b>拟标</b>：初步确认参与项目，进行投标准备</div>
+            <div onclick="setStage('挂网')" class="term-item">2. <b>挂网</b>：项目正式发布并挂网，公开征集投标者</div>
+            <div onclick="setStage('招标')" class="term-item">3. <b>招标</b>：客户发布招标文件，正式启动招标过程</div>
+            <div onclick="setStage('投标')" class="term-item">4. <b>投标</b>：企业提交投标书，包括技术方案、报价等</div>
+            <div onclick="setStage('封标')" class="term-item">5. <b>封标</b>：投标截止时间，投标文件已封存，停止接收投标</div>
+            <div onclick="setStage('评标')" class="term-item">6. <b>评标</b>：招标方对各投标书进行评审</div>
+            <div onclick="setStage('定标')" class="term-item">7. <b>定标</b>：招标方确定中标者，并通知各投标方</div>
+            <div onclick="setStage('流标废标')" class="term-item">8. <b>流标废标</b>：投标失败或招标方未做出中标决定，项目流标或废标</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slabel" style="margin-top:4px">📋 跟进详情</div>
+    <div class="grid2">
+      <div class="field"><label>项目需求</label><textarea id="proj-requirement" placeholder="客户的具体需求描述" style="min-height:52px"></textarea></div>
+      <div class="field"><label>项目数量</label><input id="proj-quantity" placeholder="如：100台 / 2套 / 500m²"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>项目报价</label><input id="proj-quote" placeholder="如：¥98,000 或 $15,000"></div>
       <div class="field"><label>记录日期</label><input id="proj-date" type="date"></div>
+    </div>
+    <div class="field"><label>跟进详情（沟通内容、关键进展）</label><textarea id="proj-progress" placeholder="如：2026/4/18 与客户技术部沟通，确认规格参数，客户表示需内部审批后回复"></textarea></div>
+
+    <div class="slabel">🎯 推进计划</div>
+    <div class="grid2">
+      <div class="field"><label>行动内容</label><textarea id="proj-action-content" placeholder="下一步具体行动" style="min-height:52px"></textarea></div>
+      <div class="field"><label>行动时间</label><input id="proj-action-time" placeholder="如：2026/4/25 前"></div>
+    </div>
+    <div class="field"><label>确认信息点</label><input id="proj-confirm-points" placeholder="需要客户确认的关键信息"></div>
+    <div class="grid2">
+      <div class="field"><label>可能的风险</label><textarea id="proj-risks" placeholder="潜在风险或障碍" style="min-height:52px"></textarea></div>
+      <div class="field"><label>关键决策人</label><input id="proj-decision-maker" placeholder="如：采购负责人 王总"></div>
+    </div>
+
+    <div class="grid2" style="margin-top:4px">
       <div class="field"><label>优先级</label><select id="proj-priority"><option value="高">高</option><option value="中" selected>中</option><option value="低">低</option></select></div>
     </div>
     <button class="btn btn-primary" id="proj-submit-btn" onclick="submitProject()">+ 保存（新增或追加进展）</button>
@@ -649,20 +706,51 @@ function renderProjects(){
     const sc=SC[latest.status]||{label:latest.status};
     const pc=latest.priority==='高'?'badge-red':latest.priority==='中'?'badge-amber':'badge-gray';
     const hid='h_'+k.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
+    const crmId='crm_'+latest.id;
+    const allEntriesForCard=entries.slice().sort((a,b)=>b.id-a.id);
+    const historyBullets=allEntriesForCard.filter(e=>e.progress&&e.progress.trim()).map(e=>{
+      const date=e.recordDate||'';
+      return e.progress.trim().split('\n').filter(l=>l.trim()).map(l=>`<div style="padding:1px 0">· ${date} ${l.trim()}</div>`).join('');
+    }).join('');
     html+=`<div class="project-item">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
         <div>
           <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:2px">${latest.client}</div>
           <div style="font-size:13px;font-weight:500;margin-bottom:2px">${icon} ${latest.name}</div>
         </div>
-        <div class="inline-flex" style="flex-shrink:0"><span class="badge ${pc}">${latest.priority}</span><span class="badge badge-gray">${sc.label}</span></div>
+        <div class="inline-flex" style="flex-shrink:0"><span class="badge ${pc}">${latest.priority}</span><span class="badge badge-gray">${sc.label}</span>${latest.progressStage?`<span class="badge badge-blue" style="font-size:10px">${latest.progressStage}</span>`:''}</div>
       </div>
-      <div style="font-size:12px;background:var(--bg2);padding:7px 10px;border-radius:var(--radius-xs);margin-bottom:8px;line-height:1.6;color:var(--text2)">${(latest.progress||'暂无进展').replace(/\n/g,'<br>')}</div>
-      ${entries.length>1?`<button class="btn btn-xs" style="margin-bottom:6px" onclick="(function(){var el=document.getElementById('${hid}');el.style.display=el.style.display==='none'?'block':'none'})()">历史记录 (${entries.length-1}条)</button>
-        <div id="${hid}" style="display:none;margin-bottom:6px">${entries.slice(1).map(e=>`<div class="history-item"><span style="font-size:11px">${e.recordDate} · ${SC[e.status]?.label||e.status}</span><br>${e.progress||'—'}</div>`).join('')}</div>`:''}
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:11px;color:var(--text2)">${latest.savedAt}</span>
-        <div class="inline-flex"><button class="btn btn-xs" onclick="fillEdit('${k.replace(/'/g,"\\'")}')">追加进展</button><button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="editLatestProgress('${k.replace(/'/g,"\\'")}',${latest.id})">编辑记录</button><button class="btn btn-danger btn-xs" onclick="delGroup('${k.replace(/'/g,"\\'")}')">删除</button></div>
+
+      <div style="font-size:12px;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:6px;line-height:1.8;color:var(--text2)">
+        <div><b>1. 项目名称：</b>${latest.name||''}</div>
+        <div><b>2. 项目进度：</b>${latest.progressStage||''}</div>
+        <div><b>3. 项目需求：</b>${(latest.requirement||'').replace(/\n/g,'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')}</div>
+        <div><b>4. 项目数量：</b>${latest.quantity||''}</div>
+        <div><b>5. 项目报价：</b>${latest.quote||''}</div>
+        <div style="margin-top:4px"><b>6. 跟进详情：</b>${historyBullets||'<span style="color:var(--text3);font-style:italic">暂无</span>'}</div>
+      </div>
+
+      <div style="font-size:12px;background:#F0F7FF;border:1px solid #B8D4F0;padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:6px;line-height:1.8;color:#0C447C">
+        <div style="font-weight:600;margin-bottom:2px;color:#185FA5">🎯 推进计划</div>
+        <div><b>1. 行动内容：</b>${(latest.actionContent||'').replace(/\n/g,'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')}</div>
+        <div><b>2. 行动时间：</b>${latest.actionTime||''}</div>
+        <div><b>3. 确认信息点：</b>${latest.confirmPoints||''}</div>
+        <div><b>4. 可能的风险：</b>${(latest.risks||'').replace(/\n/g,'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')}</div>
+        <div><b>5. 关键决策人：</b>${latest.decisionMaker||''}</div>
+      </div>
+
+      <div id="${crmId}" style="display:none;margin-bottom:6px">
+        <div style="background:#FFFBF0;border:1px solid #F0D070;border-radius:var(--radius-xs);padding:8px 10px;font-size:12px;white-space:pre-wrap;font-family:monospace;line-height:1.8;color:var(--text);user-select:all">${buildCRMTextFull(latest,allEntriesForCard)}</div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+        <span style="font-size:11px;color:var(--text2)">${latest.savedAt}${entries.length>1?` · 共${entries.length}条记录`:''}</span>
+        <div class="inline-flex" style="flex-wrap:wrap;gap:4px">
+          <button class="btn btn-xs" style="background:#FFFBF0;color:#7A5800;border-color:#F0D070" onclick="copyCRM(${latest.id},'${crmId}',this)">📋 复制CRM格式</button>
+          <button class="btn btn-xs" onclick="fillEdit('${k.replace(/'/g,"\\'")}')">追加进展</button>
+          <button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="editLatestProgress('${k.replace(/'/g,"\\'")}',${latest.id})">编辑记录</button>
+          <button class="btn btn-danger btn-xs" onclick="delGroup('${k.replace(/'/g,"\\'")}')">删除</button>
+        </div>
       </div>
     </div>`;
   });
@@ -672,13 +760,21 @@ function renderProjects(){
 function submitProject(){
   const editId=document.getElementById('proj-edit-id').value;
   if(editId){
-    // Edit mode: update existing entry
     const entry=state.projects.find(p=>String(p.id)===editId);
     if(!entry){alert('记录不存在');return;}
     entry.name=document.getElementById('proj-name').value.trim()||entry.name;
     entry.client=document.getElementById('proj-client').value.trim()||entry.client;
     entry.status=document.getElementById('proj-status').value;
+    entry.progressStage=document.getElementById('proj-progress-stage').value.trim();
+    entry.requirement=document.getElementById('proj-requirement').value.trim();
+    entry.quantity=document.getElementById('proj-quantity').value.trim();
+    entry.quote=document.getElementById('proj-quote').value.trim();
     entry.progress=document.getElementById('proj-progress').value.trim();
+    entry.actionContent=document.getElementById('proj-action-content').value.trim();
+    entry.actionTime=document.getElementById('proj-action-time').value.trim();
+    entry.confirmPoints=document.getElementById('proj-confirm-points').value.trim();
+    entry.risks=document.getElementById('proj-risks').value.trim();
+    entry.decisionMaker=document.getElementById('proj-decision-maker').value.trim();
     entry.recordDate=document.getElementById('proj-date').value||todayStr();
     entry.priority=document.getElementById('proj-priority').value;
     entry.savedAt=new Date().toLocaleString('zh-CN');
@@ -686,20 +782,28 @@ function submitProject(){
     const a=document.createElement('div');a.className='alert-s';a.textContent='记录已更新！';
     document.getElementById('proj-form-card').prepend(a);setTimeout(()=>a.remove(),1800);
   } else {
-    // Append / new mode
     const client=document.getElementById('proj-client').value.trim();
     if(!client){alert('请填写客户名称');return;}
     const entry={
       id:Date.now(),
       name:document.getElementById('proj-name').value.trim()||client,
       client,status:document.getElementById('proj-status').value,
+      progressStage:document.getElementById('proj-progress-stage').value.trim(),
+      requirement:document.getElementById('proj-requirement').value.trim(),
+      quantity:document.getElementById('proj-quantity').value.trim(),
+      quote:document.getElementById('proj-quote').value.trim(),
       progress:document.getElementById('proj-progress').value.trim(),
+      actionContent:document.getElementById('proj-action-content').value.trim(),
+      actionTime:document.getElementById('proj-action-time').value.trim(),
+      confirmPoints:document.getElementById('proj-confirm-points').value.trim(),
+      risks:document.getElementById('proj-risks').value.trim(),
+      decisionMaker:document.getElementById('proj-decision-maker').value.trim(),
       recordDate:document.getElementById('proj-date').value||todayStr(),
       priority:document.getElementById('proj-priority').value,
       savedAt:new Date().toLocaleString('zh-CN')
     };
     state.projects.push(entry);save();
-    ['proj-name','proj-client','proj-progress'].forEach(i=>document.getElementById(i).value='');
+    ['proj-name','proj-client','proj-progress-stage','proj-requirement','proj-quantity','proj-quote','proj-progress','proj-action-content','proj-action-time','proj-confirm-points','proj-risks','proj-decision-maker'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
     document.getElementById('proj-date').value=todayStr();
     renderProjects();refreshProjDatalist();renderProjSync('w-proj-sync');renderProjSync('wm-proj-sync');
   }
@@ -712,7 +816,16 @@ function fillEdit(name){
   document.getElementById('proj-name').value=l.name||l.client;
   document.getElementById('proj-client').value=l.client;
   document.getElementById('proj-status').value=l.status;
+  document.getElementById('proj-progress-stage').value=l.progressStage||'';
+  document.getElementById('proj-requirement').value=l.requirement||'';
+  document.getElementById('proj-quantity').value=l.quantity||'';
+  document.getElementById('proj-quote').value=l.quote||'';
   document.getElementById('proj-progress').value='';
+  document.getElementById('proj-action-content').value='';
+  document.getElementById('proj-action-time').value='';
+  document.getElementById('proj-confirm-points').value='';
+  document.getElementById('proj-risks').value='';
+  document.getElementById('proj-decision-maker').value='';
   document.getElementById('proj-date').value=todayStr();
   document.getElementById('proj-priority').value=l.priority||'中';
   switchTab('projects');window.scrollTo(0,0);
@@ -721,12 +834,20 @@ function fillEdit(name){
 function editLatestProgress(name,id){
   const entry=state.projects.find(p=>p.id===id);
   if(!entry)return;
-  // Fill form in edit mode
   document.getElementById('proj-edit-id').value=String(id);
   document.getElementById('proj-name').value=entry.name||entry.client;
   document.getElementById('proj-client').value=entry.client;
   document.getElementById('proj-status').value=entry.status;
+  document.getElementById('proj-progress-stage').value=entry.progressStage||'';
+  document.getElementById('proj-requirement').value=entry.requirement||'';
+  document.getElementById('proj-quantity').value=entry.quantity||'';
+  document.getElementById('proj-quote').value=entry.quote||'';
   document.getElementById('proj-progress').value=entry.progress||'';
+  document.getElementById('proj-action-content').value=entry.actionContent||'';
+  document.getElementById('proj-action-time').value=entry.actionTime||'';
+  document.getElementById('proj-confirm-points').value=entry.confirmPoints||'';
+  document.getElementById('proj-risks').value=entry.risks||'';
+  document.getElementById('proj-decision-maker').value=entry.decisionMaker||'';
   document.getElementById('proj-date').value=entry.recordDate||todayStr();
   document.getElementById('proj-priority').value=entry.priority||'中';
   // Switch card to edit mode UI
@@ -737,6 +858,49 @@ function editLatestProgress(name,id){
   document.getElementById('proj-submit-btn').textContent='💾 保存修改';
   document.getElementById('proj-submit-btn').style.background='#0C447C';
   switchTab('projects');window.scrollTo(0,0);
+}
+
+function buildCRMText(p){
+  // delegates to full-history version with single entry
+  return buildCRMTextFull(p,[p]);
+}
+
+function copyCRM(id,crmId,btn){
+  const p=state.projects.find(x=>x.id===id);
+  if(!p)return;
+  // get all entries for this project group for full history
+  const allEntries=state.projects.filter(x=>(x.name||x.client)===(p.name||p.client)).sort((a,b)=>b.id-a.id);
+  const txt=buildCRMTextFull(p,allEntries);
+  const box=document.getElementById(crmId);
+  if(box){const inner=box.querySelector('div');if(inner)inner.textContent=txt;box.style.display=box.style.display==='none'?'block':'none';}
+  navigator.clipboard.writeText(txt).then(()=>{
+    const orig=btn.textContent;btn.textContent='✅ 已复制！';btn.style.background='#EAF3DE';btn.style.color='#27500A';btn.style.borderColor='#C0DD97';
+    setTimeout(()=>{btn.textContent=orig;btn.style.background='';btn.style.color='';btn.style.borderColor='';},2000);
+  }).catch(()=>{
+    if(box)box.style.display='block';
+    alert('请手动复制上方黄色文本框中的内容');
+  });
+}
+
+function toggleTerms(){
+  const box=document.getElementById('progress-terms-box');
+  const toggle=document.getElementById('progress-term-toggle');
+  const shown=box.style.display==='none';
+  box.style.display=shown?'block':'none';
+  toggle.textContent=shown?'📋 收起术语参考 ▴':'📋 查看术语参考 ▾';
+}
+function switchTermTab(tab){
+  document.getElementById('term-regular').style.display=tab==='regular'?'block':'none';
+  document.getElementById('term-bid').style.display=tab==='bid'?'block':'none';
+  document.getElementById('term-tab-regular').style.background=tab==='regular'?'var(--blue)':'';
+  document.getElementById('term-tab-regular').style.color=tab==='regular'?'#fff':'';
+  document.getElementById('term-tab-bid').style.background=tab==='bid'?'var(--blue)':'';
+  document.getElementById('term-tab-bid').style.color=tab==='bid'?'#fff':'';
+}
+function setStage(val){
+  document.getElementById('proj-progress-stage').value=val;
+  document.getElementById('progress-terms-box').style.display='none';
+  document.getElementById('progress-term-toggle').textContent='📋 查看术语参考 ▾';
 }
 
 function cancelEditRecord(){
@@ -800,13 +964,36 @@ function fillProjTextareas(prefix){
     } else {
       items=Object.keys(grouped).map(k=>grouped[k].sort((a,b)=>b.id-a.id)[0]).filter(p=>cat.statuses.includes(p.status));
     }
-    el.value=items.map(p=>`客户：${p.client}\n${projIcon(p.status)} ${p.name}\n${p.progress||''}`).join('\n\n');
+    el.value=items.map(p=>{
+      const allEntries=(grouped[p.name||p.client]||[]).sort((a,b)=>b.id-a.id);
+      return buildCRMTextFull(p,allEntries);
+    }).join('\n\n──────────────\n\n');
   });
   autoResizeAll();
 }
 // 兼容旧代码
 function renderProjSync(){}
 function getCheckedProjects(){return[];}
+
+// Build accumulated progress across all entries as bullet lines
+function buildFullProgress(entries){
+  const lines=[];
+  entries.forEach(e=>{
+    if(e.progress&&e.progress.trim()){
+      const date=e.recordDate||'';
+      e.progress.trim().split('\n').forEach(line=>{
+        if(line.trim())lines.push(`· ${date} ${line.trim()}`);
+      });
+    }
+  });
+  return lines.length?lines.join('\n'):'（暂无）';
+}
+
+// Build CRM-formatted text for a project group (latest fields + full accumulated progress)
+function buildCRMTextFull(latest,allEntries){
+  const fullProgress=buildFullProgress(allEntries);
+  return `*跟进详情\n1. 项目名称：${latest.name||''}\n2. 项目进度：${latest.progressStage||''}\n3. 项目需求：${latest.requirement||''}\n4. 项目数量：${latest.quantity||''}\n5. 项目报价：${latest.quote||''}\n6. 跟进详情：\n${fullProgress}\n*推进计划\n1. 行动内容：${latest.actionContent||''}\n2. 行动时间：${latest.actionTime||''}\n3. 确认信息点：${latest.confirmPoints||''}\n4. 可能的风险：${latest.risks||''}\n5. 关键决策人：${latest.decisionMaker||''}`;
+}
 
 function buildProjSection(projects,forMonthly){
   const cats=[
@@ -816,12 +1003,19 @@ function buildProjSection(projects,forMonthly){
     {label:'➡️ 长期跟进项目 / 暂无进展',statuses:['长期','暂无进展']},
     {label:'➡️ 丢单',statuses:['丢单']},
   ];
+  // Build a grouped map so we can get full history per project
+  const grouped={};
+  state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
   let r='';
   cats.forEach(cat=>{
     const items=projects.filter(p=>cat.statuses.includes(p.status));
     r+=`${cat.label}：\n`;
-    if(items.length){items.forEach(p=>{r+=`  客户：${p.client}\n  ${projIcon(p.status)} ${p.name}\n  ${p.progress||''}\n`;});}
-    else{r+=`  （暂无）\n`;}
+    if(items.length){
+      items.forEach(p=>{
+        const allEntries=(grouped[p.name||p.client]||[p]).sort((a,b)=>b.id-a.id);
+        r+=buildCRMTextFull(p,allEntries)+'\n\n';
+      });
+    } else {r+=`  （暂无）\n`;}
   });
   return r;
 }
@@ -984,7 +1178,10 @@ function fillDailyProjects(){
     } else {
       items=Object.keys(grouped).map(k=>grouped[k].sort((a,b)=>b.id-a.id)[0]).filter(p=>cat.statuses.includes(p.status));
     }
-    el.value=items.map(p=>`客户：${p.client}\n${projIcon(p.status)} ${p.name}\n${p.progress||''}`).join('\n\n');
+    el.value=items.map(p=>{
+      const allEntries=(grouped[p.name||p.client]||[p]).sort((a,b)=>b.id-a.id);
+      return buildCRMTextFull(p,allEntries);
+    }).join('\n\n──────────────\n\n');
     autoResize(el);
   });
 }
@@ -1290,8 +1487,17 @@ function exportProjectsExcel(){
       '项目名称':latest.name||k,
       '客户名称':latest.client||'',
       '当前状态':sc.label,
+      '项目进度':latest.progressStage||'',
       '优先级':latest.priority||'',
-      '最新进展':latest.progress||'',
+      '项目需求':latest.requirement||'',
+      '项目数量':latest.quantity||'',
+      '项目报价':latest.quote||'',
+      '跟进详情':latest.progress||'',
+      '行动内容':latest.actionContent||'',
+      '行动时间':latest.actionTime||'',
+      '确认信息点':latest.confirmPoints||'',
+      '可能风险':latest.risks||'',
+      '关键决策人':latest.decisionMaker||'',
       '记录日期':latest.recordDate||'',
       '历史记录数':entries.length,
       '保存时间':latest.savedAt||''
