@@ -229,6 +229,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <select class="ym-s" id="pj-month" onchange="renderProjects()"><option value="all">全部月份</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select>
     <select class="ym-s" id="pj-week" onchange="renderProjects()"><option value="all">全部周次</option><option value="第一周">第一周</option><option value="第二周">第二周</option><option value="第三周">第三周</option><option value="第四周">第四周</option><option value="第五周">第五周</option></select>
     <select class="ym-s" id="pj-status" onchange="renderProjects()"><option value="all">全部状态</option><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="报价跟进">已报价跟进中</option><option value="方案">已提供方案</option><option value="确认">方案确认中</option><option value="长期">长期跟进项目</option><option value="暂无进展">暂无进展</option><option value="丢单">丢单</option></select>
+    <button id="pj-sort-btn" class="btn btn-sm" onclick="cycleProjSort()" title="切换排序方式" style="white-space:nowrap;min-width:100px">🕐 最近更新</button>
     <div style="position:relative;flex:1;min-width:140px;max-width:260px">
       <input id="pj-search" placeholder="🔍 搜索项目名/客户名" oninput="renderProjects()" style="width:100%;padding:5px 28px 5px 10px;font-size:13px;background:#F5F4F0;border:0.5px solid var(--border);border-radius:var(--radius-xs)">
       <span id="pj-search-clear" onclick="document.getElementById('pj-search').value='';renderProjects()" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text2);font-size:14px;line-height:1">✕</span>
@@ -713,6 +714,24 @@ function refreshProjDatalist(){
 function projIcon(status){return status==='成交'?'✅':status==='丢单'?'❌':'⭕️';}
 
 
+// Project sort state: 'recent'(default) | 'oldest' | 'name'
+let _projSort='recent';
+const _projSortDefs=[
+  {key:'recent', label:'🕐 最近更新'},
+  {key:'oldest', label:'🕙 最早更新'},
+  {key:'name',   label:'🔤 名称 A→Z'},
+];
+function cycleProjSort(){
+  const idx=_projSortDefs.findIndex(d=>d.key===_projSort);
+  _projSort=_projSortDefs[(idx+1)%_projSortDefs.length].key;
+  const btn=document.getElementById('pj-sort-btn');
+  if(btn)btn.textContent=_projSortDefs.find(d=>d.key===_projSort).label;
+  renderProjects();
+}
+
+// Highlighted project key after save (scroll-to target)
+let _projHighlight=null;
+
 function renderProjects(){
   const pjFY=document.getElementById('pj-fy').value,pjS=document.getElementById('pj-status').value;
   const pjMonth=document.getElementById('pj-month').value;
@@ -723,7 +742,15 @@ function renderProjects(){
   if(clearBtn)clearBtn.style.display=pjQ?'inline':'none';
   const grouped={};
   state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
-  const keys=Object.keys(grouped);
+  let keys=Object.keys(grouped);
+  // Sort keys
+  if(_projSort==='recent'){
+    keys.sort((a,b)=>{const la=grouped[a].sort((x,y)=>y.id-x.id)[0];const lb=grouped[b].sort((x,y)=>y.id-x.id)[0];return lb.id-la.id;});
+  } else if(_projSort==='oldest'){
+    keys.sort((a,b)=>{const la=grouped[a].sort((x,y)=>y.id-x.id)[0];const lb=grouped[b].sort((x,y)=>y.id-x.id)[0];return la.id-lb.id;});
+  } else {
+    keys.sort((a,b)=>a.localeCompare(b,'zh-CN'));
+  }
   // Compute status counts (across all filters except status)
   const statusDefs=[
     {key:'报价',label:'已报价',cls:'badge-blue'},
@@ -788,6 +815,8 @@ function renderProjects(){
     const pc=latest.priority==='高'?'badge-red':latest.priority==='中'?'badge-amber':'badge-gray';
     const hid='h_'+k.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
     const crmId='crm_'+latest.id;
+    const cardId='card_'+k.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
+    const isHighlighted=_projHighlight&&_projHighlight===k;
     const allEntriesForCard=entries.slice().sort((a,b)=>b.id-a.id);
     const historyBullets=allEntriesForCard.filter(e=>e.progress&&e.progress.trim()).map(e=>{
       const date=e.recordDate||'';
@@ -809,7 +838,7 @@ function renderProjects(){
       </div>`;
     }).join(''):'';
 
-    html+=`<div class="project-item">
+    html+=`<div class="project-item" id="${cardId}" style="${isHighlighted?'border-color:#185FA5;box-shadow:0 0 0 3px #B8D4F0;':''}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
         <div>
           <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:2px">${latest.client}</div>
@@ -861,6 +890,16 @@ function renderProjects(){
     </div>`;
   });
   document.getElementById('proj-list').innerHTML=html||'<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">暂无项目</div>';
+  // Scroll to and clear highlight
+  if(_projHighlight){
+    const cardId='card_'+_projHighlight.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
+    const el=document.getElementById(cardId);
+    if(el){el.scrollIntoView({behavior:'smooth',block:'center'});}
+    setTimeout(()=>{_projHighlight=null;
+      const el2=document.getElementById(cardId);
+      if(el2)el2.style.cssText=el2.style.cssText.replace(/border-color[^;]*;?/g,'').replace(/box-shadow[^;]*;?/g,'');
+    },2000);
+  }
 }
 
 function submitProject(){
@@ -884,7 +923,9 @@ function submitProject(){
     entry.recordDate=document.getElementById('proj-date').value||todayStr();
     entry.priority=document.getElementById('proj-priority').value;
     entry.savedAt=new Date().toLocaleString('zh-CN');
-    save();cancelEditRecord();renderProjects();refreshProjDatalist();
+    save();cancelEditRecord();
+    _projHighlight=entry.name||entry.client;
+    renderProjects();refreshProjDatalist();
     const a=document.createElement('div');a.className='alert-s';a.textContent='记录已更新！';
     document.getElementById('proj-form-card').prepend(a);setTimeout(()=>a.remove(),1800);
   } else {
@@ -909,6 +950,7 @@ function submitProject(){
       savedAt:new Date().toLocaleString('zh-CN')
     };
     state.projects.push(entry);save();
+    _projHighlight=entry.name||entry.client;
     ['proj-name','proj-client','proj-progress-stage','proj-requirement','proj-quantity','proj-quote','proj-progress','proj-action-content','proj-action-time','proj-confirm-points','proj-risks','proj-decision-maker'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
     document.getElementById('proj-date').value=todayStr();
     renderProjects();refreshProjDatalist();renderProjSync('w-proj-sync');renderProjSync('wm-proj-sync');
