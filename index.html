@@ -1509,8 +1509,7 @@ function genDaily(){
   const planDaily=document.getElementById('d-plan-daily').value.trim();
   const projs=state.projects.filter(p=>p.recordDate===date);
   let r=`【日报 ${date}】\n${'─'.repeat(28)}\n\n`;
-  // 1. 重点项目状态
-  r+=`➡️ 重点项目（按项目节点划分）\n`;
+  // 1. 重点项目
   const dAllGrouped={};state.projects.forEach(p=>{const k=p.name||p.client;if(!dAllGrouped[k])dAllGrouped[k]=[];dAllGrouped[k].push(p);});
   function dProjBlock(stages){
     const items=[];
@@ -1520,48 +1519,33 @@ function genDaily(){
       const rep=dayEntries.length>0?dayEntries[0]:null;
       if(rep&&stages.includes(rep.progressStage))items.push({latest:rep,entries});
     });
-    if(!items.length)return'（暂无）';
+    if(!items.length)return'暂无';
     return items.map(({latest,entries})=>buildCRMTextFull(latest,entries)).join('\n\n──────────────\n\n');
   }
-  r+=`➡️ 合同签订（含走流程）：\n${dProjBlock(['生产/交付','安装/验收','项目完结','合同签订'])}\n\n`;
-  r+=`➡️ 产品报价：\n${dProjBlock(['产品报价'])}\n\n`;
-  r+=`➡️ 方案设计：\n${dProjBlock(['方案设计'])}\n\n`;
-  r+=`➡️ 需求确认：\n${dProjBlock(['需求确认'])}\n\n`;
-  r+=`➡️ 项目延期：\n${dProjBlock(['项目延期'])}\n\n`;
-  r+=`➡️ 丢单：\n${dProjBlock(['项目停止'])}\n\n`;
-  // 2. 长线工作
-  if(followupCount||visitCount||newC){
-    r+=`➡️ 长线工作\n`;
-    if(followupCount){
-      r+=`  —跟进：${followupCount}家`;
-      if(followupLines.length)r+=`（${followupLines.join('、')}）`;
-      r+='\n';
-    }
-    if(visitCount){
-      r+=`  —拜访：${visitCount}家`;
-      if(visitLines.length)r+=`（${visitLines.join('、')}）`;
-      r+='\n';
-    }
-    if(newC){
-      let nb='';if(newMid||newLong)nb=`（其中中等投入${newMid}个，长期投入${newLong}个）`;
-      r+=`  —新增背调：${newC}个${nb}\n`;
-    }
-    r+='\n';
-  }
-  // 3. 日常事务
-  if(keyorders||aftersales){
-    r+=`日常事务\n`;
-    if(keyorders)r+=`  —重点订单情况：${keyorders}\n`;
-    if(aftersales)r+=`  —售后情况：${aftersales}\n`;
-    r+='\n';
-  }
-  // 4. 明日计划
-  if(planProjects||planBaodiao||planDaily){
-    r+=`➡️ 明日计划\n`;
-    if(planProjects)r+=`  ➡️ 重点项目：\n${planProjects.split('\n').map(l=>`    ${l}`).join('\n')}\n`;
-    if(planBaodiao)r+=`  ➡️ 背调客户：${planBaodiao}\n`;
-    if(planDaily)r+=`  ➡️ 日常事务：${planDaily}\n`;
-  }
+  r+=`重点项目（按项目节点划分）\n`;
+  r+=`1）合同签订（含走流程）：\n${dProjBlock(['生产/交付','安装/验收','项目完结','合同签订'])}\n\n`;
+  r+=`2）产品报价：\n${dProjBlock(['产品报价'])}\n\n`;
+  r+=`3）方案设计：\n${dProjBlock(['方案设计'])}\n\n`;
+  r+=`4）需求确认：\n${dProjBlock(['需求确认'])}\n\n`;
+  r+=`5）项目延期：\n${dProjBlock(['项目延期'])}\n\n`;
+  r+=`6）丢单：\n${dProjBlock(['项目停止'])}\n\n`;
+  r+=`${'─'.repeat(28)}\n\n`;
+  // 2. 长线工作 & 日常事务
+  r+=`长线工作 & 日常事务\n`;
+  r+=`1）背调客户：${newC?newC+'个':'暂无'}\n\n`;
+  r+=`2）长线客户跟进情况如下：\n`;
+  if(followupCount){r+=`  跟进：${followupCount}家`;if(followupLines.length)r+=`（${followupLines.join('、')}）`;r+='\n';}
+  else r+=`  跟进：暂无\n`;
+  if(visitCount){r+=`  拜访：${visitCount}家`;if(visitLines.length)r+=`（${visitLines.join('、')}）`;r+='\n';}
+  else r+=`  拜访：暂无\n`;
+  r+=`\n3）重点订单情况：\n${keyorders||'暂无'}\n\n`;
+  r+=`4）售后情况：\n${aftersales||'暂无'}\n\n`;
+  r+=`${'─'.repeat(28)}\n\n`;
+  // 3. 明日计划
+  r+=`明日计划\n`;
+  r+=`1）重点项目：\n${planProjects||'暂无'}\n\n`;
+  r+=`2）背调客户：${planBaodiao||'暂无'}\n\n`;
+  r+=`3）日常事务：${planDaily||'暂无'}\n`;
   // Save
   if(!state.dailies)state.dailies=[];
   const dailyData={id:Date.now(),date,
@@ -1679,39 +1663,51 @@ function renderSavedDailies(expandDate){
   el.innerHTML=list.map(d=>{
     const hid='dh_'+d.date.replace(/-/g,'_');
     const isNew=d.date===expandDate;
-    const hasInvest=d.newClients;
     const hasFollowup=d.followupCount||d.visitCount;
+    // 区块1：重点项目
     const projTxt=[
-      d.p1?`➡️ 合同签订（含走流程）：\n${d.p1}`:'',
-      d.p2?`➡️ 产品报价：\n${d.p2}`:'',
-      d.p3?`➡️ 方案设计：\n${d.p3}`:'',
-      d.p4?`➡️ 需求确认：\n${d.p4}`:'',
-      d.p5?`➡️ 项目延期：\n${d.p5}`:'',
-      d.p6?`➡️ 丢单：\n${d.p6}`:'',
-    ].filter(Boolean).join('\n\n')||'（暂无项目记录）';
-    // build followup summary
-    let followupSummary='';
-    if(d.followupCount){followupSummary+=`跟进${d.followupCount}家`;}
-    if(d.visitCount){followupSummary+=(followupSummary?' · ':'')+`拜访${d.visitCount}家`;}
+      `1）合同签订（含走流程）：\n${d.p1||'暂无'}`,
+      `2）产品报价：\n${d.p2||'暂无'}`,
+      `3）方案设计：\n${d.p3||'暂无'}`,
+      `4）需求确认：\n${d.p4||'暂无'}`,
+      `5）项目延期：\n${d.p5||'暂无'}`,
+      `6）丢单：\n${d.p6||'暂无'}`,
+    ].join('\n\n');
+    // 区块2：长线工作 & 日常事务
+    const followupArr=(d.followup||'').split('\n').filter(Boolean);
+    const visitArr=(d.visit||'').split('\n').filter(Boolean);
+    const longlineTxt=`1）背调客户：${d.newClients?d.newClients+'个':'暂无'}\n\n2）长线客户跟进情况如下：\n  跟进：${d.followupCount?d.followupCount+'家'+(followupArr.length?'（'+followupArr.join('、')+'）':''):'暂无'}\n  拜访：${d.visitCount?d.visitCount+'家'+(visitArr.length?'（'+visitArr.join('、')+'）':''):'暂无'}\n\n3）重点订单情况：\n${d.keyorders||'暂无'}\n\n4）售后情况：\n${d.aftersales||'暂无'}`;
+    // 区块3：明日计划
+    const planTxt=`1）重点项目：\n${d.planProjects||d.plan||'暂无'}\n\n2）背调客户：${d.planBaodiao||'暂无'}\n\n3）日常事务：${d.planDaily||'暂无'}`;
+    const did=d.date;
     return`<div class="card" style="margin-top:8px">
       <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
         <span style="font-size:13px;font-weight:500"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> 日报 ${d.date}</span>
         <div class="inline-flex">
-          ${hasFollowup?`<span class="badge badge-blue" style="font-size:10px">长线${followupSummary}</span>`:''}
-          ${hasInvest?`<span class="badge badge-teal" style="font-size:10px">背调${d.newClients}个</span>`:''}
+          ${hasFollowup?`<span class="badge badge-blue" style="font-size:10px">长线 跟进${d.followupCount||0}家 拜访${d.visitCount||0}家</span>`:''}
+          ${d.newClients?`<span class="badge badge-teal" style="font-size:10px">背调${d.newClients}个</span>`:''}
           <span class="badge badge-gray" style="font-size:10px">项目${d.projCount||0}条</span>
-          <button class="btn btn-xs" onclick="event.stopPropagation();loadDailyIntoForm('${d.date}')">编辑</button>
-          <button class="btn btn-xs" onclick="event.stopPropagation();copyDailyTxt('${d.date}')">复制</button>
-          <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delDaily('${d.date}')">删除</button>
+          <button class="btn btn-xs" onclick="event.stopPropagation();loadDailyIntoForm('${did}')">编辑</button>
+          <button class="btn btn-xs" onclick="event.stopPropagation();copyDailyTxt('${did}')">复制全部</button>
+          <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delDaily('${did}')">删除</button>
         </div>
       </div>
       <div id="${hid}" style="display:${isNew?'block':'none'};margin-top:10px">
-        ${hasFollowup?`<div style="font-size:12px;margin-bottom:8px;padding:6px 10px;background:var(--blue-bg);border-radius:var(--radius-xs)"><span style="color:var(--blue-text);font-weight:500">长线客户跟进：</span>${followupSummary}</div>`:''}
-        ${hasInvest?`<div style="font-size:12px;margin-bottom:8px;padding:6px 10px;background:var(--teal-bg);border-radius:var(--radius-xs)"><span style="color:var(--teal-text);font-weight:500">客户投入：</span>新增背调${d.newClients||0}个${(d.newMid||d.newLong)?'（其中中等'+(d.newMid||0)+'个，长期'+(d.newLong||0)+'个）':''}</div>`:''}
-        <div style="font-size:12px;white-space:pre-wrap;line-height:1.7;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:6px">${projTxt}</div>
-        ${d.keyorders?`<div style="margin:4px 0;font-size:12px"><span style="color:var(--text2);font-weight:500">重点订单：</span>${d.keyorders}</div>`:''}
-        ${d.aftersales?`<div style="margin:4px 0;font-size:12px"><span style="color:var(--text2);font-weight:500">售后情况：</span>${d.aftersales}</div>`:''}
-        ${(d.planProjects||d.planBaodiao||d.planDaily||d.plan)?`<div style="margin:4px 0;font-size:12px"><span style="color:var(--text2);font-weight:500">明日计划：</span>${d.planProjects?`<div style="white-space:pre-wrap;margin-top:2px">➡️ 重点项目：\n${d.planProjects}</div>`:''}${d.planBaodiao?`<div>➡️ 背调客户：${d.planBaodiao}</div>`:''}${d.planDaily?`<div>➡️ 日常事务：${d.planDaily}</div>`:''}${(!d.planProjects&&!d.planBaodiao&&!d.planDaily&&d.plan)?d.plan:''}</div>`:''}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:12px;font-weight:500;color:var(--text2)">重点项目（按项目节点划分）</span>
+          <button class="btn btn-xs" onclick="navigator.clipboard.writeText(${JSON.stringify(projTxt)}).then(()=>alert('已复制！'))">复制</button>
+        </div>
+        <div style="font-size:12px;white-space:pre-wrap;line-height:1.7;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:10px">${projTxt}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:12px;font-weight:500;color:var(--text2)">长线工作 &amp; 日常事务</span>
+          <button class="btn btn-xs" onclick="navigator.clipboard.writeText(${JSON.stringify(longlineTxt)}).then(()=>alert('已复制！'))">复制</button>
+        </div>
+        <div style="font-size:12px;white-space:pre-wrap;line-height:1.7;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:10px">${longlineTxt}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:12px;font-weight:500;color:var(--text2)">明日计划</span>
+          <button class="btn btn-xs" onclick="navigator.clipboard.writeText(${JSON.stringify(planTxt)}).then(()=>alert('已复制！'))">复制</button>
+        </div>
+        <div style="font-size:12px;white-space:pre-wrap;line-height:1.7;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:6px">${planTxt}</div>
         <div style="font-size:11px;color:var(--text2);margin-top:6px">${d.savedAt}</div>
       </div>
     </div>`;
