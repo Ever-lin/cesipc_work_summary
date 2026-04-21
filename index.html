@@ -147,7 +147,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
 <!-- ===== 项目情况 ===== -->
 <div id="panel-projects" class="panel">
-  <div class="hint">同一个项目用相同「项目名称」保存，每次追加进展。⭕️ 跟进中 &nbsp;/&nbsp; ⭕️ 已确认订单 &nbsp;/&nbsp; ✅ 已成交 &nbsp;/&nbsp; ⏸️ 暂无进展 &nbsp;/&nbsp; ❌ 丢单</div>
+  <div class="hint">同一个项目用相同「项目名称」保存，每次追加进展。⭕️ 跟进中 &nbsp;/&nbsp; 🔶 已确认订单 &nbsp;/&nbsp; ✅ 已成交 &nbsp;/&nbsp; ⏸️ 暂无进展 &nbsp;/&nbsp; ❌ 丢单</div>
   <div class="card" id="proj-form-card">
     <div class="card-header">
       <span class="card-title" id="proj-form-title">新增 / 追加进展</span>
@@ -753,7 +753,7 @@ function refreshProjDatalist(){
   document.getElementById('proj-dl').innerHTML=names.map(n=>`<option value="${n}">`).join('');
 }
 
-function projIcon(status){return status==='成交'?'✅':status==='丢单'?'❌':status==='暂无进展'?'⏸️':'⭕️';}
+function projIcon(status){return status==='成交'?'✅':status==='确认订单'?'🔶':status==='丢单'?'❌':status==='暂无进展'?'⏸️':'⭕️';}
 
 
 // Project sort state: 'recent'(default) | 'oldest' | 'name'
@@ -1458,7 +1458,6 @@ function fillDailyTomorrowPlan(){
   const grouped={};
   state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
   const toFollow=[];
-  const projIcon=s=>{if(s==='成交')return'✅';if(s==='确认订单')return'🔶';if(s==='丢单')return'❌';if(s==='暂无进展')return'⏸️';return'⭕️';};
   Object.keys(grouped).forEach(k=>{
     const latest=grouped[k].sort((a,b)=>b.id-a.id)[0];
     if(latest.actionTime===tomorrow&&latest.actionContent){
