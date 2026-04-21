@@ -159,8 +159,17 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="field"><label>客户名称</label><input id="proj-client" placeholder="如：Orange Ltd"></div>
     </div>
     <div class="grid2">
-      <div class="field"><label>当前状态</label>
-        <select id="proj-status"><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="报价跟进">已报价跟进中</option><option value="方案">已提供方案</option><option value="确认">方案确认中</option><option value="长期">长期跟进项目</option><option value="暂无进展">暂无进展</option><option value="丢单">丢单</option></select>
+      <div class="field"><label>当前状态（由项目进度自动推导，可手动修改）</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <select id="proj-status">
+            <option value="跟进中">跟进中</option>
+            <option value="确认订单">已确认订单</option>
+            <option value="成交">已成交</option>
+            <option value="暂无进展">暂无进展</option>
+            <option value="丢单">丢单</option>
+          </select>
+          <span id="proj-status-badge" style="font-size:11px;color:var(--text2)">选择进度后自动填入</span>
+        </div>
       </div>
       <div class="field">
         <label>项目进度
@@ -228,7 +237,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <select class="ym-s" id="pj-fy" onchange="renderProjects()"></select>
     <select class="ym-s" id="pj-month" onchange="renderProjects()"><option value="all">全部月份</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select>
     <select class="ym-s" id="pj-week" onchange="renderProjects()"><option value="all">全部周次</option><option value="第一周">第一周</option><option value="第二周">第二周</option><option value="第三周">第三周</option><option value="第四周">第四周</option><option value="第五周">第五周</option></select>
-    <select class="ym-s" id="pj-status" onchange="renderProjects()"><option value="all">全部状态</option><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="报价跟进">已报价跟进中</option><option value="方案">已提供方案</option><option value="确认">方案确认中</option><option value="长期">长期跟进项目</option><option value="暂无进展">暂无进展</option><option value="丢单">丢单</option></select>
+    <select class="ym-s" id="pj-status" onchange="renderProjects()"><option value="all">全部状态</option><option value="跟进中">跟进中</option><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="暂无进展">暂无进展</option><option value="丢单">丢单</option></select>
     <button id="pj-sort-btn" class="btn btn-sm" onclick="cycleProjSort()" title="切换排序方式" style="white-space:nowrap;min-width:100px">🕐 最近更新</button>
     <div style="position:relative;flex:1;min-width:140px;max-width:260px">
       <input id="pj-search" placeholder="🔍 搜索项目名/客户名" oninput="renderProjects()" style="width:100%;padding:5px 28px 5px 10px;font-size:13px;background:#F5F4F0;border:0.5px solid var(--border);border-radius:var(--radius-xs)">
@@ -275,10 +284,9 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         </div>
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目状态（从项目情况同步）<button class="btn btn-sm" onclick="fillProjTextareas('w')">↻ 刷新项目</button></div>
         <div class="field"><label>➡️ 已确认订单 / 已成交</label><textarea id="w-p1" class="auto-resize"></textarea></div>
-        <div class="field"><label>➡️ 已报价跟进中 / 已提供方案</label><textarea id="w-p2" class="auto-resize"></textarea></div>
-        <div class="field"><label>➡️ 方案确认中</label><textarea id="w-p3" class="auto-resize"></textarea></div>
-        <div class="field"><label>➡️ 长期跟进项目 / 暂无进展</label><textarea id="w-p4" class="auto-resize"></textarea></div>
-        <div class="field"><label>➡️ 丢单</label><textarea id="w-p5" class="auto-resize"></textarea></div>
+        <div class="field"><label>➡️ 跟进中</label><textarea id="w-p2" class="auto-resize"></textarea></div>
+        <div class="field"><label>➡️ 暂无进展</label><textarea id="w-p3" class="auto-resize"></textarea></div>
+        <div class="field"><label>➡️ 丢单</label><textarea id="w-p4" class="auto-resize"></textarea></div>
         <div class="slabel">其他</div>
         <div class="field"><label>重点订单情况</label><textarea id="w-keyorders"></textarea></div>
         <div class="field"><label>售后情况</label><textarea id="w-aftersales"></textarea></div>
@@ -307,10 +315,9 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         </div>
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目状态（从项目情况同步）<button class="btn btn-sm" onclick="fillProjTextareas('wm')">↻ 刷新项目</button></div>
         <div class="field"><label>➡️ 已确认订单 / 已成交</label><textarea id="wm-p1" class="auto-resize"></textarea></div>
-        <div class="field"><label>➡️ 已报价跟进中 / 已提供方案</label><textarea id="wm-p2" class="auto-resize"></textarea></div>
-        <div class="field"><label>➡️ 方案确认中</label><textarea id="wm-p3" class="auto-resize"></textarea></div>
-        <div class="field"><label>➡️ 长期跟进项目 / 暂无进展</label><textarea id="wm-p4" class="auto-resize"></textarea></div>
-        <div class="field"><label>➡️ 丢单</label><textarea id="wm-p5" class="auto-resize"></textarea></div>
+        <div class="field"><label>➡️ 跟进中</label><textarea id="wm-p2" class="auto-resize"></textarea></div>
+        <div class="field"><label>➡️ 暂无进展</label><textarea id="wm-p3" class="auto-resize"></textarea></div>
+        <div class="field"><label>➡️ 丢单</label><textarea id="wm-p4" class="auto-resize"></textarea></div>
         <div class="slabel">其他</div>
         <div class="field"><label>重点订单情况</label><textarea id="wm-keyorders"></textarea></div>
         <div class="field"><label>售后情况</label><textarea id="wm-aftersales"></textarea></div>
@@ -335,10 +342,9 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
       <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目状态（从项目情况同步）<button class="btn btn-sm" onclick="fillDailyProjects()">↻ 刷新项目</button></div>
       <div class="field"><label>➡️ 已确认订单 / 已成交</label><textarea id="d-p1" class="auto-resize"></textarea></div>
-      <div class="field"><label>➡️ 已报价跟进中 / 已提供方案</label><textarea id="d-p2" class="auto-resize"></textarea></div>
-      <div class="field"><label>➡️ 方案确认中</label><textarea id="d-p3" class="auto-resize"></textarea></div>
-      <div class="field"><label>➡️ 长期跟进项目 / 暂无进展</label><textarea id="d-p4" class="auto-resize"></textarea></div>
-      <div class="field"><label>➡️ 丢单</label><textarea id="d-p5" class="auto-resize"></textarea></div>
+      <div class="field"><label>➡️ 跟进中</label><textarea id="d-p2" class="auto-resize"></textarea></div>
+      <div class="field"><label>➡️ 暂无进展</label><textarea id="d-p3" class="auto-resize"></textarea></div>
+      <div class="field"><label>➡️ 丢单</label><textarea id="d-p4" class="auto-resize"></textarea></div>
 
       <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">长线工作（中长期客户跟进、拜访）</div>
       <div class="field">
@@ -416,7 +422,16 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
 <script>
 const NO_AMT=['昆明途恒科技有限公司'];
-const SC={报价:{label:'已报价'},报价跟进:{label:'已报价跟进中'},方案:{label:'已提供方案'},确认:{label:'方案确认中'},长期:{label:'长期跟进项目'},暂无进展:{label:'暂无进展'},确认订单:{label:'已确认订单'},成交:{label:'已成交'},丢单:{label:'丢单'}};
+const SC={
+  // 新状态
+  跟进中:{label:'跟进中'},
+  确认订单:{label:'已确认订单'},
+  成交:{label:'已成交'},
+  暂无进展:{label:'暂无进展'},
+  丢单:{label:'丢单'},
+  // 旧状态兼容映射
+  报价:{label:'跟进中'},报价跟进:{label:'跟进中'},方案:{label:'跟进中'},确认:{label:'跟进中'},长期:{label:'暂无进展'},
+};
 const MONTHS_ORDER=['4','5','6','7','8','9','10','11','12','1','2','3'];
 const MONTH_NAMES={1:'1月',2:'2月',3:'3月',4:'4月',5:'5月',6:'6月',7:'7月',8:'8月',9:'9月',10:'10月',11:'11月',12:'12月'};
 function fyMonthIdx(m){return MONTHS_ORDER.indexOf(String(m));}
@@ -497,6 +512,13 @@ function load(){
   }catch(e){state.perf=SEED.slice();state.monthlies=[];state.dailies=[];state.genWeeklies=[];state.genMonthlies=[];save();}
 }
 load();
+// Migrate old status values to new 5-status system
+(function migrateStatuses(){
+  const map={报价:'跟进中',报价跟进:'跟进中',方案:'跟进中',确认:'跟进中',长期:'暂无进展'};
+  let changed=false;
+  state.projects.forEach(p=>{if(map[p.status]){p.status=map[p.status];changed=true;}});
+  if(changed)save();
+})();
 
 function init(){
   ['view-fy','perf-fy','pj-fy','w-fy','wm-fy','ew-fy','em-fy'].forEach(id=>buildFYOptions(id));
@@ -724,7 +746,7 @@ function refreshProjDatalist(){
   document.getElementById('proj-dl').innerHTML=names.map(n=>`<option value="${n}">`).join('');
 }
 
-function projIcon(status){return status==='成交'?'✅':status==='丢单'?'❌':'⭕️';}
+function projIcon(status){return status==='成交'?'✅':status==='丢单'?'❌':status==='暂无进展'?'⏸️':'⭕️';}
 
 
 // Project sort state: 'recent'(default) | 'oldest' | 'name'
@@ -766,13 +788,10 @@ function renderProjects(){
   }
   // Compute status counts (across all filters except status)
   const statusDefs=[
-    {key:'报价',label:'已报价',cls:'badge-blue'},
-    {key:'方案',label:'已提供方案',cls:'badge-blue'},
-    {key:'确认',label:'方案确认中',cls:'badge-amber'},
-    {key:'报价跟进',label:'已报价跟进中',cls:'badge-blue'},
-    {key:'长期',label:'长期跟进',cls:'badge-teal'},
-    {key:'确认订单',label:'已确认订单',cls:'badge-green'},
+    {key:'跟进中',label:'跟进中',cls:'badge-blue'},
+    {key:'确认订单',label:'已确认订单',cls:'badge-amber'},
     {key:'成交',label:'已成交',cls:'badge-green'},
+    {key:'暂无进展',label:'暂无进展',cls:'badge-gray'},
     {key:'丢单',label:'丢单',cls:'badge-red'},
   ];
   const counts={};
@@ -1065,8 +1084,23 @@ function switchTermTab(tab){
   document.getElementById('term-tab-bid').style.background=tab==='bid'?'var(--blue)':'';
   document.getElementById('term-tab-bid').style.color=tab==='bid'?'#fff':'';
 }
+// 项目进度 → 自动推导状态
+const STAGE_TO_STATUS={
+  '需求确认':'跟进中','方案设计':'跟进中','产品报价':'跟进中','合同签订':'跟进中',
+  '生产/交付':'确认订单','安装/验收':'确认订单',
+  '项目完结':'成交',
+  '项目延期':'暂无进展','项目停止':'暂无进展',
+  '丢单':'丢单',
+};
 function setStage(val){
   document.getElementById('proj-progress-stage').value=val;
+  // Auto-derive status
+  const derived=STAGE_TO_STATUS[val];
+  if(derived){
+    document.getElementById('proj-status').value=derived;
+    const badge=document.getElementById('proj-status-badge');
+    if(badge){const sc=SC[derived]||{label:derived};badge.textContent=sc.label;}
+  }
   document.getElementById('progress-terms-box').style.display='none';
   document.getElementById('progress-term-toggle').textContent='📋 查看术语参考 ▾';
 }
@@ -1108,10 +1142,9 @@ function weekOfDay(dateStr){
 function fillProjTextareas(prefix){
   const CATS=[
     {id:'p1',statuses:['确认订单','成交']},
-    {id:'p2',statuses:['报价跟进','方案','报价']},
-    {id:'p3',statuses:['确认']},
-    {id:'p4',statuses:['长期','暂无进展']},
-    {id:'p5',statuses:['丢单']},
+    {id:'p2',statuses:['跟进中']},
+    {id:'p3',statuses:['暂无进展']},
+    {id:'p4',statuses:['丢单']},
   ];
   const grouped={};
   state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
@@ -1195,9 +1228,8 @@ function buildCRMTextFull(latest,allEntries){
 function buildProjSection(projects,forMonthly){
   const cats=[
     {label:'➡️ 已确认订单 / 已成交',statuses:['确认订单','成交']},
-    {label:'➡️ 已报价跟进中 / 已提供方案',statuses:['报价跟进','方案','报价']},
-    {label:'➡️ 方案确认中',statuses:['确认']},
-    {label:'➡️ 长期跟进项目 / 暂无进展',statuses:['长期','暂无进展']},
+    {label:'➡️ 跟进中',statuses:['跟进中']},
+    {label:'➡️ 暂无进展',statuses:['暂无进展']},
     {label:'➡️ 丢单',statuses:['丢单']},
   ];
   // Build a grouped map so we can get full history per project
@@ -1223,7 +1255,7 @@ function saveWeekly(){
   const data={id:Date.now(),fy,month,week,checkedProjs,
     mid:document.getElementById('w-mid').value,long:document.getElementById('w-long').value,newClients:document.getElementById('w-new').value,
     newMid:document.getElementById('w-new-mid').value,newLong:document.getElementById('w-new-long').value,
-    p1:document.getElementById('w-p1').value,p2:document.getElementById('w-p2').value,p3:document.getElementById('w-p3').value,p4:document.getElementById('w-p4').value,p5:document.getElementById('w-p5').value,
+    p1:document.getElementById('w-p1').value,p2:document.getElementById('w-p2').value,p3:document.getElementById('w-p3').value,p4:document.getElementById('w-p4').value,
     keyorders:document.getElementById('w-keyorders').value,aftersales:document.getElementById('w-aftersales').value,plan:document.getElementById('w-plan').value,
     savedAt:new Date().toLocaleString('zh-CN')};
   const ex=state.weeklies.findIndex(w=>w.fy===fy&&w.month===month&&w.week===week);
@@ -1237,8 +1269,8 @@ function renderSavedWeeklies(){
   const el=document.getElementById('saved-weeklies');
   if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--text2);font-size:12px">暂无已保存的周报内容</div>';return;}
   el.innerHTML=list.map(w=>{
-    const p1=w.p1||'',p2=w.p2||'',p3=w.p3||'',p4=w.p4||'',p5=w.p5||'';
-    const projTxt=`➡️ 已确认订单 / 已成交：\n${p1||'（暂无）'}\n\n➡️ 已报价跟进中 / 已提供方案：\n${p2||'（暂无）'}\n\n➡️ 方案确认中：\n${p3||'（暂无）'}\n\n➡️ 长期跟进项目 / 暂无进展：\n${p4||'（暂无）'}\n\n➡️ 丢单：\n${p5||'（暂无）'}`;
+    const p1=w.p1||'',p2=w.p2||'',p3=w.p3||'',p4=w.p4||'';
+    const projTxt=`➡️ 已确认订单 / 已成交：\n${p1||'（暂无）'}\n\n➡️ 跟进中：\n${p2||'（暂无）'}\n\n➡️ 暂无进展：\n${p3||'（暂无）'}\n\n➡️ 丢单：\n${p4||'（暂无）'}`;
     const infoRow=(label,val)=>val?`<div style="margin:6px 0"><span style="font-size:12px;color:var(--text2);font-weight:500">${label}：</span><span style="font-size:12px">${val}</span></div>`:'';
     const hid='wh_'+w.id;
     return`<div class="card" style="margin-top:8px">
@@ -1263,7 +1295,7 @@ function loadWeekly(id){
   const w=state.weeklies.find(x=>x.id===id);if(!w)return;
   document.getElementById('w-fy').value=w.fy||document.getElementById('w-fy').value;
   document.getElementById('w-month').value=w.month;document.getElementById('w-week').value=w.week;
-  ['mid','long','p1','p2','p3','p4','p5','keyorders','aftersales','plan'].forEach(f=>{const el=document.getElementById('w-'+f);if(el)el.value=w[f]||'';});
+  ['mid','long','p1','p2','p3','p4','keyorders','aftersales','plan'].forEach(f=>{const el=document.getElementById('w-'+f);if(el)el.value=w[f]||'';});
   document.getElementById('w-new').value=w.newClients||'';
   document.getElementById('w-new-mid').value=w.newMid||'';
   document.getElementById('w-new-long').value=w.newLong||'';
@@ -1291,7 +1323,7 @@ function saveMonthly(){
   const data={id:Date.now(),fy,month,checkedProjs:[],
     mid:document.getElementById('wm-mid').value,long:document.getElementById('wm-long').value,newClients:document.getElementById('wm-new').value,
     newMid:document.getElementById('wm-new-mid').value,newLong:document.getElementById('wm-new-long').value,
-    p1:document.getElementById('wm-p1').value,p2:document.getElementById('wm-p2').value,p3:document.getElementById('wm-p3').value,p4:document.getElementById('wm-p4').value,p5:document.getElementById('wm-p5').value,
+    p1:document.getElementById('wm-p1').value,p2:document.getElementById('wm-p2').value,p3:document.getElementById('wm-p3').value,p4:document.getElementById('wm-p4').value,
     keyorders:document.getElementById('wm-keyorders').value,aftersales:document.getElementById('wm-aftersales').value,plan:document.getElementById('wm-plan').value,
     savedAt:new Date().toLocaleString('zh-CN')};
   const ex=(state.monthlies||[]).findIndex(m=>m.fy===fy&&m.month===month);
@@ -1305,8 +1337,8 @@ function renderSavedMonthlies(){
   const el=document.getElementById('saved-monthlies');
   if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--text2);font-size:12px">暂无已保存的月报内容</div>';return;}
   el.innerHTML=list.map(m=>{
-    const p1=m.p1||'',p2=m.p2||'',p3=m.p3||'',p4=m.p4||'',p5=m.p5||'';
-    const projTxt=`➡️ 已确认订单 / 已成交：\n${p1||'（暂无）'}\n\n➡️ 已报价跟进中 / 已提供方案：\n${p2||'（暂无）'}\n\n➡️ 方案确认中：\n${p3||'（暂无）'}\n\n➡️ 长期跟进项目 / 暂无进展：\n${p4||'（暂无）'}\n\n➡️ 丢单：\n${p5||'（暂无）'}`;
+    const p1=m.p1||'',p2=m.p2||'',p3=m.p3||'',p4=m.p4||'';
+    const projTxt=`➡️ 已确认订单 / 已成交：\n${p1||'（暂无）'}\n\n➡️ 跟进中：\n${p2||'（暂无）'}\n\n➡️ 暂无进展：\n${p3||'（暂无）'}\n\n➡️ 丢单：\n${p4||'（暂无）'}`;
     const infoRow=(label,val)=>val?`<div style="margin:6px 0"><span style="font-size:12px;color:var(--text2);font-weight:500">${label}：</span><span style="font-size:12px">${val}</span></div>`:'';
     const hid='mh_'+m.id;
     return`<div class="card" style="margin-top:8px">
@@ -1331,7 +1363,7 @@ function loadMonthly(id){
   const m=(state.monthlies||[]).find(x=>x.id===id);if(!m)return;
   document.getElementById('wm-fy').value=m.fy||document.getElementById('wm-fy').value;
   document.getElementById('wm-month').value=m.month;
-  ['mid','long','p1','p2','p3','p4','p5','keyorders','aftersales','plan'].forEach(f=>{const el=document.getElementById('wm-'+f);if(el)el.value=m[f]||'';});
+  ['mid','long','p1','p2','p3','p4','keyorders','aftersales','plan'].forEach(f=>{const el=document.getElementById('wm-'+f);if(el)el.value=m[f]||'';});
   document.getElementById('wm-new').value=m.newClients||'';
   document.getElementById('wm-new-mid').value=m.newMid||'';
   document.getElementById('wm-new-long').value=m.newLong||'';
@@ -1355,10 +1387,9 @@ function fillDailyProjects(){
   const date=document.getElementById('d-date').value;
   const CATS=[
     {id:'d-p1',statuses:['确认订单','成交']},
-    {id:'d-p2',statuses:['报价跟进','方案','报价']},
-    {id:'d-p3',statuses:['确认']},
-    {id:'d-p4',statuses:['长期','暂无进展']},
-    {id:'d-p5',statuses:['丢单']},
+    {id:'d-p2',statuses:['跟进中']},
+    {id:'d-p3',statuses:['暂无进展']},
+    {id:'d-p4',statuses:['丢单']},
   ];
   const grouped={};
   state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
@@ -1472,9 +1503,8 @@ function genDaily(){
     return items.map(({latest,entries})=>buildCRMTextFull(latest,entries)).join('\n\n──────────────\n\n');
   }
   r+=`➡️ 已确认订单 / 已成交：\n${dProjBlock(['确认订单','成交'])}\n\n`;
-  r+=`➡️ 已报价跟进中 / 已提供方案：\n${dProjBlock(['报价跟进','方案','报价'])}\n\n`;
-  r+=`➡️ 方案确认中：\n${dProjBlock(['确认'])}\n\n`;
-  r+=`➡️ 长期跟进项目 / 暂无进展：\n${dProjBlock(['长期','暂无进展'])}\n\n`;
+  r+=`➡️ 跟进中：\n${dProjBlock(['跟进中'])}\n\n`;
+  r+=`➡️ 暂无进展：\n${dProjBlock(['暂无进展'])}\n\n`;
   r+=`➡️ 丢单：\n${dProjBlock(['丢单'])}\n\n`;
   // 2. 长线工作
   if(followupCount||visitCount||newC){
@@ -1546,7 +1576,7 @@ function loadDailyIntoForm(date){
   const fuCEl=document.getElementById('d-followup-count');const viCEl=document.getElementById('d-visit-count');
   if(fuCEl){fuCEl.value=d.followupCount||'';fuCEl.dataset.manual=d.followupCount?'1':'';}
   if(viCEl){viCEl.value=d.visitCount||'';viCEl.dataset.manual=d.visitCount?'1':'';}
-  ['p1','p2','p3','p4','p5','keyorders','aftersales'].forEach(f=>{
+  ['p1','p2','p3','p4','keyorders','aftersales'].forEach(f=>{
     const el=document.getElementById('d-'+f);if(el){el.value=d[f]||'';autoResize(el);}
   });
   // 3 plan fields (new) with fallback to old single 'plan' field
@@ -1573,10 +1603,9 @@ function renderSavedDailies(expandDate){
     const hasFollowup=d.followupCount||d.visitCount;
     const projTxt=[
       d.p1?`➡️ 已确认订单 / 已成交：\n${d.p1}`:'',
-      d.p2?`➡️ 已报价跟进中 / 已提供方案：\n${d.p2}`:'',
-      d.p3?`➡️ 方案确认中：\n${d.p3}`:'',
-      d.p4?`➡️ 长期跟进项目 / 暂无进展：\n${d.p4}`:'',
-      d.p5?`➡️ 丢单：\n${d.p5}`:'',
+      d.p2?`➡️ 跟进中：\n${d.p2}`:'',
+      d.p3?`➡️ 暂无进展：\n${d.p3}`:'',
+      d.p4?`➡️ 丢单：\n${d.p4}`:'',
     ].filter(Boolean).join('\n\n')||'（暂无项目记录）';
     // build followup summary
     let followupSummary='';
@@ -1652,9 +1681,8 @@ function genWeekly(){
     return items.map(({latest,entries})=>buildCRMTextFull(latest,entries)).join('\n\n──────────────\n\n');
   }
   r+=`➡️ 已确认订单 / 已成交：\n${projBlock(['确认订单','成交'])}\n\n`;
-  r+=`➡️ 已报价跟进中 / 已提供方案：\n${projBlock(['报价跟进','方案','报价'])}\n\n`;
-  r+=`➡️ 方案确认中：\n${projBlock(['确认'])}\n\n`;
-  r+=`➡️ 长期跟进项目 / 暂无进展：\n${projBlock(['长期','暂无进展'])}\n\n`;
+  r+=`➡️ 跟进中：\n${projBlock(['跟进中'])}\n\n`;
+  r+=`➡️ 暂无进展：\n${projBlock(['暂无进展'])}\n\n`;
   r+=`➡️ 丢单：\n${projBlock(['丢单'])}\n\n`;
   if(wr&&wr.keyorders)r+=`➡️ 重点订单情况\n  ${wr.keyorders}\n\n`;
   if(wr&&wr.aftersales)r+=`➡️ 售后情况\n  ${wr.aftersales}\n\n`;
@@ -1724,9 +1752,8 @@ function genMonthly(){
     return items.map(({latest,entries})=>buildCRMTextFull(latest,entries)).join('\n\n──────────────\n\n');
   }
   r+=`➡️ 已确认订单 / 已成交：\n${mProjBlock(['确认订单','成交'])}\n\n`;
-  r+=`➡️ 已报价跟进中 / 已提供方案：\n${mProjBlock(['报价跟进','方案','报价'])}\n\n`;
-  r+=`➡️ 方案确认中：\n${mProjBlock(['确认'])}\n\n`;
-  r+=`➡️ 长期跟进项目 / 暂无进展：\n${mProjBlock(['长期','暂无进展'])}\n\n`;
+  r+=`➡️ 跟进中：\n${mProjBlock(['跟进中'])}\n\n`;
+  r+=`➡️ 暂无进展：\n${mProjBlock(['暂无进展'])}\n\n`;
   r+=`➡️ 丢单：\n${mProjBlock(['丢单'])}\n\n`;
   if(mm&&mm.keyorders)r+=`➡️ 重点订单情况\n  ${mm.keyorders}\n\n`;
   if(mm&&mm.aftersales)r+=`➡️ 售后情况\n  ${mm.aftersales}\n\n`;
