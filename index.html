@@ -337,7 +337,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="card-header"><span class="card-title">导出日报</span></div>
       <div class="hint">自动提取「项目情况」中所选日期的进展记录，填写后点击生成日报保存并显示。</div>
       <div class="grid2">
-        <div class="field"><label>日期</label><input id="d-date" type="date" onchange="fillDailyProjects();fillDailyTomorrowPlan();fillDailyFollowup()"></div>
+        <div class="field"><label>日期</label><input id="d-date" type="date" onchange="fillDailyProjects();fillDailyTomorrowPlan();setTimeout(fillDailyFollowup,50)"></div>
         <div class="field" style="display:flex;align-items:flex-end;gap:8px">
           <button class="btn btn-primary" onclick="genDaily()" style="flex:1">生成日报</button>
           <button class="btn" onclick="copyLastDaily()">复制</button>
@@ -363,7 +363,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field">
           <label style="display:flex;align-items:center;justify-content:space-between">
             <span>➡️ 跟进客户（每行一家）</span>
-            <span style="font-size:11px;color:var(--text2)">数量：<input id="d-followup-count" type="number" min="0" placeholder="自动" style="width:52px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onDailyCountInput('followup')"></span>
+            <span class="inline-flex"><span style="font-size:11px;color:var(--text2)">数量：<input id="d-followup-count" type="number" min="0" placeholder="自动" style="width:52px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onDailyCountInput('followup')"></span><button class="btn btn-sm" onclick="fillDailyFollowup()">↻ 刷新</button></span>
           </label>
           <textarea id="d-followup" class="auto-resize" placeholder="每行填写一家公司名称" oninput="onDailyListInput('followup')"></textarea>
         </div>
@@ -535,7 +535,7 @@ function init(){
   document.getElementById('pj-month').value=String(cm);
   renderPerf();renderPivot();refreshProjDatalist();renderSavedWeeklies();renderSavedMonthlies();renderSavedDailies();
   renderGeneratedWeeklies();renderGeneratedMonthlies();
-  fillProjTextareas('w');fillProjTextareas('wm');fillDailyProjects();fillDailyTomorrowPlan();
+  fillProjTextareas('w');fillProjTextareas('wm');fillDailyProjects();fillDailyTomorrowPlan();setTimeout(fillDailyFollowup,50);
 }
 
 function switchTab(name){
@@ -1428,17 +1428,16 @@ function fillDailyProjects(){
 function fillDailyFollowup(){
   const date=document.getElementById('d-date').value;
   if(!date)return;
-  // 找今天有跟进记录（recordDate===date）的公司名，去重
   const clients=[...new Set(
-    state.projects.filter(p=>p.recordDate===date&&(p.client||p.name))
+    state.projects
+      .filter(p=>(p.recordDate||'').trim()===date.trim()&&(p.client||p.name))
       .map(p=>p.client||p.name)
   )];
   const el=document.getElementById('d-followup');
   if(!el)return;
   el.value=clients.join('\n');
-  // 更新数量
   const countEl=document.getElementById('d-followup-count');
-  if(countEl&&!countEl.dataset.manual)countEl.value=clients.length||'';
+  if(countEl)countEl.value=clients.length||'';
   autoResize(el);
 }
 
