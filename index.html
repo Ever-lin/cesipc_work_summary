@@ -820,7 +820,11 @@ function renderProjects(){
     const allEntriesForCard=entries.slice().sort((a,b)=>b.id-a.id);
     const historyBullets=allEntriesForCard.filter(e=>e.progress&&e.progress.trim()).map(e=>{
       const date=e.recordDate||'';
-      return e.progress.trim().split('\n').filter(l=>l.trim()).map(l=>`<div style="padding:1px 0">· ${date} ${l.trim()}</div>`).join('');
+      const ls=e.progress.trim().split('\n').filter(l=>l.trim());
+      if(!ls.length)return'';
+      let block=`<div style="padding:1px 0">· ${date} ${ls[0].trim()}</div>`;
+      if(ls.length>1)block+=ls.slice(1).map(l=>`<div style="padding:1px 0 1px 16px">${l.trim()}</div>`).join('');
+      return block;
     }).join('');
     const histHid='hist_'+k.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
     const hasHistory=allEntriesForCard.length>1;
@@ -1125,16 +1129,18 @@ function getCheckedProjects(){return[];}
 
 // Build accumulated progress across all entries as bullet lines
 function buildFullProgress(entries){
-  const lines=[];
+  const blocks=[];
   entries.forEach(e=>{
     if(e.progress&&e.progress.trim()){
       const date=e.recordDate||'';
-      e.progress.trim().split('\n').forEach(line=>{
-        if(line.trim())lines.push(`· ${date} ${line.trim()}`);
-      });
+      const ls=e.progress.trim().split('\n').filter(l=>l.trim());
+      if(!ls.length)return;
+      let block=`· ${date} ${ls[0].trim()}`;
+      if(ls.length>1)block+='\n'+ls.slice(1).map(l=>`  ${l.trim()}`).join('\n');
+      blocks.push(block);
     }
   });
-  return lines.length?lines.join('\n'):'（暂无）';
+  return blocks.length?blocks.join('\n'):'（暂无）';
 }
 
 // Build CRM-formatted text for a project group (latest fields + full accumulated progress)
