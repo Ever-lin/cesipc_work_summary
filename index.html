@@ -124,7 +124,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="field"><label>金额（¥）</label><input id="perf-amount" type="number" placeholder="如：19740"></div>
       <div class="field"><label>备注（可选）</label><input id="perf-note" placeholder="可选"></div>
     </div>
-    <div id="noamt-hint" style="display:none;font-size:12px;color:#0C447C;background:#E6F1FB;padding:6px 10px;border-radius:var(--radius-xs);margin-bottom:8px">昆明途恒科技有限公司 — 无需填写金额</div>
+    <div id="amt-row-note" class="field" style="display:none"><label>备注（可选）</label><input id="perf-note-deal" placeholder="可选"></div>
     <button class="btn btn-primary" id="perf-submit-btn" onclick="addPerf()">+ 添加</button>
   </div>
   <div id="perf-list"></div>
@@ -524,10 +524,10 @@ function onPerfDateChange(){
 }
 
 function toggleAmt(){
-  const type=document.getElementById('perf-type').value,client=document.getElementById('perf-client').value;
-  const noAmt=type==='新成交'&&NO_AMT.some(c=>client.includes(c));
-  document.getElementById('amt-row').style.display=noAmt?'none':'grid';
-  document.getElementById('noamt-hint').style.display=noAmt?'block':'none';
+  const type=document.getElementById('perf-type').value;
+  const isNew=type==='新成交';
+  document.getElementById('amt-row').style.display=isNew?'none':'grid';
+  document.getElementById('amt-row-note').style.display=isNew?'block':'none';
 }
 
 function addPerf(){
@@ -538,16 +538,16 @@ function addPerf(){
   const week=document.getElementById('perf-week').value;
   const type=document.getElementById('perf-type').value,client=document.getElementById('perf-client').value.trim();
   if(!client){alert('请填写客户名称');return;}
-  const noAmt=type==='新成交'&&NO_AMT.some(c=>client.includes(c));
+  const noAmt=type==='新成交';
   const amount=noAmt?0:(parseFloat(document.getElementById('perf-amount').value)||0);
-  const note=document.getElementById('perf-note').value.trim();
+  const note=noAmt?document.getElementById('perf-note-deal').value.trim():document.getElementById('perf-note').value.trim();
   if(editId){
     const entry=state.perf.find(p=>String(p.id)===editId);
     if(entry){entry.fy=fy;entry.calYear=calYear;entry.month=month;entry.week=week;entry.type=type;entry.client=client;entry.amount=amount;entry.note=note;entry.noAmount=noAmt;}
     cancelEditPerf();
   } else {
     state.perf.push({id:Date.now(),fy,calYear,month,week,type,client,amount,note,noAmount:noAmt});
-    ['perf-client','perf-amount','perf-note'].forEach(i=>document.getElementById(i).value='');
+    ['perf-client','perf-amount','perf-note','perf-note-deal'].forEach(i=>document.getElementById(i).value='');
   }
   save();renderPerf();renderPivot();
 }
@@ -567,7 +567,8 @@ function editPerf(id){
   document.getElementById('perf-type').value=p.type;
   document.getElementById('perf-client').value=p.client;
   document.getElementById('perf-amount').value=p.noAmount?'':p.amount;
-  document.getElementById('perf-note').value=p.note||'';
+  document.getElementById('perf-note').value=p.noAmount?'':p.note||'';
+  document.getElementById('perf-note-deal').value=p.noAmount?p.note||'':'';
   document.getElementById('perf-form-title').textContent='✏️ 编辑记录';
   document.getElementById('perf-form-card').style.borderColor='#378ADD';
   document.getElementById('perf-form-card').style.background='#F0F7FF';
@@ -586,7 +587,7 @@ function cancelEditPerf(){
   document.getElementById('perf-cancel-edit').style.display='none';
   document.getElementById('perf-submit-btn').textContent='+ 添加';
   document.getElementById('perf-submit-btn').style.background='';
-  ['perf-client','perf-amount','perf-note'].forEach(i=>document.getElementById(i).value='');
+  ['perf-client','perf-amount','perf-note','perf-note-deal'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('perf-date').value=todayStr();
   onPerfDateChange();
   toggleAmt();
