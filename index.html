@@ -325,28 +325,45 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="card-header"><span class="card-title">导出日报</span></div>
       <div class="hint">自动提取「项目情况」中所选日期的进展记录，填写后点击生成日报保存并显示。</div>
       <div class="grid2">
-        <div class="field"><label>日期</label><input id="d-date" type="date"></div>
+        <div class="field"><label>日期</label><input id="d-date" type="date" onchange="fillDailyProjects()"></div>
         <div class="field" style="display:flex;align-items:flex-end;gap:8px">
           <button class="btn btn-primary" onclick="genDaily()" style="flex:1">生成日报</button>
           <button class="btn" onclick="copyLastDaily()">复制</button>
         </div>
       </div>
-      <div class="slabel">客户投入情况（可选）</div>
-      <div class="grid3">
-        <div class="field"><label>中等投入客户数</label><input id="d-mid" type="number" placeholder="0"></div>
-        <div class="field"><label>长期投入客户数</label><input id="d-long" type="number" placeholder="0"></div>
-        <div class="field"><label>新增背调客户数</label><input id="d-new" type="number" placeholder="0"></div>
-      </div>
-      <div class="grid2" style="margin-top:-4px">
-        <div class="field"><label style="color:var(--text2)">　↳ 其中中等投入</label><input id="d-new-mid" type="number" placeholder="0"></div>
-        <div class="field"><label style="color:var(--text2)">　↳ 其中长期投入</label><input id="d-new-long" type="number" placeholder="0"></div>
-      </div>
+
       <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目状态（从项目情况同步）<button class="btn btn-sm" onclick="fillDailyProjects()">↻ 刷新项目</button></div>
       <div class="field"><label>➡️ 已确认订单 / 已成交</label><textarea id="d-p1" class="auto-resize"></textarea></div>
       <div class="field"><label>➡️ 已报价跟进中 / 已提供方案</label><textarea id="d-p2" class="auto-resize"></textarea></div>
       <div class="field"><label>➡️ 方案确认中</label><textarea id="d-p3" class="auto-resize"></textarea></div>
       <div class="field"><label>➡️ 长期跟进项目 / 暂无进展</label><textarea id="d-p4" class="auto-resize"></textarea></div>
       <div class="field"><label>➡️ 丢单</label><textarea id="d-p5" class="auto-resize"></textarea></div>
+
+      <div class="slabel">长线客户跟进情况（可选）</div>
+      <div class="grid2">
+        <div class="field">
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>跟进客户（每行一家）</span>
+            <span style="font-size:11px;color:var(--text2)">数量：<input id="d-followup-count" type="number" min="0" placeholder="自动" style="width:52px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onDailyCountInput('followup')"></span>
+          </label>
+          <textarea id="d-followup" class="auto-resize" placeholder="每行填写一家公司名称" oninput="onDailyListInput('followup')"></textarea>
+        </div>
+        <div class="field">
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>拜访客户（每行一家）</span>
+            <span style="font-size:11px;color:var(--text2)">数量：<input id="d-visit-count" type="number" min="0" placeholder="自动" style="width:52px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onDailyCountInput('visit')"></span>
+          </label>
+          <textarea id="d-visit" class="auto-resize" placeholder="每行填写一家公司名称" oninput="onDailyListInput('visit')"></textarea>
+        </div>
+      </div>
+
+      <div class="slabel">客户投入情况（可选）</div>
+      <div class="field"><label>新增背调客户数</label><input id="d-new" type="number" placeholder="0" style="max-width:160px"></div>
+      <div class="grid2" style="margin-top:-4px">
+        <div class="field"><label style="color:var(--text2)">　↳ 其中中等投入</label><input id="d-new-mid" type="number" placeholder="0"></div>
+        <div class="field"><label style="color:var(--text2)">　↳ 其中长期投入</label><input id="d-new-long" type="number" placeholder="0"></div>
+      </div>
+
       <div class="slabel">其他</div>
       <div class="field"><label>重点订单情况</label><textarea id="d-keyorders" class="auto-resize"></textarea></div>
       <div class="field"><label>售后情况</label><textarea id="d-aftersales" class="auto-resize"></textarea></div>
@@ -1292,11 +1309,35 @@ function fillDailyProjects(){
   });
 }
 
+function dailyListLines(id){
+  const el=document.getElementById(id);if(!el)return[];
+  return el.value.split('\n').map(s=>s.trim()).filter(Boolean);
+}
+function onDailyListInput(type){
+  // Auto-update count when list changes, only if count was not manually overridden
+  const listId='d-'+type,countId='d-'+type+'-count';
+  const lines=dailyListLines(listId);
+  const countEl=document.getElementById(countId);
+  if(countEl&&!countEl.dataset.manual)countEl.value=lines.length||'';
+  autoResize(document.getElementById(listId));
+}
+function onDailyCountInput(type){
+  // Mark as manually set so auto-calc doesn't override
+  const countEl=document.getElementById('d-'+type+'-count');
+  if(countEl)countEl.dataset.manual=countEl.value?'1':'';
+}
+
 function genDaily(){
   const date=document.getElementById('d-date').value;
   if(!date){alert('请选择日期');return;}
-  const mid=parseInt(document.getElementById('d-mid').value)||0;
-  const long_=parseInt(document.getElementById('d-long').value)||0;
+  // Followup / visit
+  const followupLines=dailyListLines('d-followup');
+  const visitLines=dailyListLines('d-visit');
+  const followupCountEl=document.getElementById('d-followup-count');
+  const visitCountEl=document.getElementById('d-visit-count');
+  const followupCount=followupCountEl&&followupCountEl.value!==''?parseInt(followupCountEl.value):followupLines.length;
+  const visitCount=visitCountEl&&visitCountEl.value!==''?parseInt(visitCountEl.value):visitLines.length;
+  // Customer invest
   const newC=parseInt(document.getElementById('d-new').value)||0;
   const newMid=parseInt(document.getElementById('d-new-mid').value)||0;
   const newLong=parseInt(document.getElementById('d-new-long').value)||0;
@@ -1310,17 +1351,13 @@ function genDaily(){
   const plan=document.getElementById('d-plan').value.trim();
   const projs=state.projects.filter(p=>p.recordDate===date);
   let r=`【日报 ${date}】\n${'─'.repeat(28)}\n\n`;
-  if(mid||long_||newC){
-    let nb='';if(newC&&(newMid||newLong))nb=`（其中中等投入${newMid}个，长期投入${newLong}个）`;
-    r+=`➡️ 客户投入情况\n  中等投入${mid}个，长期投入${long_}个，新增背调${newC}个${nb}\n\n`;
-  }
+  // 1. 重点项目状态
   r+=`➡️ 重点项目状态\n`;
   const dAllGrouped={};state.projects.forEach(p=>{const k=p.name||p.client;if(!dAllGrouped[k])dAllGrouped[k]=[];dAllGrouped[k].push(p);});
   function dProjBlock(statuses){
     const items=[];
     Object.keys(dAllGrouped).forEach(k=>{
       const entries=dAllGrouped[k].sort((a,b)=>b.id-a.id);
-      // For daily: prefer entries recorded on this date, else fall back to latest
       const dayEntries=entries.filter(p=>p.recordDate===date);
       const rep=dayEntries.length>0?dayEntries[0]:null;
       if(rep&&statuses.includes(rep.status))items.push({latest:rep,entries});
@@ -1333,12 +1370,36 @@ function genDaily(){
   r+=`➡️ 方案确认中：\n${dProjBlock(['确认'])}\n\n`;
   r+=`➡️ 长期跟进项目 / 暂无进展：\n${dProjBlock(['长期','暂无进展'])}\n\n`;
   r+=`➡️ 丢单：\n${dProjBlock(['丢单'])}\n\n`;
+  // 2. 长线客户跟进情况
+  if(followupCount||visitCount){
+    r+=`➡️ 长线客户跟进情况\n`;
+    if(followupCount){
+      r+=`  —跟进：${followupCount}家`;
+      if(followupLines.length)r+=`（${followupLines.join('、')}）`;
+      r+='\n';
+    }
+    if(visitCount){
+      r+=`  —拜访：${visitCount}家`;
+      if(visitLines.length)r+=`（${visitLines.join('、')}）`;
+      r+='\n';
+    }
+    r+='\n';
+  }
+  // 3. 客户投入情况
+  if(newC){
+    let nb='';if(newMid||newLong)nb=`（其中中等投入${newMid}个，长期投入${newLong}个）`;
+    r+=`➡️ 客户投入情况\n  新增背调${newC}个${nb}\n\n`;
+  }
+  // 4. 其他
   if(keyorders)r+=`➡️ 重点订单情况\n  ${keyorders}\n\n`;
   if(aftersales)r+=`➡️ 售后情况\n  ${aftersales}\n\n`;
   if(plan)r+=`➡️ 明日计划\n  ${plan}\n`;
   // Save
   if(!state.dailies)state.dailies=[];
-  const dailyData={id:Date.now(),date,mid,long:long_,newClients:newC,newMid,newLong,
+  const dailyData={id:Date.now(),date,
+    followup:document.getElementById('d-followup').value,followupCount,
+    visit:document.getElementById('d-visit').value,visitCount,
+    newClients:newC,newMid,newLong,
     p1,p2,p3,p4,p5,keyorders,aftersales,plan,
     projCount:projs.length,txt:r,savedAt:new Date().toLocaleString('zh-CN')};
   const ex=state.dailies.findIndex(d=>d.date===date);
@@ -1359,11 +1420,16 @@ function copyLastDaily(){
 function loadDailyIntoForm(date){
   const d=(state.dailies||[]).find(x=>x.date===date);if(!d)return;
   document.getElementById('d-date').value=d.date;
-  document.getElementById('d-mid').value=d.mid||'';
-  document.getElementById('d-long').value=d.long||'';
   document.getElementById('d-new').value=d.newClients||'';
   document.getElementById('d-new-mid').value=d.newMid||'';
   document.getElementById('d-new-long').value=d.newLong||'';
+  // followup / visit
+  const fuEl=document.getElementById('d-followup');const viEl=document.getElementById('d-visit');
+  if(fuEl){fuEl.value=d.followup||'';autoResize(fuEl);}
+  if(viEl){viEl.value=d.visit||'';autoResize(viEl);}
+  const fuCEl=document.getElementById('d-followup-count');const viCEl=document.getElementById('d-visit-count');
+  if(fuCEl){fuCEl.value=d.followupCount||'';fuCEl.dataset.manual=d.followupCount?'1':'';}
+  if(viCEl){viCEl.value=d.visitCount||'';viCEl.dataset.manual=d.visitCount?'1':'';}
   ['p1','p2','p3','p4','p5','keyorders','aftersales','plan'].forEach(f=>{
     const el=document.getElementById('d-'+f);if(el){el.value=d[f]||'';autoResize(el);}
   });
@@ -1380,7 +1446,8 @@ function renderSavedDailies(expandDate){
   el.innerHTML=list.map(d=>{
     const hid='dh_'+d.date.replace(/-/g,'_');
     const isNew=d.date===expandDate;
-    const hasInvest=d.mid||d.long||d.newClients;
+    const hasInvest=d.newClients;
+    const hasFollowup=d.followupCount||d.visitCount;
     const projTxt=[
       d.p1?`➡️ 已确认订单 / 已成交：\n${d.p1}`:'',
       d.p2?`➡️ 已报价跟进中 / 已提供方案：\n${d.p2}`:'',
@@ -1388,11 +1455,16 @@ function renderSavedDailies(expandDate){
       d.p4?`➡️ 长期跟进项目 / 暂无进展：\n${d.p4}`:'',
       d.p5?`➡️ 丢单：\n${d.p5}`:'',
     ].filter(Boolean).join('\n\n')||'（暂无项目记录）';
+    // build followup summary
+    let followupSummary='';
+    if(d.followupCount){followupSummary+=`跟进${d.followupCount}家`;}
+    if(d.visitCount){followupSummary+=(followupSummary?' · ':'')+`拜访${d.visitCount}家`;}
     return`<div class="card" style="margin-top:8px">
       <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
         <span style="font-size:13px;font-weight:500"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> 日报 ${d.date}</span>
         <div class="inline-flex">
-          ${hasInvest?`<span class="badge badge-teal" style="font-size:10px">含客户投入</span>`:''}
+          ${hasFollowup?`<span class="badge badge-blue" style="font-size:10px">长线${followupSummary}</span>`:''}
+          ${hasInvest?`<span class="badge badge-teal" style="font-size:10px">背调${d.newClients}个</span>`:''}
           <span class="badge badge-gray" style="font-size:10px">项目${d.projCount||0}条</span>
           <button class="btn btn-xs" onclick="event.stopPropagation();loadDailyIntoForm('${d.date}')">编辑</button>
           <button class="btn btn-xs" onclick="event.stopPropagation();copyDailyTxt('${d.date}')">复制</button>
@@ -1400,7 +1472,8 @@ function renderSavedDailies(expandDate){
         </div>
       </div>
       <div id="${hid}" style="display:${isNew?'block':'none'};margin-top:10px">
-        ${hasInvest?`<div style="font-size:12px;margin-bottom:8px;padding:6px 10px;background:var(--teal-bg);border-radius:var(--radius-xs)"><span style="color:var(--teal-text);font-weight:500">客户投入：</span>中等${d.mid||0}个 · 长期${d.long||0}个 · 背调${d.newClients||0}个${(d.newMid||d.newLong)?'（其中中等'+(d.newMid||0)+'个，长期'+(d.newLong||0)+'个）':''}</div>`:''}
+        ${hasFollowup?`<div style="font-size:12px;margin-bottom:8px;padding:6px 10px;background:var(--blue-bg);border-radius:var(--radius-xs)"><span style="color:var(--blue-text);font-weight:500">长线客户跟进：</span>${followupSummary}</div>`:''}
+        ${hasInvest?`<div style="font-size:12px;margin-bottom:8px;padding:6px 10px;background:var(--teal-bg);border-radius:var(--radius-xs)"><span style="color:var(--teal-text);font-weight:500">客户投入：</span>新增背调${d.newClients||0}个${(d.newMid||d.newLong)?'（其中中等'+(d.newMid||0)+'个，长期'+(d.newLong||0)+'个）':''}</div>`:''}
         <div style="font-size:12px;white-space:pre-wrap;line-height:1.7;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:6px">${projTxt}</div>
         ${d.keyorders?`<div style="margin:4px 0;font-size:12px"><span style="color:var(--text2);font-weight:500">重点订单：</span>${d.keyorders}</div>`:''}
         ${d.aftersales?`<div style="margin:4px 0;font-size:12px"><span style="color:var(--text2);font-weight:500">售后情况：</span>${d.aftersales}</div>`:''}
