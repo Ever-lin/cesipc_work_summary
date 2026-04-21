@@ -109,11 +109,13 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="inline-flex">
         <button id="perf-cancel-edit" class="btn btn-sm" style="display:none" onclick="cancelEditPerf()">✕ 取消编辑</button>
         <select class="ym-s" id="perf-fy"></select>
-        <select class="ym-s" id="perf-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select>
-        <select class="ym-s" id="perf-week"><option>第一周</option><option>第二周</option><option>第三周</option><option>第四周</option><option>第五周</option></select>
+        <input type="date" class="ym-s" id="perf-date" style="width:140px" onchange="onPerfDateChange()" title="选择日期，自动识别月份和周次">
+        <span id="perf-week-badge" style="font-size:12px;color:var(--blue-text);background:var(--blue-bg);padding:3px 8px;border-radius:12px;white-space:nowrap"></span>
       </div>
     </div>
     <input type="hidden" id="perf-edit-id" value="">
+  <input type="hidden" id="perf-month" value="">
+  <input type="hidden" id="perf-week" value="">
     <div class="grid2">
       <div class="field"><label>类型</label><select id="perf-type" onchange="toggleAmt()"><option value="业绩">业绩</option><option value="回款">回款</option><option value="新成交">新成交</option></select></div>
       <div class="field"><label>客户名称</label><input id="perf-client" placeholder="客户名称" oninput="toggleAmt()"></div>
@@ -469,6 +471,8 @@ function init(){
   ['view-fy','perf-fy','pj-fy','w-fy','wm-fy','ew-fy','em-fy'].forEach(id=>buildFYOptions(id));
   document.getElementById('d-date').value=todayStr();
   document.getElementById('proj-date').value=todayStr();
+  document.getElementById('perf-date').value=todayStr();
+  onPerfDateChange();
   const now=new Date();const cm=now.getMonth()+1;
   document.getElementById('view-month').value=String(cm);
   document.getElementById('perf-month').value=String(cm);
@@ -512,10 +516,26 @@ function toggleAmt(){
   document.getElementById('noamt-hint').style.display=noAmt?'block':'none';
 }
 
+function onPerfDateChange(){
+  const val=document.getElementById('perf-date').value;
+  if(!val){document.getElementById('perf-week-badge').textContent='';return;}
+  const parts=val.split('-');
+  const calY=parts[0],m=parseInt(parts[1],10);
+  const week=weekOfDay(val);
+  const fy=getFY(calY,m);
+  document.getElementById('perf-month').value=String(m);
+  document.getElementById('perf-week').value=week;
+  // Update FY selector to match
+  const fyEl=document.getElementById('perf-fy');if(fyEl)fyEl.value=fy;
+  document.getElementById('perf-week-badge').textContent=`${m}月 ${week}`;
+}
+
 function addPerf(){
   const editId=document.getElementById('perf-edit-id').value;
   const fy=document.getElementById('perf-fy').value,month=document.getElementById('perf-month').value;
-  const calYear=calYearOfFYMonth(fy,month),week=document.getElementById('perf-week').value;
+  const perfDate=document.getElementById('perf-date').value;
+  const calYear=perfDate?perfDate.split('-')[0]:calYearOfFYMonth(fy,month);
+  const week=document.getElementById('perf-week').value;
   const type=document.getElementById('perf-type').value,client=document.getElementById('perf-client').value.trim();
   if(!client){alert('请填写客户名称');return;}
   const noAmt=type==='新成交'&&NO_AMT.some(c=>client.includes(c));
@@ -538,6 +558,14 @@ function editPerf(id){
   document.getElementById('perf-fy').value=p.fy;
   document.getElementById('perf-month').value=p.month;
   document.getElementById('perf-week').value=p.week;
+  // Reconstruct a date for the date picker: use calYear+month, day 1 (or middle of week range)
+  const cy=p.calYear||calYearOfFYMonth(p.fy,p.month);
+  const mm=String(p.month).padStart(2,'0');
+  // Pick representative day for the week
+  const wDays={'第一周':'04','第二周':'11','第三三周':'18','第四周':'25','第五周':'30'};
+  const day=wDays[p.week]||'01';
+  document.getElementById('perf-date').value=`${cy}-${mm}-${day}`;
+  document.getElementById('perf-week-badge').textContent=`${p.month}月 ${p.week}`;
   document.getElementById('perf-type').value=p.type;
   document.getElementById('perf-client').value=p.client;
   document.getElementById('perf-amount').value=p.noAmount?'':p.amount||'';
@@ -561,6 +589,8 @@ function cancelEditPerf(){
   document.getElementById('perf-submit-btn').textContent='+ 添加';
   document.getElementById('perf-submit-btn').style.background='';
   ['perf-client','perf-amount','perf-note'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('perf-date').value=todayStr();
+  onPerfDateChange();
   toggleAmt();
 }
 
@@ -1034,7 +1064,11 @@ function buildFullProgress(entries){
 // Build CRM-formatted text for a project group (latest fields + full accumulated progress)
 function buildCRMTextFull(latest,allEntries){
   const fullProgress=buildFullProgress(allEntries);
-  return `*跟进详情\n1. 项目名称：${latest.name||''}\n2. 项目进度：${latest.progressStage||''}\n3. 项目需求：${latest.requirement||''}\n4. 项目数量：${latest.quantity||''}\n5. 项目报价：${latest.quote||''}\n6. 跟进详情：\n${fullProgress}\n*推进计划\n1. 行动内容：${latest.actionContent||''}\n2. 行动时间：${latest.actionTime||''}\n3. 确认信息点：${latest.confirmPoints||''}\n4. 可能的风险：${latest.risks||''}\n5. 关键决策人：${latest.decisionMaker||''}`;
+  const icon=projIcon(latest.status);
+  const clientHeader=latest.client?`${latest.client}\n`:'';
+  const sc=SC[latest.status]||{label:latest.status||''};
+  const statusLine=`${icon} ${latest.name||''} ${sc.label?`[${sc.label}]`:''}\n`;
+  return `${clientHeader}${statusLine}*跟进详情\n1. 项目名称：${latest.name||''}\n2. 项目进度：${latest.progressStage||''}\n3. 项目需求：${latest.requirement||''}\n4. 项目数量：${latest.quantity||''}\n5. 项目报价：${latest.quote||''}\n6. 跟进详情：\n${fullProgress}\n*推进计划\n1. 行动内容：${latest.actionContent||''}\n2. 行动时间：${latest.actionTime||''}\n3. 确认信息点：${latest.confirmPoints||''}\n4. 可能的风险：${latest.risks||''}\n5. 关键决策人：${latest.decisionMaker||''}`;
 }
 
 function buildProjSection(projects,forMonthly){
@@ -1251,11 +1285,24 @@ function genDaily(){
     r+=`➡️ 客户投入情况\n  中等投入${mid}个，长期投入${long_}个，新增背调${newC}个${nb}\n\n`;
   }
   r+=`➡️ 重点项目状态\n`;
-  r+=`➡️ 已确认订单 / 已成交：\n${p1||'（暂无）'}\n\n`;
-  r+=`➡️ 已报价跟进中 / 已提供方案：\n${p2||'（暂无）'}\n\n`;
-  r+=`➡️ 方案确认中：\n${p3||'（暂无）'}\n\n`;
-  r+=`➡️ 长期跟进项目 / 暂无进展：\n${p4||'（暂无）'}\n\n`;
-  r+=`➡️ 丢单：\n${p5||'（暂无）'}\n\n`;
+  const dAllGrouped={};state.projects.forEach(p=>{const k=p.name||p.client;if(!dAllGrouped[k])dAllGrouped[k]=[];dAllGrouped[k].push(p);});
+  function dProjBlock(statuses){
+    const items=[];
+    Object.keys(dAllGrouped).forEach(k=>{
+      const entries=dAllGrouped[k].sort((a,b)=>b.id-a.id);
+      // For daily: prefer entries recorded on this date, else fall back to latest
+      const dayEntries=entries.filter(p=>p.recordDate===date);
+      const rep=dayEntries.length>0?dayEntries[0]:null;
+      if(rep&&statuses.includes(rep.status))items.push({latest:rep,entries});
+    });
+    if(!items.length)return'（暂无）';
+    return items.map(({latest,entries})=>buildCRMTextFull(latest,entries)).join('\n\n──────────────\n\n');
+  }
+  r+=`➡️ 已确认订单 / 已成交：\n${dProjBlock(['确认订单','成交'])}\n\n`;
+  r+=`➡️ 已报价跟进中 / 已提供方案：\n${dProjBlock(['报价跟进','方案','报价'])}\n\n`;
+  r+=`➡️ 方案确认中：\n${dProjBlock(['确认'])}\n\n`;
+  r+=`➡️ 长期跟进项目 / 暂无进展：\n${dProjBlock(['长期','暂无进展'])}\n\n`;
+  r+=`➡️ 丢单：\n${dProjBlock(['丢单'])}\n\n`;
   if(keyorders)r+=`➡️ 重点订单情况\n  ${keyorders}\n\n`;
   if(aftersales)r+=`➡️ 售后情况\n  ${aftersales}\n\n`;
   if(plan)r+=`➡️ 明日计划\n  ${plan}\n`;
@@ -1378,11 +1425,27 @@ function genWeekly(){
     r+=`➡️ 客户投入情况\n  中等投入${wr.mid||0}个，长期投入${wr.long||0}个，新增背调${wr.newClients||0}个${nb}\n\n`;
   }
   r+=`➡️ 重点项目状态\n`;
-  r+=`➡️ 已确认订单 / 已成交：\n${(wr&&wr.p1)||'（暂无）'}\n\n`;
-  r+=`➡️ 已报价跟进中 / 已提供方案：\n${(wr&&wr.p2)||'（暂无）'}\n\n`;
-  r+=`➡️ 方案确认中：\n${(wr&&wr.p3)||'（暂无）'}\n\n`;
-  r+=`➡️ 长期跟进项目 / 暂无进展：\n${(wr&&wr.p4)||'（暂无）'}\n\n`;
-  r+=`➡️ 丢单：\n${(wr&&wr.p5)||'（暂无）'}\n\n`;
+  // Build project sections from live project data filtered to this week
+  const allGrouped={};state.projects.forEach(p=>{const k=p.name||p.client;if(!allGrouped[k])allGrouped[k]=[];allGrouped[k].push(p);});
+  function getWeekProjects(statuses){
+    const res=[];
+    Object.keys(allGrouped).forEach(k=>{
+      const entries=allGrouped[k].sort((a,b)=>b.id-a.id);
+      const latest=entries[0];
+      if(statuses.includes(latest.status))res.push({latest,entries});
+    });
+    return res;
+  }
+  function projBlock(statuses){
+    const items=getWeekProjects(statuses);
+    if(!items.length)return'（暂无）';
+    return items.map(({latest,entries})=>buildCRMTextFull(latest,entries)).join('\n\n──────────────\n\n');
+  }
+  r+=`➡️ 已确认订单 / 已成交：\n${projBlock(['确认订单','成交'])}\n\n`;
+  r+=`➡️ 已报价跟进中 / 已提供方案：\n${projBlock(['报价跟进','方案','报价'])}\n\n`;
+  r+=`➡️ 方案确认中：\n${projBlock(['确认'])}\n\n`;
+  r+=`➡️ 长期跟进项目 / 暂无进展：\n${projBlock(['长期','暂无进展'])}\n\n`;
+  r+=`➡️ 丢单：\n${projBlock(['丢单'])}\n\n`;
   if(wr&&wr.keyorders)r+=`➡️ 重点订单情况\n  ${wr.keyorders}\n\n`;
   if(wr&&wr.aftersales)r+=`➡️ 售后情况\n  ${wr.aftersales}\n\n`;
   if(wr&&wr.plan)r+=`➡️ 下周计划\n  ${wr.plan}\n`;
@@ -1452,11 +1515,22 @@ function genMonthly(){
     r+=`➡️ 客户投入情况\n  中等投入${mm.mid||0}个，长期投入${mm.long||0}个，新增背调${mm.newClients||0}个${nb}\n\n`;
   }
   r+=`➡️ 重点项目状态\n`;
-  r+=`➡️ 已确认订单 / 已成交：\n${(mm&&mm.p1)||'（暂无）'}\n\n`;
-  r+=`➡️ 已报价跟进中 / 已提供方案：\n${(mm&&mm.p2)||'（暂无）'}\n\n`;
-  r+=`➡️ 方案确认中：\n${(mm&&mm.p3)||'（暂无）'}\n\n`;
-  r+=`➡️ 长期跟进项目 / 暂无进展：\n${(mm&&mm.p4)||'（暂无）'}\n\n`;
-  r+=`➡️ 丢单：\n${(mm&&mm.p5)||'（暂无）'}\n\n`;
+  const mAllGrouped={};state.projects.forEach(p=>{const k=p.name||p.client;if(!mAllGrouped[k])mAllGrouped[k]=[];mAllGrouped[k].push(p);});
+  function mProjBlock(statuses){
+    const items=[];
+    Object.keys(mAllGrouped).forEach(k=>{
+      const entries=mAllGrouped[k].sort((a,b)=>b.id-a.id);
+      const latest=entries[0];
+      if(statuses.includes(latest.status))items.push({latest,entries});
+    });
+    if(!items.length)return'（暂无）';
+    return items.map(({latest,entries})=>buildCRMTextFull(latest,entries)).join('\n\n──────────────\n\n');
+  }
+  r+=`➡️ 已确认订单 / 已成交：\n${mProjBlock(['确认订单','成交'])}\n\n`;
+  r+=`➡️ 已报价跟进中 / 已提供方案：\n${mProjBlock(['报价跟进','方案','报价'])}\n\n`;
+  r+=`➡️ 方案确认中：\n${mProjBlock(['确认'])}\n\n`;
+  r+=`➡️ 长期跟进项目 / 暂无进展：\n${mProjBlock(['长期','暂无进展'])}\n\n`;
+  r+=`➡️ 丢单：\n${mProjBlock(['丢单'])}\n\n`;
   if(mm&&mm.keyorders)r+=`➡️ 重点订单情况\n  ${mm.keyorders}\n\n`;
   if(mm&&mm.aftersales)r+=`➡️ 售后情况\n  ${mm.aftersales}\n\n`;
   if(mm&&mm.plan)r+=`➡️ 下月计划\n  ${mm.plan}\n`;
