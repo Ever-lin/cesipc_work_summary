@@ -452,7 +452,8 @@ function buildFYOptions(id,sel){
   el.innerHTML=fys.map(f=>`<option value="${f}"${f===(sel||curFY)?'selected':''}>${f}（${f.replace('FY','')}年4月–${parseInt(f.replace('FY',''))+1}年3月）</option>`).join('');
 }
 function fmt(n){return'¥'+Math.round(n).toLocaleString('zh-CN');}
-function todayStr(){return new Date().toISOString().slice(0,10);}
+function toCST(d){const ms=d.getTime()+8*3600*1000;const u=new Date(ms);const pad=n=>String(n).padStart(2,'0');return`${u.getUTCFullYear()}-${pad(u.getUTCMonth()+1)}-${pad(u.getUTCDate())}`;}
+function todayStr(){return toCST(new Date());}
 
 const SEED=[
 {id:1001,fy:'FY2025',calYear:'2026',month:'3',week:'第一周',type:'业绩',client:'RONAV FZE',amount:38500,note:'',noAmount:false},
@@ -1451,7 +1452,8 @@ function fillDailyTomorrowPlan(){
   if(!dateVal)return;
   const d=new Date(dateVal+'T00:00:00');
   d.setDate(d.getDate()+1);
-  const tomorrow=d.toISOString().slice(0,10);
+  const pad=n=>String(n).padStart(2,'0');
+  const tomorrow=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
   // Find projects whose actionTime === tomorrow
   const grouped={};
   state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
@@ -1879,7 +1881,7 @@ function exportProjectsExcel(){
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;
-  const now=new Date();const ds=now.toISOString().slice(0,10);
+  const ds=toCST(new Date());
   a.download=`项目情况_${pjFY}_${ds}.csv`;
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
 }
@@ -1894,7 +1896,7 @@ function exportBackup(){
   const blob=new Blob([json],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;
-  const ds=new Date().toISOString().slice(0,10);
+  const ds=toCST(new Date());
   a.download=`工作总结备份_${ds}.json`;
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
 }
