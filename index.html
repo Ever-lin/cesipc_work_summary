@@ -340,7 +340,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="field"><label>➡️ 长期跟进项目 / 暂无进展</label><textarea id="d-p4" class="auto-resize"></textarea></div>
       <div class="field"><label>➡️ 丢单</label><textarea id="d-p5" class="auto-resize"></textarea></div>
 
-      <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">长线客户跟进情况 &amp; 客户投入（可选）<button class="btn btn-sm" onclick="fillDailyTomorrowPlan()">↻ 刷新明日计划</button></div>
+      <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">长线工作（中长期客户跟进、拜访）</div>
       <div class="field">
         <label>➡️ 新增背调客户数</label>
         <div style="display:flex;align-items:center;gap:8px">
@@ -368,13 +368,20 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         </div>
       </div>
 
-      <div class="slabel">➡️ 日常事务</div>
+      <div class="slabel">日常事务</div>
       <div class="field"><label>➡️ 重点订单情况</label><textarea id="d-keyorders" class="auto-resize"></textarea></div>
       <div class="field"><label>➡️ 售后情况</label><textarea id="d-aftersales" class="auto-resize"></textarea></div>
 
       <div class="slabel">明日计划</div>
-      <div class="hint" style="margin-bottom:6px">重点项目根据行动时间自动填入，可手动修改</div>
-      <div class="field"><textarea id="d-plan" class="auto-resize" style="min-height:80px"></textarea></div>
+      <div class="field">
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          <span>➡️ 重点项目</span>
+          <button class="btn btn-sm" onclick="fillDailyTomorrowPlan()">↻ 刷新</button>
+        </label>
+        <textarea id="d-plan-projects" class="auto-resize" placeholder="根据行动时间自动填入，可手动修改" style="min-height:60px"></textarea>
+      </div>
+      <div class="field"><label>➡️ 背调客户</label><textarea id="d-plan-baodiao" class="auto-resize" placeholder="如：背调3个客户" style="min-height:40px"></textarea></div>
+      <div class="field"><label>➡️ 日常事务</label><textarea id="d-plan-daily" class="auto-resize" placeholder="其他工作安排" style="min-height:40px"></textarea></div>
     </div>
     <div id="saved-dailies" style="margin-top:4px"></div>
   </div>
@@ -1397,7 +1404,6 @@ function onDailyCountInput(type){
 function fillDailyTomorrowPlan(){
   const dateVal=document.getElementById('d-date').value;
   if(!dateVal)return;
-  // Calculate tomorrow
   const d=new Date(dateVal+'T00:00:00');
   d.setDate(d.getDate()+1);
   const tomorrow=d.toISOString().slice(0,10);
@@ -1408,17 +1414,22 @@ function fillDailyTomorrowPlan(){
   Object.keys(grouped).forEach(k=>{
     const latest=grouped[k].sort((a,b)=>b.id-a.id)[0];
     if(latest.actionTime===tomorrow&&latest.actionContent){
-      toFollow.push(`· ${latest.client||latest.name} - ${latest.actionContent}`);
+      toFollow.push(`🎯 ${latest.client||latest.name}\n   ${latest.actionContent}`);
     }
   });
+  // Fill 重点项目 box
+  const planProj=document.getElementById('d-plan-projects');
+  if(planProj){
+    planProj.value=toFollow.length?toFollow.join('\n\n'):'（暂无到期跟进项目）';
+    autoResize(planProj);
+  }
+  // Fill 背调客户 box with count if set
   const newC=parseInt(document.getElementById('d-new').value)||0;
-  let plan=`重点项目：\n`;
-  if(toFollow.length){plan+=toFollow.join('\n')+'\n';}
-  else{plan+=`（暂无到期跟进项目）\n`;}
-  plan+=`背调客户：${newC>0?newC+'个':''}\n`;
-  plan+=`其他工作安排：`;
-  const el=document.getElementById('d-plan');
-  if(el){el.value=plan;autoResize(el);}
+  const planBao=document.getElementById('d-plan-baodiao');
+  if(planBao&&!planBao.value){
+    planBao.value=newC>0?`背调${newC}个客户`:'';
+    autoResize(planBao);
+  }
 }
 function genDaily(){
   const date=document.getElementById('d-date').value;
@@ -1441,7 +1452,9 @@ function genDaily(){
   const p5=document.getElementById('d-p5').value.trim();
   const keyorders=document.getElementById('d-keyorders').value.trim();
   const aftersales=document.getElementById('d-aftersales').value.trim();
-  const plan=document.getElementById('d-plan').value.trim();
+  const planProjects=document.getElementById('d-plan-projects').value.trim();
+  const planBaodiao=document.getElementById('d-plan-baodiao').value.trim();
+  const planDaily=document.getElementById('d-plan-daily').value.trim();
   const projs=state.projects.filter(p=>p.recordDate===date);
   let r=`【日报 ${date}】\n${'─'.repeat(28)}\n\n`;
   // 1. 重点项目状态
@@ -1463,9 +1476,9 @@ function genDaily(){
   r+=`➡️ 方案确认中：\n${dProjBlock(['确认'])}\n\n`;
   r+=`➡️ 长期跟进项目 / 暂无进展：\n${dProjBlock(['长期','暂无进展'])}\n\n`;
   r+=`➡️ 丢单：\n${dProjBlock(['丢单'])}\n\n`;
-  // 3. 长线客户跟进 + 客户投入
+  // 2. 长线工作
   if(followupCount||visitCount||newC){
-    r+=`➡️ 长线客户跟进情况\n`;
+    r+=`➡️ 长线工作\n`;
     if(followupCount){
       r+=`  —跟进：${followupCount}家`;
       if(followupLines.length)r+=`（${followupLines.join('、')}）`;
@@ -1482,22 +1495,28 @@ function genDaily(){
     }
     r+='\n';
   }
-  // 4. 日常事务
+  // 3. 日常事务
   if(keyorders||aftersales){
-    r+=`➡️ 日常事务\n`;
+    r+=`日常事务\n`;
     if(keyorders)r+=`  —重点订单情况：${keyorders}\n`;
     if(aftersales)r+=`  —售后情况：${aftersales}\n`;
     r+='\n';
   }
-  // 5. 明日计划
-  if(plan)r+=`➡️ 明日计划\n${plan.split('\n').map(l=>`  ${l}`).join('\n')}\n`;
+  // 4. 明日计划
+  if(planProjects||planBaodiao||planDaily){
+    r+=`➡️ 明日计划\n`;
+    if(planProjects)r+=`  ➡️ 重点项目：\n${planProjects.split('\n').map(l=>`    ${l}`).join('\n')}\n`;
+    if(planBaodiao)r+=`  ➡️ 背调客户：${planBaodiao}\n`;
+    if(planDaily)r+=`  ➡️ 日常事务：${planDaily}\n`;
+  }
   // Save
   if(!state.dailies)state.dailies=[];
   const dailyData={id:Date.now(),date,
     followup:document.getElementById('d-followup').value,followupCount,
     visit:document.getElementById('d-visit').value,visitCount,
     newClients:newC,newMid,newLong,
-    p1,p2,p3,p4,p5,keyorders,aftersales,plan,
+    p1,p2,p3,p4,p5,keyorders,aftersales,
+    planProjects,planBaodiao,planDaily,
     projCount:projs.length,txt:r,savedAt:new Date().toLocaleString('zh-CN')};
   const ex=state.dailies.findIndex(d=>d.date===date);
   if(ex>=0){dailyData.id=state.dailies[ex].id;state.dailies[ex]=dailyData;}
@@ -1527,9 +1546,16 @@ function loadDailyIntoForm(date){
   const fuCEl=document.getElementById('d-followup-count');const viCEl=document.getElementById('d-visit-count');
   if(fuCEl){fuCEl.value=d.followupCount||'';fuCEl.dataset.manual=d.followupCount?'1':'';}
   if(viCEl){viCEl.value=d.visitCount||'';viCEl.dataset.manual=d.visitCount?'1':'';}
-  ['p1','p2','p3','p4','p5','keyorders','aftersales','plan'].forEach(f=>{
+  ['p1','p2','p3','p4','p5','keyorders','aftersales'].forEach(f=>{
     const el=document.getElementById('d-'+f);if(el){el.value=d[f]||'';autoResize(el);}
   });
+  // 3 plan fields (new) with fallback to old single 'plan' field
+  const ppEl=document.getElementById('d-plan-projects');
+  const pbEl=document.getElementById('d-plan-baodiao');
+  const pdEl=document.getElementById('d-plan-daily');
+  if(ppEl){ppEl.value=d.planProjects||'';autoResize(ppEl);}
+  if(pbEl){pbEl.value=d.planBaodiao||'';autoResize(pbEl);}
+  if(pdEl){pdEl.value=d.planDaily||'';autoResize(pdEl);}
   window._lastDailyTxt=d.txt||'';
   window.scrollTo(0,0);
 }
