@@ -838,7 +838,10 @@ function renderProjects(){
           ${e.progressStage?`<span class="badge badge-blue" style="font-size:10px;margin-left:2px">${e.progressStage}</span>`:''}
           ${e.progress?`<div style="font-size:12px;color:var(--text2);margin-top:2px">${e.progress.replace(/\n/g,'<br>')}</div>`:''}
         </div>
-        <button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0;flex-shrink:0" onclick="editLatestProgress('${k.replace(/'/g,"\\'")}',${e.id})">编辑</button>
+        <div class="inline-flex" style="flex-shrink:0">
+          <button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="editLatestProgress('${k.replace(/'/g,"\\'")}',${e.id})">编辑</button>
+          <button class="btn btn-danger btn-xs" onclick="delProjectEntry(${e.id},'${k.replace(/'/g,"\\'")}')">删除</button>
+        </div>
       </div>`;
     }).join(''):'';
 
@@ -1069,6 +1072,17 @@ function delGroup(name){
   if(!confirm(`确认删除"${name}"的所有记录？`))return;
   state.projects=state.projects.filter(p=>(p.name||p.client)!==name);
   save();renderProjects();refreshProjDatalist();renderProjSync('w-proj-sync');renderProjSync('wm-proj-sync');
+}
+
+function delProjectEntry(id,groupName){
+  const group=state.projects.filter(p=>(p.name||p.client)===groupName);
+  if(group.length<=1){
+    if(!confirm(`这是该项目唯一的记录，删除后整个项目将消失，确认？`))return;
+  } else {
+    if(!confirm('确认删除该条跟进记录？'))return;
+  }
+  state.projects=state.projects.filter(p=>p.id!==id);
+  save();renderProjects();refreshProjDatalist();
 }
 
 // 自动填充4个项目文本框
