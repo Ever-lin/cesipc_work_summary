@@ -103,14 +103,17 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     </select>
   </div>
   <div class="metric-grid" id="metrics"></div>
-  <div class="card">
-    <div class="card-header"><span class="card-title">新增记录</span>
+  <div class="card" id="perf-form-card">
+    <div class="card-header">
+      <span class="card-title" id="perf-form-title">新增记录</span>
       <div class="inline-flex">
+        <button id="perf-cancel-edit" class="btn btn-sm" style="display:none" onclick="cancelEditPerf()">✕ 取消编辑</button>
         <select class="ym-s" id="perf-fy"></select>
         <select class="ym-s" id="perf-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select>
         <select class="ym-s" id="perf-week"><option>第一周</option><option>第二周</option><option>第三周</option><option>第四周</option><option>第五周</option></select>
       </div>
     </div>
+    <input type="hidden" id="perf-edit-id" value="">
     <div class="grid2">
       <div class="field"><label>类型</label><select id="perf-type" onchange="toggleAmt()"><option value="业绩">业绩</option><option value="回款">回款</option><option value="新成交">新成交</option></select></div>
       <div class="field"><label>客户名称</label><input id="perf-client" placeholder="客户名称" oninput="toggleAmt()"></div>
@@ -120,7 +123,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="field"><label>备注</label><input id="perf-note" placeholder="可选"></div>
     </div>
     <div id="noamt-hint" style="display:none;font-size:12px;color:#0C447C;background:#E6F1FB;padding:6px 10px;border-radius:var(--radius-xs);margin-bottom:8px">昆明途恒科技有限公司 — 无需填写金额</div>
-    <button class="btn btn-primary" onclick="addPerf()">+ 添加</button>
+    <button class="btn btn-primary" id="perf-submit-btn" onclick="addPerf()">+ 添加</button>
   </div>
   <div id="perf-list"></div>
 
@@ -510,6 +513,7 @@ function toggleAmt(){
 }
 
 function addPerf(){
+  const editId=document.getElementById('perf-edit-id').value;
   const fy=document.getElementById('perf-fy').value,month=document.getElementById('perf-month').value;
   const calYear=calYearOfFYMonth(fy,month),week=document.getElementById('perf-week').value;
   const type=document.getElementById('perf-type').value,client=document.getElementById('perf-client').value.trim();
@@ -517,9 +521,47 @@ function addPerf(){
   const noAmt=type==='新成交'&&NO_AMT.some(c=>client.includes(c));
   const amount=noAmt?0:(parseFloat(document.getElementById('perf-amount').value)||0);
   const note=document.getElementById('perf-note').value.trim();
-  state.perf.push({id:Date.now(),fy,calYear,month,week,type,client,amount,note,noAmount:noAmt});
-  save();['perf-client','perf-amount','perf-note'].forEach(i=>document.getElementById(i).value='');
-  renderPerf();renderPivot();
+  if(editId){
+    const entry=state.perf.find(p=>String(p.id)===editId);
+    if(entry){entry.fy=fy;entry.calYear=calYear;entry.month=month;entry.week=week;entry.type=type;entry.client=client;entry.amount=amount;entry.note=note;entry.noAmount=noAmt;}
+    cancelEditPerf();
+  } else {
+    state.perf.push({id:Date.now(),fy,calYear,month,week,type,client,amount,note,noAmount:noAmt});
+    ['perf-client','perf-amount','perf-note'].forEach(i=>document.getElementById(i).value='');
+  }
+  save();renderPerf();renderPivot();
+}
+
+function editPerf(id){
+  const p=state.perf.find(x=>x.id===id);if(!p)return;
+  document.getElementById('perf-edit-id').value=String(id);
+  document.getElementById('perf-fy').value=p.fy;
+  document.getElementById('perf-month').value=p.month;
+  document.getElementById('perf-week').value=p.week;
+  document.getElementById('perf-type').value=p.type;
+  document.getElementById('perf-client').value=p.client;
+  document.getElementById('perf-amount').value=p.noAmount?'':p.amount||'';
+  document.getElementById('perf-note').value=p.note||'';
+  document.getElementById('perf-form-title').textContent='✏️ 编辑记录';
+  document.getElementById('perf-form-card').style.borderColor='#378ADD';
+  document.getElementById('perf-form-card').style.background='#F0F7FF';
+  document.getElementById('perf-cancel-edit').style.display='inline-block';
+  document.getElementById('perf-submit-btn').textContent='💾 保存修改';
+  document.getElementById('perf-submit-btn').style.background='#0C447C';
+  toggleAmt();
+  window.scrollTo(0,0);
+}
+
+function cancelEditPerf(){
+  document.getElementById('perf-edit-id').value='';
+  document.getElementById('perf-form-title').textContent='新增记录';
+  document.getElementById('perf-form-card').style.borderColor='';
+  document.getElementById('perf-form-card').style.background='';
+  document.getElementById('perf-cancel-edit').style.display='none';
+  document.getElementById('perf-submit-btn').textContent='+ 添加';
+  document.getElementById('perf-submit-btn').style.background='';
+  ['perf-client','perf-amount','perf-note'].forEach(i=>document.getElementById(i).value='');
+  toggleAmt();
 }
 
 function renderPerf(){
@@ -547,7 +589,7 @@ function renderPerf(){
       const bc=p.type==='业绩'?'badge-blue':p.type==='回款'?'badge-green':'badge-amber';
       html+=`<div class="summary-row">
         <span class="inline-flex"><span style="width:8px;height:8px;border-radius:50%;background:${dc};display:inline-block;margin-right:5px;flex-shrink:0"></span><span class="badge ${bc}" style="font-size:10px">${p.type}</span><span style="font-size:13px">${p.client}</span>${p.noAmount?'<span class="badge badge-gray" style="font-size:10px">无金额</span>':''}</span>
-        <span class="inline-flex">${(!p.noAmount&&p.amount)?`<span style="font-weight:500">${fmt(p.amount)}</span>`:''}${p.note?`<span style="color:var(--text2);font-size:12px">${p.note}</span>`:''}<button class="btn btn-danger btn-xs" onclick="delPerf(${p.id})">删</button></span>
+        <span class="inline-flex">${(!p.noAmount&&p.amount)?`<span style="font-weight:500">${fmt(p.amount)}</span>`:''}${p.note?`<span style="color:var(--text2);font-size:12px">${p.note}</span>`:''}<button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="editPerf(${p.id})">编辑</button><button class="btn btn-danger btn-xs" onclick="delPerf(${p.id})">删</button></span>
       </div>`;
     });
     html+='</div>';
