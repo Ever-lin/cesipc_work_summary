@@ -272,16 +272,6 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
             <select class="ym-s" id="w-week" onchange="fillProjTextareas('w')"><option>第一周</option><option selected>第二周</option><option>第三周</option><option>第四周</option><option>第五周</option></select>
           </div>
         </div>
-        <div class="slabel">客户投入情况</div>
-        <div class="grid3">
-          <div class="field"><label>中等投入客户数</label><input id="w-mid" type="number"></div>
-          <div class="field"><label>长期投入客户数</label><input id="w-long" type="number"></div>
-          <div class="field"><label>新增背调客户数</label><input id="w-new" type="number"></div>
-        </div>
-        <div class="grid2" style="margin-top:-4px">
-          <div class="field"><label style="color:var(--text2)">　↳ 其中中等投入</label><input id="w-new-mid" type="number" placeholder="0"></div>
-          <div class="field"><label style="color:var(--text2)">　↳ 其中长期投入</label><input id="w-new-long" type="number" placeholder="0"></div>
-        </div>
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目（按项目节点划分）<button class="btn btn-sm" onclick="fillProjTextareas('w')">↻ 刷新项目</button></div>
         <div class="field"><label>1）合同签订（含走流程）<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：生产/交付、安装/验收、项目完结、合同签订</span></label><textarea id="w-p1" class="auto-resize"></textarea></div>
         <div class="field"><label>2）产品报价<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：产品报价</span></label><textarea id="w-p2" class="auto-resize"></textarea></div>
@@ -289,10 +279,57 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>4）需求确认<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：需求确认</span></label><textarea id="w-p4" class="auto-resize"></textarea></div>
         <div class="field"><label>5）项目延期<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：项目延期</span></label><textarea id="w-p5" class="auto-resize"></textarea></div>
         <div class="field"><label>6）丢单<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：项目停止</span></label><textarea id="w-p6" class="auto-resize"></textarea></div>
-        <div class="slabel">其他</div>
-        <div class="field"><label>重点订单情况</label><textarea id="w-keyorders"></textarea></div>
-        <div class="field"><label>售后情况</label><textarea id="w-aftersales"></textarea></div>
-        <div class="field"><label>下周计划</label><textarea id="w-plan"></textarea></div>
+
+        <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">长线工作 &amp; 日常事务</div>
+        <div class="field"><label>1）背调客户数</label><input id="w-new" type="number" placeholder="0" style="max-width:100px"></div>
+        <div class="field"><label>2）长线客户跟进情况如下</label></div>
+        <div class="grid2">
+          <div class="field">
+            <label style="display:flex;align-items:center;justify-content:space-between">
+              <span>跟进客户（每行一家）<span style="font-size:11px;color:var(--text2);margin-left:4px">数量：<input id="w-followup-count" type="number" min="0" placeholder="自动" style="width:48px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onWListCountInput('w','followup')"></span></span>
+            </label>
+            <textarea id="w-followup" class="auto-resize" placeholder="每行填写一家公司名称" oninput="onWListInput('w','followup')"></textarea>
+          </div>
+          <div class="field">
+            <label>拜访客户（每行填：时间+客户名）<span style="font-size:11px;color:var(--text2);margin-left:4px">数量：<input id="w-visit-count" type="number" min="0" placeholder="自动" style="width:48px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onWListCountInput('w','visit')"></span></label>
+            <textarea id="w-visit" class="auto-resize" placeholder="如：4/21 Orange Ltd" oninput="onWListInput('w','visit')"></textarea>
+          </div>
+        </div>
+        <div class="field"><label>3）重点订单情况</label><textarea id="w-keyorders" class="auto-resize"></textarea></div>
+        <div class="field"><label>4）售后情况</label><textarea id="w-aftersales" class="auto-resize"></textarea></div>
+        <div class="field"><label>5）日常事务</label><textarea id="w-daily" class="auto-resize" placeholder="其他日常工作安排"></textarea></div>
+
+        <div class="slabel">下周目标</div>
+        <div class="field"><label>1. 业绩目标（每行一条：xxW，项目名称）</label><textarea id="w-target-perf" class="auto-resize" placeholder="如：5W，Orange_项目A&#10;3W，Master_项目B"></textarea></div>
+        <div class="field"><label>2. 回款目标（每行一条：xxW，客户名）</label><textarea id="w-target-collect" class="auto-resize" placeholder="如：10W，Orange Ltd&#10;5W，Master Power"></textarea></div>
+        <div class="field"><label>3. 新成交（每行一条：客户名，项目名称+进度）</label><textarea id="w-target-deal" class="auto-resize" placeholder="如：Orange Ltd，项目A 产品报价"></textarea></div>
+
+        <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">下周工作计划<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span></div>
+        <div class="field"><label style="font-weight:500">一、重点项目（按项目节点划分）</label></div>
+        <div class="field"><label>1）合同签订（含走流程）</label><textarea id="w-np1" class="auto-resize" placeholder="填写下周跟进的合同签订项目"></textarea></div>
+        <div class="field"><label>2）产品报价</label><textarea id="w-np2" class="auto-resize" placeholder="填写下周跟进的报价项目"></textarea></div>
+        <div class="field"><label>3）方案设计</label><textarea id="w-np3" class="auto-resize" placeholder="填写下周跟进的方案项目"></textarea></div>
+        <div class="field"><label>4）需求确认</label><textarea id="w-np4" class="auto-resize" placeholder="填写下周跟进的需求确认项目"></textarea></div>
+        <div class="field"><label style="font-weight:500">二、其他工作</label></div>
+        <div class="field"><label>1）客户拜访/来访（每行填：时间+客户名）</label><textarea id="w-np-visit" class="auto-resize" placeholder="如：4/21 Orange Ltd"></textarea></div>
+        <div class="field"><label>2）出差</label><textarea id="w-np-trip" class="auto-resize" placeholder="出差安排"></textarea></div>
+
+        <div class="slabel">下周长线工作</div>
+        <div class="field"><label>1）背调客户数</label><input id="w-nlong-new" type="number" placeholder="0" style="max-width:100px"></div>
+        <div class="field"><label>2）长线客户跟进情况如下</label></div>
+        <div class="grid2">
+          <div class="field">
+            <label>—跟进（每行一家）</label>
+            <textarea id="w-nlong-followup" class="auto-resize" placeholder="每行填写一家公司名称"></textarea>
+          </div>
+          <div class="field">
+            <label>—拜访（每行填：时间+客户名）</label>
+            <textarea id="w-nlong-visit" class="auto-resize" placeholder="如：4/21 Orange Ltd"></textarea>
+          </div>
+        </div>
+        <div class="field"><label>3）重点订单情况</label><textarea id="w-nlong-keyorders" class="auto-resize"></textarea></div>
+        <div class="field"><label>4）售后情况</label><textarea id="w-nlong-aftersales" class="auto-resize"></textarea></div>
+
         <button class="btn btn-primary" onclick="saveWeekly()">保存周报内容</button>
       </div>
       <div id="saved-weeklies"></div>
@@ -305,16 +342,6 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
             <select class="ym-s" id="wm-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select>
           </div>
         </div>
-        <div class="slabel">客户投入情况</div>
-        <div class="grid3">
-          <div class="field"><label>中等投入客户数</label><input id="wm-mid" type="number"></div>
-          <div class="field"><label>长期投入客户数</label><input id="wm-long" type="number"></div>
-          <div class="field"><label>新增背调客户数</label><input id="wm-new" type="number"></div>
-        </div>
-        <div class="grid2" style="margin-top:-4px">
-          <div class="field"><label style="color:var(--text2)">　↳ 其中中等投入</label><input id="wm-new-mid" type="number" placeholder="0"></div>
-          <div class="field"><label style="color:var(--text2)">　↳ 其中长期投入</label><input id="wm-new-long" type="number" placeholder="0"></div>
-        </div>
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目（按项目节点划分）<button class="btn btn-sm" onclick="fillProjTextareas('wm')">↻ 刷新项目</button></div>
         <div class="field"><label>1）合同签订（含走流程）<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：生产/交付、安装/验收、项目完结、合同签订</span></label><textarea id="wm-p1" class="auto-resize"></textarea></div>
         <div class="field"><label>2）产品报价<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：产品报价</span></label><textarea id="wm-p2" class="auto-resize"></textarea></div>
@@ -322,10 +349,57 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>4）需求确认<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：需求确认</span></label><textarea id="wm-p4" class="auto-resize"></textarea></div>
         <div class="field"><label>5）项目延期<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：项目延期</span></label><textarea id="wm-p5" class="auto-resize"></textarea></div>
         <div class="field"><label>6）丢单<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：项目停止</span></label><textarea id="wm-p6" class="auto-resize"></textarea></div>
-        <div class="slabel">其他</div>
-        <div class="field"><label>重点订单情况</label><textarea id="wm-keyorders"></textarea></div>
-        <div class="field"><label>售后情况</label><textarea id="wm-aftersales"></textarea></div>
-        <div class="field"><label>下月计划</label><textarea id="wm-plan"></textarea></div>
+
+        <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">长线工作 &amp; 日常事务</div>
+        <div class="field"><label>1）背调客户数</label><input id="wm-new" type="number" placeholder="0" style="max-width:100px"></div>
+        <div class="field"><label>2）长线客户跟进情况如下</label></div>
+        <div class="grid2">
+          <div class="field">
+            <label style="display:flex;align-items:center;justify-content:space-between">
+              <span>跟进客户（每行一家）<span style="font-size:11px;color:var(--text2);margin-left:4px">数量：<input id="wm-followup-count" type="number" min="0" placeholder="自动" style="width:48px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onWListCountInput('wm','followup')"></span></span>
+            </label>
+            <textarea id="wm-followup" class="auto-resize" placeholder="每行填写一家公司名称" oninput="onWListInput('wm','followup')"></textarea>
+          </div>
+          <div class="field">
+            <label>拜访客户（每行填：时间+客户名）<span style="font-size:11px;color:var(--text2);margin-left:4px">数量：<input id="wm-visit-count" type="number" min="0" placeholder="自动" style="width:48px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onWListCountInput('wm','visit')"></span></label>
+            <textarea id="wm-visit" class="auto-resize" placeholder="如：4/21 Orange Ltd" oninput="onWListInput('wm','visit')"></textarea>
+          </div>
+        </div>
+        <div class="field"><label>3）重点订单情况</label><textarea id="wm-keyorders" class="auto-resize"></textarea></div>
+        <div class="field"><label>4）售后情况</label><textarea id="wm-aftersales" class="auto-resize"></textarea></div>
+        <div class="field"><label>5）日常事务</label><textarea id="wm-daily" class="auto-resize" placeholder="其他日常工作安排"></textarea></div>
+
+        <div class="slabel">下月目标</div>
+        <div class="field"><label>1. 业绩目标（每行一条：xxW，项目名称）</label><textarea id="wm-target-perf" class="auto-resize" placeholder="如：5W，Orange_项目A&#10;3W，Master_项目B"></textarea></div>
+        <div class="field"><label>2. 回款目标（每行一条：xxW，客户名）</label><textarea id="wm-target-collect" class="auto-resize" placeholder="如：10W，Orange Ltd&#10;5W，Master Power"></textarea></div>
+        <div class="field"><label>3. 新成交（每行一条：客户名，项目名称+进度）</label><textarea id="wm-target-deal" class="auto-resize" placeholder="如：Orange Ltd，项目A 产品报价"></textarea></div>
+
+        <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">下月工作计划<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span></div>
+        <div class="field"><label style="font-weight:500">一、重点项目（按项目节点划分）</label></div>
+        <div class="field"><label>1）合同签订（含走流程）</label><textarea id="wm-np1" class="auto-resize" placeholder="填写下月跟进的合同签订项目"></textarea></div>
+        <div class="field"><label>2）产品报价</label><textarea id="wm-np2" class="auto-resize" placeholder="填写下月跟进的报价项目"></textarea></div>
+        <div class="field"><label>3）方案设计</label><textarea id="wm-np3" class="auto-resize" placeholder="填写下月跟进的方案项目"></textarea></div>
+        <div class="field"><label>4）需求确认</label><textarea id="wm-np4" class="auto-resize" placeholder="填写下月跟进的需求确认项目"></textarea></div>
+        <div class="field"><label style="font-weight:500">二、其他工作</label></div>
+        <div class="field"><label>1）客户拜访/来访（每行填：时间+客户名）</label><textarea id="wm-np-visit" class="auto-resize" placeholder="如：5/1 Orange Ltd"></textarea></div>
+        <div class="field"><label>2）出差</label><textarea id="wm-np-trip" class="auto-resize" placeholder="出差安排"></textarea></div>
+
+        <div class="slabel">下月长线工作</div>
+        <div class="field"><label>1）背调客户数</label><input id="wm-nlong-new" type="number" placeholder="0" style="max-width:100px"></div>
+        <div class="field"><label>2）长线客户跟进情况如下</label></div>
+        <div class="grid2">
+          <div class="field">
+            <label>—跟进（每行一家）</label>
+            <textarea id="wm-nlong-followup" class="auto-resize" placeholder="每行填写一家公司名称"></textarea>
+          </div>
+          <div class="field">
+            <label>—拜访（每行填：时间+客户名）</label>
+            <textarea id="wm-nlong-visit" class="auto-resize" placeholder="如：5/1 Orange Ltd"></textarea>
+          </div>
+        </div>
+        <div class="field"><label>3）重点订单情况</label><textarea id="wm-nlong-keyorders" class="auto-resize"></textarea></div>
+        <div class="field"><label>4）售后情况</label><textarea id="wm-nlong-aftersales" class="auto-resize"></textarea></div>
+
         <button class="btn btn-primary" onclick="saveMonthly()">保存月报内容</button>
       </div>
       <div id="saved-monthlies"></div>
@@ -1244,15 +1318,30 @@ function buildProjSection(projects,forMonthly){
   return r;
 }
 
+function gv(id){const el=document.getElementById(id);return el?el.value:'';}
+function onWListInput(prefix,type){
+  const lines=gv(prefix+'-'+type).split('\n').filter(Boolean);
+  const cEl=document.getElementById(prefix+'-'+type+'-count');
+  if(cEl&&!cEl.dataset.manual)cEl.value=lines.length||'';
+  autoResize(document.getElementById(prefix+'-'+type));
+}
+function onWListCountInput(prefix,type){
+  const cEl=document.getElementById(prefix+'-'+type+'-count');
+  if(cEl)cEl.dataset.manual=cEl.value?'1':'';
+}
 function saveWeekly(){
-  const fy=document.getElementById('w-fy').value,month=document.getElementById('w-month').value,week=document.getElementById('w-week').value;
-  const checkedProjs=[];
-  const data={id:Date.now(),fy,month,week,checkedProjs,
-    mid:document.getElementById('w-mid').value,long:document.getElementById('w-long').value,newClients:document.getElementById('w-new').value,
-    newMid:document.getElementById('w-new-mid').value,newLong:document.getElementById('w-new-long').value,
-    p1:document.getElementById('w-p1').value,p2:document.getElementById('w-p2').value,p3:document.getElementById('w-p3').value,p4:document.getElementById('w-p4').value,
-    p5:document.getElementById('w-p5').value,p6:document.getElementById('w-p6').value,
-    keyorders:document.getElementById('w-keyorders').value,aftersales:document.getElementById('w-aftersales').value,plan:document.getElementById('w-plan').value,
+  const fy=gv('w-fy'),month=gv('w-month'),week=gv('w-week');
+  const data={id:Date.now(),fy,month,week,
+    p1:gv('w-p1'),p2:gv('w-p2'),p3:gv('w-p3'),p4:gv('w-p4'),p5:gv('w-p5'),p6:gv('w-p6'),
+    newClients:gv('w-new'),
+    followup:gv('w-followup'),followupCount:gv('w-followup-count'),
+    visit:gv('w-visit'),visitCount:gv('w-visit-count'),
+    keyorders:gv('w-keyorders'),aftersales:gv('w-aftersales'),daily:gv('w-daily'),
+    targetPerf:gv('w-target-perf'),targetCollect:gv('w-target-collect'),targetDeal:gv('w-target-deal'),
+    np1:gv('w-np1'),np2:gv('w-np2'),np3:gv('w-np3'),np4:gv('w-np4'),
+    npVisit:gv('w-np-visit'),npTrip:gv('w-np-trip'),
+    nlongNew:gv('w-nlong-new'),nlongFollowup:gv('w-nlong-followup'),nlongVisit:gv('w-nlong-visit'),
+    nlongKeyorders:gv('w-nlong-keyorders'),nlongAftersales:gv('w-nlong-aftersales'),
     savedAt:new Date().toLocaleString('zh-CN')};
   const ex=state.weeklies.findIndex(w=>w.fy===fy&&w.month===month&&w.week===week);
   if(ex>=0)state.weeklies[ex]=data;else state.weeklies.push(data);
@@ -1265,22 +1354,17 @@ function renderSavedWeeklies(){
   const el=document.getElementById('saved-weeklies');
   if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--text2);font-size:12px">暂无已保存的周报内容</div>';return;}
   el.innerHTML=list.map(w=>{
-    const p1=w.p1||'',p2=w.p2||'',p3=w.p3||'',p4=w.p4||'',p5=w.p5||'',p6=w.p6||'';
-    const projTxt=`➡️ 合同签订（含走流程）：\n${p1||'（暂无）'}\n\n➡️ 产品报价：\n${p2||'（暂无）'}\n\n➡️ 方案设计：\n${p3||'（暂无）'}\n\n➡️ 需求确认：\n${p4||'（暂无）'}\n\n➡️ 项目延期：\n${p5||'（暂无）'}\n\n➡️ 丢单：\n${p6||'（暂无）'}`;
-    const infoRow=(label,val)=>val?`<div style="margin:6px 0"><span style="font-size:12px;color:var(--text2);font-weight:500">${label}：</span><span style="font-size:12px">${val}</span></div>`:'';
     const hid='wh_'+w.id;
+    const badges=[];
+    if(w.newClients)badges.push(`<span class="badge badge-teal" style="font-size:10px">背调${w.newClients}个</span>`);
+    if(w.followupCount||w.visitCount)badges.push(`<span class="badge badge-blue" style="font-size:10px">跟进${w.followupCount||0}家 拜访${w.visitCount||0}家</span>`);
     return`<div class="card" style="margin-top:8px">
       <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var el=document.getElementById('${hid}');el.style.display=el.style.display==='none'?'block':'none';var ic=document.getElementById('${hid}_ic');ic.textContent=el.style.display==='none'?'▶':'▼'})()">
         <span style="font-size:13px;font-weight:500"><span id="${hid}_ic">▶</span> ${w.fy} ${w.month}月 ${w.week} 周报</span>
-        <div class="inline-flex" onclick="event.stopPropagation()"><button class="btn btn-primary btn-sm" onclick="editWeekly(${w.id})">编辑</button><button class="btn btn-sm" onclick="loadWeekly(${w.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delWeekly(${w.id})">删除</button></div>
+        <div class="inline-flex" onclick="event.stopPropagation()">${badges.join('')}<button class="btn btn-primary btn-sm" onclick="editWeekly(${w.id})">编辑</button><button class="btn btn-sm" onclick="loadWeekly(${w.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delWeekly(${w.id})">删除</button></div>
       </div>
-      <div id="${hid}" style="display:none;margin-top:8px">
-        <div style="margin:4px 0 8px;font-size:12px"><span style="color:var(--text2);font-weight:500">客户投入：</span>中等${w.mid||0}个 · 长期${w.long||0}个 · 背调${w.newClients||0}个${(w.newMid||w.newLong)?`（其中中等${w.newMid||0}个，长期${w.newLong||0}个）`:''}</div>
-        <div style="margin:6px 0 4px;font-size:12px;font-weight:500;color:var(--text2)">重点项目（按项目节点划分）</div>
-        <div style="font-size:12px;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);white-space:pre-wrap;line-height:1.7;font-family:monospace;margin-bottom:6px">${projTxt}</div>
-        ${infoRow('重点订单',w.keyorders)}
-        ${infoRow('售后情况',w.aftersales)}
-        ${infoRow('下周计划',w.plan)}
+      <div id="${hid}" style="display:none;margin-top:8px;font-size:12px;color:var(--text2)">
+        <div>已填写字段：重点项目 / 长线工作 / 下周目标 / 下周工作计划 / 下周长线工作</div>
         <div style="font-size:11px;color:var(--text2);margin-top:6px">${w.savedAt}</div>
       </div>
     </div>`;
@@ -1291,10 +1375,24 @@ function loadWeekly(id){
   const w=state.weeklies.find(x=>x.id===id);if(!w)return;
   document.getElementById('w-fy').value=w.fy||document.getElementById('w-fy').value;
   document.getElementById('w-month').value=w.month;document.getElementById('w-week').value=w.week;
-  ['mid','long','p1','p2','p3','p4','p5','p6','keyorders','aftersales','plan'].forEach(f=>{const el=document.getElementById('w-'+f);if(el)el.value=w[f]||'';});
-  document.getElementById('w-new').value=w.newClients||'';
-  document.getElementById('w-new-mid').value=w.newMid||'';
-  document.getElementById('w-new-long').value=w.newLong||'';
+  ['p1','p2','p3','p4','p5','p6','keyorders','aftersales','daily',
+   'target-perf','target-collect','target-deal',
+   'np1','np2','np3','np4','np-visit','np-trip',
+   'nlong-followup','nlong-visit','nlong-keyorders','nlong-aftersales'].forEach(f=>{
+    const el=document.getElementById('w-'+f);if(el)el.value=w[f.replace(/-([a-z])/g,(m,c)=>c.toUpperCase()).replace('NlongN','nlongN').replace(/^n([A-Z])/,(_,c)=>'n'+c)]||w[f]||'';
+  });
+  // Load fields with mapping
+  const setV=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||'';};
+  setV('w-new',w.newClients);
+  setV('w-followup',w.followup);setV('w-followup-count',w.followupCount);
+  setV('w-visit',w.visit);setV('w-visit-count',w.visitCount);
+  setV('w-keyorders',w.keyorders);setV('w-aftersales',w.aftersales);setV('w-daily',w.daily);
+  setV('w-target-perf',w.targetPerf);setV('w-target-collect',w.targetCollect);setV('w-target-deal',w.targetDeal);
+  setV('w-np1',w.np1);setV('w-np2',w.np2);setV('w-np3',w.np3);setV('w-np4',w.np4);
+  setV('w-np-visit',w.npVisit);setV('w-np-trip',w.npTrip);
+  setV('w-nlong-new',w.nlongNew);setV('w-nlong-followup',w.nlongFollowup);setV('w-nlong-visit',w.nlongVisit);
+  setV('w-nlong-keyorders',w.nlongKeyorders);setV('w-nlong-aftersales',w.nlongAftersales);
+  setV('w-p1',w.p1);setV('w-p2',w.p2);setV('w-p3',w.p3);setV('w-p4',w.p4);setV('w-p5',w.p5);setV('w-p6',w.p6);
   autoResizeAll();
 }
 function delWeekly(id){if(!confirm('确认删除？'))return;state.weeklies=state.weeklies.filter(x=>x.id!==id);save();renderSavedWeeklies();}
@@ -1315,13 +1413,18 @@ function editWeekly(id){
 }
 
 function saveMonthly(){
-  const fy=document.getElementById('wm-fy').value,month=document.getElementById('wm-month').value;
+  const fy=gv('wm-fy'),month=gv('wm-month');
   const data={id:Date.now(),fy,month,checkedProjs:[],
-    mid:document.getElementById('wm-mid').value,long:document.getElementById('wm-long').value,newClients:document.getElementById('wm-new').value,
-    newMid:document.getElementById('wm-new-mid').value,newLong:document.getElementById('wm-new-long').value,
-    p1:document.getElementById('wm-p1').value,p2:document.getElementById('wm-p2').value,p3:document.getElementById('wm-p3').value,p4:document.getElementById('wm-p4').value,
-    p5:document.getElementById('wm-p5').value,p6:document.getElementById('wm-p6').value,
-    keyorders:document.getElementById('wm-keyorders').value,aftersales:document.getElementById('wm-aftersales').value,plan:document.getElementById('wm-plan').value,
+    p1:gv('wm-p1'),p2:gv('wm-p2'),p3:gv('wm-p3'),p4:gv('wm-p4'),p5:gv('wm-p5'),p6:gv('wm-p6'),
+    newClients:gv('wm-new'),
+    followup:gv('wm-followup'),followupCount:gv('wm-followup-count'),
+    visit:gv('wm-visit'),visitCount:gv('wm-visit-count'),
+    keyorders:gv('wm-keyorders'),aftersales:gv('wm-aftersales'),daily:gv('wm-daily'),
+    targetPerf:gv('wm-target-perf'),targetCollect:gv('wm-target-collect'),targetDeal:gv('wm-target-deal'),
+    np1:gv('wm-np1'),np2:gv('wm-np2'),np3:gv('wm-np3'),np4:gv('wm-np4'),
+    npVisit:gv('wm-np-visit'),npTrip:gv('wm-np-trip'),
+    nlongNew:gv('wm-nlong-new'),nlongFollowup:gv('wm-nlong-followup'),nlongVisit:gv('wm-nlong-visit'),
+    nlongKeyorders:gv('wm-nlong-keyorders'),nlongAftersales:gv('wm-nlong-aftersales'),
     savedAt:new Date().toLocaleString('zh-CN')};
   const ex=(state.monthlies||[]).findIndex(m=>m.fy===fy&&m.month===month);
   if(ex>=0)state.monthlies[ex]=data;else(state.monthlies=state.monthlies||[]).push(data);
@@ -1334,22 +1437,17 @@ function renderSavedMonthlies(){
   const el=document.getElementById('saved-monthlies');
   if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--text2);font-size:12px">暂无已保存的月报内容</div>';return;}
   el.innerHTML=list.map(m=>{
-    const p1=m.p1||'',p2=m.p2||'',p3=m.p3||'',p4=m.p4||'',p5=m.p5||'',p6=m.p6||'';
-    const projTxt=`➡️ 合同签订（含走流程）：\n${p1||'（暂无）'}\n\n➡️ 产品报价：\n${p2||'（暂无）'}\n\n➡️ 方案设计：\n${p3||'（暂无）'}\n\n➡️ 需求确认：\n${p4||'（暂无）'}\n\n➡️ 项目延期：\n${p5||'（暂无）'}\n\n➡️ 丢单：\n${p6||'（暂无）'}`;
-    const infoRow=(label,val)=>val?`<div style="margin:6px 0"><span style="font-size:12px;color:var(--text2);font-weight:500">${label}：</span><span style="font-size:12px">${val}</span></div>`:'';
     const hid='mh_'+m.id;
+    const badges=[];
+    if(m.newClients)badges.push(`<span class="badge badge-teal" style="font-size:10px">背调${m.newClients}个</span>`);
+    if(m.followupCount||m.visitCount)badges.push(`<span class="badge badge-blue" style="font-size:10px">跟进${m.followupCount||0}家 拜访${m.visitCount||0}家</span>`);
     return`<div class="card" style="margin-top:8px">
       <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var el=document.getElementById('${hid}');el.style.display=el.style.display==='none'?'block':'none';var ic=document.getElementById('${hid}_ic');ic.textContent=el.style.display==='none'?'▶':'▼'})()">
         <span style="font-size:13px;font-weight:500"><span id="${hid}_ic">▶</span> ${m.fy} ${m.month}月 月报</span>
-        <div class="inline-flex" onclick="event.stopPropagation()"><button class="btn btn-primary btn-sm" onclick="editMonthly(${m.id})">编辑</button><button class="btn btn-sm" onclick="loadMonthly(${m.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delMonthly(${m.id})">删除</button></div>
+        <div class="inline-flex" onclick="event.stopPropagation()">${badges.join('')}<button class="btn btn-primary btn-sm" onclick="editMonthly(${m.id})">编辑</button><button class="btn btn-sm" onclick="loadMonthly(${m.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delMonthly(${m.id})">删除</button></div>
       </div>
-      <div id="${hid}" style="display:none;margin-top:8px">
-        <div style="margin:4px 0 8px;font-size:12px"><span style="color:var(--text2);font-weight:500">客户投入：</span>中等${m.mid||0}个 · 长期${m.long||0}个 · 背调${m.newClients||0}个${(m.newMid||m.newLong)?`（其中中等${m.newMid||0}个，长期${m.newLong||0}个）`:''}</div>
-        <div style="margin:6px 0 4px;font-size:12px;font-weight:500;color:var(--text2)">重点项目（按项目节点划分）</div>
-        <div style="font-size:12px;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);white-space:pre-wrap;line-height:1.7;font-family:monospace;margin-bottom:6px">${projTxt}</div>
-        ${infoRow('重点订单',m.keyorders)}
-        ${infoRow('售后情况',m.aftersales)}
-        ${infoRow('下月计划',m.plan)}
+      <div id="${hid}" style="display:none;margin-top:8px;font-size:12px;color:var(--text2)">
+        <div>已填写字段：重点项目 / 长线工作 / 下月目标 / 下月工作计划 / 下月长线工作</div>
         <div style="font-size:11px;color:var(--text2);margin-top:6px">${m.savedAt}</div>
       </div>
     </div>`;
@@ -1360,10 +1458,17 @@ function loadMonthly(id){
   const m=(state.monthlies||[]).find(x=>x.id===id);if(!m)return;
   document.getElementById('wm-fy').value=m.fy||document.getElementById('wm-fy').value;
   document.getElementById('wm-month').value=m.month;
-  ['mid','long','p1','p2','p3','p4','p5','p6','keyorders','aftersales','plan'].forEach(f=>{const el=document.getElementById('wm-'+f);if(el)el.value=m[f]||'';});
-  document.getElementById('wm-new').value=m.newClients||'';
-  document.getElementById('wm-new-mid').value=m.newMid||'';
-  document.getElementById('wm-new-long').value=m.newLong||'';
+  const setV=(i,v)=>{const el=document.getElementById(i);if(el)el.value=v||'';};
+  setV('wm-new',m.newClients);
+  setV('wm-followup',m.followup);setV('wm-followup-count',m.followupCount);
+  setV('wm-visit',m.visit);setV('wm-visit-count',m.visitCount);
+  setV('wm-keyorders',m.keyorders);setV('wm-aftersales',m.aftersales);setV('wm-daily',m.daily);
+  setV('wm-target-perf',m.targetPerf);setV('wm-target-collect',m.targetCollect);setV('wm-target-deal',m.targetDeal);
+  setV('wm-np1',m.np1);setV('wm-np2',m.np2);setV('wm-np3',m.np3);setV('wm-np4',m.np4);
+  setV('wm-np-visit',m.npVisit);setV('wm-np-trip',m.npTrip);
+  setV('wm-nlong-new',m.nlongNew);setV('wm-nlong-followup',m.nlongFollowup);setV('wm-nlong-visit',m.nlongVisit);
+  setV('wm-nlong-keyorders',m.nlongKeyorders);setV('wm-nlong-aftersales',m.nlongAftersales);
+  setV('wm-p1',m.p1);setV('wm-p2',m.p2);setV('wm-p3',m.p3);setV('wm-p4',m.p4);setV('wm-p5',m.p5);setV('wm-p6',m.p6);
   autoResizeAll();
 }
 function delMonthly(id){if(!confirm('确认删除？'))return;state.monthlies=state.monthlies.filter(x=>x.id!==id);save();renderSavedMonthlies();}
@@ -1749,6 +1854,56 @@ function groupByClient(arr){
 }
 const fl=p=>p.noAmount?`  ${p.client}`:`  ${p.client} ${fmt(p.amount)}`;
 
+function buildLonglineTxt(newC,followupArr,followupCount,visitArr,visitCount,keyorders,aftersales,daily){
+  let r='';
+  r+=`1）背调客户：${newC?newC+'个':'暂无'}\n\n`;
+  r+=`2）长线客户跟进情况如下：\n`;
+  r+=`  跟进：${followupCount?followupCount+'家':'暂无'}\n`;
+  if(followupArr.length)r+=followupArr.join('\n')+'\n';
+  r+=`  拜访：${visitCount?visitCount+'家':'暂无'}\n`;
+  if(visitArr.length)r+=visitArr.join('\n')+'\n';
+  r+=`\n3）重点订单情况：\n${keyorders||'暂无'}\n\n`;
+  r+=`4）售后情况：\n${aftersales||'暂无'}\n`;
+  if(daily)r+=`\n5）日常事务：\n${daily}\n`;
+  return r;
+}
+function buildTargetTxt(label1,perfLines,collectLines,dealLines){
+  let r='';
+  const pTotal=perfLines.length;
+  r+=`1. 业绩目标：${pTotal}个\n`;
+  perfLines.forEach((l,i)=>r+=`客户 ${i+1}：${l}\n`);
+  const cTotal=collectLines.length;
+  r+=`2. 回款目标：${cTotal}个\n`;
+  collectLines.forEach((l,i)=>r+=`客户 ${i+1}：${l}\n`);
+  const dTotal=dealLines.length;
+  r+=`3. 新成交：${dTotal}个\n`;
+  dealLines.forEach(l=>r+=`客户 ${l}\n`);
+  return r;
+}
+function buildNextPlanTxt(np1,np2,np3,np4,npVisit,npTrip){
+  let r='一、重点项目（按项目节点划分）\n';
+  r+=`1）合同签订（含走流程）：\n${np1||'（暂无）'}\n\n`;
+  r+=`2）产品报价：\n${np2||'（暂无）'}\n\n`;
+  r+=`3）方案设计：\n${np3||'（暂无）'}\n\n`;
+  r+=`4）需求确认：\n${np4||'（暂无）'}\n\n`;
+  r+='二、其他工作\n';
+  r+=`1）客户拜访/来访：\n${npVisit||'（暂无）'}\n\n`;
+  r+=`2）出差：\n${npTrip||'（暂无）'}\n`;
+  return r;
+}
+function buildNextLonglineTxt(nlongNew,nlongFollowup,nlongVisit,nlongKeyorders,nlongAftersales){
+  const fuArr=(nlongFollowup||'').split('\n').filter(Boolean);
+  const viArr=(nlongVisit||'').split('\n').filter(Boolean);
+  let r=`1）背调客户：${nlongNew?nlongNew+'个':'暂无'}\n\n`;
+  r+=`2）长线客户跟进情况如下：\n`;
+  r+=`  —跟进：${fuArr.length?fuArr.length+'家':'暂无'}\n`;
+  if(fuArr.length)r+=fuArr.join('\n')+'\n';
+  r+=`  —拜访：${viArr.length?viArr.length+'家':'暂无'}\n`;
+  if(viArr.length)r+=viArr.join('\n')+'\n';
+  r+=`\n3）重点订单情况：\n${nlongKeyorders||'暂无'}\n\n`;
+  r+=`4）售后情况：\n${nlongAftersales||'暂无'}\n`;
+  return r;
+}
 function genWeekly(){
   const fy=document.getElementById('ew-fy').value,month=document.getElementById('ew-month').value,week=document.getElementById('ew-week').value;
   const wd=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.week===week&&p.type==='新成交');
@@ -1760,12 +1915,7 @@ function genWeekly(){
   r+=`➡️ 本月总新成交：${pd.length}家\n`;
   pd.forEach(p=>{r+=`  ${p.client}${p.note?'（'+p.note+'）':''}\n`;});
   r+='\n';
-  if(wr&&(wr.mid||wr.long||wr.newClients)){
-    let nb='';if(wr.newClients&&(wr.newMid||wr.newLong))nb=`（其中中等投入${wr.newMid||0}个，长期投入${wr.newLong||0}个）`;
-    r+=`➡️ 客户投入情况\n  中等投入${wr.mid||0}个，长期投入${wr.long||0}个，新增背调${wr.newClients||0}个${nb}\n\n`;
-  }
   r+=`重点项目（按项目节点划分）\n`;
-  // Build project sections from live project data filtered by progressStage
   const allGrouped={};state.projects.forEach(p=>{const k=p.name||p.client;if(!allGrouped[k])allGrouped[k]=[];allGrouped[k].push(p);});
   function projBlock(stages){
     const res=[];
@@ -1783,10 +1933,38 @@ function genWeekly(){
   r+=`4）需求确认：\n${projBlock(['需求确认'])}\n\n`;
   r+=`5）项目延期：\n${projBlock(['项目延期'])}\n\n`;
   r+=`6）丢单：\n${projBlock(['项目停止'])}\n\n`;
-  if(wr&&wr.keyorders)r+=`➡️ 重点订单情况\n  ${wr.keyorders}\n\n`;
-  if(wr&&wr.aftersales)r+=`➡️ 售后情况\n  ${wr.aftersales}\n\n`;
-  if(wr&&wr.plan)r+=`➡️ 下周计划\n  ${wr.plan}\n`;
-  // Save generated report
+  r+=`${'─'.repeat(28)}\n\n`;
+  // 长线工作 & 日常事务
+  r+=`长线工作 & 日常事务\n`;
+  if(wr){
+    const fuArr=(wr.followup||'').split('\n').filter(Boolean);
+    const viArr=(wr.visit||'').split('\n').filter(Boolean);
+    const fuCount=wr.followupCount||fuArr.length;
+    const viCount=wr.visitCount||viArr.length;
+    r+=buildLonglineTxt(wr.newClients,fuArr,fuCount,viArr,viCount,wr.keyorders,wr.aftersales,wr.daily);
+  } else {r+=`（暂无）\n`;}
+  r+=`\n${'─'.repeat(28)}\n\n`;
+  // 下周目标
+  r+=`下周目标\n`;
+  if(wr){
+    const perfLines=(wr.targetPerf||'').split('\n').filter(Boolean);
+    const collectLines=(wr.targetCollect||'').split('\n').filter(Boolean);
+    const dealLines=(wr.targetDeal||'').split('\n').filter(Boolean);
+    r+=buildTargetTxt('下周',perfLines,collectLines,dealLines);
+  } else {r+=`（暂无）\n`;}
+  r+=`\n${'─'.repeat(28)}\n\n`;
+  // 下周工作计划
+  r+=`下周工作计划\n`;
+  if(wr){
+    r+=buildNextPlanTxt(wr.np1,wr.np2,wr.np3,wr.np4,wr.npVisit,wr.npTrip);
+  } else {r+=`（暂无）\n`;}
+  r+=`\n${'─'.repeat(28)}\n\n`;
+  // 下周长线工作
+  r+=`下周长线工作\n`;
+  if(wr){
+    r+=buildNextLonglineTxt(wr.nlongNew,wr.nlongFollowup,wr.nlongVisit,wr.nlongKeyorders,wr.nlongAftersales);
+  } else {r+=`（暂无）\n`;}
+  // Save
   if(!state.genWeeklies)state.genWeeklies=[];
   const key=`${fy}_${month}_${week}`;
   const entry={id:Date.now(),key,fy,month,week,txt:r,savedAt:new Date().toLocaleString('zh-CN')};
@@ -1834,12 +2012,7 @@ function genMonthly(){
   r+=`➡️ 截至本月总新成交：${dC.length}家\n`;
   dC.forEach(p=>{r+=`  ${p.client}${p.note?'（'+p.note+'）':''}\n`;});
   r+='\n';
-  if(mm&&(mm.mid||mm.long||mm.newClients)){
-    let nb='';if(mm.newClients&&(mm.newMid||mm.newLong))nb=`（其中中等投入${mm.newMid||0}个，长期投入${mm.newLong||0}个）`;
-    r+=`➡️ 客户投入情况\n  中等投入${mm.mid||0}个，长期投入${mm.long||0}个，新增背调${mm.newClients||0}个${nb}\n\n`;
-  }
   r+=`重点项目（按项目节点划分）\n`;
-  // 优先使用已保存月报中的项目内容，若无则从实时项目数据读取
   if(mm&&(mm.p1||mm.p2||mm.p3||mm.p4||mm.p5||mm.p6)){
     r+=`1）合同签订（含走流程）：\n${mm.p1||'（暂无）'}\n\n`;
     r+=`2）产品报价：\n${mm.p2||'（暂无）'}\n\n`;
@@ -1848,28 +2021,56 @@ function genMonthly(){
     r+=`5）项目延期：\n${mm.p5||'（暂无）'}\n\n`;
     r+=`6）丢单：\n${mm.p6||'（暂无）'}\n\n`;
   } else {
-  const mAllGrouped={};state.projects.forEach(p=>{const k=p.name||p.client;if(!mAllGrouped[k])mAllGrouped[k]=[];mAllGrouped[k].push(p);});
-  function mProjBlock(stages){
-    const items=[];
-    Object.keys(mAllGrouped).forEach(k=>{
-      const entries=mAllGrouped[k].sort((a,b)=>b.id-a.id);
-      const latest=entries[0];
-      if(stages.includes(latest.progressStage))items.push({latest,entries});
-    });
-    if(!items.length)return'（暂无）';
-    return items.map(({latest,entries})=>buildCRMTextFull(latest,entries)).join('\n\n──────────────\n\n');
+    const mAllGrouped={};state.projects.forEach(p=>{const k=p.name||p.client;if(!mAllGrouped[k])mAllGrouped[k]=[];mAllGrouped[k].push(p);});
+    function mProjBlock(stages){
+      const items=[];
+      Object.keys(mAllGrouped).forEach(k=>{
+        const entries=mAllGrouped[k].sort((a,b)=>b.id-a.id);
+        const latest=entries[0];
+        if(stages.includes(latest.progressStage))items.push({latest,entries});
+      });
+      if(!items.length)return'（暂无）';
+      return items.map(({latest,entries})=>buildCRMTextFull(latest,entries)).join('\n\n──────────────\n\n');
+    }
+    r+=`1）合同签订（含走流程）：\n${mProjBlock(['生产/交付','安装/验收','项目完结','合同签订'])}\n\n`;
+    r+=`2）产品报价：\n${mProjBlock(['产品报价'])}\n\n`;
+    r+=`3）方案设计：\n${mProjBlock(['方案设计'])}\n\n`;
+    r+=`4）需求确认：\n${mProjBlock(['需求确认'])}\n\n`;
+    r+=`5）项目延期：\n${mProjBlock(['项目延期'])}\n\n`;
+    r+=`6）丢单：\n${mProjBlock(['项目停止'])}\n\n`;
   }
-  r+=`1）合同签订（含走流程）：\n${mProjBlock(['生产/交付','安装/验收','项目完结','合同签订'])}\n\n`;
-  r+=`2）产品报价：\n${mProjBlock(['产品报价'])}\n\n`;
-  r+=`3）方案设计：\n${mProjBlock(['方案设计'])}\n\n`;
-  r+=`4）需求确认：\n${mProjBlock(['需求确认'])}\n\n`;
-  r+=`5）项目延期：\n${mProjBlock(['项目延期'])}\n\n`;
-  r+=`6）丢单：\n${mProjBlock(['项目停止'])}\n\n`;
-  }
-  if(mm&&mm.keyorders)r+=`➡️ 重点订单情况\n  ${mm.keyorders}\n\n`;
-  if(mm&&mm.aftersales)r+=`➡️ 售后情况\n  ${mm.aftersales}\n\n`;
-  if(mm&&mm.plan)r+=`➡️ 下月计划\n  ${mm.plan}\n`;
-  // Save generated report
+  r+=`${'─'.repeat(28)}\n\n`;
+  // 长线工作 & 日常事务
+  r+=`长线工作 & 日常事务\n`;
+  if(mm){
+    const fuArr=(mm.followup||'').split('\n').filter(Boolean);
+    const viArr=(mm.visit||'').split('\n').filter(Boolean);
+    const fuCount=mm.followupCount||fuArr.length;
+    const viCount=mm.visitCount||viArr.length;
+    r+=buildLonglineTxt(mm.newClients,fuArr,fuCount,viArr,viCount,mm.keyorders,mm.aftersales,mm.daily);
+  } else {r+=`（暂无）\n`;}
+  r+=`\n${'─'.repeat(28)}\n\n`;
+  // 下月目标
+  r+=`下月目标\n`;
+  if(mm){
+    const perfLines=(mm.targetPerf||'').split('\n').filter(Boolean);
+    const collectLines=(mm.targetCollect||'').split('\n').filter(Boolean);
+    const dealLines=(mm.targetDeal||'').split('\n').filter(Boolean);
+    r+=buildTargetTxt('下月',perfLines,collectLines,dealLines);
+  } else {r+=`（暂无）\n`;}
+  r+=`\n${'─'.repeat(28)}\n\n`;
+  // 下月工作计划
+  r+=`下月工作计划\n`;
+  if(mm){
+    r+=buildNextPlanTxt(mm.np1,mm.np2,mm.np3,mm.np4,mm.npVisit,mm.npTrip);
+  } else {r+=`（暂无）\n`;}
+  r+=`\n${'─'.repeat(28)}\n\n`;
+  // 下月长线工作
+  r+=`下月长线工作\n`;
+  if(mm){
+    r+=buildNextLonglineTxt(mm.nlongNew,mm.nlongFollowup,mm.nlongVisit,mm.nlongKeyorders,mm.nlongAftersales);
+  } else {r+=`（暂无）\n`;}
+  // Save
   if(!state.genMonthlies)state.genMonthlies=[];
   const key=`${fy}_${month}`;
   const entry={id:Date.now(),key,fy,month,txt:r,savedAt:new Date().toLocaleString('zh-CN')};
