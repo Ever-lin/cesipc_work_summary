@@ -18,25 +18,25 @@
   --teal-bg:#E1F5EE;--teal-text:#085041;
   --radius:8px;--radius-sm:6px;--radius-xs:4px;
 }
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;font-size:14px;color:var(--c-text);background:var(--bg2);min-height:100vh}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;font-size:14px;color:var(--text);background:var(--bg2);min-height:100vh}
 .tabs{display:flex;gap:4px;padding:10px 14px 0;border-bottom:1px solid var(--border2);background:var(--bg2);flex-wrap:wrap}
 .tab{padding:7px 14px;border-radius:6px 6px 0 0;cursor:pointer;font-size:13px;border:1px solid transparent;color:var(--text2);background:transparent;white-space:nowrap}
 .tab.active{background:var(--bg);border-color:var(--border2);border-bottom-color:var(--bg);color:var(--text);font-weight:500}
 .panel{display:none;padding:14px}.panel.active{display:block}
-.card{background:var(--c-bg);border:1px solid var(--border2);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.card{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:14px;margin-bottom:12px}
 .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;flex-wrap:wrap}
 .card-title{font-weight:500;font-size:14px}
 .badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500}
 .badge-blue{background:var(--blue-bg);color:var(--blue-text)}.badge-green{background:var(--green-bg);color:var(--green-text)}.badge-amber{background:var(--amber-bg);color:var(--amber-text)}.badge-red{background:var(--red-bg);color:var(--red-text)}.badge-gray{background:var(--gray-bg);color:var(--gray-text)}.badge-teal{background:var(--teal-bg);color:var(--teal-text)}
 label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
-input,select,textarea{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;font-family:inherit;background:var(--bg2);color:var(--c-text);outline:none}
+input,select,textarea{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;font-family:inherit;background:var(--bg2);color:var(--text);outline:none}
 input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg)}
 textarea{resize:vertical;min-height:60px;line-height:1.5}
 textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 .grid3{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:10px}
 .field{margin-bottom:10px}
-.btn{padding:7px 14px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--c-bg);color:var(--c-text);font-size:13px;cursor:pointer;font-family:inherit;transition:background .15s}
+.btn{padding:7px 14px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;cursor:pointer;font-family:inherit;transition:background .15s}
 .btn:hover{background:var(--bg2)}
 .btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}.btn-primary:hover{background:var(--blue-text)}
 .btn-danger{background:var(--red-bg);color:var(--red-text);border-color:var(--red-border)}
@@ -47,7 +47,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .metric{background:var(--bg2);border-radius:var(--radius-sm);padding:12px}
 .metric-label{font-size:12px;color:var(--text2);margin-bottom:4px}
 .metric-value{font-size:19px;font-weight:500}
-.project-item{border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;background:var(--c-bg);margin-bottom:8px}
+.project-item{border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;background:var(--bg);margin-bottom:8px}
 .inline-flex{display:flex;align-items:center;gap:8px}
 .filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
 .ym-s{width:auto;padding:5px 10px;font-size:13px}
@@ -70,8 +70,8 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .proj-sync-item:last-child{border-bottom:none}
 .proj-sync-item input[type=checkbox]{width:auto;margin-top:2px;flex-shrink:0}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.page-header{background:var(--c-bg);border-bottom:1px solid var(--border2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.page-title{font-size:15px;font-weight:600;color:var(--c-text)}
+.page-header{background:var(--bg);border-bottom:1px solid var(--border2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.page-title{font-size:15px;font-weight:600;color:var(--text)}
 .collapse-hdr{cursor:pointer;user-select:none}
 .collapse-hdr:hover{opacity:.85}
 @media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr}.metric-grid{grid-template-columns:repeat(2,1fr)}}
@@ -525,7 +525,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="field"><label>项目数量</label><input id="proj-quantity" placeholder="如：100台 / 2套 / 500m²"></div>
     </div>
     <div class="grid2">
-      <div class="field"><label>项目报价</label><input id="proj-quote" placeholder="如：¥98,000 或 $15,000"></div>
+      <div class="field"><label>项目报价</label><textarea id="proj-quote" class="auto-resize" placeholder="如：¥98,000 或 $15,000" style="min-height:80px;font-size:12px;line-height:1.7;font-family:'SF Mono','Fira Code',monospace"></textarea></div>
       <div class="field"><label>记录日期</label><input id="proj-date" type="date"></div>
     </div>
     <div class="field"><label>跟进详情（沟通内容、关键进展）</label><textarea id="proj-progress" placeholder="如：2026/4/18 与客户技术部沟通，确认规格参数，客户表示需内部审批后回复"></textarea></div>
@@ -564,13 +564,13 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
 <!-- ===== 从报价导入弹窗 ===== -->
 <div id="import-qt-modal-bg" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;display:none;align-items:center;justify-content:center">
-  <div style="background:var(--c-bg);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:94%;max-width:760px;max-height:88vh;overflow-y:auto">
+  <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:94%;max-width:760px;max-height:88vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <span style="font-size:15px;font-weight:600">💰 从报价管理导入</span>
       <button onclick="closeImportFromQuotes()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2)">✕</button>
     </div>
     <div style="margin-bottom:10px">
-      <input id="iqt-search" placeholder="🔍 搜索项目名称、型号、公司…" oninput="renderImportQtList()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--c-text)">
+      <input id="iqt-search" placeholder="🔍 搜索项目名称、型号、公司…" oninput="renderImportQtList()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--text)">
     </div>
     <div id="iqt-list" style="font-size:13px"></div>
   </div>
@@ -909,14 +909,14 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 <style>
 .qt-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
 .qt-search{flex:1;min-width:160px;position:relative}
-.qt-search input{width:100%;padding:6px 10px 6px 30px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--c-text);font-family:inherit;outline:none}
+.qt-search input{width:100%;padding:6px 10px 6px 30px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--text);font-family:inherit;outline:none}
 .qt-search input:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg)}
 .qt-search-ic{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text2);pointer-events:none}
-.qt-tbl-wrap{overflow-x:auto;border:1px solid var(--border2);border-radius:var(--radius);background:var(--c-bg)}
+.qt-tbl-wrap{overflow-x:auto;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg)}
 .qt-tbl{width:100%;border-collapse:collapse;font-size:12px}
 .qt-tbl th{background:var(--bg2);padding:7px 10px;text-align:left;font-weight:500;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border2);white-space:nowrap;cursor:pointer;user-select:none}
-.qt-tbl th:hover{color:var(--c-text)}
-.qt-tbl td{padding:7px 10px;border-bottom:1px solid var(--border2);white-space:nowrap;font-size:12px;color:var(--c-text)}
+.qt-tbl th:hover{color:var(--text)}
+.qt-tbl td{padding:7px 10px;border-bottom:1px solid var(--border2);white-space:nowrap;font-size:12px;color:var(--text)}
 .qt-tbl tr:last-child td{border-bottom:none}
 .qt-tbl tr:hover td{background:var(--bg2)}
 .qt-price{font-weight:500}
@@ -935,26 +935,26 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .qt-col-resizer:hover,.qt-col-resizer.resizing{background:var(--blue);opacity:.4}
 .qt-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:none;align-items:center;justify-content:center}
 .qt-modal-bg.open{display:flex}
-.qt-modal{background:var(--c-bg);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:92%;max-width:720px;max-height:90vh;overflow-y:auto}
+.qt-modal{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:92%;max-width:720px;max-height:90vh;overflow-y:auto}
 .qt-modal-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
 .qt-modal-title{font-size:15px;font-weight:600}
 .qt-mclose{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2);line-height:1}
-.qt-mclose:hover{color:var(--c-text)}
+.qt-mclose:hover{color:var(--text)}
 .qt-p3warn{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red-text);border-radius:var(--radius-xs);padding:7px 10px;margin-bottom:10px;font-size:12px;display:none}
 .qt-p3warn.show{display:block}
 .qt-pp{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
 .qt-pp-val{font-size:20px;font-weight:600}
 .qt-pp-lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
 .qt-pg{display:flex;align-items:center;gap:6px;margin-top:10px;justify-content:flex-end}
-.qt-pg-btn{background:var(--c-bg);border:1px solid var(--border2);color:var(--text2);padding:4px 10px;border-radius:var(--radius-xs);cursor:pointer;font-size:12px;font-family:inherit}
+.qt-pg-btn{background:var(--bg);border:1px solid var(--border2);color:var(--text2);padding:4px 10px;border-radius:var(--radius-xs);cursor:pointer;font-size:12px;font-family:inherit}
 .qt-pg-btn:hover{border-color:var(--blue);color:var(--blue-text)}
 .qt-pg-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
 .qt-kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:12px}
-.qt-kpi{background:var(--c-bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px}
+.qt-kpi{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px}
 .qt-kpi-val{font-size:22px;font-weight:600;margin-bottom:2px}
 .qt-kpi-lbl{font-size:11px;color:var(--text2)}
 .qt-cc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-bottom:14px}
-.qt-cc{background:var(--c-bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px}
+.qt-cc{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px}
 .qt-cc-name{font-weight:600;font-size:13px;margin-bottom:8px}
 .qt-cc-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
 .qt-mode-btn{display:inline-flex;align-items:center;padding:6px 12px;border:1px solid var(--border);border-radius:var(--radius-xs);cursor:pointer;font-size:12px;color:var(--text2);background:var(--bg2);transition:all .15s;user-select:none}
@@ -1547,7 +1547,7 @@ function qtDealToStatus(deal){
   return{open:'跟进中',confirmed:'确认订单',won:'成交',pause:'暂无进展',lost:'丢单'}[deal]||'跟进中';
 }
 function qtSnapToLine(h){
-  // Format one history snapshot into a single line like the price history display
+  // Format one history snapshot into rich multi-line format
   const fc=s=>s==='CNY'?'¥':'$';
   const parts=[];
   if(h.barbone!=null)parts.push('准系统 '+fc(h.barboneCur||'USD')+h.barbone);
@@ -1556,23 +1556,49 @@ function qtSnapToLine(h){
   if(h.totalPrice!=null)parts.push('整机 '+fc(h.totalCur||'USD')+h.totalPrice);
   if(h.qty)parts.push('数量:'+h.qty+'台');
   const priceStr=fc(h.priceCur||'USD')+(h.price||'—');
-  return(h.savedAt||'')+'  '+priceStr+(parts.length?' '+parts.join(' · '):'');
+  // Date: use first 10 chars of savedAt (YYYY-MM-DD) or full savedAt
+  const dateStr=(h.savedAt||'').slice(0,10)||'';
+  let lines=[];
+  lines.push('💰'+(dateStr?dateStr+' ':'')+priceStr);
+  if(h.model||h.cpu||h.partno){
+    let modelLine=(h.model||'')+(h.cpu?' · '+h.cpu:'')+(h.partno?' · 料号:'+h.partno:'');
+    lines.push(modelLine);
+  }
+  if(parts.length||(h.shipping&&h.shipping.trim())){
+    let detailLine=parts.join(' · ')+(h.shipping?' · 🚢 '+h.shipping:'');
+    lines.push(detailLine);
+  }
+  if(h.custom&&h.custom.trim())lines.push('🔧 '+h.custom);
+  if(h.notes&&h.notes.trim())lines.push('📝 '+h.notes);
+  return lines.join('\n');
 }
 function qtBuildQuoteText(q){
-  // Build the full quote text from all history snapshots (one per line)
+  // Build the full quote text from all history snapshots (rich multi-line blocks)
   const hist=q.priceHistory||[];
   if(!hist.length){
-    // fallback: use current record fields
-    const fc=s=>s==='CNY'?'¥':'$';
-    const parts=[];
-    if(q.barbone!=null)parts.push('准系统 '+fc(q.barboneCur||'USD')+q.barbone);
-    if(q.ramp!=null)parts.push('RAM('+(q.ram||'—')+') '+fc(q.rampCur||'USD')+q.ramp);
-    if(q.ssdp!=null)parts.push('SSD('+(q.ssd||'—')+') '+fc(q.ssdpCur||'USD')+q.ssdp);
-    if(q.totalPrice!=null)parts.push('整机 '+fc(q.totalCur||'USD')+q.totalPrice);
-    if(q.qty)parts.push('数量:'+q.qty+'台');
-    return fc(q.priceCur||'USD')+(q.price||'—')+(parts.length?' '+parts.join(' · '):'');
+    // fallback: build a snap-like object from current record fields
+    const snap={
+      savedAt:q.date||'',priceCur:q.priceCur||'USD',price:q.price,
+      model:q.model,cpu:q.cpu,partno:q.partno,
+      barbone:q.barbone,barboneCur:q.barboneCur||'USD',
+      ram:q.ram,ramp:q.ramp,rampCur:q.rampCur||'USD',
+      ssd:q.ssd,ssdp:q.ssdp,ssdpCur:q.ssdpCur||'USD',
+      totalPrice:q.totalPrice,totalCur:q.totalCur||'USD',
+      qty:q.qty,shipping:q.shipping,custom:q.custom,notes:q.notes
+    };
+    return qtSnapToLine(snap);
   }
-  return hist.map(h=>qtSnapToLine(h)).join('\n');
+  // Each snapshot as a rich block, separated by blank line
+  return hist.map(h=>{
+    // Backfill model/cpu/partno from parent if missing in snap
+    if(!h.model&&q.model)h=Object.assign({},h,{model:q.model});
+    if(!h.cpu&&q.cpu)h=Object.assign({},h,{cpu:q.cpu});
+    if(!h.partno&&q.partno)h=Object.assign({},h,{partno:q.partno});
+    if(!h.custom&&q.custom)h=Object.assign({},h,{custom:q.custom});
+    if(!h.shipping&&q.shipping)h=Object.assign({},h,{shipping:q.shipping});
+    if(!h.notes&&q.notes)h=Object.assign({},h,{notes:q.notes});
+    return qtSnapToLine(h);
+  }).join('\n\n');
 }
 
 // Group quotes by project name, return array of {project, company, quotes[]}
@@ -1610,7 +1636,7 @@ function renderImportQtList(){
     const statusLabel={open:'⭕ 跟进中',confirmed:'🔶 已确认订单',won:'✅ 已成交',pause:'⏸️ 暂无进展',lost:'❌ 丢单','':'—'}[g.deal]||'—';
     const modelsStr=[...new Set(g.quotes.map(x=>x.model).filter(Boolean))].join(' / ');
     const qtySummary=[...new Set(g.quotes.map(x=>x.qty).filter(Boolean))].map(q=>q+'台').join(' / ');
-    return`<div style="border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;background:var(--c-bg)">
+    return`<div style="border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;background:var(--bg)">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap">
         <div style="flex:1;min-width:0">
           <div style="font-weight:600;font-size:13px;margin-bottom:3px">${g.project||'（无项目名称）'}</div>
@@ -1649,13 +1675,15 @@ function importFromQuoteGroup(gi){
   // Fill quantity - take first non-empty qty across all quotes
   const qty=[...new Set(g.quotes.map(x=>x.qty).filter(Boolean))];
   if(qty.length)document.getElementById('proj-quantity').value=qty.join(' / ')+'台';
-  // Build quote text: one line per quote entry (newest first), each line = one quote record's history
-  const lines=[];
+  // Build quote text: each quote record as a rich block separated by blank line
+  const blocks=[];
   g.quotes.forEach(q=>{
     const text=qtBuildQuoteText(q);
-    text.split('\n').forEach(l=>{if(l.trim())lines.push(l.trim());});
+    if(text.trim())blocks.push(text.trim());
   });
-  document.getElementById('proj-quote').value=lines.join('\n');
+  document.getElementById('proj-quote').value=blocks.join('\n\n');
+  // Auto-resize the textarea
+  setTimeout(()=>{const el=document.getElementById('proj-quote');if(el&&el.tagName==='TEXTAREA'){el.style.height='auto';el.style.height=el.scrollHeight+'px';}},50);
   closeImportFromQuotes();
   // Scroll to form
   document.getElementById('proj-form-card').scrollIntoView({behavior:'smooth',block:'start'});
@@ -1840,7 +1868,7 @@ function renderProjects(){
       </div>
 
       <div id="${crmId}" style="display:none;margin-bottom:6px">
-        <div style="background:#FFFBF0;border:1px solid #F0D070;border-radius:var(--radius-xs);padding:8px 10px;font-size:12px;white-space:pre-wrap;font-family:monospace;line-height:1.8;color:var(--c-text);user-select:all">${buildCRMTextFull(latest,allEntriesForCard)}</div>
+        <div style="background:#FFFBF0;border:1px solid #F0D070;border-radius:var(--radius-xs);padding:8px 10px;font-size:12px;white-space:pre-wrap;font-family:monospace;line-height:1.8;color:var(--text);user-select:all">${buildCRMTextFull(latest,allEntriesForCard)}</div>
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
@@ -3798,7 +3826,7 @@ function qtRenderHistoryInModal(hist){
       +(isLatest?'<span style="font-size:10px;color:var(--blue-text);background:var(--blue-bg);padding:1px 6px;border-radius:8px">最新</span>':'')
       +'</div>'
       +(parentQ&&parentQ.project?'<div style="color:var(--text2);font-size:11px;margin-top:3px">'+parentQ.project+'</div>':'')
-      +((h.model||h.cpu||h.partno)?'<div style="color:var(--c-text);font-size:11px;font-weight:500;margin-top:3px">'+(h.model?'<b>'+h.model+'</b>':'')+(h.cpu?' · '+h.cpu:'')+(h.partno?' · 料号:'+h.partno:'')+'</div>':'')
+      +((h.model||h.cpu||h.partno)?'<div style="color:var(--text);font-size:11px;font-weight:500;margin-top:3px">'+(h.model?'<b>'+h.model+'</b>':'')+(h.cpu?' · '+h.cpu:'')+(h.partno?' · 料号:'+h.partno:'')+'</div>':'')
       +(parts.length?'<div style="color:var(--text2);font-size:11px;margin-top:2px">'+parts.join(' · ')+(h.shipping?' · 🚢 '+h.shipping:'')+'</div>':(!h.shipping?'':'<div style="color:var(--text2);font-size:11px;margin-top:2px">🚢 '+h.shipping+'</div>'))
       +(h.custom?'<div style="color:var(--text2);font-size:11px;margin-top:2px">🔧 '+h.custom+'</div>':'')
       +(h.notes?'<div style="color:var(--text2);font-size:11px;margin-top:2px;font-style:italic">📝 '+h.notes+'</div>':'')
