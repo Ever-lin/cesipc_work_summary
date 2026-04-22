@@ -157,7 +157,13 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     </div>
     <input type="hidden" id="proj-edit-id" value="">
     <div class="grid2">
-      <div class="field"><label>项目名称（唯一标识）</label><input id="proj-name" placeholder="如：Orange_项目10_260330_UTC-S1272A" list="proj-dl"><datalist id="proj-dl"></datalist></div>
+      <div class="field">
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          <span>项目名称（唯一标识）</span>
+          <button type="button" class="btn btn-xs" onclick="openImportFromQuotes()" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue);white-space:nowrap">💰 从报价导入</button>
+        </label>
+        <input id="proj-name" placeholder="如：Orange_项目10_260330_UTC-S1272A" list="proj-dl" oninput="onProjNameInput()"><datalist id="proj-dl"></datalist>
+      </div>
       <div class="field"><label>客户名称</label><input id="proj-client" placeholder="如：Orange Ltd"></div>
     </div>
     <div class="grid2">
@@ -249,6 +255,20 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   </div>
   <div id="proj-status-counts" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
   <div id="proj-list"></div>
+</div>
+
+<!-- ===== 从报价导入弹窗 ===== -->
+<div id="import-qt-modal-bg" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;display:none;align-items:center;justify-content:center">
+  <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:94%;max-width:760px;max-height:88vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <span style="font-size:15px;font-weight:600">💰 从报价管理导入</span>
+      <button onclick="closeImportFromQuotes()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2)">✕</button>
+    </div>
+    <div style="margin-bottom:10px">
+      <input id="iqt-search" placeholder="🔍 搜索项目名称、型号、公司…" oninput="renderImportQtList()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--text)">
+    </div>
+    <div id="iqt-list" style="font-size:13px"></div>
+  </div>
 </div>
 
 <!-- ===== 目标设定 ===== -->
@@ -667,6 +687,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <th onclick="qtSort('price')">报价(P) ↕</th>
         <th onclick="qtSort('p3')">P3 ↕</th>
         <th onclick="qtSort('diff')">价差 ↕</th>
+        <th>项目进度</th>
         <th>备注/Custom</th>
         <th>操作</th>
       </tr></thead>
@@ -796,6 +817,16 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <select id="qf-deal">
           <option value="">—</option><option value="open">⭕ 跟进中</option><option value="confirmed">🔶 已确认订单</option><option value="won">✅ 已成交</option><option value="pause">⏸️ 暂无进展</option><option value="lost">❌ 丢单</option>
         </select>
+      </div>
+
+      <!-- 项目进度（与项目情况联动） -->
+      <div class="field">
+        <label>项目进度<span style="font-size:11px;color:var(--text2);margin-left:4px">（与项目情况一致）</span></label>
+        <input id="qf-stage" placeholder="如：产品报价 / 方案设计 / 合同签订…" list="qf-stage-dl">
+        <datalist id="qf-stage-dl">
+          <option value="需求确认"><option value="方案设计"><option value="产品报价"><option value="合同签订"><option value="生产/交付"><option value="安装/验收"><option value="项目完结"><option value="项目延期"><option value="项目停止">
+          <option value="拟标"><option value="挂网"><option value="招标"><option value="投标"><option value="封标"><option value="评标"><option value="定标"><option value="流标废标">
+        </datalist>
       </div>
 
       <!-- 价格汇总面板 -->
@@ -1201,6 +1232,132 @@ function renderPivot(){
 function refreshProjDatalist(){
   const names=[...new Set(state.projects.map(p=>p.name))];
   document.getElementById('proj-dl').innerHTML=names.map(n=>`<option value="${n}">`).join('');
+}
+
+// ===== 从报价导入 =====
+function qtDealToStatus(deal){
+  return{open:'跟进中',confirmed:'确认订单',won:'成交',pause:'暂无进展',lost:'丢单'}[deal]||'跟进中';
+}
+function qtSnapToLine(h){
+  // Format one history snapshot into a single line like the price history display
+  const fc=s=>s==='CNY'?'¥':'$';
+  const parts=[];
+  if(h.barbone!=null)parts.push('准系统 '+fc(h.barboneCur||'USD')+h.barbone);
+  if(h.ramp!=null)parts.push('RAM('+(h.ram||'—')+') '+fc(h.rampCur||'USD')+h.ramp);
+  if(h.ssdp!=null)parts.push('SSD('+(h.ssd||'—')+') '+fc(h.ssdpCur||'USD')+h.ssdp);
+  if(h.totalPrice!=null)parts.push('整机 '+fc(h.totalCur||'USD')+h.totalPrice);
+  if(h.qty)parts.push('数量:'+h.qty+'台');
+  const priceStr=fc(h.priceCur||'USD')+(h.price||'—');
+  return(h.savedAt||'')+'  '+priceStr+(parts.length?' '+parts.join(' · '):'');
+}
+function qtBuildQuoteText(q){
+  // Build the full quote text from all history snapshots (one per line)
+  const hist=q.priceHistory||[];
+  if(!hist.length){
+    // fallback: use current record fields
+    const fc=s=>s==='CNY'?'¥':'$';
+    const parts=[];
+    if(q.barbone!=null)parts.push('准系统 '+fc(q.barboneCur||'USD')+q.barbone);
+    if(q.ramp!=null)parts.push('RAM('+(q.ram||'—')+') '+fc(q.rampCur||'USD')+q.ramp);
+    if(q.ssdp!=null)parts.push('SSD('+(q.ssd||'—')+') '+fc(q.ssdpCur||'USD')+q.ssdp);
+    if(q.totalPrice!=null)parts.push('整机 '+fc(q.totalCur||'USD')+q.totalPrice);
+    if(q.qty)parts.push('数量:'+q.qty+'台');
+    return fc(q.priceCur||'USD')+(q.price||'—')+(parts.length?' '+parts.join(' · '):'');
+  }
+  return hist.map(h=>qtSnapToLine(h)).join('\n');
+}
+
+// Group quotes by project name, return array of {project, company, quotes[]}
+function qtGroupedByProject(){
+  const map={};
+  qtQuotes.forEach(q=>{
+    const key=q.project||('__noproj__'+q.id);
+    if(!map[key])map[key]={project:q.project||'',company:q.company||'',deal:q.deal||'',stage:q.stage||'',quotes:[]};
+    map[key].quotes.push(q);
+    // use most recent deal/stage
+    if(q.deal)map[key].deal=q.deal;
+    if(q.stage)map[key].stage=q.stage;
+  });
+  return Object.values(map);
+}
+
+function openImportFromQuotes(){
+  document.getElementById('import-qt-modal-bg').style.display='flex';
+  document.getElementById('iqt-search').value='';
+  renderImportQtList();
+}
+function closeImportFromQuotes(){
+  document.getElementById('import-qt-modal-bg').style.display='none';
+}
+
+function renderImportQtList(){
+  const q=(document.getElementById('iqt-search').value||'').toLowerCase();
+  const groups=qtGroupedByProject().filter(g=>{
+    if(!q)return true;
+    return (g.project+' '+g.company+' '+g.quotes.map(x=>x.model+' '+x.cpu).join(' ')).toLowerCase().includes(q);
+  });
+  const el=document.getElementById('iqt-list');
+  if(!groups.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2)">无匹配报价记录</div>';return;}
+  el.innerHTML=groups.map((g,gi)=>{
+    const statusLabel={open:'⭕ 跟进中',confirmed:'🔶 已确认订单',won:'✅ 已成交',pause:'⏸️ 暂无进展',lost:'❌ 丢单','':'—'}[g.deal]||'—';
+    const modelsStr=[...new Set(g.quotes.map(x=>x.model).filter(Boolean))].join(' / ');
+    const qtySummary=[...new Set(g.quotes.map(x=>x.qty).filter(Boolean))].map(q=>q+'台').join(' / ');
+    return`<div style="border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;background:var(--bg)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:13px;margin-bottom:3px">${g.project||'（无项目名称）'}</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:4px">${g.company}${modelsStr?' · '+modelsStr:''}${qtySummary?' · '+qtySummary:''}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <span style="font-size:11px;padding:1px 8px;border-radius:10px;background:var(--blue-bg);color:var(--blue-text)">${statusLabel}</span>
+            ${g.stage?`<span style="font-size:11px;padding:1px 8px;border-radius:10px;background:var(--bg2);color:var(--text2)">进度: ${g.stage}</span>`:''}
+            <span style="font-size:11px;color:var(--text2)">${g.quotes.length}条报价</span>
+          </div>
+        </div>
+        <button onclick="importFromQuoteGroup(${gi})" style="flex-shrink:0;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-xs);padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit">导入此项目</button>
+      </div>
+    </div>`;
+  }).join('');
+  // store filtered groups for use in importFromQuoteGroup
+  window._iqtGroups=groups;
+}
+
+function importFromQuoteGroup(gi){
+  const g=window._iqtGroups[gi];if(!g)return;
+  // Fill project name
+  document.getElementById('proj-name').value=g.project||'';
+  // Fill company/client
+  document.getElementById('proj-client').value=g.company||'';
+  // Fill status from deal
+  if(g.deal){
+    const status=qtDealToStatus(g.deal);
+    document.getElementById('proj-status').value=status;
+    const badge=document.getElementById('proj-status-badge');
+    if(badge)badge.textContent='';
+  }
+  // Fill progress stage
+  if(g.stage){
+    document.getElementById('proj-progress-stage').value=g.stage;
+  }
+  // Fill quantity - take first non-empty qty across all quotes
+  const qty=[...new Set(g.quotes.map(x=>x.qty).filter(Boolean))];
+  if(qty.length)document.getElementById('proj-quantity').value=qty.join(' / ')+'台';
+  // Build quote text: one line per quote entry (newest first), each line = one quote record's history
+  const lines=[];
+  g.quotes.forEach(q=>{
+    const text=qtBuildQuoteText(q);
+    text.split('\n').forEach(l=>{if(l.trim())lines.push(l.trim());});
+  });
+  document.getElementById('proj-quote').value=lines.join('\n');
+  closeImportFromQuotes();
+  // Scroll to form
+  document.getElementById('proj-form-card').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// When user types in proj-name, suggest import if matches a quote project
+function onProjNameInput(){
+  const val=document.getElementById('proj-name').value.trim().toLowerCase();
+  if(!val)return;
+  // Auto-suggest hint — just a passive feature, no forced fill
 }
 
 function projIcon(status){return status==='成交'?'✅':status==='确认订单'?'🔶':status==='丢单'?'❌':status==='暂无进展'?'⏸️':'⭕️';}
@@ -3020,7 +3177,7 @@ function qtFiltered(){
   const st=document.getElementById('qt-f-status').value;
   const p3f=document.getElementById('qt-f-p3').value;
   return qtQuotes.filter(r=>{
-    if(q&&!`${r.project} ${r.model} ${r.cpu} ${r.ram} ${r.ssd}`.toLowerCase().includes(q))return false;
+    if(q&&!`${r.project} ${r.model} ${r.cpu} ${r.ram} ${r.ssd} ${r.stage||''}`.toLowerCase().includes(q))return false;
     if(co&&r.company!==co)return false;
     if(st&&r.deal!==st)return false;
     if(p3f){const d=r.p3?r.price-r.p3:null;if(p3f==='below'&&(d===null||d>=0))return false;if(p3f==='ok'&&(d===null||d<0))return false;}
@@ -3061,6 +3218,7 @@ function qtRender(){
       <td class="${diff!==null?(diff<0?'qt-diff-neg':'qt-diff-pos'):''}">
         ${diff!==null?(diff>=0?'+':'')+(r.priceCur==='CNY'?'¥':'$')+diff:'—'}
       </td>
+      <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;color:var(--text2);font-size:11px">${r.stage||'—'}</td>
       <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>
       <td><span style="display:flex;gap:4px">
         <button class="btn btn-xs" onclick="qtOpenEdit('${r.id}')">编辑</button>
@@ -3068,7 +3226,7 @@ function qtRender(){
         <button class="btn btn-danger btn-xs" onclick="qtDel('${r.id}')">删</button>
       </span></td>
     </tr>`;
-  }).join(''):`<tr><td colspan="14" style="text-align:center;padding:24px;color:var(--text2)">没有找到匹配的报价</td></tr>`;
+  }).join(''):`<tr><td colspan="15" style="text-align:center;padding:24px;color:var(--text2)">没有找到匹配的报价</td></tr>`;
   setTimeout(qtInitResizableCols,0);
   // pagination
   const pg=document.getElementById('qt-pg');
@@ -3126,6 +3284,7 @@ function qtOpenAdd(){
   document.getElementById('qt-modal-title').textContent='新增报价';
   ['qf-project','qf-model','qf-partno','qf-cpu','qf-ram','qf-ssd','qf-custom','qf-notes','qf-shipping'].forEach(id=>document.getElementById(id).value='');
   ['qf-qty','qf-barbone','qf-ramp','qf-ssdp','qf-price','qf-p3','qf-total-price'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('qf-stage').value='';
   delete document.getElementById('qf-price').dataset.manualEdit;
   document.getElementById('qf-date').value=todayStr();
   document.getElementById('qf-company').value='ENT Group Company Limited';
@@ -3151,6 +3310,7 @@ function qtOpenEdit(id){
   document.getElementById('qf-custom').value=r.custom||'';
   document.getElementById('qf-shipping').value=r.shipping||'';
   document.getElementById('qf-deal').value=r.deal||'';
+  document.getElementById('qf-stage').value=r.stage||'';
   document.getElementById('qf-notes').value=r.notes||'';
   // pricing mode
   const mode=r.pmode||'breakdown';
@@ -3252,6 +3412,7 @@ function qtBuildSnap(mode){
     qty:document.getElementById('qf-qty').value.trim(),
     p3:parseFloat(document.getElementById('qf-p3').value)||null,
     p3Cur:document.getElementById('qf-p3-cur').value,
+    stage:document.getElementById('qf-stage').value.trim(),
   };
 }
 function qtDelHistory(quoteId, histIdx){
@@ -3320,6 +3481,7 @@ function qtSave(){
     p3:snap.p3,p3Cur:snap.p3Cur,
     shipping:document.getElementById('qf-shipping').value.trim(),
     deal:document.getElementById('qf-deal').value,
+    stage:document.getElementById('qf-stage').value.trim(),
     notes:document.getElementById('qf-notes').value.trim(),
   };
   if(qtEditId){
