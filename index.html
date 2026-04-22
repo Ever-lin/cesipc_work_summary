@@ -601,6 +601,12 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .qt-stat-won{background:var(--green-bg);color:var(--green-text)}
 .qt-stat-open{background:var(--blue-bg);color:var(--blue-text)}
 .qt-stat-lost{background:var(--red-bg);color:var(--red-text)}
+.qt-stat-confirmed{background:var(--amber-bg);color:var(--amber-text)}
+.qt-stat-pause{background:var(--gray-bg);color:var(--gray-text)}
+/* Resizable columns */
+.qt-tbl th{position:relative}
+.qt-col-resizer{position:absolute;right:0;top:0;bottom:0;width:5px;cursor:col-resize;z-index:1;background:transparent}
+.qt-col-resizer:hover,.qt-col-resizer.resizing{background:var(--blue);opacity:.4}
 .qt-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:none;align-items:center;justify-content:center}
 .qt-modal-bg.open{display:flex}
 .qt-modal{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:92%;max-width:720px;max-height:90vh;overflow-y:auto}
@@ -625,6 +631,9 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .qt-cc{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px}
 .qt-cc-name{font-weight:600;font-size:13px;margin-bottom:8px}
 .qt-cc-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.qt-mode-btn{display:inline-flex;align-items:center;padding:6px 12px;border:1px solid var(--border);border-radius:var(--radius-xs);cursor:pointer;font-size:12px;color:var(--text2);background:var(--bg2);transition:all .15s;user-select:none}
+.qt-mode-btn:has(input:checked){background:var(--blue-bg);border-color:var(--blue);color:var(--blue-text);font-weight:500}
+.qt-mode-btn:hover{border-color:var(--blue);color:var(--blue-text)}
 </style>
 
 <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
@@ -637,7 +646,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div class="qt-bar">
     <div class="qt-search"><span class="qt-search-ic">🔍</span><input id="qt-search" placeholder="搜索项目、型号、CPU…" oninput="qtRender()"></div>
     <select class="ym-s" id="qt-f-company" onchange="qtRender()"><option value="">全部公司</option></select>
-    <select class="ym-s" id="qt-f-status" onchange="qtRender()"><option value="">全部状态</option><option value="won">✅ 已成单</option><option value="open">⭕ 跟进中</option><option value="lost">❌ 丢单</option></select>
+    <select class="ym-s" id="qt-f-status" onchange="qtRender()"><option value="">全部状态</option><option value="open">⭕ 跟进中</option><option value="confirmed">🔶 已确认订单</option><option value="won">✅ 已成交</option><option value="pause">⏸️ 暂无进展</option><option value="lost">❌ 丢单</option></select>
     <select class="ym-s" id="qt-f-p3" onchange="qtRender()"><option value="">全部价格</option><option value="below">⚠️ 低于P3</option><option value="ok">✅ 高于P3</option></select>
     <button class="btn btn-primary btn-sm" onclick="qtOpenAdd()">＋ 新增报价</button>
     <button class="btn btn-sm" onclick="qtExportCSV()">⬇ 导出CSV</button>
@@ -684,10 +693,11 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <div class="qt-modal-hd"><span class="qt-modal-title" id="qt-modal-title">新增报价</span><button class="qt-mclose" onclick="qtCloseModal()">✕</button></div>
     <div class="qt-p3warn" id="qt-p3warn">⚠️ 当前报价低于P3价格，请确认！</div>
     <div class="grid2">
+      <!-- 基本信息 -->
       <div class="field" style="grid-column:1/-1"><label>项目名称</label><input id="qf-project" placeholder="如：ENT_项目5_260210_EPC-W1592A"></div>
       <div class="field"><label>公司</label>
         <select id="qf-company">
-          <option value="ENT Group Company Limited">ENT Group Company Limited（Orange / Sky / LUCIJUNE）</option>
+          <option value="ENT Group Company Limited">ENT Group Company Limited</option>
           <option value="其他">其他</option>
         </select>
       </div>
@@ -696,24 +706,114 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="field"><label>料号</label><input id="qf-partno" placeholder="选填"></div>
       <div class="field"><label>数量 (Q)</label><input type="number" id="qf-qty" min="0" placeholder="0"></div>
       <div class="field"><label>CPU</label><input id="qf-cpu" placeholder="i5-10210U"></div>
-      <div class="field"><label>准系统价 (Barbone $)</label><input type="number" id="qf-barbone" min="0" oninput="qtCalc()" placeholder="0"></div>
-      <div class="field"><label>RAM 规格</label><input id="qf-ram" placeholder="8GB DDR4"></div>
-      <div class="field"><label>RAM 价格 ($)</label><input type="number" id="qf-ramp" min="0" oninput="qtCalc()" placeholder="0"></div>
-      <div class="field"><label>SSD 规格</label><input id="qf-ssd" placeholder="256 GB M.2 SSD"></div>
-      <div class="field"><label>SSD 价格 ($)</label><input type="number" id="qf-ssdp" min="0" oninput="qtCalc()" placeholder="0"></div>
-      <div class="field"><label>P3 参考价 ($)</label><input type="number" id="qf-p3" min="0" oninput="qtCalc()" placeholder="0"></div>
       <div class="field"><label>Custom / 附加功能</label><input id="qf-custom" placeholder="Windows 11 Pro OEM…"></div>
-      <div class="field"><label>成单状态</label>
+
+      <!-- 报价模式切换 -->
+      <div class="field" style="grid-column:1/-1">
+        <label style="margin-bottom:6px">报价方式</label>
+        <div style="display:flex;gap:8px">
+          <label class="qt-mode-btn" id="qt-mode-btn-breakdown">
+            <input type="radio" name="qf-pmode" value="breakdown" onchange="qtTogglePriceMode()" checked style="display:none">
+            <span>📋 分项报价（Barbone + RAM + SSD）</span>
+          </label>
+          <label class="qt-mode-btn" id="qt-mode-btn-total">
+            <input type="radio" name="qf-pmode" value="total" onchange="qtTogglePriceMode()" style="display:none">
+            <span>📦 整机报价（Configured System）</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 分项报价区域 -->
+      <div id="qf-breakdown-section" style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field">
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>准系统价 (Barbone)</span>
+            <select id="qf-barbone-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+              <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+            </select>
+          </label>
+          <input type="number" id="qf-barbone" min="0" oninput="qtCalc()" placeholder="0">
+        </div>
+        <div class="field"><label>RAM 规格</label><input id="qf-ram" placeholder="8GB DDR4"></div>
+        <div class="field">
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>RAM 价格</span>
+            <select id="qf-ramp-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+              <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+            </select>
+          </label>
+          <input type="number" id="qf-ramp" min="0" oninput="qtCalc()" placeholder="0">
+        </div>
+        <div class="field"><label>SSD 规格</label><input id="qf-ssd" placeholder="256 GB M.2 SSD"></div>
+        <div class="field">
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>SSD 价格</span>
+            <select id="qf-ssdp-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+              <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+            </select>
+          </label>
+          <input type="number" id="qf-ssdp" min="0" oninput="qtCalc()" placeholder="0">
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <label style="color:var(--text2);font-size:11px">💡 报价 (P) 将自动合计以上三项（统一换算为所选货币）</label>
+        </div>
+      </div>
+
+      <!-- 整机报价区域 -->
+      <div id="qf-total-section" style="grid-column:1/-1;display:none">
+        <div class="field">
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>整机配置总价 (Configured System)</span>
+            <select id="qf-total-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+              <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+            </select>
+          </label>
+          <input type="number" id="qf-total-price" min="0" oninput="qtCalc()" placeholder="直接填写整机总价">
+        </div>
+      </div>
+
+      <!-- P3 参考价 -->
+      <div class="field">
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          <span>P3 参考价</span>
+          <select id="qf-p3-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+            <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+          </select>
+        </label>
+        <input type="number" id="qf-p3" min="0" oninput="qtCalc()" placeholder="0">
+      </div>
+
+      <!-- 运费 -->
+      <div class="field">
+        <label>运费备注（选填）</label>
+        <input id="qf-shipping" placeholder="如：10台 每台运费$70">
+      </div>
+
+      <!-- 成单状态 -->
+      <div class="field">
+        <label>成单状态</label>
         <select id="qf-deal">
-          <option value="">—</option><option value="won">✅ 已成单</option><option value="open">⭕ 跟进中</option><option value="lost">❌ 丢单</option>
+          <option value="">—</option><option value="open">⭕ 跟进中</option><option value="confirmed">🔶 已确认订单</option><option value="won">✅ 已成交</option><option value="pause">⏸️ 暂无进展</option><option value="lost">❌ 丢单</option>
         </select>
       </div>
+
+      <!-- 价格汇总面板 -->
       <div class="qt-pp">
-        <div><div class="qt-pp-val" id="qpp-cost" style="color:var(--text2)">—</div><div class="qt-pp-lbl">成本合计</div></div>
+        <div><div class="qt-pp-val" id="qpp-cost" style="color:var(--text2)">—</div><div class="qt-pp-lbl">P3 参考价</div></div>
         <div><div class="qt-pp-val" id="qpp-price" style="color:var(--blue-text)">—</div><div class="qt-pp-lbl">报价 (P)</div></div>
         <div><div class="qt-pp-val" id="qpp-diff">—</div><div class="qt-pp-lbl">P − P3 价差</div></div>
       </div>
-      <div class="field" style="grid-column:1/-1"><label>报价 (P) — 最终报给客户的价格</label><input type="number" id="qf-price" min="0" oninput="qtCalc()" placeholder="0"></div>
+
+      <!-- 最终报价 -->
+      <div class="field" style="grid-column:1/-1">
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          <span>报价 (P) — 最终报给客户的价格（以此为准）</span>
+          <select id="qf-price-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+            <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+          </select>
+        </label>
+        <input type="number" id="qf-price" min="0" oninput="qtCalc()" placeholder="0" style="font-size:15px;font-weight:600">
+      </div>
       <div class="field" style="grid-column:1/-1"><label>备注</label><textarea id="qf-notes" style="min-height:52px"></textarea></div>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--border2)">
@@ -2932,7 +3032,7 @@ function qtRender(){
   const total=sorted.length;const pages=Math.max(1,Math.ceil(total/QT_PAGE));
   if(qtPage>pages)qtPage=1;
   const data=sorted.slice((qtPage-1)*QT_PAGE,qtPage*QT_PAGE);
-  const dealBadge=d=>d==='won'?'<span class="badge qt-stat-won">✅ 成单</span>':d==='lost'?'<span class="badge qt-stat-lost">❌ 丢单</span>':d==='open'?'<span class="badge qt-stat-open">⭕ 跟进</span>':'<span class="badge badge-gray">—</span>';
+  const dealBadge=d=>d==='won'?'<span class="badge qt-stat-won">✅ 已成交</span>':d==='lost'?'<span class="badge qt-stat-lost">❌ 丢单</span>':d==='open'?'<span class="badge qt-stat-open">⭕ 跟进中</span>':d==='confirmed'?'<span class="badge qt-stat-confirmed">🔶 已确认订单</span>':d==='pause'?'<span class="badge qt-stat-pause">⏸️ 暂无进展</span>':'<span class="badge badge-gray">—</span>';
   document.getElementById('qt-tbody').innerHTML=data.length?data.map(r=>{
     const diff=r.p3?r.price-r.p3:null;
     return`<tr>
@@ -2945,28 +3045,62 @@ function qtRender(){
       <td>${r.barbone!=null?'$'+r.barbone:'—'}</td>
       <td>${r.ram||'—'}</td>
       <td>${r.ssd||'—'}</td>
-      <td class="qt-price ${r.p3&&r.price<r.p3?'qt-below':''}">$${r.price}</td>
-      <td>${r.p3!=null?'$'+r.p3:'—'}</td>
+      <td class="qt-price ${r.p3&&r.price<r.p3?'qt-below':''}">${r.priceCur==='CNY'?'¥':'$'}${r.price}</td>
+      <td>${r.p3!=null?(r.p3Cur==='CNY'?'¥':'$')+r.p3:'—'}</td>
       <td class="${diff!==null?(diff<0?'qt-diff-neg':'qt-diff-pos'):''}">
-        ${diff!==null?(diff>=0?'+':'')+diff:'—'}
+        ${diff!==null?(diff>=0?'+':'')+(r.priceCur==='CNY'?'¥':'$')+diff:'—'}
       </td>
-      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis">${[r.custom,r.notes].filter(Boolean).join(' / ')||'—'}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>
       <td><span style="display:flex;gap:4px">
         <button class="btn btn-xs" onclick="qtOpenEdit('${r.id}')">编辑</button>
         <button class="btn btn-danger btn-xs" onclick="qtDel('${r.id}')">删</button>
       </span></td>
     </tr>`;
   }).join(''):`<tr><td colspan="14" style="text-align:center;padding:24px;color:var(--text2)">没有找到匹配的报价</td></tr>`;
+  setTimeout(qtInitResizableCols,0);
   // pagination
   const pg=document.getElementById('qt-pg');
-  if(pages<=1){pg.innerHTML='';return;}
+  if(pages<=1){pg.innerHTML='';setTimeout(qtInitResizableCols,0);return;}
   let h=`<span style="font-size:12px;color:var(--text2)">${total} 条</span>`;
   if(qtPage>1)h+=`<button class="qt-pg-btn" onclick="qtGo(${qtPage-1})">‹</button>`;
   for(let i=Math.max(1,qtPage-2);i<=Math.min(pages,qtPage+2);i++)h+=`<button class="qt-pg-btn${i===qtPage?' active':''}" onclick="qtGo(${i})">${i}</button>`;
   if(qtPage<pages)h+=`<button class="qt-pg-btn" onclick="qtGo(${qtPage+1})">›</button>`;
   pg.innerHTML=h;
+  setTimeout(qtInitResizableCols,0);
 }
 function qtGo(p){qtPage=p;qtRender();}
+
+// Resizable columns
+function qtInitResizableCols(){
+  const tbl=document.querySelector('.qt-tbl');
+  if(!tbl)return;
+  const ths=tbl.querySelectorAll('thead th');
+  ths.forEach(th=>{
+    // remove any old resizers
+    th.querySelectorAll('.qt-col-resizer').forEach(r=>r.remove());
+    const resizer=document.createElement('div');
+    resizer.className='qt-col-resizer';
+    th.appendChild(resizer);
+    let startX,startW;
+    resizer.addEventListener('mousedown',e=>{
+      e.stopPropagation();
+      startX=e.pageX;
+      startW=th.offsetWidth;
+      resizer.classList.add('resizing');
+      const onMove=ev=>{
+        const w=Math.max(40,startW+(ev.pageX-startX));
+        th.style.width=w+'px';th.style.minWidth=w+'px';
+      };
+      const onUp=()=>{
+        resizer.classList.remove('resizing');
+        document.removeEventListener('mousemove',onMove);
+        document.removeEventListener('mouseup',onUp);
+      };
+      document.addEventListener('mousemove',onMove);
+      document.addEventListener('mouseup',onUp);
+    });
+  });
+}
 
 function qtUpdateCompanyFilter(){
   const companies=[...new Set(qtQuotes.map(q=>q.company).filter(Boolean))].sort();
@@ -2978,12 +3112,16 @@ function qtUpdateCompanyFilter(){
 function qtOpenAdd(){
   qtEditId=null;
   document.getElementById('qt-modal-title').textContent='新增报价';
-  ['qf-project','qf-model','qf-partno','qf-cpu','qf-ram','qf-ssd','qf-custom','qf-notes'].forEach(id=>document.getElementById(id).value='');
-  ['qf-qty','qf-barbone','qf-ramp','qf-ssdp','qf-price','qf-p3'].forEach(id=>document.getElementById(id).value='');
+  ['qf-project','qf-model','qf-partno','qf-cpu','qf-ram','qf-ssd','qf-custom','qf-notes','qf-shipping'].forEach(id=>document.getElementById(id).value='');
+  ['qf-qty','qf-barbone','qf-ramp','qf-ssdp','qf-price','qf-p3','qf-total-price'].forEach(id=>document.getElementById(id).value='');
+  delete document.getElementById('qf-price').dataset.manualEdit;
   document.getElementById('qf-date').value=todayStr();
   document.getElementById('qf-company').value='ENT Group Company Limited';
   document.getElementById('qf-deal').value='';
-  qtCalc();
+  // reset mode to breakdown
+  document.querySelector('input[name="qf-pmode"][value="breakdown"]').checked=true;
+  ['qf-barbone-cur','qf-ramp-cur','qf-ssdp-cur','qf-price-cur','qf-p3-cur','qf-total-cur'].forEach(id=>document.getElementById(id).value='USD');
+  qtTogglePriceMode();
   document.getElementById('qt-modal-bg').classList.add('open');
 }
 function qtOpenEdit(id){
@@ -2997,38 +3135,102 @@ function qtOpenEdit(id){
   document.getElementById('qf-partno').value=r.partno||'';
   document.getElementById('qf-qty').value=r.qty||'';
   document.getElementById('qf-cpu').value=r.cpu||'';
-  document.getElementById('qf-barbone').value=r.barbone!=null?r.barbone:'';
-  document.getElementById('qf-ram').value=r.ram||'';
-  document.getElementById('qf-ramp').value=r.ramp!=null?r.ramp:'';
-  document.getElementById('qf-ssd').value=r.ssd||'';
-  document.getElementById('qf-ssdp').value=r.ssdp!=null?r.ssdp:'';
-  document.getElementById('qf-price').value=r.price!=null?r.price:'';
-  document.getElementById('qf-p3').value=r.p3!=null?r.p3:'';
   document.getElementById('qf-custom').value=r.custom||'';
+  document.getElementById('qf-shipping').value=r.shipping||'';
   document.getElementById('qf-deal').value=r.deal||'';
   document.getElementById('qf-notes').value=r.notes||'';
-  qtCalc();
+  // pricing mode
+  const mode=r.pmode||'breakdown';
+  document.querySelector(`input[name="qf-pmode"][value="${mode}"]`).checked=true;
+  // breakdown fields
+  document.getElementById('qf-barbone').value=r.barbone!=null?r.barbone:'';
+  document.getElementById('qf-barbone-cur').value=r.barboneCur||'USD';
+  document.getElementById('qf-ram').value=r.ram||'';
+  document.getElementById('qf-ramp').value=r.ramp!=null?r.ramp:'';
+  document.getElementById('qf-ramp-cur').value=r.rampCur||'USD';
+  document.getElementById('qf-ssd').value=r.ssd||'';
+  document.getElementById('qf-ssdp').value=r.ssdp!=null?r.ssdp:'';
+  document.getElementById('qf-ssdp-cur').value=r.ssdpCur||'USD';
+  // total mode
+  document.getElementById('qf-total-price').value=r.totalPrice!=null?r.totalPrice:'';
+  document.getElementById('qf-total-cur').value=r.totalCur||'USD';
+  // final price — mark as manually edited so qtCalc won't overwrite it
+  document.getElementById('qf-price').value=r.price!=null?r.price:'';
+  document.getElementById('qf-price').dataset.manualEdit='1';
+  document.getElementById('qf-price-cur').value=r.priceCur||'USD';
+  // p3
+  document.getElementById('qf-p3').value=r.p3!=null?r.p3:'';
+  document.getElementById('qf-p3-cur').value=r.p3Cur||'USD';
+  qtTogglePriceMode();
   document.getElementById('qt-modal-bg').classList.add('open');
 }
 function qtCloseModal(){document.getElementById('qt-modal-bg').classList.remove('open');}
+
+function qtTogglePriceMode(){
+  const mode=document.querySelector('input[name="qf-pmode"]:checked').value;
+  document.getElementById('qf-breakdown-section').style.display=mode==='breakdown'?'grid':'none';
+  document.getElementById('qf-total-section').style.display=mode==='total'?'block':'none';
+  // sync mode button highlight for browsers without :has support
+  document.getElementById('qt-mode-btn-breakdown').style.background=mode==='breakdown'?'var(--blue-bg)':'';
+  document.getElementById('qt-mode-btn-breakdown').style.borderColor=mode==='breakdown'?'var(--blue)':'';
+  document.getElementById('qt-mode-btn-breakdown').style.color=mode==='breakdown'?'var(--blue-text)':'';
+  document.getElementById('qt-mode-btn-total').style.background=mode==='total'?'var(--blue-bg)':'';
+  document.getElementById('qt-mode-btn-total').style.borderColor=mode==='total'?'var(--blue)':'';
+  document.getElementById('qt-mode-btn-total').style.color=mode==='total'?'var(--blue-text)':'';
+  qtCalc();
+}
+
+function qtFmtPrice(val,cur){
+  if(!val&&val!==0)return'—';
+  return cur==='CNY'?'¥'+val:'$'+val;
+}
+
 function qtCalc(){
-  const b=parseFloat(document.getElementById('qf-barbone').value)||0;
-  const rp=parseFloat(document.getElementById('qf-ramp').value)||0;
-  const sp=parseFloat(document.getElementById('qf-ssdp').value)||0;
-  const cost=b+rp+sp;
+  const mode=document.querySelector('input[name="qf-pmode"]:checked').value;
+  const priceCur=document.getElementById('qf-price-cur').value;
+  let autoPrice=null;
+
+  if(mode==='breakdown'){
+    const b=parseFloat(document.getElementById('qf-barbone').value)||0;
+    const rp=parseFloat(document.getElementById('qf-ramp').value)||0;
+    const sp=parseFloat(document.getElementById('qf-ssdp').value)||0;
+    const sum=b+rp+sp;
+    if(sum>0){
+      autoPrice=sum;
+      // Only auto-fill price if user hasn't manually changed it
+      const priceEl=document.getElementById('qf-price');
+      if(!priceEl.dataset.manualEdit){priceEl.value=sum;}
+    }
+  } else {
+    const t=parseFloat(document.getElementById('qf-total-price').value)||0;
+    if(t>0){
+      autoPrice=t;
+      const priceEl=document.getElementById('qf-price');
+      if(!priceEl.dataset.manualEdit){priceEl.value=t;}
+    }
+  }
+
   const price=parseFloat(document.getElementById('qf-price').value)||0;
   const p3=parseFloat(document.getElementById('qf-p3').value)||0;
-  document.getElementById('qpp-cost').textContent=cost>0?'$'+cost:'—';
-  document.getElementById('qpp-price').textContent=price>0?'$'+price:'—';
+  const p3Cur=document.getElementById('qf-p3-cur').value;
+
+  document.getElementById('qpp-cost').textContent=p3>0?qtFmtPrice(p3,p3Cur):'—';
+  document.getElementById('qpp-price').textContent=price>0?qtFmtPrice(price,priceCur):'—';
+
   const diff=p3>0&&price>0?price-p3:null;
   const de=document.getElementById('qpp-diff');
-  if(diff!==null){de.textContent=(diff>=0?'+':'')+diff;de.style.color=diff<0?'var(--red-text)':'#1D9E75';}
-  else{de.textContent='—';de.style.color='var(--text2)';}
+  if(diff!==null){
+    const sym=priceCur==='CNY'?'¥':'$';
+    de.textContent=(diff>=0?'+':'')+sym+diff;
+    de.style.color=diff<0?'var(--red-text)':'#1D9E75';
+  } else{de.textContent='—';de.style.color='var(--text2)';}
   document.getElementById('qt-p3warn').classList.toggle('show',diff!==null&&diff<0);
 }
+
 function qtSave(){
   const price=parseFloat(document.getElementById('qf-price').value);
-  if(isNaN(price)){alert('请填写报价 (P)');return;}
+  if(isNaN(price)||price<=0){alert('请填写报价 (P)');return;}
+  const mode=document.querySelector('input[name="qf-pmode"]:checked').value;
   const obj={
     id:qtEditId||Date.now(),
     project:document.getElementById('qf-project').value.trim(),
@@ -3038,14 +3240,26 @@ function qtSave(){
     partno:document.getElementById('qf-partno').value.trim(),
     qty:document.getElementById('qf-qty').value.trim(),
     cpu:document.getElementById('qf-cpu').value.trim(),
-    barbone:parseFloat(document.getElementById('qf-barbone').value)||null,
-    ram:document.getElementById('qf-ram').value.trim(),
-    ramp:parseFloat(document.getElementById('qf-ramp').value)||null,
-    ssd:document.getElementById('qf-ssd').value.trim(),
-    ssdp:parseFloat(document.getElementById('qf-ssdp').value)||null,
-    price,
-    p3:parseFloat(document.getElementById('qf-p3').value)||null,
     custom:document.getElementById('qf-custom').value.trim(),
+    pmode:mode,
+    // breakdown fields
+    barbone:mode==='breakdown'?(parseFloat(document.getElementById('qf-barbone').value)||null):null,
+    barboneCur:document.getElementById('qf-barbone-cur').value,
+    ram:mode==='breakdown'?document.getElementById('qf-ram').value.trim():'',
+    ramp:mode==='breakdown'?(parseFloat(document.getElementById('qf-ramp').value)||null):null,
+    rampCur:document.getElementById('qf-ramp-cur').value,
+    ssd:mode==='breakdown'?document.getElementById('qf-ssd').value.trim():'',
+    ssdp:mode==='breakdown'?(parseFloat(document.getElementById('qf-ssdp').value)||null):null,
+    ssdpCur:document.getElementById('qf-ssdp-cur').value,
+    // total mode
+    totalPrice:mode==='total'?(parseFloat(document.getElementById('qf-total-price').value)||null):null,
+    totalCur:document.getElementById('qf-total-cur').value,
+    // final price
+    price,
+    priceCur:document.getElementById('qf-price-cur').value,
+    p3:parseFloat(document.getElementById('qf-p3').value)||null,
+    p3Cur:document.getElementById('qf-p3-cur').value,
+    shipping:document.getElementById('qf-shipping').value.trim(),
     deal:document.getElementById('qf-deal').value,
     notes:document.getElementById('qf-notes').value.trim(),
   };
@@ -3058,14 +3272,18 @@ function qtDel(id){if(!confirm('确认删除？'))return;qtQuotes=qtQuotes.filte
 function qtRenderDash(){
   const won=qtQuotes.filter(q=>q.deal==='won');
   const open_=qtQuotes.filter(q=>q.deal==='open');
+  const confirmed=qtQuotes.filter(q=>q.deal==='confirmed');
+  const pause=qtQuotes.filter(q=>q.deal==='pause');
   const lost=qtQuotes.filter(q=>q.deal==='lost');
   const withP3=qtQuotes.filter(q=>q.p3!=null);
   const belowP3=withP3.filter(q=>q.price<q.p3);
   const companies=[...new Set(qtQuotes.map(q=>q.company).filter(Boolean))];
   document.getElementById('qt-kpis').innerHTML=[
     {v:qtQuotes.length,l:'总报价数',c:'var(--blue-text)'},
-    {v:won.length,l:'已成单',c:'var(--green-text)'},
-    {v:open_.length,l:'跟进中',c:'var(--amber-text)'},
+    {v:won.length,l:'已成交',c:'var(--green-text)'},
+    {v:confirmed.length,l:'已确认订单',c:'var(--amber-text)'},
+    {v:open_.length,l:'跟进中',c:'var(--blue-text)'},
+    {v:pause.length,l:'暂无进展',c:'var(--gray-text)'},
     {v:lost.length,l:'已丢单',c:'var(--red-text)'},
     {v:companies.length,l:'公司数',c:'var(--text)'},
     {v:belowP3.length,l:'低于P3',c:'var(--red-text)'},
@@ -3082,16 +3300,16 @@ function qtRenderDash(){
       <div class="qt-cc-row"><span style="color:var(--red-text)">丢单</span><span style="color:var(--red-text)">${cl}</span></div>
     </div>`;
   }).join('');
-  const dealBadge=d=>d==='won'?'<span class="badge qt-stat-won">✅ 成单</span>':d==='lost'?'<span class="badge qt-stat-lost">❌ 丢单</span>':d==='open'?'<span class="badge qt-stat-open">⭕ 跟进</span>':'<span class="badge badge-gray">—</span>';
+  const dealBadge=d=>d==='won'?'<span class="badge qt-stat-won">✅ 已成交</span>':d==='lost'?'<span class="badge qt-stat-lost">❌ 丢单</span>':d==='open'?'<span class="badge qt-stat-open">⭕ 跟进中</span>':d==='confirmed'?'<span class="badge qt-stat-confirmed">🔶 已确认订单</span>':d==='pause'?'<span class="badge qt-stat-pause">⏸️ 暂无进展</span>':'<span class="badge badge-gray">—</span>';
   document.getElementById('qt-below-body').innerHTML=belowP3.length?belowP3.map(r=>`<tr>
     <td>${dealBadge(r.deal)}</td><td>${r.company||'—'}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">${r.project||'—'}</td>
-    <td><b>${r.model}</b></td><td class="qt-price qt-below">$${r.price}</td><td>$${r.p3}</td>
+    <td><b>${r.model}</b></td><td class="qt-price qt-below">${r.priceCur==='CNY'?'¥':'$'}${r.price}</td><td>${r.p3Cur==='CNY'?'¥':'$'}${r.p3}</td>
     <td class="qt-diff-neg">${r.price-r.p3}</td></tr>`).join(''):`<tr><td colspan="7" style="text-align:center;padding:18px;color:var(--text2)">✅ 没有低于P3的报价</td></tr>`;
 }
 
 function qtExportCSV(){
-  const headers=['项目','公司','日期','型号','料号','数量','CPU','准系统价','RAM','RAM价','SSD','SSD价','报价P','P3','价差','Custom','状态','备注'];
-  const rows=qtQuotes.map(r=>[r.project,r.company,r.date,r.model,r.partno,r.qty,r.cpu,r.barbone,r.ram,r.ramp,r.ssd,r.ssdp,r.price,r.p3,r.p3?r.price-r.p3:'',r.custom,r.deal,r.notes].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(','));
+  const headers=['项目','公司','日期','型号','料号','数量','CPU','报价方式','准系统价','准系统币种','RAM','RAM价','RAM币种','SSD','SSD价','SSD币种','整机价','整机币种','报价P','报价币种','P3','P3币种','价差','运费','Custom','状态','备注'];
+  const rows=qtQuotes.map(r=>[r.project,r.company,r.date,r.model,r.partno,r.qty,r.cpu,r.pmode||'breakdown',r.barbone,r.barboneCur||'USD',r.ram,r.ramp,r.rampCur||'USD',r.ssd,r.ssdp,r.ssdpCur||'USD',r.totalPrice,r.totalCur||'USD',r.price,r.priceCur||'USD',r.p3,r.p3Cur||'USD',r.p3?r.price-r.p3:'',r.shipping,r.custom,r.deal,r.notes].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(','));
   const csv='\uFEFF'+headers.join(',')+'\n'+rows.join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
   a.download=`报价记录_${todayStr()}.csv`;a.click();
@@ -3178,6 +3396,12 @@ function qtSeed(){
   qtLoad();
   qtUpdateCompanyFilter();
   qtRender();
+  setTimeout(qtInitResizableCols,100);
+  // Mark price as manually edited when user types directly
+  const priceEl=document.getElementById('qf-price');
+  if(priceEl){
+    priceEl.addEventListener('input',function(){this.dataset.manualEdit='1';});
+  }
 })();
 </script>
 </body>
