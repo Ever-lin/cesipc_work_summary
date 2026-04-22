@@ -3440,6 +3440,11 @@ function qtBuildSnap(mode){
     stage:document.getElementById('qf-stage').value.trim(),
     deal:document.getElementById('qf-deal').value,
     custom:document.getElementById('qf-custom').value.trim(),
+    model:document.getElementById('qf-model').value.trim(),
+    cpu:document.getElementById('qf-cpu').value.trim(),
+    partno:document.getElementById('qf-partno').value.trim(),
+    shipping:document.getElementById('qf-shipping').value.trim(),
+    notes:document.getElementById('qf-notes').value.trim(),
   };
 }
 function qtDelHistory(quoteId, histIdx){
@@ -3478,8 +3483,10 @@ function qtRenderHistoryInModal(hist){
       +(diffStr?'<span style="font-size:11px;color:'+(h.price!=null&&h.p3!=null&&h.price-h.p3<0?'var(--red-text)':'#1D9E75')+'">'+diffStr+'</span>':'')
       +(isLatest?'<span style="font-size:10px;color:var(--blue-text);background:var(--blue-bg);padding:1px 6px;border-radius:8px">最新</span>':'')
       +'</div>'
-      +(parts.length?'<div style="color:var(--text2);font-size:11px;margin-top:2px">'+parts.join(' · ')+'</div>':'')
+      +((h.model||h.cpu||h.partno)?'<div style="color:var(--text);font-size:11px;font-weight:500;margin-top:3px">'+(h.model?'<b>'+h.model+'</b>':'')+(h.cpu?' · '+h.cpu:'')+(h.partno?' · 料号:'+h.partno:'')+'</div>':'')
+      +(parts.length?'<div style="color:var(--text2);font-size:11px;margin-top:2px">'+parts.join(' · ')+(h.shipping?' · 🚢 '+h.shipping:'')+'</div>':(!h.shipping?'':'<div style="color:var(--text2);font-size:11px;margin-top:2px">🚢 '+h.shipping+'</div>'))
       +(h.custom?'<div style="color:var(--text2);font-size:11px;margin-top:2px">🔧 '+h.custom+'</div>':'')
+      +(h.notes?'<div style="color:var(--text2);font-size:11px;margin-top:2px;font-style:italic">📝 '+h.notes+'</div>':'')
       +((h.stage||h.deal)?(()=>{
         const dealMap={won:'✅ 已成交',open:'⭕ 跟进中',confirmed:'🔶 已确认订单',lost:'❌ 丢单',pause:'⏸️ 暂无进展'};
         const dealColor={won:'#1D9E75',open:'var(--blue-text)',confirmed:'#633806',lost:'var(--red-text)',pause:'var(--gray-text)'};
