@@ -3169,28 +3169,7 @@ function qtOpenEdit(id){
   document.getElementById('qf-p3').value=r.p3!=null?r.p3:'';
   document.getElementById('qf-p3-cur').value=r.p3Cur||'USD';
   qtTogglePriceMode();
-  // 渲染历史价格
-  const histWrap=document.getElementById('qf-history-wrap');
-  const histList=document.getElementById('qf-history-list');
-  const hist=r.priceHistory||[];
-  if(hist.length){
-    histWrap.style.display='block';
-    histList.innerHTML=hist.slice().reverse().map(h=>{
-      const cur=s=>s==='CNY'?'¥':'$';
-      const parts=[];
-      if(h.barbone!=null)parts.push(`准系统 ${cur(h.barboneCur||'USD')}${h.barbone}`);
-      if(h.ramp!=null)parts.push(`RAM(${h.ram||'—'}) ${cur(h.rampCur||'USD')}${h.ramp}`);
-      if(h.ssdp!=null)parts.push(`SSD(${h.ssd||'—'}) ${cur(h.ssdpCur||'USD')}${h.ssdp}`);
-      if(h.totalPrice!=null)parts.push(`整机 ${cur(h.totalCur||'USD')}${h.totalPrice}`);
-      return`<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border2)">
-        <span style="color:var(--text3);white-space:nowrap;flex-shrink:0">${h.savedAt||h.date||'—'}</span>
-        <span style="color:var(--blue-text);font-weight:600;white-space:nowrap;flex-shrink:0">${cur(h.priceCur||'USD')}${h.price}</span>
-        <span style="color:var(--text2);overflow:hidden;text-overflow:ellipsis">${parts.join(' + ')||'—'}</span>
-      </div>`;
-    }).join('');
-  } else {
-    histWrap.style.display='none';
-  }
+  qtRenderHistoryInModal(r.priceHistory||[]);
   document.getElementById('qt-modal-bg').classList.add('open');
 }
 function qtCloseModal(){document.getElementById('qt-modal-bg').classList.remove('open');}
@@ -3256,22 +3235,12 @@ function qtCalc(){
   document.getElementById('qt-p3warn').classList.toggle('show',diff!==null&&diff<0);
 }
 
-function qtSave(){
-  const price=parseFloat(document.getElementById('qf-price').value);
-  if(isNaN(price)||price<=0){alert('请填写报价 (P)');return;}
-  const mode=document.querySelector('input[name="qf-pmode"]:checked').value;
-  const obj={
-    id:qtEditId||Date.now(),
-    project:document.getElementById('qf-project').value.trim(),
-    company:document.getElementById('qf-company').value,
-    date:document.getElementById('qf-date').value,
-    model:document.getElementById('qf-model').value.trim(),
-    partno:document.getElementById('qf-partno').value.trim(),
-    qty:document.getElementById('qf-qty').value.trim(),
-    cpu:document.getElementById('qf-cpu').value.trim(),
-    custom:document.getElementById('qf-custom').value.trim(),
+function qtBuildSnap(mode){
+  return{
+    savedAt:new Date().toISOString().slice(0,16).replace('T',' '),
     pmode:mode,
-    // breakdown fields
+    price:parseFloat(document.getElementById('qf-price').value)||null,
+    priceCur:document.getElementById('qf-price-cur').value,
     barbone:mode==='breakdown'?(parseFloat(document.getElementById('qf-barbone').value)||null):null,
     barboneCur:document.getElementById('qf-barbone-cur').value,
     ram:mode==='breakdown'?document.getElementById('qf-ram').value.trim():'',
@@ -3280,14 +3249,57 @@ function qtSave(){
     ssd:mode==='breakdown'?document.getElementById('qf-ssd').value.trim():'',
     ssdp:mode==='breakdown'?(parseFloat(document.getElementById('qf-ssdp').value)||null):null,
     ssdpCur:document.getElementById('qf-ssdp-cur').value,
-    // total mode
     totalPrice:mode==='total'?(parseFloat(document.getElementById('qf-total-price').value)||null):null,
     totalCur:document.getElementById('qf-total-cur').value,
-    // final price
-    price,
-    priceCur:document.getElementById('qf-price-cur').value,
+    qty:document.getElementById('qf-qty').value.trim(),
     p3:parseFloat(document.getElementById('qf-p3').value)||null,
     p3Cur:document.getElementById('qf-p3-cur').value,
+  };
+}
+function qtRenderHistoryInModal(hist){
+  const wrap=document.getElementById('qf-history-wrap');
+  const list=document.getElementById('qf-history-list');
+  if(!hist||!hist.length){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  const fc=s=>s==='CNY'?'\xA5':'$';
+  list.innerHTML=hist.slice().reverse().map((h,idx)=>{
+    const parts=[];
+    if(h.barbone!=null)parts.push('\u51C6\u7CFB\u7EDF '+fc(h.barboneCur||'USD')+h.barbone);
+    if(h.ramp!=null)parts.push('RAM('+(h.ram||'\u2014')+') '+fc(h.rampCur||'USD')+h.ramp);
+    if(h.ssdp!=null)parts.push('SSD('+(h.ssd||'\u2014')+') '+fc(h.ssdpCur||'USD')+h.ssdp);
+    if(h.totalPrice!=null)parts.push('\u6574\u673A '+fc(h.totalCur||'USD')+h.totalPrice);
+    if(h.qty)parts.push('Q:'+h.qty);
+    const isLatest=idx===0;
+    return'<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border2)'+(isLatest?';background:var(--blue-bg);margin:0 -4px;padding-left:4px;border-radius:4px':'')+'">'
+      +'<span style="color:var(--text3);white-space:nowrap;flex-shrink:0;font-size:11px">'+(h.savedAt||'\u2014')+'</span>'
+      +'<span style="color:var(--blue-text);font-weight:600;white-space:nowrap;flex-shrink:0">'+fc(h.priceCur||'USD')+(h.price||'\u2014')+'</span>'
+      +'<span style="color:var(--text2);font-size:11px">'+(parts.join(' \xB7 ')||'\u2014')+'</span>'
+      +(isLatest?'<span style="font-size:10px;color:var(--blue-text);margin-left:auto;flex-shrink:0">\u6700\u65B0</span>':'')
+      +'</div>';
+  }).join('');
+}
+function qtSave(){
+  const price=parseFloat(document.getElementById('qf-price').value);
+  if(isNaN(price)||price<=0){alert('\u8BF7\u586B\u5199\u62A5\u4EF7 (P)');return;}
+  const mode=document.querySelector('input[name="qf-pmode"]:checked').value;
+  const snap=qtBuildSnap(mode);
+  const obj={
+    id:qtEditId||Date.now(),
+    project:document.getElementById('qf-project').value.trim(),
+    company:document.getElementById('qf-company').value,
+    date:document.getElementById('qf-date').value,
+    model:document.getElementById('qf-model').value.trim(),
+    partno:document.getElementById('qf-partno').value.trim(),
+    qty:snap.qty,
+    cpu:document.getElementById('qf-cpu').value.trim(),
+    custom:document.getElementById('qf-custom').value.trim(),
+    pmode:mode,
+    barbone:snap.barbone,barboneCur:snap.barboneCur,
+    ram:snap.ram,ramp:snap.ramp,rampCur:snap.rampCur,
+    ssd:snap.ssd,ssdp:snap.ssdp,ssdpCur:snap.ssdpCur,
+    totalPrice:snap.totalPrice,totalCur:snap.totalCur,
+    price,priceCur:snap.priceCur,
+    p3:snap.p3,p3Cur:snap.p3Cur,
     shipping:document.getElementById('qf-shipping').value.trim(),
     deal:document.getElementById('qf-deal').value,
     notes:document.getElementById('qf-notes').value.trim(),
@@ -3295,27 +3307,22 @@ function qtSave(){
   if(qtEditId){
     const i=qtQuotes.findIndex(q=>String(q.id)===String(qtEditId));
     if(i!==-1){
-      const old=qtQuotes[i];
-      // 只有价格相关字段有变化才记录历史
-      const priceChanged=old.price!==obj.price||old.barbone!==obj.barbone||old.ramp!==obj.ramp||old.ssdp!==obj.ssdp||old.totalPrice!==obj.totalPrice;
-      if(priceChanged){
-        const snap={
-          savedAt:new Date().toISOString().slice(0,10),
-          price:old.price,priceCur:old.priceCur,
-          barbone:old.barbone,barboneCur:old.barboneCur,
-          ram:old.ram,ramp:old.ramp,rampCur:old.rampCur,
-          ssd:old.ssd,ssdp:old.ssdp,ssdpCur:old.ssdpCur,
-          totalPrice:old.totalPrice,totalCur:old.totalCur,
-        };
-        obj.priceHistory=[...(old.priceHistory||[]),snap];
-      } else {
-        obj.priceHistory=old.priceHistory||[];
-      }
+      obj.priceHistory=[...(qtQuotes[i].priceHistory||[]),snap];
       qtQuotes[i]=obj;
     }
+  } else {
+    obj.priceHistory=[snap];
+    qtQuotes.unshift(obj);
+    qtEditId=String(obj.id);
+    document.getElementById('qt-modal-title').textContent='\u7F16\u8F91\u62A5\u4EF7';
   }
-  else qtQuotes.unshift(obj);
-  qtPersist();qtCloseModal();qtRender();qtUpdateCompanyFilter();
+  qtPersist();qtRender();qtUpdateCompanyFilter();
+  const r=qtQuotes.find(q=>String(q.id)===String(qtEditId));
+  qtRenderHistoryInModal(r?r.priceHistory:[]);
+  const saveBtn=document.querySelector('#qt-modal-bg .btn-primary');
+  const orig=saveBtn.textContent;
+  saveBtn.textContent='\u2705 \u5DF2\u4FDD\u5B58';saveBtn.disabled=true;
+  setTimeout(()=>{saveBtn.textContent=orig;saveBtn.disabled=false;},1200);
 }
 function qtDel(id){if(!confirm('确认删除？'))return;qtQuotes=qtQuotes.filter(q=>String(q.id)!==String(id));qtPersist();qtRender();qtUpdateCompanyFilter();}
 
