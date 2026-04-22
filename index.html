@@ -531,6 +531,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       </div>
       <div class="field"><label>3）重点订单情况</label><textarea id="d-keyorders" class="auto-resize"></textarea></div>
       <div class="field"><label>4）售后情况</label><textarea id="d-aftersales" class="auto-resize"></textarea></div>
+      <div class="field"><label>5）日常事务</label><textarea id="d-daily" class="auto-resize" placeholder="其他日常工作安排"></textarea></div>
 
       <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">明日计划<span class="inline-flex"><button class="btn btn-sm" onclick="fillDailyTomorrowPlan()">↻ 刷新</button><button class="btn btn-sm" onclick="copyDailySection('plan')">复制全部</button></span></div>
       <div class="field"><label>1）重点项目</label><textarea id="d-plan-projects" class="auto-resize" placeholder="根据行动时间自动填入，可手动修改" style="min-height:60px"></textarea></div>
@@ -2185,6 +2186,7 @@ function genDaily(){
   const p5=document.getElementById('d-p5').value.trim();
   const keyorders=document.getElementById('d-keyorders').value.trim();
   const aftersales=document.getElementById('d-aftersales').value.trim();
+  const dailyTasks=document.getElementById('d-daily').value.trim();
   const planProjects=document.getElementById('d-plan-projects').value.trim();
   const planBaodiao=document.getElementById('d-plan-baodiao').value.trim();
   const planDaily=document.getElementById('d-plan-daily').value.trim();
@@ -2221,6 +2223,7 @@ function genDaily(){
   else r+=`  拜访：暂无\n`;
   r+=`\n3）重点订单情况：\n${keyorders||'暂无'}\n\n`;
   r+=`4）售后情况：\n${aftersales||'暂无'}\n\n`;
+  r+=`5）日常事务：\n${dailyTasks||'暂无'}\n\n`;
   r+=`${'─'.repeat(28)}\n\n`;
   // 3. 明日计划
   r+=`明日计划\n`;
@@ -2233,7 +2236,7 @@ function genDaily(){
     followup:document.getElementById('d-followup').value,followupCount,
     visit:document.getElementById('d-visit').value,visitCount,
     newClients:newC,newMid,newLong,
-    p1,p2,p3,p4,p5,p6:document.getElementById('d-p6').value.trim(),keyorders,aftersales,
+    p1,p2,p3,p4,p5,p6:document.getElementById('d-p6').value.trim(),keyorders,aftersales,dailyTasks,
     planProjects,planBaodiao,planDaily,
     projCount:projs.length,txt:r,savedAt:new Date().toLocaleString('zh-CN')};
   const ex=state.dailies.findIndex(d=>d.date===date);
@@ -2277,6 +2280,7 @@ function copyDailySection(section){
     const visitCount=parseInt(v('d-visit-count'))||visitLines.split('\n').filter(Boolean).length;
     const keyorders=v('d-keyorders').trim();
     const aftersales=v('d-aftersales').trim();
+    const dailyTasks=v('d-daily').trim();
     const parts=[];
     parts.push(`1）背调客户：${newC?newC+'个':'暂无'}`);
     let s='2）长线客户跟进情况如下：';
@@ -2287,6 +2291,7 @@ function copyDailySection(section){
     parts.push(s);
     parts.push(`3）重点订单情况：\n${keyorders||'暂无'}`);
     parts.push(`4）售后情况：\n${aftersales||'暂无'}`);
+    parts.push(`5）日常事务：\n${dailyTasks||'暂无'}`);
     txt=parts.join('\n\n');
   } else if(section==='plan'){
     const planProj=v('d-plan-projects').trim();
@@ -2324,6 +2329,7 @@ function loadDailyIntoForm(date){
   ['p1','p2','p3','p4','p5','p6','keyorders','aftersales'].forEach(f=>{
     const el=document.getElementById('d-'+f);if(el){el.value=d[f]||'';autoResize(el);}
   });
+  const dtEl=document.getElementById('d-daily');if(dtEl){dtEl.value=d.dailyTasks||'';autoResize(dtEl);}
   // 3 plan fields (new) with fallback to old single 'plan' field
   const ppEl=document.getElementById('d-plan-projects');
   const pbEl=document.getElementById('d-plan-baodiao');
@@ -2351,7 +2357,7 @@ function copySavedDailySection(date,section){
       `6）丢单：\n${d.p6||'暂无'}`,
     ].join('\n\n');
   } else if(section==='longline'){
-    txt=`1）背调客户：${d.newClients?d.newClients+'个':'暂无'}\n\n2）长线客户跟进情况如下：\n  跟进：${d.followupCount?d.followupCount+'家'+(followupArr.length?'\n'+followupArr.join('\n'):''):'暂无'}\n  拜访：${d.visitCount?d.visitCount+'家'+(visitArr.length?'\n'+visitArr.join('\n'):''):'暂无'}\n\n3）重点订单情况：\n${d.keyorders||'暂无'}\n\n4）售后情况：\n${d.aftersales||'暂无'}`;
+    txt=`1）背调客户：${d.newClients?d.newClients+'个':'暂无'}\n\n2）长线客户跟进情况如下：\n  跟进：${d.followupCount?d.followupCount+'家'+(followupArr.length?'\n'+followupArr.join('\n'):''):'暂无'}\n  拜访：${d.visitCount?d.visitCount+'家'+(visitArr.length?'\n'+visitArr.join('\n'):''):'暂无'}\n\n3）重点订单情况：\n${d.keyorders||'暂无'}\n\n4）售后情况：\n${d.aftersales||'暂无'}\n\n5）日常事务：\n${d.dailyTasks||'暂无'}`;
   } else if(section==='plan'){
     txt=`1）重点项目：\n${d.planProjects||d.plan||'暂无'}\n\n2）背调客户：${d.planBaodiao||'暂无'}\n\n3）日常事务：\n${d.planDaily||'暂无'}`;
   }
@@ -2380,7 +2386,7 @@ function renderSavedDailies(expandDate){
     // 区块2：长线工作 & 日常事务
     const followupArr=(d.followup||'').split('\n').filter(Boolean);
     const visitArr=(d.visit||'').split('\n').filter(Boolean);
-    const longlineTxt=`1）背调客户：${d.newClients?d.newClients+'个':'暂无'}\n\n2）长线客户跟进情况如下：\n  跟进：${d.followupCount?d.followupCount+'家'+(followupArr.length?'\n'+followupArr.join('\n'):''):'暂无'}\n  拜访：${d.visitCount?d.visitCount+'家'+(visitArr.length?'\n'+visitArr.join('\n'):''):'暂无'}\n\n3）重点订单情况：\n${d.keyorders||'暂无'}\n\n4）售后情况：\n${d.aftersales||'暂无'}`;
+    const longlineTxt=`1）背调客户：${d.newClients?d.newClients+'个':'暂无'}\n\n2）长线客户跟进情况如下：\n  跟进：${d.followupCount?d.followupCount+'家'+(followupArr.length?'\n'+followupArr.join('\n'):''):'暂无'}\n  拜访：${d.visitCount?d.visitCount+'家'+(visitArr.length?'\n'+visitArr.join('\n'):''):'暂无'}\n\n3）重点订单情况：\n${d.keyorders||'暂无'}\n\n4）售后情况：\n${d.aftersales||'暂无'}\n\n5）日常事务：\n${d.dailyTasks||'暂无'}`;
     // 区块3：明日计划
     const planTxt=`1）重点项目：\n${d.planProjects||d.plan||'暂无'}\n\n2）背调客户：${d.planBaodiao||'暂无'}\n\n3）日常事务：\n${d.planDaily||'暂无'}`;
     const did=d.date;
