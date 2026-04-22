@@ -1779,9 +1779,9 @@ function renderSavedWeeklies(){
     const badges=[];
     if(w.newClients)badges.push(`<span class="badge badge-teal" style="font-size:10px">背调${w.newClients}个</span>`);
     if(w.followupCount||w.visitCount)badges.push(`<span class="badge badge-blue" style="font-size:10px">跟进${w.followupCount||0}家 拜访${w.visitCount||0}家</span>`);
-    return`<div class="card" style="margin-top:8px">
+    return`<div class="card" style="margin-top:8px;border-left:4px solid #1D9E75">
       <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var el=document.getElementById('${hid}');el.style.display=el.style.display==='none'?'block':'none';var ic=document.getElementById('${hid}_ic');ic.textContent=el.style.display==='none'?'▶':'▼'})()">
-        <span style="font-size:13px;font-weight:500"><span id="${hid}_ic">▶</span> ${w.fy} ${w.month}月 ${w.week} 周报</span>
+        <span style="font-size:13px;font-weight:500;color:#27500A"><span id="${hid}_ic">▶</span> 📋 ${w.fy} ${w.month}月 ${w.week} 周报</span>
         <div class="inline-flex" onclick="event.stopPropagation()">${badges.join('')}<button class="btn btn-primary btn-sm" onclick="editWeekly(${w.id})">编辑</button><button class="btn btn-sm" onclick="loadWeekly(${w.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delWeekly(${w.id})">删除</button></div>
       </div>
       <div id="${hid}" style="display:none;margin-top:8px;font-size:12px;color:var(--text2)">
@@ -1869,9 +1869,9 @@ function renderSavedMonthlies(){
     const badges=[];
     if(m.newClients)badges.push(`<span class="badge badge-teal" style="font-size:10px">背调${m.newClients}个</span>`);
     if(m.followupCount||m.visitCount)badges.push(`<span class="badge badge-blue" style="font-size:10px">跟进${m.followupCount||0}家 拜访${m.visitCount||0}家</span>`);
-    return`<div class="card" style="margin-top:8px">
+    return`<div class="card" style="margin-top:8px;border-left:4px solid #EF9F27">
       <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var el=document.getElementById('${hid}');el.style.display=el.style.display==='none'?'block':'none';var ic=document.getElementById('${hid}_ic');ic.textContent=el.style.display==='none'?'▶':'▼'})()">
-        <span style="font-size:13px;font-weight:500"><span id="${hid}_ic">▶</span> ${m.fy} ${m.month}月 月报</span>
+        <span style="font-size:13px;font-weight:500;color:#633806"><span id="${hid}_ic">▶</span> 🗓 ${m.fy} ${m.month}月 月报</span>
         <div class="inline-flex" onclick="event.stopPropagation()">${badges.join('')}<button class="btn btn-primary btn-sm" onclick="editMonthly(${m.id})">编辑</button><button class="btn btn-sm" onclick="loadMonthly(${m.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delMonthly(${m.id})">删除</button></div>
       </div>
       <div id="${hid}" style="display:none;margin-top:8px;font-size:12px;color:var(--text2)">
@@ -2390,9 +2390,9 @@ function renderSavedDailies(expandDate){
     // 区块3：明日计划
     const planTxt=`1）重点项目：\n${d.planProjects||d.plan||'暂无'}\n\n2）背调客户：${d.planBaodiao||'暂无'}\n\n3）日常事务：\n${d.planDaily||'暂无'}`;
     const did=d.date;
-    return`<div class="card" style="margin-top:8px">
+    return`<div class="card" style="margin-top:8px;border-left:4px solid #185FA5">
       <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
-        <span style="font-size:13px;font-weight:500"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> 日报 ${d.date}</span>
+        <span style="font-size:13px;font-weight:500;color:#0C447C"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> 📅 日报 ${d.date}</span>
         <div class="inline-flex">
           ${hasFollowup?`<span class="badge badge-blue" style="font-size:10px">长线 跟进${d.followupCount||0}家 拜访${d.visitCount||0}家</span>`:''}
           ${d.newClients?`<span class="badge badge-teal" style="font-size:10px">背调${d.newClients}个</span>`:''}
@@ -2713,9 +2713,9 @@ function renderGeneratedWeeklies(expandKey){
   el.innerHTML=list.map(w=>{
     const hid='gw_'+w.id;
     const isNew=w.key===expandKey;
-    return`<div class="card" style="margin-top:8px">
+    return`<div class="card" style="margin-top:8px;border-left:4px solid #1D9E75">
       <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
-        <span style="font-size:13px;font-weight:500"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> ${w.fy} ${w.month}月 ${w.week} 周报</span>
+        <span style="font-size:13px;font-weight:500;color:#27500A"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> 📋 ${w.fy} ${w.month}月 ${w.week} 周报</span>
         <div class="inline-flex">
           <button class="btn btn-xs" onclick="event.stopPropagation();copyGenTxt('genWeeklies',${w.id})">复制</button>
           <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delGenWeekly(${w.id})">删除</button>
@@ -2858,9 +2858,9 @@ function renderGeneratedMonthlies(expandKey){
   el.innerHTML=list.map(m=>{
     const hid='gm_'+m.id;
     const isNew=m.key===expandKey;
-    return`<div class="card" style="margin-top:8px">
+    return`<div class="card" style="margin-top:8px;border-left:4px solid #EF9F27">
       <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
-        <span style="font-size:13px;font-weight:500"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> ${m.fy} ${m.month}月 月报</span>
+        <span style="font-size:13px;font-weight:500;color:#633806"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> 🗓 ${m.fy} ${m.month}月 月报</span>
         <div class="inline-flex">
           <button class="btn btn-xs" onclick="event.stopPropagation();copyGenTxt('genMonthlies',${m.id})">复制</button>
           <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delGenMonthly(${m.id})">删除</button>
