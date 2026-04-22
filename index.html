@@ -3479,8 +3479,8 @@ function qtRenderHistoryInModal(hist){
     if(h.qty)parts.push('数量:'+h.qty+'台');
     // P-P3 差价
     const diffStr=(h.price!=null&&h.p3!=null)?(()=>{
-      const d=h.price-h.p3;const sym=fc(h.priceCur||'USD');
-      return'P−P3:'+(d>=0?'+':'')+sym+d;
+      const d=h.price-h.p3;const sym=fc(h.priceCur||'USD');const p3sym=fc(h.p3Cur||'USD');
+      return'P−P3:'+(d>=0?'+':'')+sym+d+'（P3: '+p3sym+h.p3+'）';
     })():'';
     const isLatest=idx===0;
     const curId=qtEditId;
@@ -3492,6 +3492,7 @@ function qtRenderHistoryInModal(hist){
       +(diffStr?'<span style="font-size:11px;color:'+(h.price!=null&&h.p3!=null&&h.price-h.p3<0?'var(--red-text)':'#1D9E75')+'">'+diffStr+'</span>':'')
       +(isLatest?'<span style="font-size:10px;color:var(--blue-text);background:var(--blue-bg);padding:1px 6px;border-radius:8px">最新</span>':'')
       +'</div>'
+      +(parentQ&&parentQ.project?'<div style="color:var(--text2);font-size:11px;margin-top:3px">'+parentQ.project+'</div>':'')
       +((h.model||h.cpu||h.partno)?'<div style="color:var(--text);font-size:11px;font-weight:500;margin-top:3px">'+(h.model?'<b>'+h.model+'</b>':'')+(h.cpu?' · '+h.cpu:'')+(h.partno?' · 料号:'+h.partno:'')+'</div>':'')
       +(parts.length?'<div style="color:var(--text2);font-size:11px;margin-top:2px">'+parts.join(' · ')+(h.shipping?' · 🚢 '+h.shipping:'')+'</div>':(!h.shipping?'':'<div style="color:var(--text2);font-size:11px;margin-top:2px">🚢 '+h.shipping+'</div>'))
       +(h.custom?'<div style="color:var(--text2);font-size:11px;margin-top:2px">🔧 '+h.custom+'</div>':'')
