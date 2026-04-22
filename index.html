@@ -815,6 +815,11 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <input type="number" id="qf-price" min="0" oninput="qtCalc()" placeholder="0" style="font-size:15px;font-weight:600">
       </div>
       <div class="field" style="grid-column:1/-1"><label>备注</label><textarea id="qf-notes" style="min-height:52px"></textarea></div>
+      <!-- 历史价格记录 -->
+      <div id="qf-history-wrap" style="grid-column:1/-1;display:none">
+        <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;padding-top:4px;border-top:1px solid var(--border2)">📋 价格变更历史</div>
+        <div id="qf-history-list" style="font-size:12px"></div>
+      </div>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--border2)">
       <button class="btn" onclick="qtCloseModal()">取消</button>
@@ -3053,6 +3058,7 @@ function qtRender(){
       <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>
       <td><span style="display:flex;gap:4px">
         <button class="btn btn-xs" onclick="qtOpenEdit('${r.id}')">编辑</button>
+        ${(r.priceHistory&&r.priceHistory.length)?'<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="qtOpenEdit(\''+r.id+'\')" title="'+r.priceHistory.length+'次价格变更">📋'+r.priceHistory.length+'</button>':''}
         <button class="btn btn-danger btn-xs" onclick="qtDel('${r.id}')">删</button>
       </span></td>
     </tr>`;
@@ -3122,9 +3128,8 @@ function qtOpenAdd(){
   document.querySelector('input[name="qf-pmode"][value="breakdown"]').checked=true;
   ['qf-barbone-cur','qf-ramp-cur','qf-ssdp-cur','qf-price-cur','qf-p3-cur','qf-total-cur'].forEach(id=>document.getElementById(id).value='USD');
   qtTogglePriceMode();
+  document.getElementById('qf-history-wrap').style.display='none';
   document.getElementById('qt-modal-bg').classList.add('open');
-}
-function qtOpenEdit(id){
   const r=qtQuotes.find(q=>String(q.id)===String(id));if(!r)return;
   qtEditId=id;
   document.getElementById('qt-modal-title').textContent='编辑报价';
@@ -3162,6 +3167,28 @@ function qtOpenEdit(id){
   document.getElementById('qf-p3').value=r.p3!=null?r.p3:'';
   document.getElementById('qf-p3-cur').value=r.p3Cur||'USD';
   qtTogglePriceMode();
+  // 渲染历史价格
+  const histWrap=document.getElementById('qf-history-wrap');
+  const histList=document.getElementById('qf-history-list');
+  const hist=r.priceHistory||[];
+  if(hist.length){
+    histWrap.style.display='block';
+    histList.innerHTML=hist.slice().reverse().map(h=>{
+      const cur=s=>s==='CNY'?'¥':'$';
+      const parts=[];
+      if(h.barbone!=null)parts.push(`准系统 ${cur(h.barboneCur||'USD')}${h.barbone}`);
+      if(h.ramp!=null)parts.push(`RAM(${h.ram||'—'}) ${cur(h.rampCur||'USD')}${h.ramp}`);
+      if(h.ssdp!=null)parts.push(`SSD(${h.ssd||'—'}) ${cur(h.ssdpCur||'USD')}${h.ssdp}`);
+      if(h.totalPrice!=null)parts.push(`整机 ${cur(h.totalCur||'USD')}${h.totalPrice}`);
+      return`<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border2)">
+        <span style="color:var(--text3);white-space:nowrap;flex-shrink:0">${h.savedAt||h.date||'—'}</span>
+        <span style="color:var(--blue-text);font-weight:600;white-space:nowrap;flex-shrink:0">${cur(h.priceCur||'USD')}${h.price}</span>
+        <span style="color:var(--text2);overflow:hidden;text-overflow:ellipsis">${parts.join(' + ')||'—'}</span>
+      </div>`;
+    }).join('');
+  } else {
+    histWrap.style.display='none';
+  }
   document.getElementById('qt-modal-bg').classList.add('open');
 }
 function qtCloseModal(){document.getElementById('qt-modal-bg').classList.remove('open');}
@@ -3263,7 +3290,28 @@ function qtSave(){
     deal:document.getElementById('qf-deal').value,
     notes:document.getElementById('qf-notes').value.trim(),
   };
-  if(qtEditId){const i=qtQuotes.findIndex(q=>String(q.id)===String(qtEditId));if(i!==-1)qtQuotes[i]=obj;}
+  if(qtEditId){
+    const i=qtQuotes.findIndex(q=>String(q.id)===String(qtEditId));
+    if(i!==-1){
+      const old=qtQuotes[i];
+      // 只有价格相关字段有变化才记录历史
+      const priceChanged=old.price!==obj.price||old.barbone!==obj.barbone||old.ramp!==obj.ramp||old.ssdp!==obj.ssdp||old.totalPrice!==obj.totalPrice;
+      if(priceChanged){
+        const snap={
+          savedAt:new Date().toISOString().slice(0,10),
+          price:old.price,priceCur:old.priceCur,
+          barbone:old.barbone,barboneCur:old.barboneCur,
+          ram:old.ram,ramp:old.ramp,rampCur:old.rampCur,
+          ssd:old.ssd,ssdp:old.ssdp,ssdpCur:old.ssdpCur,
+          totalPrice:old.totalPrice,totalCur:old.totalCur,
+        };
+        obj.priceHistory=[...(old.priceHistory||[]),snap];
+      } else {
+        obj.priceHistory=old.priceHistory||[];
+      }
+      qtQuotes[i]=obj;
+    }
+  }
   else qtQuotes.unshift(obj);
   qtSave();qtCloseModal();qtRender();qtUpdateCompanyFilter();
 }
