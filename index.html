@@ -322,7 +322,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>2）长线客户跟进情况如下</label></div>
         <div class="grid2">
           <div class="field">
-            <label>—跟进（每行一家）</label>
+            <label style="display:flex;align-items:center;justify-content:space-between">—跟进（每行一家）<button class="btn btn-xs" onclick="fillNlongFollowup('w')">↻ 刷新</button></label>
             <textarea id="w-nlong-followup" class="auto-resize" placeholder="每行填写一家公司名称"></textarea>
           </div>
           <div class="field">
@@ -395,7 +395,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>2）长线客户跟进情况如下</label></div>
         <div class="grid2">
           <div class="field">
-            <label>—跟进（每行一家）</label>
+            <label style="display:flex;align-items:center;justify-content:space-between">—跟进（每行一家）<button class="btn btn-xs" onclick="fillNlongFollowup('wm')">↻ 刷新</button></label>
             <textarea id="wm-nlong-followup" class="auto-resize" placeholder="每行填写一家公司名称"></textarea>
           </div>
           <div class="field">
@@ -1633,7 +1633,26 @@ function fillMonthlyFollowup(){
   autoResize(el);
 }
 
-// 下周/下月工作计划 一、重点项目：自动填入行动时间落在该周/月的项目
+// 计算"下一周"的归属月+周次
+function getNextWeekInfo(selMonth, selWeek){
+  const weekLabels=['第一周','第二周','第三周','第四周','第五周'];
+  const idx=weekLabels.indexOf(selWeek);
+  if(idx<weekLabels.length-1){
+    // 下一周还在同月
+    return{month:String(selMonth),week:weekLabels[idx+1]};
+  } else {
+    // 第五周之后 → 下个月第一周
+    const nm=parseInt(selMonth,10)===12?1:parseInt(selMonth,10)+1;
+    return{month:String(nm),week:'第一周'};
+  }
+}
+// 计算"下一个月"
+function getNextMonth(selMonth){
+  const nm=parseInt(selMonth,10)===12?1:parseInt(selMonth,10)+1;
+  return String(nm);
+}
+
+// 下周/下月工作计划 一、重点项目：自动填入行动时间落在【下一周/下一月】的项目
 function fillNextPlanTextareas(prefix){
   const NEXT_CATS=[
     {id:'np1',stages:['生产/交付','安装/验收','项目完结','合同签订']},
@@ -1645,23 +1664,23 @@ function fillNextPlanTextareas(prefix){
   ];
   const grouped={};
   state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
-  // Determine target week or month range
   let matchFn;
   if(prefix==='w'){
     const selWeek=document.getElementById('w-week')?.value;
     const selMonth=document.getElementById('w-month')?.value;
+    const next=getNextWeekInfo(selMonth,selWeek);
     matchFn=(actionTime)=>{
       if(!actionTime)return false;
       const info=weekInfoOfDay(actionTime);
-      return info&&info.month===String(selMonth)&&info.week===selWeek;
+      return info&&info.month===next.month&&info.week===next.week;
     };
   } else {
-    // monthly
     const selMonth=document.getElementById('wm-month')?.value;
+    const nextMonth=getNextMonth(selMonth);
     matchFn=(actionTime)=>{
       if(!actionTime)return false;
       const info=weekInfoOfDay(actionTime);
-      return info&&info.month===String(selMonth);
+      return info&&info.month===nextMonth;
     };
   }
   NEXT_CATS.forEach(cat=>{
@@ -1677,6 +1696,42 @@ function fillNextPlanTextareas(prefix){
     el.value=items.map(({latest,entries})=>buildCRMTextFull(latest,entries)).join('\n\n──────────────\n\n');
     autoResize(el);
   });
+}
+
+// 下周/下月长线工作 跟进客户：自动填入行动时间落在【下一周/下一月】的客户名
+function fillNlongFollowup(prefix){
+  let matchFn;
+  if(prefix==='w'){
+    const selWeek=document.getElementById('w-week')?.value;
+    const selMonth=document.getElementById('w-month')?.value;
+    const next=getNextWeekInfo(selMonth,selWeek);
+    matchFn=(actionTime)=>{
+      if(!actionTime)return false;
+      const info=weekInfoOfDay(actionTime);
+      return info&&info.month===next.month&&info.week===next.week;
+    };
+  } else {
+    const selMonth=document.getElementById('wm-month')?.value;
+    const nextMonth=getNextMonth(selMonth);
+    matchFn=(actionTime)=>{
+      if(!actionTime)return false;
+      const info=weekInfoOfDay(actionTime);
+      return info&&info.month===nextMonth;
+    };
+  }
+  const grouped={};
+  state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
+  const clients=[...new Set(
+    Object.keys(grouped)
+      .map(k=>grouped[k].sort((a,b)=>b.id-a.id)[0])
+      .filter(p=>matchFn(p.actionTime)&&(p.client||p.name))
+      .map(p=>p.client||p.name)
+  )];
+  const elId=prefix+'-nlong-followup';
+  const el=document.getElementById(elId);
+  if(!el)return;
+  el.value=clients.join('\n');
+  autoResize(el);
 }
 
 function dailyListLines(id){
