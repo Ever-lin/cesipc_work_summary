@@ -3460,8 +3460,17 @@ function qtRenderHistoryInModal(hist){
   const list=document.getElementById('qf-history-list');
   if(!hist||!hist.length){wrap.style.display='none';return;}
   wrap.style.display='block';
+  // Backfill missing fields in old snapshots from the parent quote record
+  const parentQ=qtQuotes.find(q=>String(q.id)===String(qtEditId));
+  const backfill=parentQ?{model:parentQ.model||'',cpu:parentQ.cpu||'',partno:parentQ.partno||'',custom:parentQ.custom||'',shipping:parentQ.shipping||'',notes:parentQ.notes||''}:{};
   const fc=s=>s==='CNY'?'\xA5':'$';
   list.innerHTML=hist.slice().reverse().map((h,idx)=>{
+    // Apply backfill only for fields missing in the snapshot
+    if(!h.model&&backfill.model)h=Object.assign({},h,{model:backfill.model});
+    if(!h.cpu&&backfill.cpu)h=Object.assign({},h,{cpu:backfill.cpu});
+    if(!h.partno&&backfill.partno)h=Object.assign({},h,{partno:backfill.partno});
+    if(!h.custom&&backfill.custom)h=Object.assign({},h,{custom:backfill.custom});
+    if(!h.shipping&&backfill.shipping)h=Object.assign({},h,{shipping:backfill.shipping});
     const parts=[];
     if(h.barbone!=null)parts.push('准系统 '+fc(h.barboneCur||'USD')+h.barbone);
     if(h.ramp!=null)parts.push('RAM('+(h.ram||'—')+') '+fc(h.rampCur||'USD')+h.ramp);
