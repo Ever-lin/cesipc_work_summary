@@ -3167,9 +3167,10 @@ function qtOpenEdit(id){
   // total mode
   document.getElementById('qf-total-price').value=r.totalPrice!=null?r.totalPrice:'';
   document.getElementById('qf-total-cur').value=r.totalCur||'USD';
-  // final price — mark as manually edited so qtCalc won't overwrite it
-  document.getElementById('qf-price').value=r.price!=null?r.price:'';
-  document.getElementById('qf-price').dataset.manualEdit='1';
+  // final price — load value; user can freely re-type to get live diff update
+  const priceEl=document.getElementById('qf-price');
+  priceEl.value=r.price!=null?r.price:'';
+  delete priceEl.dataset.manualEdit; // allow qtCalc to reflect typed changes
   document.getElementById('qf-price-cur').value=r.priceCur||'USD';
   // p3
   document.getElementById('qf-p3').value=r.p3!=null?r.p3:'';
@@ -3202,29 +3203,20 @@ function qtFmtPrice(val,cur){
 function qtCalc(){
   const mode=document.querySelector('input[name="qf-pmode"]:checked').value;
   const priceCur=document.getElementById('qf-price-cur').value;
-  let autoPrice=null;
+  const priceEl=document.getElementById('qf-price');
 
   if(mode==='breakdown'){
     const b=parseFloat(document.getElementById('qf-barbone').value)||0;
     const rp=parseFloat(document.getElementById('qf-ramp').value)||0;
     const sp=parseFloat(document.getElementById('qf-ssdp').value)||0;
     const sum=b+rp+sp;
-    if(sum>0){
-      autoPrice=sum;
-      // Only auto-fill price if user hasn't manually changed it
-      const priceEl=document.getElementById('qf-price');
-      if(!priceEl.dataset.manualEdit){priceEl.value=sum;}
-    }
+    if(sum>0&&!priceEl.dataset.manualEdit&&!priceEl.value){priceEl.value=sum;}
   } else {
     const t=parseFloat(document.getElementById('qf-total-price').value)||0;
-    if(t>0){
-      autoPrice=t;
-      const priceEl=document.getElementById('qf-price');
-      if(!priceEl.dataset.manualEdit){priceEl.value=t;}
-    }
+    if(t>0&&!priceEl.dataset.manualEdit&&!priceEl.value){priceEl.value=t;}
   }
 
-  const price=parseFloat(document.getElementById('qf-price').value)||0;
+  const price=parseFloat(priceEl.value)||0;
   const p3=parseFloat(document.getElementById('qf-p3').value)||0;
   const p3Cur=document.getElementById('qf-p3-cur').value;
 
@@ -3262,6 +3254,14 @@ function qtBuildSnap(mode){
     p3Cur:document.getElementById('qf-p3-cur').value,
   };
 }
+function qtDelHistory(quoteId, histIdx){
+  const q=qtQuotes.find(q=>String(q.id)===String(quoteId));
+  if(!q||!q.priceHistory)return;
+  if(!confirm('确认删除这条价格记录？'))return;
+  q.priceHistory.splice(q.priceHistory.length-1-histIdx,1);
+  qtPersist();qtRender();
+  qtRenderHistoryInModal(q.priceHistory);
+}
 function qtRenderHistoryInModal(hist){
   const wrap=document.getElementById('qf-history-wrap');
   const list=document.getElementById('qf-history-list');
@@ -3270,17 +3270,29 @@ function qtRenderHistoryInModal(hist){
   const fc=s=>s==='CNY'?'\xA5':'$';
   list.innerHTML=hist.slice().reverse().map((h,idx)=>{
     const parts=[];
-    if(h.barbone!=null)parts.push('\u51C6\u7CFB\u7EDF '+fc(h.barboneCur||'USD')+h.barbone);
-    if(h.ramp!=null)parts.push('RAM('+(h.ram||'\u2014')+') '+fc(h.rampCur||'USD')+h.ramp);
-    if(h.ssdp!=null)parts.push('SSD('+(h.ssd||'\u2014')+') '+fc(h.ssdpCur||'USD')+h.ssdp);
-    if(h.totalPrice!=null)parts.push('\u6574\u673A '+fc(h.totalCur||'USD')+h.totalPrice);
-    if(h.qty)parts.push('Q:'+h.qty);
+    if(h.barbone!=null)parts.push('准系统 '+fc(h.barboneCur||'USD')+h.barbone);
+    if(h.ramp!=null)parts.push('RAM('+(h.ram||'—')+') '+fc(h.rampCur||'USD')+h.ramp);
+    if(h.ssdp!=null)parts.push('SSD('+(h.ssd||'—')+') '+fc(h.ssdpCur||'USD')+h.ssdp);
+    if(h.totalPrice!=null)parts.push('整机 '+fc(h.totalCur||'USD')+h.totalPrice);
+    if(h.qty)parts.push('数量:'+h.qty+'台');
+    // P-P3 差价
+    const diffStr=(h.price!=null&&h.p3!=null)?(()=>{
+      const d=h.price-h.p3;const sym=fc(h.priceCur||'USD');
+      return'P−P3:'+(d>=0?'+':'')+sym+d;
+    })():'';
     const isLatest=idx===0;
-    return'<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border2)'+(isLatest?';background:var(--blue-bg);margin:0 -4px;padding-left:4px;border-radius:4px':'')+'">'
-      +'<span style="color:var(--text3);white-space:nowrap;flex-shrink:0;font-size:11px">'+(h.savedAt||'\u2014')+'</span>'
-      +'<span style="color:var(--blue-text);font-weight:600;white-space:nowrap;flex-shrink:0">'+fc(h.priceCur||'USD')+(h.price||'\u2014')+'</span>'
-      +'<span style="color:var(--text2);font-size:11px">'+(parts.join(' \xB7 ')||'\u2014')+'</span>'
-      +(isLatest?'<span style="font-size:10px;color:var(--blue-text);margin-left:auto;flex-shrink:0">\u6700\u65B0</span>':'')
+    const curId=qtEditId;
+    return'<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 4px;border-bottom:1px solid var(--border2)'+(isLatest?';background:var(--blue-bg);border-radius:4px':'')+'">'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
+      +'<span style="color:var(--text3);white-space:nowrap;font-size:11px">'+(h.savedAt||'—')+'</span>'
+      +'<span style="color:var(--blue-text);font-weight:600;white-space:nowrap">'+fc(h.priceCur||'USD')+(h.price||'—')+'</span>'
+      +(diffStr?'<span style="font-size:11px;color:'+(h.price!=null&&h.p3!=null&&h.price-h.p3<0?'var(--red-text)':'#1D9E75')+'">'+diffStr+'</span>':'')
+      +(isLatest?'<span style="font-size:10px;color:var(--blue-text);background:var(--blue-bg);padding:1px 6px;border-radius:8px">最新</span>':'')
+      +'</div>'
+      +(parts.length?'<div style="color:var(--text2);font-size:11px;margin-top:2px">'+parts.join(' · ')+'</div>':'')
+      +'</div>'
+      +'<button onclick="qtDelHistory(\''+curId+'\','+idx+')" style="flex-shrink:0;background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:3px;font-size:11px;padding:2px 7px;cursor:pointer;line-height:1.4" title="删除此条记录">删除</button>'
       +'</div>';
   }).join('');
 }
