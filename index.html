@@ -3313,9 +3313,9 @@ function qtSave(){
     }
   }
   else qtQuotes.unshift(obj);
-  qtSave();qtCloseModal();qtRender();qtUpdateCompanyFilter();
+  qtPersist();qtCloseModal();qtRender();qtUpdateCompanyFilter();
 }
-function qtDel(id){if(!confirm('确认删除？'))return;qtQuotes=qtQuotes.filter(q=>String(q.id)!==String(id));qtSave();qtRender();qtUpdateCompanyFilter();}
+function qtDel(id){if(!confirm('确认删除？'))return;qtQuotes=qtQuotes.filter(q=>String(q.id)!==String(id));qtPersist();qtRender();qtUpdateCompanyFilter();}
 
 function qtRenderDash(){
   const won=qtQuotes.filter(q=>q.deal==='won');
