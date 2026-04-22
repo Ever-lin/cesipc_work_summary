@@ -336,9 +336,30 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>5）日常事务</label><textarea id="w-daily" class="auto-resize" placeholder="其他日常工作安排"></textarea></div>
 
         <div class="slabel">下周目标</div>
-        <div class="field"><label>1. 业绩目标（第一行填总目标如：20W，之后每行一条明细：客户名字：xxW，项目名称）</label><textarea id="w-target-perf" class="auto-resize" placeholder="20W&#10;Orange Ltd：5W，Orange_项目A&#10;Master Power：3W，Master_项目B"></textarea></div>
-        <div class="field"><label>2. 回款目标（第一行填总目标如：30W，之后每行一条明细：客户名字：xxW）</label><textarea id="w-target-collect" class="auto-resize" placeholder="30W&#10;Orange Ltd：10W&#10;Master Power：5W"></textarea></div>
-        <div class="field"><label>3. 新成交（每行一条：客户名字，项目名称+项目进度术语）</label><textarea id="w-target-deal" class="auto-resize" placeholder="如：Orange Ltd，项目A 产品报价"></textarea></div>
+        <div class="field">
+          <label>1. 业绩目标</label>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:13px;color:var(--text2);white-space:nowrap">业绩目标：</span>
+            <input id="w-target-perf-total" placeholder="如：20W" style="width:120px">
+          </div>
+          <textarea id="w-target-perf-detail" class="auto-resize" placeholder="客户名字：xxW，项目名称&#10;如：Orange Ltd：5W，Orange_项目A&#10;Master Power：3W，Master_项目B"></textarea>
+        </div>
+        <div class="field">
+          <label>2. 回款目标</label>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:13px;color:var(--text2);white-space:nowrap">回款目标：</span>
+            <input id="w-target-collect-total" placeholder="如：30W" style="width:120px">
+          </div>
+          <textarea id="w-target-collect-detail" class="auto-resize" placeholder="客户名字：xxW&#10;如：Orange Ltd：10W&#10;Master Power：5W"></textarea>
+        </div>
+        <div class="field">
+          <label>3. 新成交</label>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:13px;color:var(--text2);white-space:nowrap">新成交：</span>
+            <input id="w-target-deal-total" placeholder="如：2个" style="width:120px">
+          </div>
+          <textarea id="w-target-deal-detail" class="auto-resize" placeholder="客户名字，项目名称+项目进度术语&#10;如：Orange Ltd，项目A 产品报价"></textarea>
+        </div>
 
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">下周工作计划<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span></div>
         <div class="field"><label style="font-weight:500;display:flex;align-items:center;justify-content:space-between">一、重点项目（按项目节点划分）<button class="btn btn-xs" onclick="fillNextPlanTextareas('w')">↻ 刷新</button></label></div>
@@ -409,9 +430,30 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>5）日常事务</label><textarea id="wm-daily" class="auto-resize" placeholder="其他日常工作安排"></textarea></div>
 
         <div class="slabel">下月目标</div>
-        <div class="field"><label>1. 业绩目标（第一行填总目标如：20W，之后每行一条明细：客户名字：xxW，项目名称）</label><textarea id="wm-target-perf" class="auto-resize" placeholder="20W&#10;Orange Ltd：5W，Orange_项目A&#10;Master Power：3W，Master_项目B"></textarea></div>
-        <div class="field"><label>2. 回款目标（第一行填总目标如：30W，之后每行一条明细：客户名字：xxW）</label><textarea id="wm-target-collect" class="auto-resize" placeholder="30W&#10;Orange Ltd：10W&#10;Master Power：5W"></textarea></div>
-        <div class="field"><label>3. 新成交（每行一条：客户名字，项目名称+项目进度术语）</label><textarea id="wm-target-deal" class="auto-resize" placeholder="如：Orange Ltd，项目A 产品报价"></textarea></div>
+        <div class="field">
+          <label>1. 业绩目标</label>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:13px;color:var(--text2);white-space:nowrap">业绩目标：</span>
+            <input id="wm-target-perf-total" placeholder="如：20W" style="width:120px">
+          </div>
+          <textarea id="wm-target-perf-detail" class="auto-resize" placeholder="客户名字：xxW，项目名称&#10;如：Orange Ltd：5W，Orange_项目A&#10;Master Power：3W，Master_项目B"></textarea>
+        </div>
+        <div class="field">
+          <label>2. 回款目标</label>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:13px;color:var(--text2);white-space:nowrap">回款目标：</span>
+            <input id="wm-target-collect-total" placeholder="如：30W" style="width:120px">
+          </div>
+          <textarea id="wm-target-collect-detail" class="auto-resize" placeholder="客户名字：xxW&#10;如：Orange Ltd：10W&#10;Master Power：5W"></textarea>
+        </div>
+        <div class="field">
+          <label>3. 新成交</label>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:13px;color:var(--text2);white-space:nowrap">新成交：</span>
+            <input id="wm-target-deal-total" placeholder="如：2个" style="width:120px">
+          </div>
+          <textarea id="wm-target-deal-detail" class="auto-resize" placeholder="客户名字，项目名称+项目进度术语&#10;如：Orange Ltd，项目A 产品报价"></textarea>
+        </div>
 
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">下月工作计划<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span></div>
         <div class="field"><label style="font-weight:500;display:flex;align-items:center;justify-content:space-between">一、重点项目（按项目节点划分）<button class="btn btn-xs" onclick="fillNextPlanTextareas('wm')">↻ 刷新</button></label></div>
@@ -646,6 +688,23 @@ function init(){
   document.getElementById('view-month').value=String(cm);
   document.getElementById('perf-month').value=String(cm);
   document.getElementById('pj-month').value=String(cm);
+  // 周报/月报 自动设置当前月份并加载已有数据
+  const wMonthEl=document.getElementById('w-month');
+  const wmMonthEl=document.getElementById('wm-month');
+  const ewMonthEl=document.getElementById('ew-month');
+  const emMonthEl=document.getElementById('em-month');
+  if(wMonthEl)wMonthEl.value=String(cm);
+  if(wmMonthEl)wmMonthEl.value=String(cm);
+  if(ewMonthEl)ewMonthEl.value=String(cm);
+  if(emMonthEl)emMonthEl.value=String(cm);
+  // 自动加载当月已有的周报/月报内容
+  const curFY=document.getElementById('w-fy').value;
+  const curWeekEl=document.getElementById('w-week');
+  const curWeek=curWeekEl?curWeekEl.value:'第一周';
+  const existingWeekly=state.weeklies.find(w=>w.fy===curFY&&w.month===String(cm));
+  if(existingWeekly)loadWeekly(existingWeekly.id);
+  const existingMonthly=(state.monthlies||[]).find(m=>m.fy===curFY&&m.month===String(cm));
+  if(existingMonthly)loadMonthly(existingMonthly.id);
   renderPerf();renderPivot();refreshProjDatalist();renderSavedWeeklies();renderSavedMonthlies();renderSavedDailies();
   renderGeneratedWeeklies();renderGeneratedMonthlies();
   fillProjTextareas('w');fillProjTextareas('wm');fillDailyProjects();fillDailyTomorrowPlan();setTimeout(fillDailyFollowup,50);
@@ -1437,7 +1496,9 @@ function saveWeekly(){
     followup:gv('w-followup'),followupCount:gv('w-followup-count'),
     visit:gv('w-visit'),visitCount:gv('w-visit-count'),
     keyorders:gv('w-keyorders'),aftersales:gv('w-aftersales'),daily:gv('w-daily'),
-    targetPerf:gv('w-target-perf'),targetCollect:gv('w-target-collect'),targetDeal:gv('w-target-deal'),
+    targetPerfTotal:gv('w-target-perf-total'),targetPerfDetail:gv('w-target-perf-detail'),
+    targetCollectTotal:gv('w-target-collect-total'),targetCollectDetail:gv('w-target-collect-detail'),
+    targetDealTotal:gv('w-target-deal-total'),targetDealDetail:gv('w-target-deal-detail'),
     np1:gv('w-np1'),np2:gv('w-np2'),np3:gv('w-np3'),np4:gv('w-np4'),np5:gv('w-np5'),np6:gv('w-np6'),
     npVisit:gv('w-np-visit'),npTrip:gv('w-np-trip'),
     nlongNew:gv('w-nlong-new'),nlongFollowup:gv('w-nlong-followup'),nlongVisit:gv('w-nlong-visit'),
@@ -1487,7 +1548,12 @@ function loadWeekly(id){
   setV('w-followup',w.followup);setV('w-followup-count',w.followupCount);
   setV('w-visit',w.visit);setV('w-visit-count',w.visitCount);
   setV('w-keyorders',w.keyorders);setV('w-aftersales',w.aftersales);setV('w-daily',w.daily);
-  setV('w-target-perf',w.targetPerf);setV('w-target-collect',w.targetCollect);setV('w-target-deal',w.targetDeal);
+  setV('w-target-perf-total',w.targetPerfTotal||(w.targetPerf||'').split('\n')[0]||'');
+  setV('w-target-perf-detail',w.targetPerfDetail||(w.targetPerf||'').split('\n').slice(1).join('\n')||'');
+  setV('w-target-collect-total',w.targetCollectTotal||(w.targetCollect||'').split('\n')[0]||'');
+  setV('w-target-collect-detail',w.targetCollectDetail||(w.targetCollect||'').split('\n').slice(1).join('\n')||'');
+  setV('w-target-deal-total',w.targetDealTotal||'');
+  setV('w-target-deal-detail',w.targetDealDetail||w.targetDeal||'');
   setV('w-np1',w.np1);setV('w-np2',w.np2);setV('w-np3',w.np3);setV('w-np4',w.np4);setV('w-np5',w.np5);setV('w-np6',w.np6);
   setV('w-np-visit',w.npVisit);setV('w-np-trip',w.npTrip);
   setV('w-nlong-new',w.nlongNew);setV('w-nlong-followup',w.nlongFollowup);setV('w-nlong-visit',w.nlongVisit);
@@ -1520,7 +1586,9 @@ function saveMonthly(){
     followup:gv('wm-followup'),followupCount:gv('wm-followup-count'),
     visit:gv('wm-visit'),visitCount:gv('wm-visit-count'),
     keyorders:gv('wm-keyorders'),aftersales:gv('wm-aftersales'),daily:gv('wm-daily'),
-    targetPerf:gv('wm-target-perf'),targetCollect:gv('wm-target-collect'),targetDeal:gv('wm-target-deal'),
+    targetPerfTotal:gv('wm-target-perf-total'),targetPerfDetail:gv('wm-target-perf-detail'),
+    targetCollectTotal:gv('wm-target-collect-total'),targetCollectDetail:gv('wm-target-collect-detail'),
+    targetDealTotal:gv('wm-target-deal-total'),targetDealDetail:gv('wm-target-deal-detail'),
     np1:gv('wm-np1'),np2:gv('wm-np2'),np3:gv('wm-np3'),np4:gv('wm-np4'),np5:gv('wm-np5'),np6:gv('wm-np6'),
     npVisit:gv('wm-np-visit'),npTrip:gv('wm-np-trip'),
     nlongNew:gv('wm-nlong-new'),nlongFollowup:gv('wm-nlong-followup'),nlongVisit:gv('wm-nlong-visit'),
@@ -1563,7 +1631,12 @@ function loadMonthly(id){
   setV('wm-followup',m.followup);setV('wm-followup-count',m.followupCount);
   setV('wm-visit',m.visit);setV('wm-visit-count',m.visitCount);
   setV('wm-keyorders',m.keyorders);setV('wm-aftersales',m.aftersales);setV('wm-daily',m.daily);
-  setV('wm-target-perf',m.targetPerf);setV('wm-target-collect',m.targetCollect);setV('wm-target-deal',m.targetDeal);
+  setV('wm-target-perf-total',m.targetPerfTotal||(m.targetPerf||'').split('\n')[0]||'');
+  setV('wm-target-perf-detail',m.targetPerfDetail||(m.targetPerf||'').split('\n').slice(1).join('\n')||'');
+  setV('wm-target-collect-total',m.targetCollectTotal||(m.targetCollect||'').split('\n')[0]||'');
+  setV('wm-target-collect-detail',m.targetCollectDetail||(m.targetCollect||'').split('\n').slice(1).join('\n')||'');
+  setV('wm-target-deal-total',m.targetDealTotal||'');
+  setV('wm-target-deal-detail',m.targetDealDetail||m.targetDeal||'');
   setV('wm-np1',m.np1);setV('wm-np2',m.np2);setV('wm-np3',m.np3);setV('wm-np4',m.np4);setV('wm-np5',m.np5);setV('wm-np6',m.np6);
   setV('wm-np-visit',m.npVisit);setV('wm-np-trip',m.npTrip);
   setV('wm-nlong-new',m.nlongNew);setV('wm-nlong-followup',m.nlongFollowup);setV('wm-nlong-visit',m.nlongVisit);
@@ -2111,14 +2184,14 @@ function buildLonglineTxt(newC,followupArr,followupCount,visitArr,visitCount,key
   if(daily)r+=`\n5）日常事务：\n${daily}\n`;
   return r;
 }
-function buildTargetTxt(label1,perfTotal,collectTotal,perfLines,collectLines,dealLines){
-  // perfTotal/collectTotal are now the first line of the textarea (total), perfLines/collectLines are the rest (detail)
+function buildTargetTxt(label1,perfTotal,collectTotal,dealTotal,perfDetail,collectDetail,dealDetail){
   let r='';
   r+=`1. 业绩目标：${perfTotal||'（未填写）'}\n`;
-  perfLines.forEach((l,i)=>r+=`客户 ${i+1}：${l}\n`);
+  if(perfDetail){const lines=perfDetail.split('\n').filter(Boolean);lines.forEach((l,i)=>r+=`客户 ${i+1}：${l}\n`);}
   r+=`2. 回款目标：${collectTotal||'（未填写）'}\n`;
-  collectLines.forEach((l,i)=>r+=`客户 ${i+1}：${l}\n`);
-  r+=`3. 新成交：${dealLines.length}个\n`;
+  if(collectDetail){const lines=collectDetail.split('\n').filter(Boolean);lines.forEach((l,i)=>r+=`客户 ${i+1}：${l}\n`);}
+  const dealLines=dealDetail?dealDetail.split('\n').filter(Boolean):[];
+  r+=`3. 新成交：${dealTotal||dealLines.length+'个'}\n`;
   dealLines.forEach(l=>r+=`客户 ${l}\n`);
   return r;
 }
@@ -2343,12 +2416,7 @@ function genWeekly(){
   // 下周目标
   r+=`下周目标\n`;
   if(wr){
-    const perfAllLines=(wr.targetPerf||'').split('\n').filter(Boolean);
-    const perfTotal=perfAllLines[0]||'';const perfLines=perfAllLines.slice(1);
-    const collectAllLines=(wr.targetCollect||'').split('\n').filter(Boolean);
-    const collectTotal=collectAllLines[0]||'';const collectLines=collectAllLines.slice(1);
-    const dealLines=(wr.targetDeal||'').split('\n').filter(Boolean);
-    r+=buildTargetTxt('下周',perfTotal,collectTotal,perfLines,collectLines,dealLines);
+    r+=buildTargetTxt('下周',wr.targetPerfTotal||(wr.targetPerf||'').split('\n')[0]||'',wr.targetCollectTotal||(wr.targetCollect||'').split('\n')[0]||'',wr.targetDealTotal||'',wr.targetPerfDetail||(wr.targetPerf||'').split('\n').slice(1).join('\n')||'',wr.targetCollectDetail||(wr.targetCollect||'').split('\n').slice(1).join('\n')||'',wr.targetDealDetail||wr.targetDeal||'');
   } else {r+=`（暂无）\n`;}
   r+=`\n${'─'.repeat(28)}\n\n`;
   // 下周工作计划
@@ -2493,12 +2561,7 @@ function genMonthly(){
   // 下月目标
   r+=`下月目标\n`;
   if(mm){
-    const perfAllLines=(mm.targetPerf||'').split('\n').filter(Boolean);
-    const perfTotal=perfAllLines[0]||'';const perfLines=perfAllLines.slice(1);
-    const collectAllLines=(mm.targetCollect||'').split('\n').filter(Boolean);
-    const collectTotal=collectAllLines[0]||'';const collectLines=collectAllLines.slice(1);
-    const dealLines=(mm.targetDeal||'').split('\n').filter(Boolean);
-    r+=buildTargetTxt('下月',mm.targetPerfTotal,mm.targetCollectTotal,perfLines,collectLines,dealLines);
+    r+=buildTargetTxt('下月',mm.targetPerfTotal||(mm.targetPerf||'').split('\n')[0]||'',mm.targetCollectTotal||(mm.targetCollect||'').split('\n')[0]||'',mm.targetDealTotal||'',mm.targetPerfDetail||(mm.targetPerf||'').split('\n').slice(1).join('\n')||'',mm.targetCollectDetail||(mm.targetCollect||'').split('\n').slice(1).join('\n')||'',mm.targetDealDetail||mm.targetDeal||'');
   } else {r+=`（暂无）\n`;}
   r+=`\n${'─'.repeat(28)}\n\n`;
   // 下月工作计划
