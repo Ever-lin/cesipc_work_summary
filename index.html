@@ -1667,8 +1667,8 @@ function fillNextPlanTextareas(prefix){
     const nextMonth=getNextMonth(selMonth);
     matchFn=(actionTime)=>{
       if(!actionTime)return false;
-      const info=weekInfoOfDay(actionTime);
-      return info&&info.month===nextMonth;
+      const m=parseInt(actionTime.split('-')[1],10);
+      return String(m)===nextMonth;
     };
   }
   NEXT_CATS.forEach(cat=>{
@@ -1703,8 +1703,8 @@ function fillNlongFollowup(prefix){
     const nextMonth=getNextMonth(selMonth);
     matchFn=(actionTime)=>{
       if(!actionTime)return false;
-      const info=weekInfoOfDay(actionTime);
-      return info&&info.month===nextMonth;
+      const m=parseInt(actionTime.split('-')[1],10);
+      return String(m)===nextMonth;
     };
   }
   const grouped={};
