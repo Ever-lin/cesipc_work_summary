@@ -1385,10 +1385,10 @@ function buildCRMTextFull(latest,allEntries){
   const sc=SC[latest.status]||{label:latest.status||''};
   let r=`${clientHeader}`;
   r+=`1. 项目名称：${icon} ${latest.name||''} ${sc.label?`[${sc.label}]`:''}\n`;
-  r+=`2. 项目进度：${latest.progressStage||''}\n`;
-  r+=`3. 项目需求：${latest.requirement||''}\n`;
-  r+=`4. 项目数量：${latest.quantity||''}\n`;
-  r+=`5. 项目报价：${latest.quote||'参考跟进详情'}`;
+  r+=`2. 项目进度：${latest.progressStage||'暂无'}\n`;
+  r+=`3. 项目需求：${latest.requirement||'暂无'}\n`;
+  r+=`4. 项目数量：${latest.quantity||'暂无'}\n`;
+  r+=`5. 项目报价：${latest.quote||'暂无'}`;
   return r;
 }
 
