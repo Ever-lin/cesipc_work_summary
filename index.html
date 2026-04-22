@@ -91,6 +91,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 <div class="tabs">
   <div class="tab active" onclick="switchTab('performance')">业绩&回款</div>
   <div class="tab" onclick="switchTab('projects')">项目情况</div>
+  <div class="tab" onclick="switchTab('targets')">目标设定</div>
   <div class="tab" onclick="switchTab('export')">导出报告</div>
 </div>
 
@@ -247,6 +248,40 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   </div>
   <div id="proj-status-counts" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
   <div id="proj-list"></div>
+</div>
+
+<!-- ===== 目标设定 ===== -->
+<div id="panel-targets" class="panel">
+  <div class="hint">每个财年设置一次，周报和月报导出时自动读取。应收货款根据月度回款目标自动累计计算。</div>
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">财年目标配置</span>
+      <select class="ym-s" id="tgt-fy" onchange="loadTargetForm()"></select>
+    </div>
+    <div class="slabel">💰 业绩目标</div>
+    <div class="grid2">
+      <div class="field"><label>年度业绩总目标（W）</label><input id="tgt-perf-year" type="number" placeholder="如：600" step="0.01"></div>
+      <div class="field"><label>月度业绩目标（W）<span style="font-size:11px;color:var(--text3)"> 每月相同</span></label><input id="tgt-perf-month" type="number" placeholder="如：50" step="0.01"></div>
+    </div>
+    <div class="slabel">🏦 回款目标</div>
+    <div class="grid2">
+      <div class="field"><label>年度回款总目标（W）</label><input id="tgt-collect-year" type="number" placeholder="如：700" step="0.01"></div>
+      <div class="field"><label>月度回款目标（W）<span style="font-size:11px;color:var(--text3)"> 每月相同</span></label><input id="tgt-collect-month" type="number" placeholder="如：60" step="0.01"></div>
+    </div>
+    <div class="slabel">🤝 新客成交目标</div>
+    <div class="grid2">
+      <div class="field"><label>年度新客目标（个）</label><input id="tgt-deal-year" type="number" placeholder="如：30"></div>
+      <div class="field"><label>月度新客目标（个）</label><input id="tgt-deal-month" type="number" placeholder="如：3"></div>
+    </div>
+    <div style="margin-top:12px;display:flex;align-items:center;gap:10px">
+      <button class="btn btn-primary" onclick="saveTargets()">💾 保存目标</button>
+      <span id="tgt-save-hint" style="font-size:12px;color:var(--green-text);display:none">✓ 已保存</span>
+    </div>
+  </div>
+  <div class="card" id="tgt-preview-card" style="display:none">
+    <div class="card-title" style="margin-bottom:10px">📋 应收货款预览（按月度回款目标累计）</div>
+    <div id="tgt-receivable-preview"></div>
+  </div>
 </div>
 
 <!-- ===== 导出报告 ===== -->
@@ -467,27 +502,15 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="card-header"><span class="card-title">导出周报</span></div>
       <div class="hint">业绩&amp;回款数据 + 已保存的周报内容 合并生成。请先在「填写周报/月报」中保存对应周次的内容。</div>
       <div class="grid3">
-        <div class="field"><label>财年</label><select id="ew-fy"></select></div>
-        <div class="field"><label>月份</label><select id="ew-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select></div>
+        <div class="field"><label>财年</label><select id="ew-fy" onchange="renderExportTargetPreview('ew',this.value,document.getElementById('ew-month').value)"></select></div>
+        <div class="field"><label>月份</label><select id="ew-month" onchange="renderExportTargetPreview('ew',document.getElementById('ew-fy').value,this.value)"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select></div>
         <div class="field"><label>周次</label><select id="ew-week"><option>第一周</option><option selected>第二周</option><option>第三周</option><option>第四周</option><option>第五周</option></select></div>
       </div>
-      <div class="slabel">📊 目标设定（用于计算完成比例）</div>
-      <div class="grid3">
-        <div class="field"><label>月度业绩目标（W）<span style="font-size:11px;color:var(--text3)"> 如：50</span></label><input id="ew-target-perf-month" type="number" placeholder="如：50" step="0.01"></div>
-        <div class="field"><label>年度业绩目标（W）<span style="font-size:11px;color:var(--text3)"> 如：600</span></label><input id="ew-target-perf-year" type="number" placeholder="如：600" step="0.01"></div>
-        <div class="field"></div>
+      <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">
+        📊 目标（自动从「目标设定」读取）
+        <span id="ew-target-status" style="font-size:12px;color:var(--text2)"></span>
       </div>
-      <div class="grid3">
-        <div class="field"><label>月度回款目标（W）<span style="font-size:11px;color:var(--text3)"> 如：60</span></label><input id="ew-target-collect-month" type="number" placeholder="如：60" step="0.01"></div>
-        <div class="field"><label>年度回款目标（W）<span style="font-size:11px;color:var(--text3)"> 如：700</span></label><input id="ew-target-collect-year" type="number" placeholder="如：700" step="0.01"></div>
-        <div class="field"></div>
-      </div>
-      <div class="grid3">
-        <div class="field"><label>月度新客目标（个）</label><input id="ew-target-deal-month" type="number" placeholder="如：3"></div>
-        <div class="field"><label>年度新客目标（个）</label><input id="ew-target-deal-year" type="number" placeholder="如：30"></div>
-        <div class="field"></div>
-      </div>
-      <div class="field"><label>截至本月应收货款（W）<span style="font-size:11px;color:var(--text3)"> 如：12.5</span></label><input id="ew-receivable" type="number" placeholder="如：12.5" step="0.01"></div>
+      <div id="ew-target-preview" style="font-size:12px;color:var(--text2);background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:10px;line-height:1.9"></div>
       <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="genWeekly()">生成周报</button></div>
     </div>
     <div id="generated-weeklies"></div>
@@ -498,26 +521,14 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="card-header"><span class="card-title">导出月报</span></div>
       <div class="hint">业绩&amp;回款数据（含年度截至累计）+ 已保存的月报内容 合并生成。请先在「填写周报/月报」中保存对应月份的内容。</div>
       <div class="grid2">
-        <div class="field"><label>财年</label><select id="em-fy"></select></div>
-        <div class="field"><label>月份</label><select id="em-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select></div>
+        <div class="field"><label>财年</label><select id="em-fy" onchange="renderExportTargetPreview('em',this.value,document.getElementById('em-month').value)"></select></div>
+        <div class="field"><label>月份</label><select id="em-month" onchange="renderExportTargetPreview('em',document.getElementById('em-fy').value,this.value)"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select></div>
       </div>
-      <div class="slabel">📊 目标设定（用于计算完成比例）</div>
-      <div class="grid3">
-        <div class="field"><label>月度业绩目标（W）</label><input id="em-target-perf-month" type="number" placeholder="如：50" step="0.01"></div>
-        <div class="field"><label>年度业绩目标（W）</label><input id="em-target-perf-year" type="number" placeholder="如：600" step="0.01"></div>
-        <div class="field"></div>
+      <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">
+        📊 目标（自动从「目标设定」读取）
+        <span id="em-target-status" style="font-size:12px;color:var(--text2)"></span>
       </div>
-      <div class="grid3">
-        <div class="field"><label>月度回款目标（W）</label><input id="em-target-collect-month" type="number" placeholder="如：60" step="0.01"></div>
-        <div class="field"><label>年度回款目标（W）</label><input id="em-target-collect-year" type="number" placeholder="如：700" step="0.01"></div>
-        <div class="field"></div>
-      </div>
-      <div class="grid3">
-        <div class="field"><label>月度新客目标（个）</label><input id="em-target-deal-month" type="number" placeholder="如：3"></div>
-        <div class="field"><label>年度新客目标（个）</label><input id="em-target-deal-year" type="number" placeholder="如：30"></div>
-        <div class="field"></div>
-      </div>
-      <div class="field"><label>截至本月应收货款（W）</label><input id="em-receivable" type="number" placeholder="如：12.5" step="0.01"></div>
+      <div id="em-target-preview" style="font-size:12px;color:var(--text2);background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:10px;line-height:1.9"></div>
       <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="genMonthly()">生成月报</button></div>
     </div>
     <div id="generated-monthlies"></div>
@@ -607,13 +618,13 @@ const SEED=[
 {id:5201,fy:'FY2026',calYear:'2026',month:'4',week:'第一周',type:'新成交',client:'昆明途恒科技有限公司',amount:0,note:'',noAmount:true},
 ];
 
-let state={perf:[],projects:[],weeklies:[],monthlies:[],dailies:[],genWeeklies:[],genMonthlies:[]};
+let state={perf:[],projects:[],weeklies:[],monthlies:[],dailies:[],genWeeklies:[],genMonthlies:[],fyTargets:{}};
 function save(){try{localStorage.setItem('ws6',JSON.stringify(state))}catch(e){}}
 function load(){
   try{
     const d=localStorage.getItem('ws6');
-    if(d){state=JSON.parse(d);if(!state.monthlies)state.monthlies=[];if(!state.dailies)state.dailies=[];if(!state.genWeeklies)state.genWeeklies=[];if(!state.genMonthlies)state.genMonthlies=[];SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});save();}
-    else{state.perf=SEED.slice();state.monthlies=[];state.dailies=[];state.genWeeklies=[];state.genMonthlies=[];save();}
+    if(d){state=JSON.parse(d);if(!state.monthlies)state.monthlies=[];if(!state.dailies)state.dailies=[];if(!state.genWeeklies)state.genWeeklies=[];if(!state.genMonthlies)state.genMonthlies=[];if(!state.fyTargets)state.fyTargets={};SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});save();}
+    else{state.perf=SEED.slice();state.monthlies=[];state.dailies=[];state.genWeeklies=[];state.genMonthlies=[];state.fyTargets={};save();}
   }catch(e){state.perf=SEED.slice();state.monthlies=[];state.dailies=[];state.genWeeklies=[];state.genMonthlies=[];save();}
 }
 load();
@@ -626,7 +637,7 @@ load();
 })();
 
 function init(){
-  ['view-fy','perf-fy','pj-fy','w-fy','wm-fy','ew-fy','em-fy'].forEach(id=>buildFYOptions(id));
+  ['view-fy','perf-fy','pj-fy','w-fy','wm-fy','ew-fy','em-fy','tgt-fy'].forEach(id=>buildFYOptions(id));
   document.getElementById('d-date').value=todayStr();
   document.getElementById('proj-date').value=todayStr();
   document.getElementById('perf-date').value=todayStr();
@@ -638,17 +649,25 @@ function init(){
   renderPerf();renderPivot();refreshProjDatalist();renderSavedWeeklies();renderSavedMonthlies();renderSavedDailies();
   renderGeneratedWeeklies();renderGeneratedMonthlies();
   fillProjTextareas('w');fillProjTextareas('wm');fillDailyProjects();fillDailyTomorrowPlan();setTimeout(fillDailyFollowup,50);
+  // 初始化目标预览
+  setTimeout(()=>{
+    const ewFy=document.getElementById('ew-fy'),ewMonth=document.getElementById('ew-month');
+    const emFy=document.getElementById('em-fy'),emMonth=document.getElementById('em-month');
+    if(ewFy&&ewMonth)renderExportTargetPreview('ew',ewFy.value,ewMonth.value);
+    if(emFy&&emMonth)renderExportTargetPreview('em',emFy.value,emMonth.value);
+  },100);
 }
 
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  const idx=['performance','projects','export'].indexOf(name);
+  const idx=['performance','projects','targets','export'].indexOf(name);
   document.querySelectorAll('.tab')[idx].classList.add('active');
   document.getElementById('panel-'+name).classList.add('active');
   if(name==='performance'){renderPerf();renderPivot();}
   if(name==='projects'){renderProjects();refreshProjDatalist();}
-  if(name==='export'){fillProjTextareas('w');fillProjTextareas('wm');fillDailyProjects();renderGeneratedWeeklies();renderGeneratedMonthlies();}
+  if(name==='targets'){loadTargetForm();}
+  if(name==='export'){fillProjTextareas('w');fillProjTextareas('wm');fillDailyProjects();renderGeneratedWeeklies();renderGeneratedMonthlies();refreshExportTargetPreviews();}
 }
 
 function switchSub(id,btn){
@@ -2137,6 +2156,90 @@ function buildNextLonglineTxt(nlongNew,nlongFollowup,nlongVisit,nlongKeyorders,n
   r+=`4）售后情况：\n${nlongAftersales||'暂无'}\n`;
   return r;
 }
+// ===== 目标设定管理 =====
+function getTargets(fy){return(state.fyTargets&&state.fyTargets[fy])||{};}
+
+function loadTargetForm(){
+  const fy=document.getElementById('tgt-fy').value;
+  const t=getTargets(fy);
+  const setN=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};
+  setN('tgt-perf-year',t.perfYear);setN('tgt-perf-month',t.perfMonth);
+  setN('tgt-collect-year',t.collectYear);setN('tgt-collect-month',t.collectMonth);
+  setN('tgt-deal-year',t.dealYear);setN('tgt-deal-month',t.dealMonth);
+  document.getElementById('tgt-save-hint').style.display='none';
+  renderReceivablePreview(fy);
+}
+
+function saveTargets(){
+  const fy=document.getElementById('tgt-fy').value;
+  const gN=id=>parseFloat(document.getElementById(id).value)||0;
+  if(!state.fyTargets)state.fyTargets={};
+  state.fyTargets[fy]={
+    perfYear:gN('tgt-perf-year'),perfMonth:gN('tgt-perf-month'),
+    collectYear:gN('tgt-collect-year'),collectMonth:gN('tgt-collect-month'),
+    dealYear:gN('tgt-deal-year'),dealMonth:gN('tgt-deal-month'),
+  };
+  save();
+  const hint=document.getElementById('tgt-save-hint');
+  hint.style.display='inline';setTimeout(()=>hint.style.display='none',2000);
+  renderReceivablePreview(fy);
+  // refresh export panels' target previews if visible
+  refreshExportTargetPreviews();
+}
+
+function calcReceivable(fy,upToMonth){
+  // Sum monthly collect targets from FY start (month 4) up to and including upToMonth
+  const t=getTargets(fy);
+  if(!t.collectMonth)return 0;
+  const mIdx=fyMonthIdx(upToMonth);
+  return t.collectMonth*(mIdx+1); // mIdx is 0-based, so +1 months
+}
+
+function renderReceivablePreview(fy){
+  const card=document.getElementById('tgt-preview-card');
+  const wrap=document.getElementById('tgt-receivable-preview');
+  if(!card||!wrap)return;
+  const t=getTargets(fy);
+  if(!t.collectMonth){card.style.display='none';return;}
+  card.style.display='block';
+  const rows=MONTHS_ORDER.map((m,i)=>{
+    const cum=(i+1)*t.collectMonth;
+    return`<span style="display:inline-block;min-width:120px;margin-right:8px;margin-bottom:4px"><b>${m}月</b>：${cum.toFixed(2).replace(/\.?0+$/,'')}W</span>`;
+  });
+  wrap.innerHTML=`<div style="font-size:12px;color:var(--text2);margin-bottom:6px">月度回款目标：${t.collectMonth}W／月 → 累计应收</div>`+rows.join('');
+}
+
+function refreshExportTargetPreviews(){
+  // Update the target preview boxes in export panels
+  const ewFy=document.getElementById('ew-fy');
+  const emFy=document.getElementById('em-fy');
+  const ewMonth=document.getElementById('ew-month');
+  const emMonth=document.getElementById('em-month');
+  if(ewFy&&ewMonth)renderExportTargetPreview('ew',ewFy.value,ewMonth.value);
+  if(emFy&&emMonth)renderExportTargetPreview('em',emFy.value,emMonth.value);
+}
+
+function renderExportTargetPreview(prefix,fy,month){
+  const preview=document.getElementById(prefix+'-target-preview');
+  const status=document.getElementById(prefix+'-target-status');
+  if(!preview)return;
+  const t=getTargets(fy);
+  if(!t.perfMonth&&!t.perfYear&&!t.collectMonth&&!t.collectYear){
+    preview.innerHTML='<span style="color:var(--amber-text)">⚠️ 未配置目标 — 请先前往「目标设定」页面填写</span>';
+    if(status)status.textContent='';
+    return;
+  }
+  const recv=calcReceivable(fy,month);
+  const lines=[
+    `业绩：月度目标 ${t.perfMonth||'—'}W · 年度目标 ${t.perfYear||'—'}W`,
+    `回款：月度目标 ${t.collectMonth||'—'}W · 年度目标 ${t.collectYear||'—'}W`,
+    `新客：月度目标 ${t.dealMonth||'—'}个 · 年度目标 ${t.dealYear||'—'}个`,
+    `截至${month}月应收货款（自动）：${recv?recv.toFixed(2).replace(/\.?0+$/,'')+'W':'—'}`,
+  ];
+  preview.innerHTML=lines.join('<br>');
+  if(status)status.innerHTML=`<span style="color:var(--green-text)">✓ 已读取 ${fy} 目标</span>`;
+}
+
 function fmtW(yuan){
   // Format yuan to xxW with up to 2 decimal places, e.g. 235400 -> 23.54W, 9000 -> 0.9W
   const w=yuan/10000;
@@ -2179,14 +2282,16 @@ function genWeekly(){
   const monthBorrow=monthDeals.filter(p=>p.type==='借测成交');
   const fyDeals=state.perf.filter(p=>p.fy===fy&&fyMonthIdx(p.month)<=mIdx&&isNewDeal(p.type));
 
-  // 目标值
-  const tPerfMonth=parseFloat(document.getElementById('ew-target-perf-month').value)||0;
-  const tPerfYear=parseFloat(document.getElementById('ew-target-perf-year').value)||0;
-  const tCollectMonth=parseFloat(document.getElementById('ew-target-collect-month').value)||0;
-  const tCollectYear=parseFloat(document.getElementById('ew-target-collect-year').value)||0;
-  const tDealMonth=parseFloat(document.getElementById('ew-target-deal-month').value)||0;
-  const tDealYear=parseFloat(document.getElementById('ew-target-deal-year').value)||0;
-  const receivable=parseFloat(document.getElementById('ew-receivable').value)||0;
+  // 目标值（从财年目标配置读取）
+  const tgt=getTargets(fy);
+  const tPerfMonth=tgt.perfMonth||0;
+  const tPerfYear=tgt.perfYear||0;
+  const tCollectMonth=tgt.collectMonth||0;
+  const tCollectYear=tgt.collectYear||0;
+  const tDealMonth=tgt.dealMonth||0;
+  const tDealYear=tgt.dealYear||0;
+  // 应收货款 = 截至当月累计月度回款目标
+  const receivableW=calcReceivable(fy,month);
 
   // 新成交公司名列表（月度，来自业绩&回款记录里有新成交的客户）
   const monthDealClients=[...new Set(monthDeals.map(p=>p.client))];
@@ -2325,14 +2430,16 @@ function genMonthly(){
   const monthDealClients=[...new Set(monthDeals.map(p=>p.client))];
   const fyDealCount=fyDeals.length;
 
-  // 目标值
-  const tPerfMonth=parseFloat(document.getElementById('em-target-perf-month').value)||0;
-  const tPerfYear=parseFloat(document.getElementById('em-target-perf-year').value)||0;
-  const tCollectMonth=parseFloat(document.getElementById('em-target-collect-month').value)||0;
-  const tCollectYear=parseFloat(document.getElementById('em-target-collect-year').value)||0;
-  const tDealMonth=parseFloat(document.getElementById('em-target-deal-month').value)||0;
-  const tDealYear=parseFloat(document.getElementById('em-target-deal-year').value)||0;
-  const receivable=parseFloat(document.getElementById('em-receivable').value)||0;
+  // 目标值（从财年目标配置读取）
+  const tgt=getTargets(fy);
+  const tPerfMonth=tgt.perfMonth||0;
+  const tPerfYear=tgt.perfYear||0;
+  const tCollectMonth=tgt.collectMonth||0;
+  const tCollectYear=tgt.collectYear||0;
+  const tDealMonth=tgt.dealMonth||0;
+  const tDealYear=tgt.dealYear||0;
+  // 应收货款 = 截至当月累计月度回款目标
+  const receivableW=calcReceivable(fy,month);
 
   const mm=(state.monthlies||[]).find(m=>m.fy===fy&&m.month===month);
   let r=`【${fy} ${month}月 月报】\n${'─'.repeat(30)}\n\n`;
@@ -2344,7 +2451,7 @@ function genMonthly(){
   // 2. 回款
   r+=`2. 本月总回款：${fmtW(monthCollectAmt)}；月度目标完成比例：${pctStr(monthCollectAmt,tCollectMonth*10000)}\n`;
   r+=`本财年总收款：${fmtW(fyCollectAmt)}；年度目标完成比例：${pctStr(fyCollectAmt,tCollectYear*10000)}\n`;
-  r+=`截至本月应收货款：${receivable?fmtW(receivable*10000):'—W'}\n\n`;
+  r+=`截至本月应收货款：${receivableW?fmtW(receivableW*10000):'—W'}\n\n`;
 
   // 3. 新成交
   r+=`3. 新成交\n`;
