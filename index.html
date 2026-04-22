@@ -1378,9 +1378,8 @@ function buildFullProgress(entries){
   return blocks.length?blocks.join('\n'):'（暂无）';
 }
 
-// Build CRM-formatted text for a project group (latest fields + full accumulated progress)
+// Build CRM-formatted text for a project group (simplified: fields 1-5 only)
 function buildCRMTextFull(latest,allEntries){
-  const fullProgress=buildFullProgress(allEntries);
   const icon=projIcon(latest.status);
   const clientHeader=latest.client?`${latest.client}\n`:'';
   const sc=SC[latest.status]||{label:latest.status||''};
@@ -1389,14 +1388,7 @@ function buildCRMTextFull(latest,allEntries){
   r+=`2. 项目进度：${latest.progressStage||''}\n`;
   r+=`3. 项目需求：${latest.requirement||''}\n`;
   r+=`4. 项目数量：${latest.quantity||''}\n`;
-  r+=`5. 项目报价：${latest.quote||''}\n`;
-  r+=`6. 跟进详情：\n${fullProgress}\n`;
-  r+=`\n🎯 推进计划\n`;
-  r+=`1. 行动内容：${latest.actionContent||''}\n`;
-  r+=`2. 行动时间：${latest.actionTime||''}\n`;
-  r+=`3. 确认信息点：${latest.confirmPoints||''}\n`;
-  r+=`4. 可能的风险：${latest.risks||''}\n`;
-  r+=`5. 关键决策人：${latest.decisionMaker||''}`;
+  r+=`5. 项目报价：${latest.quote||'参考跟进详情'}`;
   return r;
 }
 
