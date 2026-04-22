@@ -3332,10 +3332,13 @@ function qtOpenEdit(id){
   // total mode
   document.getElementById('qf-total-price').value=r.totalPrice!=null?r.totalPrice:'';
   document.getElementById('qf-total-cur').value=r.totalCur||'USD';
-  // final price — load value; user can freely re-type to get live diff update
+  // final price — if saved price differs from breakdown sum, mark as manual so it won't be overwritten
   const priceEl=document.getElementById('qf-price');
   priceEl.value=r.price!=null?r.price:'';
-  delete priceEl.dataset.manualEdit; // allow qtCalc to reflect typed changes
+  const _bSum=(r.barbone||0)+(r.ramp||0)+(r.ssdp||0);
+  if(r.pmode==='breakdown'&&r.price!=null&&r.price!==_bSum){priceEl.dataset.manualEdit='1';}
+  else if(r.pmode==='total'&&r.price!=null&&r.price!==r.totalPrice){priceEl.dataset.manualEdit='1';}
+  else{delete priceEl.dataset.manualEdit;}
   document.getElementById('qf-price-cur').value=r.priceCur||'USD';
   // p3
   document.getElementById('qf-p3').value=r.p3!=null?r.p3:'';
@@ -3375,10 +3378,10 @@ function qtCalc(){
     const rp=parseFloat(document.getElementById('qf-ramp').value)||0;
     const sp=parseFloat(document.getElementById('qf-ssdp').value)||0;
     const sum=b+rp+sp;
-    if(sum>0&&!priceEl.dataset.manualEdit&&!priceEl.value){priceEl.value=sum;}
+    if(!priceEl.dataset.manualEdit){priceEl.value=sum>0?sum:'';}
   } else {
     const t=parseFloat(document.getElementById('qf-total-price').value)||0;
-    if(t>0&&!priceEl.dataset.manualEdit&&!priceEl.value){priceEl.value=t;}
+    if(!priceEl.dataset.manualEdit){priceEl.value=t>0?t:'';}
   }
 
   const price=parseFloat(priceEl.value)||0;
@@ -3418,6 +3421,7 @@ function qtBuildSnap(mode){
     p3:parseFloat(document.getElementById('qf-p3').value)||null,
     p3Cur:document.getElementById('qf-p3-cur').value,
     stage:document.getElementById('qf-stage').value.trim(),
+    deal:document.getElementById('qf-deal').value,
   };
 }
 function qtDelHistory(quoteId, histIdx){
@@ -3457,6 +3461,15 @@ function qtRenderHistoryInModal(hist){
       +(isLatest?'<span style="font-size:10px;color:var(--blue-text);background:var(--blue-bg);padding:1px 6px;border-radius:8px">最新</span>':'')
       +'</div>'
       +(parts.length?'<div style="color:var(--text2);font-size:11px;margin-top:2px">'+parts.join(' · ')+'</div>':'')
+      +((h.stage||h.deal)?(()=>{
+        const dealMap={won:'✅ 已成交',open:'⭕ 跟进中',confirmed:'🔶 已确认订单',lost:'❌ 丢单',pause:'⏸️ 暂无进展'};
+        const dealColor={won:'#1D9E75',open:'var(--blue-text)',confirmed:'#633806',lost:'var(--red-text)',pause:'var(--gray-text)'};
+        const dealBg={won:'var(--green-bg)',open:'var(--blue-bg)',confirmed:'var(--amber-bg)',lost:'var(--red-bg)',pause:'var(--gray-bg)'};
+        const parts2=[];
+        if(h.stage)parts2.push('<span style="font-size:11px;background:var(--bg2);color:var(--text2);border:1px solid var(--border2);border-radius:10px;padding:1px 7px">📍 '+h.stage+'</span>');
+        if(h.deal&&dealMap[h.deal])parts2.push('<span style="font-size:11px;background:'+dealBg[h.deal]+';color:'+dealColor[h.deal]+';border-radius:10px;padding:1px 7px">'+dealMap[h.deal]+'</span>');
+        return parts2.length?'<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">'+parts2.join('')+'</div>':'';
+      })():'')
       +'</div>'
       +'<button onclick="qtDelHistory(\''+curId+'\','+idx+')" style="flex-shrink:0;background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:3px;font-size:11px;padding:2px 7px;cursor:pointer;line-height:1.4" title="删除此条记录">删除</button>'
       +'</div>';
