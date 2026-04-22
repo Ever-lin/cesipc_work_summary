@@ -93,6 +93,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div class="tab" onclick="switchTab('projects')">项目情况</div>
   <div class="tab" onclick="switchTab('targets')">目标设定</div>
   <div class="tab" onclick="switchTab('export')">导出报告</div>
+  <div class="tab" onclick="switchTab('quotes')">💰 报价管理</div>
 </div>
 
 <!-- ===== 业绩&回款 ===== -->
@@ -577,6 +578,257 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   </div>
 </div>
 
+<!-- ===== 报价管理 ===== -->
+<div id="panel-quotes" class="panel">
+<style>
+.qt-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.qt-search{flex:1;min-width:160px;position:relative}
+.qt-search input{width:100%;padding:6px 10px 6px 30px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--text);font-family:inherit;outline:none}
+.qt-search input:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg)}
+.qt-search-ic{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text2);pointer-events:none}
+.qt-tbl-wrap{overflow-x:auto;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg)}
+.qt-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.qt-tbl th{background:var(--bg2);padding:7px 10px;text-align:left;font-weight:500;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border2);white-space:nowrap;cursor:pointer;user-select:none}
+.qt-tbl th:hover{color:var(--text)}
+.qt-tbl td{padding:7px 10px;border-bottom:1px solid var(--border2);white-space:nowrap;font-size:12px;color:var(--text)}
+.qt-tbl tr:last-child td{border-bottom:none}
+.qt-tbl tr:hover td{background:var(--bg2)}
+.qt-price{font-weight:500}
+.qt-below{color:var(--red-text)!important;font-weight:600}
+.qt-ok{color:#1D9E75!important}
+.qt-diff-neg{color:var(--red-text)}
+.qt-diff-pos{color:#1D9E75}
+.qt-stat-won{background:var(--green-bg);color:var(--green-text)}
+.qt-stat-open{background:var(--blue-bg);color:var(--blue-text)}
+.qt-stat-lost{background:var(--red-bg);color:var(--red-text)}
+.qt-stat-confirmed{background:var(--amber-bg);color:var(--amber-text)}
+.qt-stat-pause{background:var(--gray-bg);color:var(--gray-text)}
+/* Resizable columns */
+.qt-tbl th{position:relative}
+.qt-col-resizer{position:absolute;right:0;top:0;bottom:0;width:5px;cursor:col-resize;z-index:1;background:transparent}
+.qt-col-resizer:hover,.qt-col-resizer.resizing{background:var(--blue);opacity:.4}
+.qt-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:none;align-items:center;justify-content:center}
+.qt-modal-bg.open{display:flex}
+.qt-modal{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:92%;max-width:720px;max-height:90vh;overflow-y:auto}
+.qt-modal-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.qt-modal-title{font-size:15px;font-weight:600}
+.qt-mclose{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2);line-height:1}
+.qt-mclose:hover{color:var(--text)}
+.qt-p3warn{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red-text);border-radius:var(--radius-xs);padding:7px 10px;margin-bottom:10px;font-size:12px;display:none}
+.qt-p3warn.show{display:block}
+.qt-pp{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.qt-pp-val{font-size:20px;font-weight:600}
+.qt-pp-lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
+.qt-pg{display:flex;align-items:center;gap:6px;margin-top:10px;justify-content:flex-end}
+.qt-pg-btn{background:var(--bg);border:1px solid var(--border2);color:var(--text2);padding:4px 10px;border-radius:var(--radius-xs);cursor:pointer;font-size:12px;font-family:inherit}
+.qt-pg-btn:hover{border-color:var(--blue);color:var(--blue-text)}
+.qt-pg-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.qt-kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:12px}
+.qt-kpi{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px}
+.qt-kpi-val{font-size:22px;font-weight:600;margin-bottom:2px}
+.qt-kpi-lbl{font-size:11px;color:var(--text2)}
+.qt-cc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-bottom:14px}
+.qt-cc{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px}
+.qt-cc-name{font-weight:600;font-size:13px;margin-bottom:8px}
+.qt-cc-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.qt-mode-btn{display:inline-flex;align-items:center;padding:6px 12px;border:1px solid var(--border);border-radius:var(--radius-xs);cursor:pointer;font-size:12px;color:var(--text2);background:var(--bg2);transition:all .15s;user-select:none}
+.qt-mode-btn:has(input:checked){background:var(--blue-bg);border-color:var(--blue);color:var(--blue-text);font-weight:500}
+.qt-mode-btn:hover{border-color:var(--blue);color:var(--blue-text)}
+</style>
+
+<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+  <button class="sub-tab active" onclick="qSwitchView('list',this)" id="qt-tab-list">📋 报价列表</button>
+  <button class="sub-tab" onclick="qSwitchView('dash',this)" id="qt-tab-dash">📊 数据看板</button>
+</div>
+
+<!-- LIST VIEW -->
+<div id="qt-view-list">
+  <div class="qt-bar">
+    <div class="qt-search"><span class="qt-search-ic">🔍</span><input id="qt-search" placeholder="搜索项目、型号、CPU…" oninput="qtRender()"></div>
+    <select class="ym-s" id="qt-f-company" onchange="qtRender()"><option value="">全部公司</option></select>
+    <select class="ym-s" id="qt-f-status" onchange="qtRender()"><option value="">全部状态</option><option value="open">⭕ 跟进中</option><option value="confirmed">🔶 已确认订单</option><option value="won">✅ 已成交</option><option value="pause">⏸️ 暂无进展</option><option value="lost">❌ 丢单</option></select>
+    <select class="ym-s" id="qt-f-p3" onchange="qtRender()"><option value="">全部价格</option><option value="below">⚠️ 低于P3</option><option value="ok">✅ 高于P3</option></select>
+    <button class="btn btn-primary btn-sm" onclick="qtOpenAdd()">＋ 新增报价</button>
+    <button class="btn btn-sm" onclick="qtExportCSV()">⬇ 导出CSV</button>
+  </div>
+  <div class="qt-tbl-wrap">
+    <table class="qt-tbl">
+      <thead><tr>
+        <th onclick="qtSort('deal')">状态 ↕</th>
+        <th onclick="qtSort('company')">公司 ↕</th>
+        <th onclick="qtSort('project')">项目 ↕</th>
+        <th onclick="qtSort('date')">日期 ↕</th>
+        <th onclick="qtSort('model')">型号 ↕</th>
+        <th>CPU</th>
+        <th>准系统</th>
+        <th>RAM</th>
+        <th>SSD</th>
+        <th onclick="qtSort('price')">报价(P) ↕</th>
+        <th onclick="qtSort('p3')">P3 ↕</th>
+        <th onclick="qtSort('diff')">价差 ↕</th>
+        <th>备注/Custom</th>
+        <th>操作</th>
+      </tr></thead>
+      <tbody id="qt-tbody"></tbody>
+    </table>
+  </div>
+  <div class="qt-pg" id="qt-pg"></div>
+</div>
+
+<!-- DASH VIEW -->
+<div id="qt-view-dash" style="display:none">
+  <div class="qt-kpi-grid" id="qt-kpis"></div>
+  <div class="slabel">公司概况</div>
+  <div class="qt-cc-grid" id="qt-ccs"></div>
+  <div class="slabel">低于P3的报价</div>
+  <div class="qt-tbl-wrap">
+    <table class="qt-tbl"><thead><tr><th>状态</th><th>公司</th><th>项目</th><th>型号</th><th>报价(P)</th><th>P3</th><th>价差</th></tr></thead>
+    <tbody id="qt-below-body"></tbody></table>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="qt-modal-bg" id="qt-modal-bg">
+  <div class="qt-modal">
+    <div class="qt-modal-hd"><span class="qt-modal-title" id="qt-modal-title">新增报价</span><button class="qt-mclose" onclick="qtCloseModal()">✕</button></div>
+    <div class="qt-p3warn" id="qt-p3warn">⚠️ 当前报价低于P3价格，请确认！</div>
+    <div class="grid2">
+      <!-- 基本信息 -->
+      <div class="field" style="grid-column:1/-1"><label>项目名称</label><input id="qf-project" placeholder="如：ENT_项目5_260210_EPC-W1592A"></div>
+      <div class="field"><label>公司</label>
+        <select id="qf-company">
+          <option value="ENT Group Company Limited">ENT Group Company Limited</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+      <div class="field"><label>日期</label><input type="date" id="qf-date"></div>
+      <div class="field"><label>型号</label><input id="qf-model" placeholder="EPC-W1592A"></div>
+      <div class="field"><label>料号</label><input id="qf-partno" placeholder="选填"></div>
+      <div class="field"><label>数量 (Q)</label><input type="number" id="qf-qty" min="0" placeholder="0"></div>
+      <div class="field"><label>CPU</label><input id="qf-cpu" placeholder="i5-10210U"></div>
+      <div class="field"><label>Custom / 附加功能</label><input id="qf-custom" placeholder="Windows 11 Pro OEM…"></div>
+
+      <!-- 报价模式切换 -->
+      <div class="field" style="grid-column:1/-1">
+        <label style="margin-bottom:6px">报价方式</label>
+        <div style="display:flex;gap:8px">
+          <label class="qt-mode-btn" id="qt-mode-btn-breakdown">
+            <input type="radio" name="qf-pmode" value="breakdown" onchange="qtTogglePriceMode()" checked style="display:none">
+            <span>📋 分项报价（Barbone + RAM + SSD）</span>
+          </label>
+          <label class="qt-mode-btn" id="qt-mode-btn-total">
+            <input type="radio" name="qf-pmode" value="total" onchange="qtTogglePriceMode()" style="display:none">
+            <span>📦 整机报价（Configured System）</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 分项报价区域 -->
+      <div id="qf-breakdown-section" style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field">
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>准系统价 (Barbone)</span>
+            <select id="qf-barbone-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+              <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+            </select>
+          </label>
+          <input type="number" id="qf-barbone" min="0" oninput="qtCalc()" placeholder="0">
+        </div>
+        <div class="field"><label>RAM 规格</label><input id="qf-ram" placeholder="8GB DDR4"></div>
+        <div class="field">
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>RAM 价格</span>
+            <select id="qf-ramp-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+              <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+            </select>
+          </label>
+          <input type="number" id="qf-ramp" min="0" oninput="qtCalc()" placeholder="0">
+        </div>
+        <div class="field"><label>SSD 规格</label><input id="qf-ssd" placeholder="256 GB M.2 SSD"></div>
+        <div class="field">
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>SSD 价格</span>
+            <select id="qf-ssdp-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+              <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+            </select>
+          </label>
+          <input type="number" id="qf-ssdp" min="0" oninput="qtCalc()" placeholder="0">
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <label style="color:var(--text2);font-size:11px">💡 报价 (P) 将自动合计以上三项（统一换算为所选货币）</label>
+        </div>
+      </div>
+
+      <!-- 整机报价区域 -->
+      <div id="qf-total-section" style="grid-column:1/-1;display:none">
+        <div class="field">
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>整机配置总价 (Configured System)</span>
+            <select id="qf-total-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+              <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+            </select>
+          </label>
+          <input type="number" id="qf-total-price" min="0" oninput="qtCalc()" placeholder="直接填写整机总价">
+        </div>
+      </div>
+
+      <!-- P3 参考价 -->
+      <div class="field">
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          <span>P3 参考价</span>
+          <select id="qf-p3-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+            <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+          </select>
+        </label>
+        <input type="number" id="qf-p3" min="0" oninput="qtCalc()" placeholder="0">
+      </div>
+
+      <!-- 运费 -->
+      <div class="field">
+        <label>运费备注（选填）</label>
+        <input id="qf-shipping" placeholder="如：10台 每台运费$70">
+      </div>
+
+      <!-- 成单状态 -->
+      <div class="field">
+        <label>成单状态</label>
+        <select id="qf-deal">
+          <option value="">—</option><option value="open">⭕ 跟进中</option><option value="confirmed">🔶 已确认订单</option><option value="won">✅ 已成交</option><option value="pause">⏸️ 暂无进展</option><option value="lost">❌ 丢单</option>
+        </select>
+      </div>
+
+      <!-- 价格汇总面板 -->
+      <div class="qt-pp">
+        <div><div class="qt-pp-val" id="qpp-cost" style="color:var(--text2)">—</div><div class="qt-pp-lbl">P3 参考价</div></div>
+        <div><div class="qt-pp-val" id="qpp-price" style="color:var(--blue-text)">—</div><div class="qt-pp-lbl">报价 (P)</div></div>
+        <div><div class="qt-pp-val" id="qpp-diff">—</div><div class="qt-pp-lbl">P − P3 价差</div></div>
+      </div>
+
+      <!-- 最终报价 -->
+      <div class="field" style="grid-column:1/-1">
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          <span>报价 (P) — 最终报给客户的价格（以此为准）</span>
+          <select id="qf-price-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+            <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+          </select>
+        </label>
+        <input type="number" id="qf-price" min="0" oninput="qtCalc()" placeholder="0" style="font-size:15px;font-weight:600">
+      </div>
+      <div class="field" style="grid-column:1/-1"><label>备注</label><textarea id="qf-notes" style="min-height:52px"></textarea></div>
+      <!-- 历史价格记录 -->
+      <div id="qf-history-wrap" style="grid-column:1/-1;display:none">
+        <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;padding-top:4px;border-top:1px solid var(--border2)">📋 价格变更历史</div>
+        <div id="qf-history-list" style="font-size:12px"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--border2)">
+      <button class="btn" onclick="qtCloseModal()">取消</button>
+      <button class="btn btn-primary" onclick="qtSave()">保存</button>
+    </div>
+  </div>
+</div>
+</div>
+
 <script>
 const NO_AMT=['昆明途恒科技有限公司'];
 const SC={
@@ -727,7 +979,7 @@ function init(){
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  const idx=['performance','projects','targets','export'].indexOf(name);
+  const idx=['performance','projects','targets','export','quotes'].indexOf(name);
   document.querySelectorAll('.tab')[idx].classList.add('active');
   document.getElementById('panel-'+name).classList.add('active');
   if(name==='performance'){renderPerf();renderPivot();}
@@ -2720,6 +2972,487 @@ function importBackup(evt){
 }
 
 init();
+
+// ============================================================
+// 报价管理模块
+// ============================================================
+const QT_KEY='quotetrack_v3';
+let qtQuotes=[];
+let qtEditId=null;
+let qtSortCol='date';
+let qtSortDir=-1;
+let qtPage=1;
+const QT_PAGE=20;
+
+// ENT Group 公司别名映射
+function qtNormalizeCompany(raw){
+  if(!raw)return'ENT Group Company Limited';
+  const r=raw.trim().toLowerCase();
+  if(r==='orange'||r==='sky'||r==='lucijune'||r==='ent group company limited'||r==='ent')return'ENT Group Company Limited';
+  return raw.trim();
+}
+
+function qtLoad(){
+  try{const r=localStorage.getItem(QT_KEY);qtQuotes=r?JSON.parse(r):[];}catch{qtQuotes=[];}
+  if(!qtQuotes.length){qtQuotes=qtSeed();qtPersist();}
+  qtQuotes=qtQuotes.map(q=>({...q,company:qtNormalizeCompany(q.company||q.customer||'')}));
+}
+function qtPersist(){localStorage.setItem(QT_KEY,JSON.stringify(qtQuotes));}
+
+function qSwitchView(v,btn){
+  document.getElementById('qt-view-list').style.display=v==='list'?'':'none';
+  document.getElementById('qt-view-dash').style.display=v==='dash'?'':'none';
+  document.querySelectorAll('#panel-quotes .sub-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  if(v==='dash')qtRenderDash();
+}
+
+// Filters & Sort
+function qtFiltered(){
+  const q=(document.getElementById('qt-search').value||'').toLowerCase();
+  const co=document.getElementById('qt-f-company').value;
+  const st=document.getElementById('qt-f-status').value;
+  const p3f=document.getElementById('qt-f-p3').value;
+  return qtQuotes.filter(r=>{
+    if(q&&!`${r.project} ${r.model} ${r.cpu} ${r.ram} ${r.ssd}`.toLowerCase().includes(q))return false;
+    if(co&&r.company!==co)return false;
+    if(st&&r.deal!==st)return false;
+    if(p3f){const d=r.p3?r.price-r.p3:null;if(p3f==='below'&&(d===null||d>=0))return false;if(p3f==='ok'&&(d===null||d<0))return false;}
+    return true;
+  });
+}
+function qtSort(col){if(qtSortCol===col)qtSortDir*=-1;else{qtSortCol=col;qtSortDir=-1;}qtRender();}
+function qtSorted(data){
+  return[...data].sort((a,b)=>{
+    let av=a[qtSortCol],bv=b[qtSortCol];
+    if(qtSortCol==='diff'){av=a.p3?a.price-a.p3:null;bv=b.p3?b.price-b.p3:null;}
+    if(av==null&&bv==null)return 0;if(av==null)return 1;if(bv==null)return-1;
+    if(typeof av==='number')return(av-bv)*qtSortDir;
+    return String(av).localeCompare(String(bv))*qtSortDir;
+  });
+}
+
+function qtRender(){
+  const filtered=qtFiltered();const sorted=qtSorted(filtered);
+  const total=sorted.length;const pages=Math.max(1,Math.ceil(total/QT_PAGE));
+  if(qtPage>pages)qtPage=1;
+  const data=sorted.slice((qtPage-1)*QT_PAGE,qtPage*QT_PAGE);
+  const dealBadge=d=>d==='won'?'<span class="badge qt-stat-won">✅ 已成交</span>':d==='lost'?'<span class="badge qt-stat-lost">❌ 丢单</span>':d==='open'?'<span class="badge qt-stat-open">⭕ 跟进中</span>':d==='confirmed'?'<span class="badge qt-stat-confirmed">🔶 已确认订单</span>':d==='pause'?'<span class="badge qt-stat-pause">⏸️ 暂无进展</span>':'<span class="badge badge-gray">—</span>';
+  document.getElementById('qt-tbody').innerHTML=data.length?data.map(r=>{
+    const diff=r.p3?r.price-r.p3:null;
+    return`<tr>
+      <td>${dealBadge(r.deal)}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis">${r.company||'—'}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${r.project||''}">${r.project||'—'}</td>
+      <td>${r.date||'—'}</td>
+      <td><b>${r.model||'—'}</b></td>
+      <td>${r.cpu||'—'}</td>
+      <td>${r.barbone!=null?'$'+r.barbone:'—'}</td>
+      <td>${r.ram||'—'}</td>
+      <td>${r.ssd||'—'}</td>
+      <td class="qt-price ${r.p3&&r.price<r.p3?'qt-below':''}">${r.priceCur==='CNY'?'¥':'$'}${r.price}</td>
+      <td>${r.p3!=null?(r.p3Cur==='CNY'?'¥':'$')+r.p3:'—'}</td>
+      <td class="${diff!==null?(diff<0?'qt-diff-neg':'qt-diff-pos'):''}">
+        ${diff!==null?(diff>=0?'+':'')+(r.priceCur==='CNY'?'¥':'$')+diff:'—'}
+      </td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>
+      <td><span style="display:flex;gap:4px">
+        <button class="btn btn-xs" onclick="qtOpenEdit('${r.id}')">编辑</button>
+        ${(r.priceHistory&&r.priceHistory.length)?'<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="qtOpenEdit(\''+r.id+'\')" title="'+r.priceHistory.length+'次价格变更">📋'+r.priceHistory.length+'</button>':''}
+        <button class="btn btn-danger btn-xs" onclick="qtDel('${r.id}')">删</button>
+      </span></td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="14" style="text-align:center;padding:24px;color:var(--text2)">没有找到匹配的报价</td></tr>`;
+  setTimeout(qtInitResizableCols,0);
+  // pagination
+  const pg=document.getElementById('qt-pg');
+  if(pages<=1){pg.innerHTML='';setTimeout(qtInitResizableCols,0);return;}
+  let h=`<span style="font-size:12px;color:var(--text2)">${total} 条</span>`;
+  if(qtPage>1)h+=`<button class="qt-pg-btn" onclick="qtGo(${qtPage-1})">‹</button>`;
+  for(let i=Math.max(1,qtPage-2);i<=Math.min(pages,qtPage+2);i++)h+=`<button class="qt-pg-btn${i===qtPage?' active':''}" onclick="qtGo(${i})">${i}</button>`;
+  if(qtPage<pages)h+=`<button class="qt-pg-btn" onclick="qtGo(${qtPage+1})">›</button>`;
+  pg.innerHTML=h;
+  setTimeout(qtInitResizableCols,0);
+}
+function qtGo(p){qtPage=p;qtRender();}
+
+// Resizable columns
+function qtInitResizableCols(){
+  const tbl=document.querySelector('.qt-tbl');
+  if(!tbl)return;
+  const ths=tbl.querySelectorAll('thead th');
+  ths.forEach(th=>{
+    // remove any old resizers
+    th.querySelectorAll('.qt-col-resizer').forEach(r=>r.remove());
+    const resizer=document.createElement('div');
+    resizer.className='qt-col-resizer';
+    th.appendChild(resizer);
+    let startX,startW;
+    resizer.addEventListener('mousedown',e=>{
+      e.stopPropagation();
+      startX=e.pageX;
+      startW=th.offsetWidth;
+      resizer.classList.add('resizing');
+      const onMove=ev=>{
+        const w=Math.max(40,startW+(ev.pageX-startX));
+        th.style.width=w+'px';th.style.minWidth=w+'px';
+      };
+      const onUp=()=>{
+        resizer.classList.remove('resizing');
+        document.removeEventListener('mousemove',onMove);
+        document.removeEventListener('mouseup',onUp);
+      };
+      document.addEventListener('mousemove',onMove);
+      document.addEventListener('mouseup',onUp);
+    });
+  });
+}
+
+function qtUpdateCompanyFilter(){
+  const companies=[...new Set(qtQuotes.map(q=>q.company).filter(Boolean))].sort();
+  const sel=document.getElementById('qt-f-company');const cur=sel.value;
+  sel.innerHTML='<option value="">全部公司</option>'+companies.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
+}
+
+// Modal
+function qtOpenAdd(){
+  qtEditId=null;
+  document.getElementById('qt-modal-title').textContent='新增报价';
+  ['qf-project','qf-model','qf-partno','qf-cpu','qf-ram','qf-ssd','qf-custom','qf-notes','qf-shipping'].forEach(id=>document.getElementById(id).value='');
+  ['qf-qty','qf-barbone','qf-ramp','qf-ssdp','qf-price','qf-p3','qf-total-price'].forEach(id=>document.getElementById(id).value='');
+  delete document.getElementById('qf-price').dataset.manualEdit;
+  document.getElementById('qf-date').value=todayStr();
+  document.getElementById('qf-company').value='ENT Group Company Limited';
+  document.getElementById('qf-deal').value='';
+  // reset mode to breakdown
+  document.querySelector('input[name="qf-pmode"][value="breakdown"]').checked=true;
+  ['qf-barbone-cur','qf-ramp-cur','qf-ssdp-cur','qf-price-cur','qf-p3-cur','qf-total-cur'].forEach(id=>document.getElementById(id).value='USD');
+  qtTogglePriceMode();
+  document.getElementById('qf-history-wrap').style.display='none';
+  document.getElementById('qt-modal-bg').classList.add('open');
+}
+function qtOpenEdit(id){
+  const r=qtQuotes.find(q=>String(q.id)===String(id));if(!r)return;
+  qtEditId=id;
+  document.getElementById('qt-modal-title').textContent='编辑报价';
+  document.getElementById('qf-project').value=r.project||'';
+  document.getElementById('qf-company').value=r.company||'ENT Group Company Limited';
+  document.getElementById('qf-date').value=r.date||'';
+  document.getElementById('qf-model').value=r.model||'';
+  document.getElementById('qf-partno').value=r.partno||'';
+  document.getElementById('qf-qty').value=r.qty||'';
+  document.getElementById('qf-cpu').value=r.cpu||'';
+  document.getElementById('qf-custom').value=r.custom||'';
+  document.getElementById('qf-shipping').value=r.shipping||'';
+  document.getElementById('qf-deal').value=r.deal||'';
+  document.getElementById('qf-notes').value=r.notes||'';
+  // pricing mode
+  const mode=r.pmode||'breakdown';
+  document.querySelector(`input[name="qf-pmode"][value="${mode}"]`).checked=true;
+  // breakdown fields
+  document.getElementById('qf-barbone').value=r.barbone!=null?r.barbone:'';
+  document.getElementById('qf-barbone-cur').value=r.barboneCur||'USD';
+  document.getElementById('qf-ram').value=r.ram||'';
+  document.getElementById('qf-ramp').value=r.ramp!=null?r.ramp:'';
+  document.getElementById('qf-ramp-cur').value=r.rampCur||'USD';
+  document.getElementById('qf-ssd').value=r.ssd||'';
+  document.getElementById('qf-ssdp').value=r.ssdp!=null?r.ssdp:'';
+  document.getElementById('qf-ssdp-cur').value=r.ssdpCur||'USD';
+  // total mode
+  document.getElementById('qf-total-price').value=r.totalPrice!=null?r.totalPrice:'';
+  document.getElementById('qf-total-cur').value=r.totalCur||'USD';
+  // final price — mark as manually edited so qtCalc won't overwrite it
+  document.getElementById('qf-price').value=r.price!=null?r.price:'';
+  document.getElementById('qf-price').dataset.manualEdit='1';
+  document.getElementById('qf-price-cur').value=r.priceCur||'USD';
+  // p3
+  document.getElementById('qf-p3').value=r.p3!=null?r.p3:'';
+  document.getElementById('qf-p3-cur').value=r.p3Cur||'USD';
+  qtTogglePriceMode();
+  // 渲染历史价格
+  const histWrap=document.getElementById('qf-history-wrap');
+  const histList=document.getElementById('qf-history-list');
+  const hist=r.priceHistory||[];
+  if(hist.length){
+    histWrap.style.display='block';
+    histList.innerHTML=hist.slice().reverse().map(h=>{
+      const cur=s=>s==='CNY'?'¥':'$';
+      const parts=[];
+      if(h.barbone!=null)parts.push(`准系统 ${cur(h.barboneCur||'USD')}${h.barbone}`);
+      if(h.ramp!=null)parts.push(`RAM(${h.ram||'—'}) ${cur(h.rampCur||'USD')}${h.ramp}`);
+      if(h.ssdp!=null)parts.push(`SSD(${h.ssd||'—'}) ${cur(h.ssdpCur||'USD')}${h.ssdp}`);
+      if(h.totalPrice!=null)parts.push(`整机 ${cur(h.totalCur||'USD')}${h.totalPrice}`);
+      return`<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border2)">
+        <span style="color:var(--text3);white-space:nowrap;flex-shrink:0">${h.savedAt||h.date||'—'}</span>
+        <span style="color:var(--blue-text);font-weight:600;white-space:nowrap;flex-shrink:0">${cur(h.priceCur||'USD')}${h.price}</span>
+        <span style="color:var(--text2);overflow:hidden;text-overflow:ellipsis">${parts.join(' + ')||'—'}</span>
+      </div>`;
+    }).join('');
+  } else {
+    histWrap.style.display='none';
+  }
+  document.getElementById('qt-modal-bg').classList.add('open');
+}
+function qtCloseModal(){document.getElementById('qt-modal-bg').classList.remove('open');}
+
+function qtTogglePriceMode(){
+  const mode=document.querySelector('input[name="qf-pmode"]:checked').value;
+  document.getElementById('qf-breakdown-section').style.display=mode==='breakdown'?'grid':'none';
+  document.getElementById('qf-total-section').style.display=mode==='total'?'block':'none';
+  // sync mode button highlight for browsers without :has support
+  document.getElementById('qt-mode-btn-breakdown').style.background=mode==='breakdown'?'var(--blue-bg)':'';
+  document.getElementById('qt-mode-btn-breakdown').style.borderColor=mode==='breakdown'?'var(--blue)':'';
+  document.getElementById('qt-mode-btn-breakdown').style.color=mode==='breakdown'?'var(--blue-text)':'';
+  document.getElementById('qt-mode-btn-total').style.background=mode==='total'?'var(--blue-bg)':'';
+  document.getElementById('qt-mode-btn-total').style.borderColor=mode==='total'?'var(--blue)':'';
+  document.getElementById('qt-mode-btn-total').style.color=mode==='total'?'var(--blue-text)':'';
+  qtCalc();
+}
+
+function qtFmtPrice(val,cur){
+  if(!val&&val!==0)return'—';
+  return cur==='CNY'?'¥'+val:'$'+val;
+}
+
+function qtCalc(){
+  const mode=document.querySelector('input[name="qf-pmode"]:checked').value;
+  const priceCur=document.getElementById('qf-price-cur').value;
+  let autoPrice=null;
+
+  if(mode==='breakdown'){
+    const b=parseFloat(document.getElementById('qf-barbone').value)||0;
+    const rp=parseFloat(document.getElementById('qf-ramp').value)||0;
+    const sp=parseFloat(document.getElementById('qf-ssdp').value)||0;
+    const sum=b+rp+sp;
+    if(sum>0){
+      autoPrice=sum;
+      // Only auto-fill price if user hasn't manually changed it
+      const priceEl=document.getElementById('qf-price');
+      if(!priceEl.dataset.manualEdit){priceEl.value=sum;}
+    }
+  } else {
+    const t=parseFloat(document.getElementById('qf-total-price').value)||0;
+    if(t>0){
+      autoPrice=t;
+      const priceEl=document.getElementById('qf-price');
+      if(!priceEl.dataset.manualEdit){priceEl.value=t;}
+    }
+  }
+
+  const price=parseFloat(document.getElementById('qf-price').value)||0;
+  const p3=parseFloat(document.getElementById('qf-p3').value)||0;
+  const p3Cur=document.getElementById('qf-p3-cur').value;
+
+  document.getElementById('qpp-cost').textContent=p3>0?qtFmtPrice(p3,p3Cur):'—';
+  document.getElementById('qpp-price').textContent=price>0?qtFmtPrice(price,priceCur):'—';
+
+  const diff=p3>0&&price>0?price-p3:null;
+  const de=document.getElementById('qpp-diff');
+  if(diff!==null){
+    const sym=priceCur==='CNY'?'¥':'$';
+    de.textContent=(diff>=0?'+':'')+sym+diff;
+    de.style.color=diff<0?'var(--red-text)':'#1D9E75';
+  } else{de.textContent='—';de.style.color='var(--text2)';}
+  document.getElementById('qt-p3warn').classList.toggle('show',diff!==null&&diff<0);
+}
+
+function qtSave(){
+  const price=parseFloat(document.getElementById('qf-price').value);
+  if(isNaN(price)||price<=0){alert('请填写报价 (P)');return;}
+  const mode=document.querySelector('input[name="qf-pmode"]:checked').value;
+  const obj={
+    id:qtEditId||Date.now(),
+    project:document.getElementById('qf-project').value.trim(),
+    company:document.getElementById('qf-company').value,
+    date:document.getElementById('qf-date').value,
+    model:document.getElementById('qf-model').value.trim(),
+    partno:document.getElementById('qf-partno').value.trim(),
+    qty:document.getElementById('qf-qty').value.trim(),
+    cpu:document.getElementById('qf-cpu').value.trim(),
+    custom:document.getElementById('qf-custom').value.trim(),
+    pmode:mode,
+    // breakdown fields
+    barbone:mode==='breakdown'?(parseFloat(document.getElementById('qf-barbone').value)||null):null,
+    barboneCur:document.getElementById('qf-barbone-cur').value,
+    ram:mode==='breakdown'?document.getElementById('qf-ram').value.trim():'',
+    ramp:mode==='breakdown'?(parseFloat(document.getElementById('qf-ramp').value)||null):null,
+    rampCur:document.getElementById('qf-ramp-cur').value,
+    ssd:mode==='breakdown'?document.getElementById('qf-ssd').value.trim():'',
+    ssdp:mode==='breakdown'?(parseFloat(document.getElementById('qf-ssdp').value)||null):null,
+    ssdpCur:document.getElementById('qf-ssdp-cur').value,
+    // total mode
+    totalPrice:mode==='total'?(parseFloat(document.getElementById('qf-total-price').value)||null):null,
+    totalCur:document.getElementById('qf-total-cur').value,
+    // final price
+    price,
+    priceCur:document.getElementById('qf-price-cur').value,
+    p3:parseFloat(document.getElementById('qf-p3').value)||null,
+    p3Cur:document.getElementById('qf-p3-cur').value,
+    shipping:document.getElementById('qf-shipping').value.trim(),
+    deal:document.getElementById('qf-deal').value,
+    notes:document.getElementById('qf-notes').value.trim(),
+  };
+  if(qtEditId){
+    const i=qtQuotes.findIndex(q=>String(q.id)===String(qtEditId));
+    if(i!==-1){
+      const old=qtQuotes[i];
+      // 只有价格相关字段有变化才记录历史
+      const priceChanged=old.price!==obj.price||old.barbone!==obj.barbone||old.ramp!==obj.ramp||old.ssdp!==obj.ssdp||old.totalPrice!==obj.totalPrice;
+      if(priceChanged){
+        const snap={
+          savedAt:new Date().toISOString().slice(0,10),
+          price:old.price,priceCur:old.priceCur,
+          barbone:old.barbone,barboneCur:old.barboneCur,
+          ram:old.ram,ramp:old.ramp,rampCur:old.rampCur,
+          ssd:old.ssd,ssdp:old.ssdp,ssdpCur:old.ssdpCur,
+          totalPrice:old.totalPrice,totalCur:old.totalCur,
+        };
+        obj.priceHistory=[...(old.priceHistory||[]),snap];
+      } else {
+        obj.priceHistory=old.priceHistory||[];
+      }
+      qtQuotes[i]=obj;
+    }
+  }
+  else qtQuotes.unshift(obj);
+  qtPersist();qtCloseModal();qtRender();qtUpdateCompanyFilter();
+}
+function qtDel(id){if(!confirm('确认删除？'))return;qtQuotes=qtQuotes.filter(q=>String(q.id)!==String(id));qtPersist();qtRender();qtUpdateCompanyFilter();}
+
+function qtRenderDash(){
+  const won=qtQuotes.filter(q=>q.deal==='won');
+  const open_=qtQuotes.filter(q=>q.deal==='open');
+  const confirmed=qtQuotes.filter(q=>q.deal==='confirmed');
+  const pause=qtQuotes.filter(q=>q.deal==='pause');
+  const lost=qtQuotes.filter(q=>q.deal==='lost');
+  const withP3=qtQuotes.filter(q=>q.p3!=null);
+  const belowP3=withP3.filter(q=>q.price<q.p3);
+  const companies=[...new Set(qtQuotes.map(q=>q.company).filter(Boolean))];
+  document.getElementById('qt-kpis').innerHTML=[
+    {v:qtQuotes.length,l:'总报价数',c:'var(--blue-text)'},
+    {v:won.length,l:'已成交',c:'var(--green-text)'},
+    {v:confirmed.length,l:'已确认订单',c:'var(--amber-text)'},
+    {v:open_.length,l:'跟进中',c:'var(--blue-text)'},
+    {v:pause.length,l:'暂无进展',c:'var(--gray-text)'},
+    {v:lost.length,l:'已丢单',c:'var(--red-text)'},
+    {v:companies.length,l:'公司数',c:'var(--text)'},
+    {v:belowP3.length,l:'低于P3',c:'var(--red-text)'},
+  ].map(k=>`<div class="qt-kpi"><div class="qt-kpi-val" style="color:${k.c}">${k.v}</div><div class="qt-kpi-lbl">${k.l}</div></div>`).join('');
+  document.getElementById('qt-ccs').innerHTML=companies.map(c=>{
+    const cqs=qtQuotes.filter(q=>q.company===c);
+    const cw=cqs.filter(q=>q.deal==='won').length;
+    const co=cqs.filter(q=>q.deal==='open').length;
+    const cl=cqs.filter(q=>q.deal==='lost').length;
+    return`<div class="qt-cc"><div class="qt-cc-name">${c}</div>
+      <div class="qt-cc-row"><span style="color:var(--text2)">总报价</span><span>${cqs.length}</span></div>
+      <div class="qt-cc-row"><span style="color:var(--green-text)">成单</span><span style="color:var(--green-text)">${cw}</span></div>
+      <div class="qt-cc-row"><span style="color:var(--blue-text)">跟进</span><span style="color:var(--blue-text)">${co}</span></div>
+      <div class="qt-cc-row"><span style="color:var(--red-text)">丢单</span><span style="color:var(--red-text)">${cl}</span></div>
+    </div>`;
+  }).join('');
+  const dealBadge=d=>d==='won'?'<span class="badge qt-stat-won">✅ 已成交</span>':d==='lost'?'<span class="badge qt-stat-lost">❌ 丢单</span>':d==='open'?'<span class="badge qt-stat-open">⭕ 跟进中</span>':d==='confirmed'?'<span class="badge qt-stat-confirmed">🔶 已确认订单</span>':d==='pause'?'<span class="badge qt-stat-pause">⏸️ 暂无进展</span>':'<span class="badge badge-gray">—</span>';
+  document.getElementById('qt-below-body').innerHTML=belowP3.length?belowP3.map(r=>`<tr>
+    <td>${dealBadge(r.deal)}</td><td>${r.company||'—'}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">${r.project||'—'}</td>
+    <td><b>${r.model}</b></td><td class="qt-price qt-below">${r.priceCur==='CNY'?'¥':'$'}${r.price}</td><td>${r.p3Cur==='CNY'?'¥':'$'}${r.p3}</td>
+    <td class="qt-diff-neg">${r.price-r.p3}</td></tr>`).join(''):`<tr><td colspan="7" style="text-align:center;padding:18px;color:var(--text2)">✅ 没有低于P3的报价</td></tr>`;
+}
+
+function qtExportCSV(){
+  const headers=['项目','公司','日期','型号','料号','数量','CPU','报价方式','准系统价','准系统币种','RAM','RAM价','RAM币种','SSD','SSD价','SSD币种','整机价','整机币种','报价P','报价币种','P3','P3币种','价差','运费','Custom','状态','备注'];
+  const rows=qtQuotes.map(r=>[r.project,r.company,r.date,r.model,r.partno,r.qty,r.cpu,r.pmode||'breakdown',r.barbone,r.barboneCur||'USD',r.ram,r.ramp,r.rampCur||'USD',r.ssd,r.ssdp,r.ssdpCur||'USD',r.totalPrice,r.totalCur||'USD',r.price,r.priceCur||'USD',r.p3,r.p3Cur||'USD',r.p3?r.price-r.p3:'',r.shipping,r.custom,r.deal,r.notes].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(','));
+  const csv='\uFEFF'+headers.join(',')+'\n'+rows.join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`报价记录_${todayStr()}.csv`;a.click();
+}
+
+function qtSeed(){
+  const raw=[
+    {project:"Orange_项目5_260210_EPC-W1592A EPC-S1092A",company:"ENT Group Company Limited",date:"2026-02-10",model:"EPC-W1592A",cpu:"I3-10110U",barbone:515,ram:"8GB DDR4",ramp:90,ssd:"256 GB M.2 SSD",ssdp:120,price:725,p3:null,custom:"",deal:"open",notes:"260305 更新准系统价格"},
+    {project:"Orange_项目5_260210_EPC-W1592A EPC-S1092A",company:"ENT Group Company Limited",date:"2026-02-10",model:"EPC-S1092A",cpu:"I3-10110U",barbone:485,ram:"8GB DDR4",ramp:90,ssd:"256 GB M.2 SSD",ssdp:120,price:695,p3:null,custom:"",deal:"open",notes:"260305 更新准系统价格"},
+    {project:"LUCIJUNE_项目8_260216_EPC-W1392A EPC-W1592A 询价",company:"ENT Group Company Limited",date:"2026-02-16",model:"EPC-W1392A",cpu:"i5-10210U",barbone:565,ram:"8GB DDR4",ramp:105,ssd:"256 GB M.2 SSD",ssdp:120,price:790,p3:null,custom:"",deal:"open",notes:"260305 更新准系统价格"},
+    {project:"LUCIJUNE_项目8_260216_EPC-W1392A EPC-W1592A 询价",company:"ENT Group Company Limited",date:"2026-02-16",model:"EPC-W1592A",cpu:"i5-10210U",barbone:575,ram:"8GB DDR4",ramp:105,ssd:"256 GB M.2 SSD",ssdp:120,price:800,p3:null,custom:"",deal:"open",notes:"260305 更新准系统价格"},
+    {project:"Orange_项目6_260218_EPC-W2422A询价",company:"ENT Group Company Limited",date:"2026-02-18",model:"EPC-W2422A",cpu:"i7-1255U",barbone:720,ram:"32GB DDR5",ramp:625,ssd:"1TB M.2 SSD",ssdp:390,price:1735,p3:null,custom:"",deal:"open",notes:"内存价格650更新为625"},
+    {project:"Sky_项目11_260219_EPC-102A FPM-1502K EPC-W1522A询价",company:"ENT Group Company Limited",date:"2026-02-20",model:"EPC-102A",cpu:"i3-1215U",barbone:380,ram:"8GB DDR5",ramp:155,ssd:"512 GB M.2 SSD",ssdp:150,price:685,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目11_260219_EPC-102A FPM-1502K EPC-W1522A询价",company:"ENT Group Company Limited",date:"2026-02-20",model:"EPC-102A",cpu:"i5-1235U",barbone:450,ram:"8GB DDR5",ramp:155,ssd:"512 GB M.2 SSD",ssdp:150,price:755,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目11_260219_EPC-102A FPM-1502K EPC-W1522A询价",company:"ENT Group Company Limited",date:"2026-02-20",model:"FPM-1502K",cpu:"",barbone:235,ram:"",ramp:null,ssd:"",ssdp:null,price:235,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目11_260219_EPC-102A FPM-1502K EPC-W1522A询价",company:"ENT Group Company Limited",date:"2026-02-20",model:"EPC-W1522A",cpu:"i3-1215U",barbone:580,ram:"8GB DDR5",ramp:155,ssd:"512 GB M.2 SSD",ssdp:150,price:885,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目11_260219_EPC-102A FPM-1502K EPC-W1522A询价",company:"ENT Group Company Limited",date:"2026-02-20",model:"EPC-W1522A",cpu:"I5-1235U",barbone:620,ram:"8GB DDR5",ramp:155,ssd:"512 GB M.2 SSD",ssdp:150,price:925,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目12_260223_EPC-S1592A EPC-W1522A UTC-S1592A询价",company:"ENT Group Company Limited",date:"2026-02-23",model:"EPC-S1592A",cpu:"i5-10210U",barbone:585,ram:"8GB DDR4",ramp:120,ssd:"512 GB M.2 SSD",ssdp:160,price:865,p3:null,custom:"",deal:"won",notes:""},
+    {project:"Sky_项目12_260223_EPC-S1592A EPC-W1522A UTC-S1592A询价",company:"ENT Group Company Limited",date:"2026-02-23",model:"EPC-W1522A",cpu:"I5-1235U",barbone:620,ram:"8GB DDR5",ramp:175,ssd:"512 GB M.2 SSD",ssdp:160,price:955,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目12_260223_EPC-S1592A EPC-W1522A UTC-S1592A询价",company:"ENT Group Company Limited",date:"2026-02-23",model:"UTC-S1592A",cpu:"i5-10210U",barbone:585,ram:"8GB DDR4",ramp:120,ssd:"512 GB M.2 SSD",ssdp:160,price:865,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目13_260224_EPC-S1522A询价",company:"ENT Group Company Limited",date:"2026-02-24",model:"EPC-S1522A",cpu:"I5-1235U",barbone:630,ram:"8GB DDR5",ramp:175,ssd:"256 GB M.2 SSD",ssdp:120,price:925,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目16_260226_EPC-W1522A EPC-W1592A 询价",company:"ENT Group Company Limited",date:"2026-03-02",model:"EPC-W1592A",cpu:"i5-10210U",barbone:575,ram:"16GB DDR4",ramp:160,ssd:"512 GB M.2 SSD",ssdp:170,price:905,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目16_260226_EPC-W1522A EPC-W1592A 询价",company:"ENT Group Company Limited",date:"2026-03-02",model:"EPC-W1522A",cpu:"I5-1235U",barbone:620,ram:"16GB DDR5",ramp:180,ssd:"512 GB M.2 SSD",ssdp:170,price:970,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Orange_项目7_260226_EPC-W1522A询价",company:"ENT Group Company Limited",date:"2026-02-26",model:"EPC-W1522A",cpu:"i7-1255U",barbone:680,ram:"16GB DDR5",ramp:170,ssd:"512 GB M.2 SSD + 2.5inch HDD 512GB",ssdp:295,price:1145,p3:null,custom:"",deal:"won",notes:""},
+    {project:"Orange_项目7_260226_EPC-W1522A询价",company:"ENT Group Company Limited",date:"2026-02-26",model:"EPC-W1522A",cpu:"i7-1255U",barbone:680,ram:"16GB DDR5",ramp:170,ssd:"512 GB M.2 SSD",ssdp:150,price:1000,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Orange_项目3_260107_EPC-S1022A",company:"ENT Group Company Limited",date:"2026-01-07",model:"EPC-S1022A",cpu:"i3-1215U",barbone:null,ram:"8GB DDR5",ramp:null,ssd:"256 GB M.2 SSD",ssdp:null,price:580,p3:null,custom:"",deal:"won",notes:""},
+    {project:"Orange_项目3_260107_EPC-S1022A",company:"ENT Group Company Limited",date:"2026-02-17",model:"EPC-S1022A",cpu:"i3-1215U",barbone:null,ram:"8GB DDR5",ramp:null,ssd:"256 GB M.2 SSD",ssdp:null,price:640,p3:null,custom:"",deal:"won",notes:""},
+    {project:"Orange_项目3_260107_EPC-S1022A",company:"ENT Group Company Limited",date:"2026-02-17",model:"EPC-S1022A",qty:"4",cpu:"i3-1215U",barbone:null,ram:"8GB DDR5",ramp:null,ssd:"256 GB M.2 SSD",ssdp:null,price:610,p3:null,custom:"",deal:"won",notes:"一次性下单，两天内付全款"},
+    {project:"Sky_项目14_260226_防水机询价",company:"ENT Group Company Limited",date:"2026-02-26",model:"UTC-W1592G",cpu:"i5-10210U",barbone:1750,ram:"8GB DDR4",ramp:110,ssd:"256 GB M.2 SSD",ssdp:120,price:1980,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目14_260226_防水机询价",company:"ENT Group Company Limited",date:"2026-02-26",model:"UTC-W2192G",cpu:"i5-10210U",barbone:1900,ram:"8GB DDR4",ramp:110,ssd:"256 GB M.2 SSD",ssdp:120,price:2130,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目14_260226_防水机询价",company:"ENT Group Company Limited",date:"2026-02-26",model:"UTC-W1572G",cpu:"J6412",barbone:1500,ram:"8GB DDR4",ramp:110,ssd:"256 GB M.2 SSD",ssdp:120,price:1730,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目14_260226_防水机询价",company:"ENT Group Company Limited",date:"2026-02-26",model:"UTC-W2172G",cpu:"J6412",barbone:1650,ram:"8GB DDR4",ramp:110,ssd:"256 GB M.2 SSD",ssdp:120,price:1880,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目14_260226_防水机询价",company:"ENT Group Company Limited",date:"2026-02-26",model:"UTC-W1582G",cpu:"i5-7200U",barbone:1550,ram:"8GB DDR4",ramp:110,ssd:"256 GB M.2 SSD",ssdp:120,price:1780,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目14_260226_防水机询价",company:"ENT Group Company Limited",date:"2026-02-26",model:"UTC-W2182G",cpu:"i5-7200U",barbone:1700,ram:"8GB DDR4",ramp:110,ssd:"256 GB M.2 SSD",ssdp:120,price:1930,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目15_260226_EPC-302A 询价",company:"ENT Group Company Limited",date:"2026-02-26",model:"EPC-302A",cpu:"i3-1215U",barbone:410,ram:"8GB DDR5",ramp:155,ssd:"256 GB M.2 SSD",ssdp:120,price:685,p3:null,custom:"",deal:"lost",notes:""},
+    {project:"Sky_项目17_260304_EPC-S1292A 询价",company:"ENT Group Company Limited",date:"2026-03-04",model:"EPC-S1292A",cpu:"I5-10210U",barbone:null,ram:"8GB DDR4",ramp:110,ssd:"128 GB mSATA SSD",ssdp:75,price:755,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目18_260304_UTC-S1582A EPC-S1592A询价",company:"ENT Group Company Limited",date:"2026-03-04",model:"UTC-S1582A",cpu:"i7-7500U",barbone:null,ram:"8GB DDR4",ramp:110,ssd:"256 GB mSATA SSD",ssdp:95,price:765,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目18_260304_UTC-S1582A EPC-S1592A询价",company:"ENT Group Company Limited",date:"2026-03-18",model:"UTC-S1582A",cpu:"i7-7500U",barbone:null,ram:"8GB DDR4",ramp:110,ssd:"256 GB mSATA SSD",ssdp:125,price:795,p3:null,custom:"Windows 10 pro OEM",deal:"won",notes:"3/25硬盘价格+5美金"},
+    {project:"Sky_项目18_260304_UTC-S1582A EPC-S1592A询价",company:"ENT Group Company Limited",date:"2026-03-04",model:"EPC-S1592A",cpu:"i7-10510U",barbone:655,ram:"8GB DDR4",ramp:110,ssd:"256 GB mSATA SSD",ssdp:95,price:860,p3:null,custom:"",deal:"won",notes:""},
+    {project:"LUCIJUNE_项目9_260304_UTC-S1582A询价",company:"ENT Group Company Limited",date:"2026-03-04",model:"UTC-S1582A",cpu:"i7-7500U",barbone:null,ram:"8GB DDR4",ramp:110,ssd:"256 GB mSATA SSD",ssdp:95,price:765,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Orange_项目8_260305_FPM-1202A 高速公路项目 询价",company:"ENT Group Company Limited",date:"2026-03-05",model:"FPM-1202A",qty:"1",cpu:"",barbone:null,ram:"",ramp:null,ssd:"",ssdp:null,price:470,p3:null,custom:"1000nits",deal:"open",notes:""},
+    {project:"Orange_项目8_260305_FPM-1202A 高速公路项目 询价",company:"ENT Group Company Limited",date:"2026-03-05",model:"FPM-1202A",qty:"7",cpu:"",barbone:null,ram:"",ramp:null,ssd:"",ssdp:null,price:370,p3:null,custom:"1000nits",deal:"open",notes:""},
+    {project:"Sky_项目19_260309_UTC-S1082A UTC-S1092A询价",company:"ENT Group Company Limited",date:"2026-03-09",model:"UTC-S1082A",cpu:"i3-7100U",barbone:null,ram:"8GB DDR4",ramp:110,ssd:"128 GB mSATA SSD",ssdp:75,price:630,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目19_260309_UTC-S1082A UTC-S1092A询价",company:"ENT Group Company Limited",date:"2026-03-09",model:"UTC-S1092A",cpu:"i3-10110U",barbone:null,ram:"8GB DDR4",ramp:110,ssd:"128 GB mSATA SSD",ssdp:75,price:670,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Orange_项目9_260311_UTC-W1782A 询价",company:"ENT Group Company Limited",date:"2026-03-11",model:"UTC-W1782A",partno:"C9.03.02.079",qty:"4",cpu:"i5-7200U",barbone:null,ram:"16GB DDR4",ramp:150,ssd:"1TB mSATA SSD",ssdp:310,price:960,p3:null,custom:"Wifi + Win10 Pro OEM",deal:"won",notes:"3/30价格更新，5台+30美金"},
+    {project:"Sky_项目20_260312_EPC-107A询价",company:"ENT Group Company Limited",date:"2026-03-12",model:"EPC-107A",cpu:"J6412",barbone:null,ram:"8GB DDR4",ramp:110,ssd:"256 GB mSATA SSD",ssdp:95,price:425,p3:null,custom:"",deal:"won",notes:""},
+    {project:"Sky_项目21_260312_UTC-W1582A询价",company:"ENT Group Company Limited",date:"2026-03-12",model:"UTC-W1582A",qty:"9",cpu:"i3-7100U",barbone:null,ram:"8GB DDR4",ramp:110,ssd:"128 GB mSATA SSD",ssdp:75,price:675,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目22_260312_FPM-1201C询价",company:"ENT Group Company Limited",date:"2026-03-14",model:"FPM-1201C",cpu:"",barbone:null,ram:"",ramp:null,ssd:"",ssdp:null,price:210,p3:null,custom:"",deal:"open",notes:""},
+    {project:"LUCIJUNE_项目9_260316_EPC-W2492A 询价",company:"ENT Group Company Limited",date:"2026-03-16",model:"EPC-W2492A",cpu:"i7-10510U",barbone:null,ram:"8GB DDR4",ramp:110,ssd:"128 GB mSATA SSD",ssdp:85,price:905,p3:null,custom:"Win11 Pro OEM",deal:"open",notes:""},
+    {project:"LUCIJUNE_项目10_260320_EPC-S1092A 询价",company:"ENT Group Company Limited",date:"2026-03-20",model:"EPC-S1092A",cpu:"i3-10110U",barbone:null,ram:"16GB DDR4",ramp:180,ssd:"512 GB M.2 SSD",ssdp:205,price:870,p3:null,custom:"Win11 Pro OEM",deal:"open",notes:""},
+    {project:"LUCIJUNE_项目10_260320_EPC-S1092A 询价",company:"ENT Group Company Limited",date:"2026-03-20",model:"EPC-S1092A",cpu:"i5-10110U",barbone:null,ram:"16GB DDR4",ramp:180,ssd:"512 GB M.2 SSD",ssdp:205,price:940,p3:null,custom:"Win11 Pro OEM",deal:"open",notes:""},
+    {project:"LUCIJUNE_项目10_260320_EPC-S1092A 询价",company:"ENT Group Company Limited",date:"2026-03-20",model:"EPC-S1092A",cpu:"i7-10110U",barbone:null,ram:"16GB DDR4",ramp:180,ssd:"512 GB M.2 SSD",ssdp:205,price:1010,p3:null,custom:"Win11 Pro OEM",deal:"open",notes:""},
+    {project:"Sky_项目24_260327_EPC-S1592A UTC-S1792A询价",company:"ENT Group Company Limited",date:"2026-03-27",model:"EPC-S1592A",cpu:"i5-10210U",barbone:null,ram:"8GB DDR4",ramp:110,ssd:"256 GB M.2 SSD",ssdp:130,price:855,p3:null,custom:"24V DC + Free Win11 Pro OEM",deal:"open",notes:""},
+    {project:"Sky_项目24_260327_EPC-S1592A UTC-S1792A询价",company:"ENT Group Company Limited",date:"2026-03-27",model:"UTC-S1792A",cpu:"i5-10210U",barbone:null,ram:"8GB DDR4",ramp:110,ssd:"256 GB M.2 SSD",ssdp:130,price:905,p3:null,custom:"24V DC + Free Win11 Pro OEM",deal:"open",notes:""},
+    {project:"Sky_项目25_260327_EPC-W1522A询价",company:"ENT Group Company Limited",date:"2026-03-27",model:"EPC-W1522A",cpu:"I5-1235U",barbone:null,ram:"16GB DDR5",ramp:315,ssd:"256 GB M.2 SSD",ssdp:130,price:1065,p3:null,custom:"Win11 Pro OEM",deal:"lost",notes:""},
+    {project:"Sky_项目25_260327_EPC-W1522A询价",company:"ENT Group Company Limited",date:"2026-03-27",model:"EPC-W1522A",cpu:"i7-1255U",barbone:null,ram:"16GB DDR5",ramp:315,ssd:"256 GB M.2 SSD",ssdp:130,price:1125,p3:null,custom:"Win11 Pro OEM",deal:"lost",notes:""},
+    {project:"LUCIJUNE_项目11_260327_EPC-W1322A 询价",company:"ENT Group Company Limited",date:"2026-03-27",model:"EPC-W1322A",cpu:"i7-1255U",barbone:null,ram:"16GB DDR5",ramp:315,ssd:"256 GB M.2 SSD",ssdp:130,price:1115,p3:null,custom:"Win11 Pro OEM",deal:"open",notes:""},
+    {project:"LUCIJUNE_项目11_260327_EPC-W1322A 询价",company:"ENT Group Company Limited",date:"2026-03-27",model:"EPC-W1322A",cpu:"i7-1255U",barbone:null,ram:"8GB DDR5",ramp:175,ssd:"256 GB M.2 SSD",ssdp:130,price:975,p3:null,custom:"Win11 Pro OEM",deal:"open",notes:""},
+    {project:"LUCIJUNE_项目11_260327_EPC-W1322A 询价",company:"ENT Group Company Limited",date:"2026-03-28",model:"EPC-W1392A",cpu:"i5-10210U",barbone:null,ram:"16GB DDR4",ramp:195,ssd:"256 GB M.2 SSD",ssdp:130,price:890,p3:null,custom:"Win11 Pro OEM",deal:"open",notes:""},
+    {project:"LUCIJUNE_项目11_260327_EPC-W1322A 询价",company:"ENT Group Company Limited",date:"2026-03-28",model:"EPC-W1392A",cpu:"i7-10510U",barbone:null,ram:"16GB DDR4",ramp:195,ssd:"256 GB M.2 SSD",ssdp:130,price:960,p3:null,custom:"Win11 Pro OEM",deal:"open",notes:""},
+    {project:"LUCIJUNE_项目11_260327_EPC-W1322A 询价",company:"ENT Group Company Limited",date:"2026-03-28",model:"EPC-W1322A",cpu:"I5-1235U",barbone:null,ram:"16GB DDR5",ramp:315,ssd:"256 GB M.2 SSD",ssdp:130,price:1055,p3:null,custom:"Win11 Pro OEM",deal:"open",notes:""},
+    {project:"LUCIJUNE_项目11_260327_EPC-W1322A 询价",company:"ENT Group Company Limited",date:"2026-03-28",model:"EPC-W1322A",cpu:"i7-1255U",barbone:null,ram:"16GB DDR5",ramp:315,ssd:"256 GB M.2 SSD",ssdp:130,price:1115,p3:null,custom:"Win11 Pro OEM，RS485*2",deal:"won",notes:""},
+    {project:"Orange_项目10_260330_UTC-S1272A 询价",company:"ENT Group Company Limited",date:"2026-03-30",model:"UTC-S1272A",cpu:"J6412",barbone:null,ram:"8GB DDR4",ramp:110,ssd:"128 GB mSATA SSD",ssdp:95,price:685,p3:null,custom:"Win11 Pro (Non License)",deal:"open",notes:""},
+    {project:"Orange_项目11_260330_EPC-W1592A EPC-W1522A 询价",company:"ENT Group Company Limited",date:"2026-03-30",model:"EPC-W1592A",cpu:"i7-10510U",barbone:null,ram:"16GB DDR4",ramp:195,ssd:"512 GB M.2 SSD",ssdp:205,price:1045,p3:null,custom:"Win11 Pro OEM",deal:"open",notes:""},
+    {project:"Orange_项目11_260330_EPC-W1592A EPC-W1522A 询价",company:"ENT Group Company Limited",date:"2026-03-30",model:"EPC-W1522A",cpu:"i7-1255U",barbone:null,ram:"16GB DDR5",ramp:315,ssd:"512 GB M.2 SSD",ssdp:205,price:1200,p3:null,custom:"Win11 Pro OEM",deal:"open",notes:""},
+    {project:"Orange_项目12_260402_EPC-W1592A 询价",company:"ENT Group Company Limited",date:"2026-04-02",model:"EPC-W1592A",cpu:"i5-10210U",barbone:null,ram:"16GB DDR4",ramp:195,ssd:"512 GB M.2 SSD",ssdp:205,price:975,p3:null,custom:"Win11 PRO OEM",deal:"open",notes:""},
+    {project:"Sky_项目26_260402_UTC-W1782A 询价",company:"ENT Group Company Limited",date:"2026-04-02",model:"UTC-W1782A",cpu:"i5-7200U",barbone:null,ram:"16GB DDR4",ramp:195,ssd:"256 GB mSATA SSD",ssdp:125,price:850,p3:null,custom:"",deal:"open",notes:"3/30价格更新，5台+30美金"},
+    {project:"LUCIJUNE_项目12_260402_EPC-W2422A询价",company:"ENT Group Company Limited",date:"2026-04-02",model:"EPC-W2422A",cpu:"i7-1255U",barbone:null,ram:"32GB DDR5",ramp:590,ssd:"1TB M.2 SSD",ssdp:390,price:1725,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Sky_项目27_260407_EPC-W2422A EPC-W2122A EPC-W1822A UTC-W1722A 询价",company:"ENT Group Company Limited",date:"2026-04-07",model:"EPC-W2422A",cpu:"I5-1235U",barbone:null,ram:"8GB DDR5",ramp:175,ssd:"512 GB M.2 SSD",ssdp:205,price:1065,p3:null,custom:"Win11 Pro OEM",deal:"open",notes:""},
+    {project:"Sky_项目27_260407_EPC-W2422A EPC-W2122A EPC-W1822A UTC-W1722A 询价",company:"ENT Group Company Limited",date:"2026-04-07",model:"EPC-W2122A",cpu:"I5-1235U",barbone:null,ram:"8GB DDR5",ramp:175,ssd:"512 GB M.2 SSD",ssdp:205,price:1055,p3:null,custom:"Win11 Pro OEM",deal:"open",notes:""},
+    {project:"Sky_项目27_260407_EPC-W2422A EPC-W2122A EPC-W1822A UTC-W1722A 询价",company:"ENT Group Company Limited",date:"2026-04-07",model:"EPC-W1822A",cpu:"I5-1235U",barbone:null,ram:"8GB DDR5",ramp:175,ssd:"512 GB M.2 SSD",ssdp:205,price:1040,p3:null,custom:"Win11 Pro OEM",deal:"open",notes:""},
+    {project:"Sky_项目27_260407_EPC-W2422A EPC-W2122A EPC-W1822A UTC-W1722A 询价",company:"ENT Group Company Limited",date:"2026-04-07",model:"UTC-W1722A",cpu:"I5-1235U",barbone:null,ram:"8GB DDR5",ramp:175,ssd:"512 GB M.2 SSD",ssdp:205,price:1040,p3:null,custom:"Win11 Pro OEM",deal:"open",notes:""},
+    {project:"LUCIJUNE_项目12_260408_UTC-S1592A 询价",company:"ENT Group Company Limited",date:"2026-04-08",model:"UTC-S1592A",cpu:"i7-10510U",barbone:null,ram:"8GB DDR4",ramp:110,ssd:"256 GB M.2 SSD",ssdp:130,price:895,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Orange_项目13_260408_EPC-S1521A 询价",company:"ENT Group Company Limited",date:"2026-04-08",model:"EPC-S1521A",cpu:"I5-1235U",barbone:null,ram:"16GB DDR5",ramp:315,ssd:"256 GB M.2 SSD",ssdp:130,price:1075,p3:null,custom:"",deal:"open",notes:""},
+    {project:"Orange_项目14_260410_EPC-S1922A 询价",company:"ENT Group Company Limited",date:"2026-04-09",model:"EPC-S1922A",cpu:"i7-1255U",barbone:null,ram:"32GB DDR5",ramp:625,ssd:"512 GB M.2 SSD",ssdp:205,price:1550,p3:null,custom:"Win11 Pro",deal:"open",notes:""},
+    {project:"",company:"ENT Group Company Limited",date:"2026-04-22",model:"EPC-S1092A",cpu:"I3-10110U",barbone:450,ram:"8GB DDR4",ramp:100,ssd:"128 GB SSD",ssdp:100,price:650,p3:614,custom:"",deal:"",notes:""},
+    {project:"",company:"ENT Group Company Limited",date:"2026-04-22",model:"EPC-S1022A",cpu:"I3-1215U",barbone:505,ram:"8GB DDR5",ramp:170,ssd:"256 GB M.2 SSD",ssdp:140,price:815,p3:720,custom:"",deal:"",notes:""},
+  ].map((q,i)=>({...q,id:Date.now()+i,partno:q.partno||'',qty:q.qty||''}));
+  return raw;
+}
+
+// Init quotes module
+(function(){
+  qtLoad();
+  qtUpdateCompanyFilter();
+  qtRender();
+  setTimeout(qtInitResizableCols,100);
+  // Mark price as manually edited when user types directly
+  const priceEl=document.getElementById('qf-price');
+  if(priceEl){
+    priceEl.addEventListener('input',function(){this.dataset.manualEdit='1';});
+  }
+})();
 </script>
 </body>
 </html>
