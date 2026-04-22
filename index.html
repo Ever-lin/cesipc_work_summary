@@ -802,7 +802,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
             <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
           </select>
         </label>
-        <input type="number" id="qf-p3" min="0" oninput="qtCalc()" placeholder="0">
+        <input type="number" id="qf-p3" min="0" oninput="qtCalc();" onchange="qtCalc();" placeholder="0">
       </div>
 
       <!-- 运费 -->
@@ -830,10 +830,11 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       </div>
 
       <!-- 价格汇总面板 -->
-      <div class="qt-pp">
+      <div class="qt-pp" style="position:relative">
         <div><div class="qt-pp-val" id="qpp-cost" style="color:var(--text2)">—</div><div class="qt-pp-lbl">P3 参考价</div></div>
         <div><div class="qt-pp-val" id="qpp-price" style="color:var(--blue-text)">—</div><div class="qt-pp-lbl">报价 (P)</div></div>
         <div><div class="qt-pp-val" id="qpp-diff">—</div><div class="qt-pp-lbl">P − P3 价差</div></div>
+        <button onclick="qtCalc()" title="刷新价格面板" style="position:absolute;top:8px;right:8px;background:var(--blue-bg);color:var(--blue-text);border:1px solid var(--blue);border-radius:var(--radius-xs);padding:3px 10px;font-size:12px;cursor:pointer;font-family:inherit">↻ 刷新</button>
       </div>
 
       <!-- 最终报价 -->
@@ -844,7 +845,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
             <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
           </select>
         </label>
-        <input type="number" id="qf-price" min="0" oninput="qtCalc()" placeholder="0" style="font-size:15px;font-weight:600">
+        <input type="number" id="qf-price" min="0" oninput="this.dataset.manualEdit='1';qtCalc();" onchange="this.dataset.manualEdit='1';qtCalc();" placeholder="0" style="font-size:15px;font-weight:600">
       </div>
       <div class="field" style="grid-column:1/-1"><label>备注</label><textarea id="qf-notes" style="min-height:52px"></textarea></div>
       <!-- 历史价格记录 -->
