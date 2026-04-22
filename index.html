@@ -287,6 +287,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <div class="field">
             <label style="display:flex;align-items:center;justify-content:space-between">
               <span>跟进客户（每行一家）<span style="font-size:11px;color:var(--text2);margin-left:4px">数量：<input id="w-followup-count" type="number" min="0" placeholder="自动" style="width:48px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onWListCountInput('w','followup')"></span></span>
+              <button class="btn btn-xs" onclick="fillWeeklyFollowup()">↻ 刷新</button>
             </label>
             <textarea id="w-followup" class="auto-resize" placeholder="每行填写一家公司名称" oninput="onWListInput('w','followup')"></textarea>
           </div>
@@ -300,16 +301,18 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>5）日常事务</label><textarea id="w-daily" class="auto-resize" placeholder="其他日常工作安排"></textarea></div>
 
         <div class="slabel">下周目标</div>
-        <div class="field"><label>1. 业绩目标（每行一条：xxW，项目名称）</label><textarea id="w-target-perf" class="auto-resize" placeholder="如：5W，Orange_项目A&#10;3W，Master_项目B"></textarea></div>
-        <div class="field"><label>2. 回款目标（每行一条：xxW，客户名）</label><textarea id="w-target-collect" class="auto-resize" placeholder="如：10W，Orange Ltd&#10;5W，Master Power"></textarea></div>
-        <div class="field"><label>3. 新成交（每行一条：客户名，项目名称+进度）</label><textarea id="w-target-deal" class="auto-resize" placeholder="如：Orange Ltd，项目A 产品报价"></textarea></div>
+        <div class="field"><label>1. 业绩目标（每行一条：客户名字：xxW，项目名称）</label><textarea id="w-target-perf" class="auto-resize" placeholder="如：Orange Ltd：5W，Orange_项目A&#10;Master Power：3W，Master_项目B"></textarea></div>
+        <div class="field"><label>2. 回款目标（每行一条：客户名字：xxW）</label><textarea id="w-target-collect" class="auto-resize" placeholder="如：Orange Ltd：10W&#10;Master Power：5W"></textarea></div>
+        <div class="field"><label>3. 新成交（每行一条：客户名字，项目名称+项目进度术语）</label><textarea id="w-target-deal" class="auto-resize" placeholder="如：Orange Ltd，项目A 产品报价"></textarea></div>
 
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">下周工作计划<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span></div>
-        <div class="field"><label style="font-weight:500">一、重点项目（按项目节点划分）</label></div>
+        <div class="field"><label style="font-weight:500;display:flex;align-items:center;justify-content:space-between">一、重点项目（按项目节点划分）<button class="btn btn-xs" onclick="fillNextPlanTextareas('w')">↻ 刷新</button></label></div>
         <div class="field"><label>1）合同签订（含走流程）</label><textarea id="w-np1" class="auto-resize" placeholder="填写下周跟进的合同签订项目"></textarea></div>
         <div class="field"><label>2）产品报价</label><textarea id="w-np2" class="auto-resize" placeholder="填写下周跟进的报价项目"></textarea></div>
         <div class="field"><label>3）方案设计</label><textarea id="w-np3" class="auto-resize" placeholder="填写下周跟进的方案项目"></textarea></div>
         <div class="field"><label>4）需求确认</label><textarea id="w-np4" class="auto-resize" placeholder="填写下周跟进的需求确认项目"></textarea></div>
+        <div class="field"><label>5）项目延期<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：项目延期</span></label><textarea id="w-np5" class="auto-resize" placeholder="填写下周跟进的项目延期"></textarea></div>
+        <div class="field"><label>6）丢单<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：项目停止</span></label><textarea id="w-np6" class="auto-resize" placeholder="填写下周跟进的丢单项目"></textarea></div>
         <div class="field"><label style="font-weight:500">二、其他工作</label></div>
         <div class="field"><label>1）客户拜访/来访（每行填：时间+客户名）</label><textarea id="w-np-visit" class="auto-resize" placeholder="如：4/21 Orange Ltd"></textarea></div>
         <div class="field"><label>2）出差</label><textarea id="w-np-trip" class="auto-resize" placeholder="出差安排"></textarea></div>
@@ -357,6 +360,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <div class="field">
             <label style="display:flex;align-items:center;justify-content:space-between">
               <span>跟进客户（每行一家）<span style="font-size:11px;color:var(--text2);margin-left:4px">数量：<input id="wm-followup-count" type="number" min="0" placeholder="自动" style="width:48px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onWListCountInput('wm','followup')"></span></span>
+              <button class="btn btn-xs" onclick="fillMonthlyFollowup()">↻ 刷新</button>
             </label>
             <textarea id="wm-followup" class="auto-resize" placeholder="每行填写一家公司名称" oninput="onWListInput('wm','followup')"></textarea>
           </div>
@@ -370,16 +374,18 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>5）日常事务</label><textarea id="wm-daily" class="auto-resize" placeholder="其他日常工作安排"></textarea></div>
 
         <div class="slabel">下月目标</div>
-        <div class="field"><label>1. 业绩目标（每行一条：xxW，项目名称）</label><textarea id="wm-target-perf" class="auto-resize" placeholder="如：5W，Orange_项目A&#10;3W，Master_项目B"></textarea></div>
-        <div class="field"><label>2. 回款目标（每行一条：xxW，客户名）</label><textarea id="wm-target-collect" class="auto-resize" placeholder="如：10W，Orange Ltd&#10;5W，Master Power"></textarea></div>
-        <div class="field"><label>3. 新成交（每行一条：客户名，项目名称+进度）</label><textarea id="wm-target-deal" class="auto-resize" placeholder="如：Orange Ltd，项目A 产品报价"></textarea></div>
+        <div class="field"><label>1. 业绩目标（每行一条：客户名字：xxW，项目名称）</label><textarea id="wm-target-perf" class="auto-resize" placeholder="如：Orange Ltd：5W，Orange_项目A&#10;Master Power：3W，Master_项目B"></textarea></div>
+        <div class="field"><label>2. 回款目标（每行一条：客户名字：xxW）</label><textarea id="wm-target-collect" class="auto-resize" placeholder="如：Orange Ltd：10W&#10;Master Power：5W"></textarea></div>
+        <div class="field"><label>3. 新成交（每行一条：客户名字，项目名称+项目进度术语）</label><textarea id="wm-target-deal" class="auto-resize" placeholder="如：Orange Ltd，项目A 产品报价"></textarea></div>
 
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">下月工作计划<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span></div>
-        <div class="field"><label style="font-weight:500">一、重点项目（按项目节点划分）</label></div>
+        <div class="field"><label style="font-weight:500;display:flex;align-items:center;justify-content:space-between">一、重点项目（按项目节点划分）<button class="btn btn-xs" onclick="fillNextPlanTextareas('wm')">↻ 刷新</button></label></div>
         <div class="field"><label>1）合同签订（含走流程）</label><textarea id="wm-np1" class="auto-resize" placeholder="填写下月跟进的合同签订项目"></textarea></div>
         <div class="field"><label>2）产品报价</label><textarea id="wm-np2" class="auto-resize" placeholder="填写下月跟进的报价项目"></textarea></div>
         <div class="field"><label>3）方案设计</label><textarea id="wm-np3" class="auto-resize" placeholder="填写下月跟进的方案项目"></textarea></div>
         <div class="field"><label>4）需求确认</label><textarea id="wm-np4" class="auto-resize" placeholder="填写下月跟进的需求确认项目"></textarea></div>
+        <div class="field"><label>5）项目延期<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：项目延期</span></label><textarea id="wm-np5" class="auto-resize" placeholder="填写下月跟进的项目延期"></textarea></div>
+        <div class="field"><label>6）丢单<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：项目停止</span></label><textarea id="wm-np6" class="auto-resize" placeholder="填写下月跟进的丢单项目"></textarea></div>
         <div class="field"><label style="font-weight:500">二、其他工作</label></div>
         <div class="field"><label>1）客户拜访/来访（每行填：时间+客户名）</label><textarea id="wm-np-visit" class="auto-resize" placeholder="如：5/1 Orange Ltd"></textarea></div>
         <div class="field"><label>2）出差</label><textarea id="wm-np-trip" class="auto-resize" placeholder="出差安排"></textarea></div>
@@ -1338,7 +1344,7 @@ function saveWeekly(){
     visit:gv('w-visit'),visitCount:gv('w-visit-count'),
     keyorders:gv('w-keyorders'),aftersales:gv('w-aftersales'),daily:gv('w-daily'),
     targetPerf:gv('w-target-perf'),targetCollect:gv('w-target-collect'),targetDeal:gv('w-target-deal'),
-    np1:gv('w-np1'),np2:gv('w-np2'),np3:gv('w-np3'),np4:gv('w-np4'),
+    np1:gv('w-np1'),np2:gv('w-np2'),np3:gv('w-np3'),np4:gv('w-np4'),np5:gv('w-np5'),np6:gv('w-np6'),
     npVisit:gv('w-np-visit'),npTrip:gv('w-np-trip'),
     nlongNew:gv('w-nlong-new'),nlongFollowup:gv('w-nlong-followup'),nlongVisit:gv('w-nlong-visit'),
     nlongKeyorders:gv('w-nlong-keyorders'),nlongAftersales:gv('w-nlong-aftersales'),
@@ -1388,7 +1394,7 @@ function loadWeekly(id){
   setV('w-visit',w.visit);setV('w-visit-count',w.visitCount);
   setV('w-keyorders',w.keyorders);setV('w-aftersales',w.aftersales);setV('w-daily',w.daily);
   setV('w-target-perf',w.targetPerf);setV('w-target-collect',w.targetCollect);setV('w-target-deal',w.targetDeal);
-  setV('w-np1',w.np1);setV('w-np2',w.np2);setV('w-np3',w.np3);setV('w-np4',w.np4);
+  setV('w-np1',w.np1);setV('w-np2',w.np2);setV('w-np3',w.np3);setV('w-np4',w.np4);setV('w-np5',w.np5);setV('w-np6',w.np6);
   setV('w-np-visit',w.npVisit);setV('w-np-trip',w.npTrip);
   setV('w-nlong-new',w.nlongNew);setV('w-nlong-followup',w.nlongFollowup);setV('w-nlong-visit',w.nlongVisit);
   setV('w-nlong-keyorders',w.nlongKeyorders);setV('w-nlong-aftersales',w.nlongAftersales);
@@ -1421,7 +1427,7 @@ function saveMonthly(){
     visit:gv('wm-visit'),visitCount:gv('wm-visit-count'),
     keyorders:gv('wm-keyorders'),aftersales:gv('wm-aftersales'),daily:gv('wm-daily'),
     targetPerf:gv('wm-target-perf'),targetCollect:gv('wm-target-collect'),targetDeal:gv('wm-target-deal'),
-    np1:gv('wm-np1'),np2:gv('wm-np2'),np3:gv('wm-np3'),np4:gv('wm-np4'),
+    np1:gv('wm-np1'),np2:gv('wm-np2'),np3:gv('wm-np3'),np4:gv('wm-np4'),np5:gv('wm-np5'),np6:gv('wm-np6'),
     npVisit:gv('wm-np-visit'),npTrip:gv('wm-np-trip'),
     nlongNew:gv('wm-nlong-new'),nlongFollowup:gv('wm-nlong-followup'),nlongVisit:gv('wm-nlong-visit'),
     nlongKeyorders:gv('wm-nlong-keyorders'),nlongAftersales:gv('wm-nlong-aftersales'),
@@ -1464,7 +1470,7 @@ function loadMonthly(id){
   setV('wm-visit',m.visit);setV('wm-visit-count',m.visitCount);
   setV('wm-keyorders',m.keyorders);setV('wm-aftersales',m.aftersales);setV('wm-daily',m.daily);
   setV('wm-target-perf',m.targetPerf);setV('wm-target-collect',m.targetCollect);setV('wm-target-deal',m.targetDeal);
-  setV('wm-np1',m.np1);setV('wm-np2',m.np2);setV('wm-np3',m.np3);setV('wm-np4',m.np4);
+  setV('wm-np1',m.np1);setV('wm-np2',m.np2);setV('wm-np3',m.np3);setV('wm-np4',m.np4);setV('wm-np5',m.np5);setV('wm-np6',m.np6);
   setV('wm-np-visit',m.npVisit);setV('wm-np-trip',m.npTrip);
   setV('wm-nlong-new',m.nlongNew);setV('wm-nlong-followup',m.nlongFollowup);setV('wm-nlong-visit',m.nlongVisit);
   setV('wm-nlong-keyorders',m.nlongKeyorders);setV('wm-nlong-aftersales',m.nlongAftersales);
@@ -1532,6 +1538,107 @@ function fillDailyFollowup(){
   const countEl=document.getElementById('d-followup-count');
   if(countEl)countEl.value=clients.length||'';
   autoResize(el);
+}
+
+// 周报：自动填充本周跟进客户（根据项目记录日期属于所选月份+周次）
+function fillWeeklyFollowup(){
+  const selMonth=document.getElementById('w-month')?.value;
+  const selWeek=document.getElementById('w-week')?.value;
+  if(!selMonth||!selWeek)return;
+  const clients=[...new Set(
+    state.projects
+      .filter(p=>{
+        if(!p.recordDate)return false;
+        const m=String(parseInt(p.recordDate.split('-')[1],10));
+        return m===String(selMonth)&&weekOfDay(p.recordDate)===selWeek&&(p.client||p.name);
+      })
+      .map(p=>p.client||p.name)
+  )];
+  const el=document.getElementById('w-followup');
+  if(!el)return;
+  el.value=clients.join('\n');
+  const countEl=document.getElementById('w-followup-count');
+  if(countEl){countEl.value=clients.length||'';countEl.dataset.manual='';}
+  autoResize(el);
+}
+
+// 月报：自动填充本月跟进客户（根据项目记录日期属于所选月份）
+function fillMonthlyFollowup(){
+  const selMonth=document.getElementById('wm-month')?.value;
+  if(!selMonth)return;
+  const clients=[...new Set(
+    state.projects
+      .filter(p=>{
+        if(!p.recordDate)return false;
+        const m=String(parseInt(p.recordDate.split('-')[1],10));
+        return m===String(selMonth)&&(p.client||p.name);
+      })
+      .map(p=>p.client||p.name)
+  )];
+  const el=document.getElementById('wm-followup');
+  if(!el)return;
+  el.value=clients.join('\n');
+  const countEl=document.getElementById('wm-followup-count');
+  if(countEl){countEl.value=clients.length||'';countEl.dataset.manual='';}
+  autoResize(el);
+}
+
+// 下周/下月工作计划 一、重点项目：自动填入行动时间落在该周/月的项目
+function fillNextPlanTextareas(prefix){
+  const NEXT_CATS=[
+    {id:'np1',stages:['生产/交付','安装/验收','项目完结','合同签订']},
+    {id:'np2',stages:['产品报价']},
+    {id:'np3',stages:['方案设计']},
+    {id:'np4',stages:['需求确认']},
+    {id:'np5',stages:['项目延期']},
+    {id:'np6',stages:['项目停止']},
+  ];
+  const grouped={};
+  state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
+  // Determine target week or month range
+  let matchFn;
+  if(prefix==='w'){
+    const selWeek=document.getElementById('w-week')?.value;
+    const selMonth=document.getElementById('w-month')?.value;
+    const selFY=document.getElementById('w-fy')?.value;
+    // We need the calendar year for this FY+month
+    const calY=selFY&&selMonth?calYearOfFYMonth(selFY,selMonth):new Date().getFullYear().toString();
+    // Build set of dates belonging to that week in that month+year
+    matchFn=(actionTime)=>{
+      if(!actionTime)return false;
+      const parts=actionTime.split('-');
+      if(parts.length<3)return false;
+      const am=String(parseInt(parts[1],10));
+      const ay=parts[0];
+      return am===String(selMonth)&&ay===calY&&weekOfDay(actionTime)===selWeek;
+    };
+  } else {
+    // monthly
+    const selMonth=document.getElementById('wm-month')?.value;
+    const selFY=document.getElementById('wm-fy')?.value;
+    const calY=selFY&&selMonth?calYearOfFYMonth(selFY,selMonth):new Date().getFullYear().toString();
+    matchFn=(actionTime)=>{
+      if(!actionTime)return false;
+      const parts=actionTime.split('-');
+      if(parts.length<3)return false;
+      const am=String(parseInt(parts[1],10));
+      const ay=parts[0];
+      return am===String(selMonth)&&ay===calY;
+    };
+  }
+  NEXT_CATS.forEach(cat=>{
+    const el=document.getElementById(prefix+'-'+cat.id);if(!el)return;
+    const items=[];
+    Object.keys(grouped).forEach(k=>{
+      const entries=grouped[k].sort((a,b)=>b.id-a.id);
+      const latest=entries[0];
+      if(matchFn(latest.actionTime)&&cat.stages.includes(latest.progressStage)){
+        items.push({latest,entries});
+      }
+    });
+    el.value=items.map(({latest,entries})=>buildCRMTextFull(latest,entries)).join('\n\n──────────────\n\n');
+    autoResize(el);
+  });
 }
 
 function dailyListLines(id){
@@ -1880,12 +1987,14 @@ function buildTargetTxt(label1,perfLines,collectLines,dealLines){
   dealLines.forEach(l=>r+=`客户 ${l}\n`);
   return r;
 }
-function buildNextPlanTxt(np1,np2,np3,np4,npVisit,npTrip){
+function buildNextPlanTxt(np1,np2,np3,np4,npVisit,npTrip,np5,np6){
   let r='一、重点项目（按项目节点划分）\n';
   r+=`1）合同签订（含走流程）：\n${np1||'（暂无）'}\n\n`;
   r+=`2）产品报价：\n${np2||'（暂无）'}\n\n`;
   r+=`3）方案设计：\n${np3||'（暂无）'}\n\n`;
   r+=`4）需求确认：\n${np4||'（暂无）'}\n\n`;
+  r+=`5）项目延期：\n${np5||'（暂无）'}\n\n`;
+  r+=`6）丢单：\n${np6||'（暂无）'}\n\n`;
   r+='二、其他工作\n';
   r+=`1）客户拜访/来访：\n${npVisit||'（暂无）'}\n\n`;
   r+=`2）出差：\n${npTrip||'（暂无）'}\n`;
@@ -1956,7 +2065,7 @@ function genWeekly(){
   // 下周工作计划
   r+=`下周工作计划\n`;
   if(wr){
-    r+=buildNextPlanTxt(wr.np1,wr.np2,wr.np3,wr.np4,wr.npVisit,wr.npTrip);
+    r+=buildNextPlanTxt(wr.np1,wr.np2,wr.np3,wr.np4,wr.npVisit,wr.npTrip,wr.np5,wr.np6);
   } else {r+=`（暂无）\n`;}
   r+=`\n${'─'.repeat(28)}\n\n`;
   // 下周长线工作
@@ -2062,7 +2171,7 @@ function genMonthly(){
   // 下月工作计划
   r+=`下月工作计划\n`;
   if(mm){
-    r+=buildNextPlanTxt(mm.np1,mm.np2,mm.np3,mm.np4,mm.npVisit,mm.npTrip);
+    r+=buildNextPlanTxt(mm.np1,mm.np2,mm.np3,mm.np4,mm.npVisit,mm.npTrip,mm.np5,mm.np6);
   } else {r+=`（暂无）\n`;}
   r+=`\n${'─'.repeat(28)}\n\n`;
   // 下月长线工作
