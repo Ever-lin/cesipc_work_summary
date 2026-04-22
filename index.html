@@ -2069,16 +2069,11 @@ function buildLonglineTxt(newC,followupArr,followupCount,visitArr,visitCount,key
 }
 function buildTargetTxt(label1,perfTotal,collectTotal,perfLines,collectLines,dealLines){
   let r='';
-  r+=`业绩目标：${perfTotal||'（未填写）'}\n`;
-  r+=`回款目标：${collectTotal||'（未填写）'}\n\n`;
-  const pTotal=perfLines.length;
-  r+=`1. 业绩目标明细：${pTotal}个\n`;
+  r+=`1. 业绩目标：${perfTotal||'（未填写）'}\n`;
   perfLines.forEach((l,i)=>r+=`客户 ${i+1}：${l}\n`);
-  const cTotal=collectLines.length;
-  r+=`2. 回款目标明细：${cTotal}个\n`;
+  r+=`2. 回款目标：${collectTotal||'（未填写）'}\n`;
   collectLines.forEach((l,i)=>r+=`客户 ${i+1}：${l}\n`);
-  const dTotal=dealLines.length;
-  r+=`3. 新成交：${dTotal}个\n`;
+  r+=`3. 新成交：${dealLines.length}个\n`;
   dealLines.forEach(l=>r+=`客户 ${l}\n`);
   return r;
 }
