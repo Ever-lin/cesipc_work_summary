@@ -301,8 +301,12 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>5）日常事务</label><textarea id="w-daily" class="auto-resize" placeholder="其他日常工作安排"></textarea></div>
 
         <div class="slabel">下周目标</div>
-        <div class="field"><label>1. 业绩目标（每行一条：客户名字：xxW，项目名称）</label><textarea id="w-target-perf" class="auto-resize" placeholder="如：Orange Ltd：5W，Orange_项目A&#10;Master Power：3W，Master_项目B"></textarea></div>
-        <div class="field"><label>2. 回款目标（每行一条：客户名字：xxW）</label><textarea id="w-target-collect" class="auto-resize" placeholder="如：Orange Ltd：10W&#10;Master Power：5W"></textarea></div>
+        <div class="grid2">
+          <div class="field"><label>总业绩目标（W）</label><input id="w-target-perf-total" type="text" placeholder="如：20W"></div>
+          <div class="field"><label>总回款目标（W）</label><input id="w-target-collect-total" type="text" placeholder="如：30W"></div>
+        </div>
+        <div class="field"><label>1. 业绩目标明细（每行一条：客户名字：xxW，项目名称）</label><textarea id="w-target-perf" class="auto-resize" placeholder="如：Orange Ltd：5W，Orange_项目A&#10;Master Power：3W，Master_项目B"></textarea></div>
+        <div class="field"><label>2. 回款目标明细（每行一条：客户名字：xxW）</label><textarea id="w-target-collect" class="auto-resize" placeholder="如：Orange Ltd：10W&#10;Master Power：5W"></textarea></div>
         <div class="field"><label>3. 新成交（每行一条：客户名字，项目名称+项目进度术语）</label><textarea id="w-target-deal" class="auto-resize" placeholder="如：Orange Ltd，项目A 产品报价"></textarea></div>
 
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">下周工作计划<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span></div>
@@ -374,8 +378,12 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>5）日常事务</label><textarea id="wm-daily" class="auto-resize" placeholder="其他日常工作安排"></textarea></div>
 
         <div class="slabel">下月目标</div>
-        <div class="field"><label>1. 业绩目标（每行一条：客户名字：xxW，项目名称）</label><textarea id="wm-target-perf" class="auto-resize" placeholder="如：Orange Ltd：5W，Orange_项目A&#10;Master Power：3W，Master_项目B"></textarea></div>
-        <div class="field"><label>2. 回款目标（每行一条：客户名字：xxW）</label><textarea id="wm-target-collect" class="auto-resize" placeholder="如：Orange Ltd：10W&#10;Master Power：5W"></textarea></div>
+        <div class="grid2">
+          <div class="field"><label>总业绩目标（W）</label><input id="wm-target-perf-total" type="text" placeholder="如：20W"></div>
+          <div class="field"><label>总回款目标（W）</label><input id="wm-target-collect-total" type="text" placeholder="如：30W"></div>
+        </div>
+        <div class="field"><label>1. 业绩目标明细（每行一条：客户名字：xxW，项目名称）</label><textarea id="wm-target-perf" class="auto-resize" placeholder="如：Orange Ltd：5W，Orange_项目A&#10;Master Power：3W，Master_项目B"></textarea></div>
+        <div class="field"><label>2. 回款目标明细（每行一条：客户名字：xxW）</label><textarea id="wm-target-collect" class="auto-resize" placeholder="如：Orange Ltd：10W&#10;Master Power：5W"></textarea></div>
         <div class="field"><label>3. 新成交（每行一条：客户名字，项目名称+项目进度术语）</label><textarea id="wm-target-deal" class="auto-resize" placeholder="如：Orange Ltd，项目A 产品报价"></textarea></div>
 
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">下月工作计划<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span></div>
@@ -1382,6 +1390,7 @@ function saveWeekly(){
     visit:gv('w-visit'),visitCount:gv('w-visit-count'),
     keyorders:gv('w-keyorders'),aftersales:gv('w-aftersales'),daily:gv('w-daily'),
     targetPerf:gv('w-target-perf'),targetCollect:gv('w-target-collect'),targetDeal:gv('w-target-deal'),
+    targetPerfTotal:gv('w-target-perf-total'),targetCollectTotal:gv('w-target-collect-total'),
     np1:gv('w-np1'),np2:gv('w-np2'),np3:gv('w-np3'),np4:gv('w-np4'),np5:gv('w-np5'),np6:gv('w-np6'),
     npVisit:gv('w-np-visit'),npTrip:gv('w-np-trip'),
     nlongNew:gv('w-nlong-new'),nlongFollowup:gv('w-nlong-followup'),nlongVisit:gv('w-nlong-visit'),
@@ -1432,6 +1441,7 @@ function loadWeekly(id){
   setV('w-visit',w.visit);setV('w-visit-count',w.visitCount);
   setV('w-keyorders',w.keyorders);setV('w-aftersales',w.aftersales);setV('w-daily',w.daily);
   setV('w-target-perf',w.targetPerf);setV('w-target-collect',w.targetCollect);setV('w-target-deal',w.targetDeal);
+  setV('w-target-perf-total',w.targetPerfTotal);setV('w-target-collect-total',w.targetCollectTotal);
   setV('w-np1',w.np1);setV('w-np2',w.np2);setV('w-np3',w.np3);setV('w-np4',w.np4);setV('w-np5',w.np5);setV('w-np6',w.np6);
   setV('w-np-visit',w.npVisit);setV('w-np-trip',w.npTrip);
   setV('w-nlong-new',w.nlongNew);setV('w-nlong-followup',w.nlongFollowup);setV('w-nlong-visit',w.nlongVisit);
@@ -1465,6 +1475,7 @@ function saveMonthly(){
     visit:gv('wm-visit'),visitCount:gv('wm-visit-count'),
     keyorders:gv('wm-keyorders'),aftersales:gv('wm-aftersales'),daily:gv('wm-daily'),
     targetPerf:gv('wm-target-perf'),targetCollect:gv('wm-target-collect'),targetDeal:gv('wm-target-deal'),
+    targetPerfTotal:gv('wm-target-perf-total'),targetCollectTotal:gv('wm-target-collect-total'),
     np1:gv('wm-np1'),np2:gv('wm-np2'),np3:gv('wm-np3'),np4:gv('wm-np4'),np5:gv('wm-np5'),np6:gv('wm-np6'),
     npVisit:gv('wm-np-visit'),npTrip:gv('wm-np-trip'),
     nlongNew:gv('wm-nlong-new'),nlongFollowup:gv('wm-nlong-followup'),nlongVisit:gv('wm-nlong-visit'),
@@ -1508,6 +1519,7 @@ function loadMonthly(id){
   setV('wm-visit',m.visit);setV('wm-visit-count',m.visitCount);
   setV('wm-keyorders',m.keyorders);setV('wm-aftersales',m.aftersales);setV('wm-daily',m.daily);
   setV('wm-target-perf',m.targetPerf);setV('wm-target-collect',m.targetCollect);setV('wm-target-deal',m.targetDeal);
+  setV('wm-target-perf-total',m.targetPerfTotal);setV('wm-target-collect-total',m.targetCollectTotal);
   setV('wm-np1',m.np1);setV('wm-np2',m.np2);setV('wm-np3',m.np3);setV('wm-np4',m.np4);setV('wm-np5',m.np5);setV('wm-np6',m.np6);
   setV('wm-np-visit',m.npVisit);setV('wm-np-trip',m.npTrip);
   setV('wm-nlong-new',m.nlongNew);setV('wm-nlong-followup',m.nlongFollowup);setV('wm-nlong-visit',m.nlongVisit);
@@ -2055,13 +2067,15 @@ function buildLonglineTxt(newC,followupArr,followupCount,visitArr,visitCount,key
   if(daily)r+=`\n5）日常事务：\n${daily}\n`;
   return r;
 }
-function buildTargetTxt(label1,perfLines,collectLines,dealLines){
+function buildTargetTxt(label1,perfTotal,collectTotal,perfLines,collectLines,dealLines){
   let r='';
+  r+=`业绩目标：${perfTotal||'（未填写）'}\n`;
+  r+=`回款目标：${collectTotal||'（未填写）'}\n\n`;
   const pTotal=perfLines.length;
-  r+=`1. 业绩目标：${pTotal}个\n`;
+  r+=`1. 业绩目标明细：${pTotal}个\n`;
   perfLines.forEach((l,i)=>r+=`客户 ${i+1}：${l}\n`);
   const cTotal=collectLines.length;
-  r+=`2. 回款目标：${cTotal}个\n`;
+  r+=`2. 回款目标明细：${cTotal}个\n`;
   collectLines.forEach((l,i)=>r+=`客户 ${i+1}：${l}\n`);
   const dTotal=dealLines.length;
   r+=`3. 新成交：${dTotal}个\n`;
@@ -2140,7 +2154,7 @@ function genWeekly(){
     const perfLines=(wr.targetPerf||'').split('\n').filter(Boolean);
     const collectLines=(wr.targetCollect||'').split('\n').filter(Boolean);
     const dealLines=(wr.targetDeal||'').split('\n').filter(Boolean);
-    r+=buildTargetTxt('下周',perfLines,collectLines,dealLines);
+    r+=buildTargetTxt('下周',wr.targetPerfTotal,wr.targetCollectTotal,perfLines,collectLines,dealLines);
   } else {r+=`（暂无）\n`;}
   r+=`\n${'─'.repeat(28)}\n\n`;
   // 下周工作计划
@@ -2246,7 +2260,7 @@ function genMonthly(){
     const perfLines=(mm.targetPerf||'').split('\n').filter(Boolean);
     const collectLines=(mm.targetCollect||'').split('\n').filter(Boolean);
     const dealLines=(mm.targetDeal||'').split('\n').filter(Boolean);
-    r+=buildTargetTxt('下月',perfLines,collectLines,dealLines);
+    r+=buildTargetTxt('下月',mm.targetPerfTotal,mm.targetCollectTotal,perfLines,collectLines,dealLines);
   } else {r+=`（暂无）\n`;}
   r+=`\n${'─'.repeat(28)}\n\n`;
   // 下月工作计划
