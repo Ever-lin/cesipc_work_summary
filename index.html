@@ -3439,6 +3439,7 @@ function qtBuildSnap(mode){
     p3Cur:document.getElementById('qf-p3-cur').value,
     stage:document.getElementById('qf-stage').value.trim(),
     deal:document.getElementById('qf-deal').value,
+    custom:document.getElementById('qf-custom').value.trim(),
   };
 }
 function qtDelHistory(quoteId, histIdx){
@@ -3478,6 +3479,7 @@ function qtRenderHistoryInModal(hist){
       +(isLatest?'<span style="font-size:10px;color:var(--blue-text);background:var(--blue-bg);padding:1px 6px;border-radius:8px">最新</span>':'')
       +'</div>'
       +(parts.length?'<div style="color:var(--text2);font-size:11px;margin-top:2px">'+parts.join(' · ')+'</div>':'')
+      +(h.custom?'<div style="color:var(--text2);font-size:11px;margin-top:2px">🔧 '+h.custom+'</div>':'')
       +((h.stage||h.deal)?(()=>{
         const dealMap={won:'✅ 已成交',open:'⭕ 跟进中',confirmed:'🔶 已确认订单',lost:'❌ 丢单',pause:'⏸️ 暂无进展'};
         const dealColor={won:'#1D9E75',open:'var(--blue-text)',confirmed:'#633806',lost:'var(--red-text)',pause:'var(--gray-text)'};
