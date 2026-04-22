@@ -18,25 +18,25 @@
   --teal-bg:#E1F5EE;--teal-text:#085041;
   --radius:8px;--radius-sm:6px;--radius-xs:4px;
 }
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;font-size:14px;color:var(--text);background:var(--bg2);min-height:100vh}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;font-size:14px;color:var(--c-text);background:var(--bg2);min-height:100vh}
 .tabs{display:flex;gap:4px;padding:10px 14px 0;border-bottom:1px solid var(--border2);background:var(--bg2);flex-wrap:wrap}
 .tab{padding:7px 14px;border-radius:6px 6px 0 0;cursor:pointer;font-size:13px;border:1px solid transparent;color:var(--text2);background:transparent;white-space:nowrap}
 .tab.active{background:var(--bg);border-color:var(--border2);border-bottom-color:var(--bg);color:var(--text);font-weight:500}
 .panel{display:none;padding:14px}.panel.active{display:block}
-.card{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.card{background:var(--c-bg);border:1px solid var(--border2);border-radius:var(--radius);padding:14px;margin-bottom:12px}
 .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;flex-wrap:wrap}
 .card-title{font-weight:500;font-size:14px}
 .badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500}
 .badge-blue{background:var(--blue-bg);color:var(--blue-text)}.badge-green{background:var(--green-bg);color:var(--green-text)}.badge-amber{background:var(--amber-bg);color:var(--amber-text)}.badge-red{background:var(--red-bg);color:var(--red-text)}.badge-gray{background:var(--gray-bg);color:var(--gray-text)}.badge-teal{background:var(--teal-bg);color:var(--teal-text)}
 label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
-input,select,textarea{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;font-family:inherit;background:var(--bg2);color:var(--text);outline:none}
+input,select,textarea{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;font-family:inherit;background:var(--bg2);color:var(--c-text);outline:none}
 input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg)}
 textarea{resize:vertical;min-height:60px;line-height:1.5}
 textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 .grid3{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:10px}
 .field{margin-bottom:10px}
-.btn{padding:7px 14px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;cursor:pointer;font-family:inherit;transition:background .15s}
+.btn{padding:7px 14px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--c-bg);color:var(--c-text);font-size:13px;cursor:pointer;font-family:inherit;transition:background .15s}
 .btn:hover{background:var(--bg2)}
 .btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}.btn-primary:hover{background:var(--blue-text)}
 .btn-danger{background:var(--red-bg);color:var(--red-text);border-color:var(--red-border)}
@@ -47,7 +47,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .metric{background:var(--bg2);border-radius:var(--radius-sm);padding:12px}
 .metric-label{font-size:12px;color:var(--text2);margin-bottom:4px}
 .metric-value{font-size:19px;font-weight:500}
-.project-item{border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;background:var(--bg);margin-bottom:8px}
+.project-item{border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;background:var(--c-bg);margin-bottom:8px}
 .inline-flex{display:flex;align-items:center;gap:8px}
 .filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
 .ym-s{width:auto;padding:5px 10px;font-size:13px}
@@ -70,12 +70,316 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .proj-sync-item:last-child{border-bottom:none}
 .proj-sync-item input[type=checkbox]{width:auto;margin-top:2px;flex-shrink:0}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.page-header{background:var(--bg);border-bottom:1px solid var(--border2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.page-title{font-size:15px;font-weight:600;color:var(--text)}
+.page-header{background:var(--c-bg);border-bottom:1px solid var(--border2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.page-title{font-size:15px;font-weight:600;color:var(--c-text)}
 .collapse-hdr{cursor:pointer;user-select:none}
 .collapse-hdr:hover{opacity:.85}
 @media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr}.metric-grid{grid-template-columns:repeat(2,1fr)}}
 .term-item{padding:2px 4px;cursor:pointer;border-radius:3px}.term-item:hover{background:var(--blue-bg);color:var(--blue-text)}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style id="cesipc-styles">
+/* ===== CESIPC Document Generator Styles ===== */
+#panel-cesipc {
+  padding: 0 !important;
+}
+#panel-cesipc .cesipc-root {
+  font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+  #panel-cesipc .cesipc-root {
+    --c-bg: #0d0f14; --surface: #161920; --surface2: #1e222d;
+    --c-border: #2a2f3d; --text: #e8ecf4; --muted: #7a829a;
+    --c-danger: #ff5c6e; --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  #panel-cesipc .cesipc-root { font-family: 'Sora', sans-serif; background: var(--c-bg); color: var(--c-text); min-height: 100vh; }
+
+  #panel-cesipc .cesipc-root header {
+    background: var(--c-surface); border-bottom: 1px solid var(--c-border);
+    padding: 16px 28px; display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { width: 34px; height: 34px; background: #1A3C5E; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  header h1 { font-size: 17px; font-weight: 600; }
+  header span { color: var(--c-muted); font-size: 12px; margin-left: 4px; font-weight: 300; }
+  header nav { margin-left: auto; display: flex; gap: 5px; }
+  .tab-btn { padding: 6px 15px; border-radius: 7px; border: 1px solid var(--c-border);
+    background: transparent; color: var(--c-muted); font-size: 12px; font-family: 'Sora', sans-serif;
+    cursor: pointer; transition: all .15s; }
+  .tab-btn:hover { border-color: #2E75B6; color: var(--c-text); }
+  .tab-btn.active { background: #1A3C5E; border-color: #1A3C5E; color: #fff; }
+
+  .app { display: flex; min-height: calc(100vh - 64px); }
+
+  #panel-cesipc .cesipc-root aside { width: 286px; flex-shrink: 0; background: var(--c-surface);
+    border-right: 1px solid var(--c-border); padding: 20px 16px;
+    display: flex; flex-direction: column; gap: 18px; overflow-y: auto; }
+  .stitle { font-size: 10px; font-weight: 600; letter-spacing: 1.4px;
+    text-transform: uppercase; color: var(--c-muted); margin-bottom: 7px; }
+  .fg { display: flex; flex-direction: column; gap: 4px; margin-bottom: 7px; }
+  .fg label { font-size: 11px; color: var(--c-muted); font-weight: 500; }
+  .fg input, .fg textarea, .fg select { background: var(--c-surface2); border: 1px solid var(--c-border);
+    border-radius: 7px; color: var(--c-text); font-family: 'Sora', sans-serif;
+    font-size: 12px; padding: 7px 10px; transition: border-color .15s; resize: vertical; }
+  .fg input:focus, .fg textarea:focus, .fg select:focus { outline: none; border-color: #2E75B6; }
+  .fg select option { background: var(--c-surface2); }
+  .divider { height: 1px; background: var(--c-border); }
+  .pi-display { background: var(--c-surface2); border: 1px solid #2E75B6; border-radius: 7px;
+    padding: 8px 11px; font-family: 'DM Mono', monospace; font-size: 13px;
+    color: #2E75B6; letter-spacing: 1px; display: flex; align-items: center;
+    justify-content: space-between; cursor: pointer; }
+  .pi-label { font-size: 10px; color: var(--c-muted); font-family: 'Sora', sans-serif;
+    letter-spacing: .5px; text-transform: uppercase; }
+  .info-box { background: rgba(26,60,94,.22); border: 1px solid rgba(46,117,182,.28);
+    border-radius: 7px; padding: 8px 11px; font-size: 11px; color: var(--c-muted); line-height: 1.6; }
+  .info-box strong { color: #2E75B6; }
+
+  #panel-cesipc .cesipc-root main { flex: 1; padding: 22px 26px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+  .tw { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--c-radius); overflow: hidden; }
+  .th { padding: 11px 16px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--c-border); }
+  .th h3 { font-size: 13px; font-weight: 600; }
+  .btn { padding: 6px 12px; border-radius: 6px; border: none;
+    font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 4px; }
+  .btn-p { background: #1A3C5E; color: #fff; }
+  .btn-p:hover { background: #2E75B6; }
+  .btn-sm { padding: 4px 8px; font-size: 11px; }
+  .btn-g { background: transparent; color: var(--c-muted); border: 1px solid var(--c-border); }
+  .btn-g:hover { color: var(--c-text); border-color: var(--c-muted); }
+  .btn-d { background: rgba(255,92,110,.1); color: var(--c-danger); border: 1px solid rgba(255,92,110,.22); }
+  .btn-d:hover { background: rgba(255,92,110,.2); }
+
+  #panel-cesipc .cesipc-root table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  #panel-cesipc .cesipc-root thead tr { background: var(--c-surface2); }
+  #panel-cesipc .cesipc-root th { padding: 8px 9px; text-align: left; font-size: 10px; font-weight: 600;
+    color: var(--c-muted); letter-spacing: .4px; white-space: nowrap; }
+  #panel-cesipc .cesipc-root td { padding: 6px 6px; border-bottom: 1px solid var(--c-border); vertical-align: middle; }
+  #panel-cesipc .cesipc-root td input, td textarea, td select { background: transparent; border: 1px solid transparent;
+    border-radius: 5px; color: var(--c-text); font-family: 'Sora', sans-serif;
+    font-size: 11px; padding: 4px 5px; width: 100%; transition: border-color .12s; }
+  td input:focus, td textarea:focus { outline: none; border-color: #2E75B6; background: var(--c-surface2); }
+  #panel-cesipc .cesipc-root td.amt { font-family: 'DM Mono', monospace; text-align: right; color: #D9E2EC; font-size: 11px; }
+  #panel-cesipc .cesipc-root tfoot td { padding: 8px 9px; font-size: 11.5px; }
+  .trow { background: #1A3C5E; }
+  .trow td { font-weight: 700; color: #fff; font-family: 'DM Mono', monospace; }
+
+  #panel-cesipc .cesipc-root .tab-content { display: none; }
+  #panel-cesipc .cesipc-root .tab-content.active { display: block; }
+
+  /* ═══ PREVIEW OVERLAY ═══ */
+  #panel-cesipc .cesipc-root .overlay { display: none; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,.88); overflow-y: auto; padding: 32px 20px; }
+  #panel-cesipc .cesipc-root .overlay.open { display: flex; flex-direction: column; align-items: center; }
+  #panel-cesipc .cesipc-root .pctrl { display: flex; gap: 9px; margin-bottom: 14px; align-self: center; }
+  .doc-print { background: #1A3C5E; color: #fff; border: none; border-radius: 7px;
+    padding: 8px 18px; cursor: pointer; font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 600; }
+  .doc-print:hover { background: #2E75B6; }
+  .doc-close { background: var(--c-surface); color: var(--c-text); border: 1px solid var(--c-border);
+    border-radius: 7px; padding: 8px 18px; cursor: pointer; font-family: 'Sora', sans-serif; font-size: 13px; }
+
+  /* ═══ PAPER — exact Excel color palette ═══
+     #1A3C5E  dark navy (main headers)
+     #2E75B6  medium blue (doc-info label, subtitles)
+     #D9E2EC  light blue (value cells, total cells)
+     #F2F7FB  very light blue (odd data rows)
+     #FFFFFF  white (even data rows)
+     #1A1A2E  dark text
+     #4A6080  muted address text
+     #8899AA  row-number text
+     #C00000  red highlight (Trade Terms, Lead Time values)
+     #AABBCC / #9E9E9E  signature placeholder text
+  ═══ */
+  .paper {
+    background: #fff; color: #1A1A2E;
+    width: 210mm; min-height: 297mm;
+    padding: 11mm 13mm;
+    font-family: Arial, sans-serif; font-size: 9pt; line-height: 1.3;
+    box-shadow: 0 14px 50px rgba(0,0,0,.55);
+  }
+
+  /* ── PAPER HEADER ── */
+  /* Row 1: full-width dark navy bar with 3 zones */
+  .xhdr { width: 100%; margin-bottom: 0; }
+  .xhdr-top {
+    background: #1A3C5E;
+    display: grid;
+    grid-template-columns: 90pt 1fr auto;
+    align-items: center;
+    padding: 6pt 10pt 6pt 8pt;
+  }
+  /* LOGO zone */
+  .xhdr-logo {
+    display: flex; align-items: center;
+  }
+  .xhdr-logo .logo-box {
+    font-size: 22pt; font-weight: 900; color: #fff;
+    font-family: 'Arial Black', 'Franklin Gothic Heavy', Impact, Arial, sans-serif;
+    letter-spacing: 1.5pt; line-height: 1;
+    text-transform: uppercase;
+  }
+  /* Company name center */
+  .xhdr-co {
+    text-align: center;
+    font-size: 11pt; font-weight: 700; color: #fff;
+    letter-spacing: .2pt;
+  }
+  /* Document type right — ORANGE */
+  .xhdr-doctype {
+    font-size: 19pt; font-weight: 700;
+    color: #E8732A;
+    letter-spacing: .5pt;
+    text-align: right;
+    white-space: nowrap;
+  }
+  /* Row 2: address row below the navy bar */
+  .xhdr-addr-row {
+    background: #fff;
+    border: 0.5pt solid #D0DBE8;
+    border-top: none;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: stretch;
+  }
+  .xhdr-addr {
+    padding: 5pt 8pt;
+    font-size: 7.5pt; color: #4A6080; line-height: 1.8;
+  }
+  /* Meta table (right side of addr row) */
+  .xhdr-meta {
+    border-left: 0.5pt solid #D0DBE8;
+  }
+  .meta-t { border-collapse: collapse; height: 100%; }
+  .meta-t td { padding: 1.5pt 0; font-size: 7.5pt; }
+  .meta-t td.ml { background: #2E75B6; color: #fff; font-weight: 700; padding: 2pt 8pt; text-align: right; white-space: nowrap; }
+  .meta-t td.mv { background: #D9E2EC; color: #1A1A2E; font-weight: 700; padding: 2pt 8pt; text-align: center; min-width: 90pt; }
+
+  /* parties */
+  .parties { display: flex; margin-top: 5pt; }
+  .party { flex: 1; background: #F2F7FB; padding: 5pt 7pt; }
+  .party + .party { border-left: 2pt solid #fff; }
+  .party-h { background: #1A3C5E; color: #fff; font-weight: 700; font-size: 7.5pt;
+    padding: 2.5pt 5pt; margin: -5pt -7pt 4pt -7pt; letter-spacing: .3pt; }
+  .party-b { font-size: 7.5pt; color: #2E75B6; line-height: 1.65; }
+
+  /* items table */
+  .items { margin-top: 7pt; }
+  .items table { width: 100%; border-collapse: collapse; font-size: 7.5pt; }
+  .items thead tr { background: #1A3C5E; }
+  .items th { color: #fff; font-weight: 700; padding: 3.5pt 4pt; text-align: center;
+    border: 0.5pt solid #2E75B6; font-size: 7pt; white-space: normal; }
+  .items th.la { text-align: left; }
+  .items td { padding: 3pt 4pt; border: 0.5pt solid #E0E8F0; vertical-align: top; color: #1A1A2E; }
+  .items tr.od td { background: #F2F7FB; }
+  .items tr.ev td { background: #FFFFFF; }
+  .items td.rn { color: #8899AA; text-align: center; }
+  .items td.nr { text-align: right; }
+  .items td.ct { text-align: center; }
+
+  /* subtotal block */
+  .sub-hdr-row td { background: #1A3C5E; color: #fff; font-weight: 700;
+    padding: 3pt 4pt; border: 0.5pt solid #2E75B6; text-align: center; font-size: 7pt; }
+  .sub-data-row td { background: #F2F7FB; color: #1A1A2E; padding: 3pt 4pt;
+    border: 0.5pt solid #E0E8F0; text-align: center; font-size: 7.5pt; }
+  .sub-data-row td.lbl { color: #2E75B6; text-align: right; }
+  .total-amt-row td { background: #2E75B6; color: #fff; font-weight: 700; font-size: 10pt; padding: 4pt 8pt; }
+
+  /* section header */
+  .sec-h { background: #1A3C5E; color: #fff; font-weight: 700; font-size: 8.5pt;
+    padding: 3.5pt 7pt; margin-top: 7pt; letter-spacing: .3pt; }
+
+  /* terms / bank two-col table */
+  .kv-t { width: 100%; border-collapse: collapse; font-size: 7.5pt; }
+  .kv-t tr.od td { background: #F2F7FB; }
+  .kv-t tr.ev td { background: #FFFFFF; }
+  .kv-t td { padding: 2.5pt 5pt; border: 0.5pt solid #E0E8F0; }
+  .kv-t td.k { color: #2E75B6; font-weight: 700; width: 100pt; }
+  .kv-t td.vr { color: #C00000; }
+  .kv-t td.vn { color: #1A1A2E; }
+
+  /* CI specific header bg override */
+  .ci-hdr td { background: #2E75B6 !important; }
+
+  /* signatures */
+  .sigs { display: flex; margin-top: 9pt; }
+  .sig { flex: 1; }
+  .sig-h { font-weight: 700; font-size: 7.5pt; padding: 2.5pt 5pt;
+    text-align: center; color: #fff; }
+  .sig-h.navy { background: #1A3C5E; }
+  .sig-h.blue { background: #2E75B6; }
+  .sig-b { background: #FAFCFF; font-size: 7pt; padding: 16pt 5pt 5pt;
+    text-align: center; border: 0.5pt solid #E0E8F0; }
+  .sig-b.a { color: #AABBCC; }
+  .sig-b.b { color: #9E9E9E; }
+  .sig + .sig .sig-h, .sig + .sig .sig-b { margin-left: 2pt; }
+
+  /* packing shipper/receiver */
+  .sr-h { background: #1A3C5E; color: #fff; font-weight: 700; font-size: 8.5pt;
+    padding: 3.5pt 7pt; margin-top: 5pt; }
+  .sr-row { display: flex; }
+  .sr-blk { flex: 1; background: #F2F7FB; padding: 5pt 7pt; }
+  .sr-blk + .sr-blk { border-left: 2pt solid #fff; }
+  .sr-sub { background: #2E75B6; color: #fff; font-weight: 700; font-size: 7.5pt;
+    padding: 2pt 5pt; margin: -5pt -7pt 4pt -7pt; }
+  .sr-#panel-cesipc .cesipc-root { font-size: 7.5pt; color: #4A6080; line-height: 1.65; }
+
+  /* packing total row */
+  .pk-tot td { border: 0.5pt solid #2E75B6; text-align: center; font-size: 7.5pt; font-weight: 700; }
+  .pk-tot td.hd { background: #1A3C5E; color: #fff; }
+  .pk-tot td.vl { background: #D9E2EC; color: #1A1A2E; }
+
+  @media print {
+    #panel-cesipc .cesipc-root { background: #fff !important; }
+    header, aside, .pctrl { display: none !important; }
+    .overlay { position: static !important; background: none !important; padding: 0 !important; display: block !important; overflow: visible !important; }
+    .paper { box-shadow: none !important; width: 100% !important; padding: 8mm !important; min-height: unset !important; }
+  }
+
+  /* ── Price mode toggle ── */
+  .mode-toggle { display:flex; align-items:center; gap:0; background:var(--c-surface2);
+    border:1px solid var(--c-border); border-radius:7px; overflow:hidden; flex-shrink:0; }
+  .mode-toggle button { padding:5px 11px; border:none; background:transparent;
+    color:var(--c-muted); font-size:11px; font-family:'Sora',sans-serif; cursor:pointer;
+    transition:all .15s; white-space:nowrap; }
+  .mode-toggle button.on { background:#1A3C5E; color:#fff; font-weight:600; }
+  .mode-toggle button:hover:not(.on) { color:var(--c-text); }
+  .rt-wrap { display:flex; flex-direction:column; gap:3px; }
+  .rt-bar { display:flex; gap:3px; flex-wrap:wrap; }
+  .rt-btn { background:var(--c-surface2); border:1px solid var(--c-border); border-radius:4px;
+    color:var(--c-muted); font-size:11px; padding:2px 6px; cursor:pointer; line-height:1.4;
+    font-family:'Sora',sans-serif; transition:all .12s; }
+  .rt-btn:hover { border-color:#2E75B6; color:var(--c-text); }
+  .rt-btn.active { background:#2E75B6; border-color:#2E75B6; color:#fff; }
+  .rt-field { background:var(--c-surface2); border:1px solid var(--c-border); border-radius:7px;
+    color:var(--c-text); font-family:'Sora',sans-serif; font-size:12px; padding:7px 10px;
+    min-height:32px; outline:none; transition:border-color .15s; }
+  .rt-field:focus { border-color:#2E75B6; }
+  /* memory combo */
+  .mem-wrap { position:relative; }
+  .mem-input { background:var(--c-surface2); border:1px solid var(--c-border); border-radius:7px;
+    color:var(--c-text); font-family:'Sora',sans-serif; font-size:12px; padding:7px 28px 7px 10px;
+    width:100%; outline:none; transition:border-color .15s; }
+  .mem-input:focus { border-color:#2E75B6; }
+  .mem-save { position:absolute; right:6px; top:50%; transform:translateY(-50%);
+    background:none; border:none; color:var(--c-muted); cursor:pointer; font-size:13px; padding:2px; }
+  .mem-save:hover { color:#2E75B6; }
+  .mem-drop { position:absolute; left:0; right:0; top:100%; margin-top:2px;
+    background:var(--c-surface2); border:1px solid var(--c-border); border-radius:7px;
+    z-index:999; display:none; max-height:160px; overflow-y:auto; }
+  .mem-drop.open { display:block; }
+  .mem-opt { padding:6px 10px; font-size:11px; color:var(--c-text); cursor:pointer;
+    display:flex; justify-content:space-between; align-items:center; gap:4px; }
+  .mem-opt:hover { background:rgba(46,117,182,.18); }
+  .mem-del { color:var(--c-danger); font-size:10px; flex-shrink:0; opacity:.6; }
+  .mem-del:hover { opacity:1; }
+  #panel-cesipc .cesipc-root .toast { position: fixed; bottom: 18px; right: 18px; background: #1A3C5E; color: #fff;
+    border-radius: 8px; padding: 9px 15px; font-size: 12px;
+    opacity: 0; transform: translateY(7px); transition: all .22s; z-index: 2000; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
 </style>
 </head>
 <body>
@@ -94,6 +398,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div class="tab" onclick="switchTab('targets')">目标设定</div>
   <div class="tab" onclick="switchTab('export')">导出报告</div>
   <div class="tab" onclick="switchTab('quotes')">💰 报价管理</div>
+  <div class="tab" onclick="switchTab('cesipc')">📄 单据生成</div>
 </div>
 
 <!-- ===== 业绩&回款 ===== -->
@@ -259,13 +564,13 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
 <!-- ===== 从报价导入弹窗 ===== -->
 <div id="import-qt-modal-bg" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;display:none;align-items:center;justify-content:center">
-  <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:94%;max-width:760px;max-height:88vh;overflow-y:auto">
+  <div style="background:var(--c-bg);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:94%;max-width:760px;max-height:88vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <span style="font-size:15px;font-weight:600">💰 从报价管理导入</span>
       <button onclick="closeImportFromQuotes()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2)">✕</button>
     </div>
     <div style="margin-bottom:10px">
-      <input id="iqt-search" placeholder="🔍 搜索项目名称、型号、公司…" oninput="renderImportQtList()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--text)">
+      <input id="iqt-search" placeholder="🔍 搜索项目名称、型号、公司…" oninput="renderImportQtList()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--c-text)">
     </div>
     <div id="iqt-list" style="font-size:13px"></div>
   </div>
@@ -604,14 +909,14 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 <style>
 .qt-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
 .qt-search{flex:1;min-width:160px;position:relative}
-.qt-search input{width:100%;padding:6px 10px 6px 30px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--text);font-family:inherit;outline:none}
+.qt-search input{width:100%;padding:6px 10px 6px 30px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--c-text);font-family:inherit;outline:none}
 .qt-search input:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg)}
 .qt-search-ic{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text2);pointer-events:none}
-.qt-tbl-wrap{overflow-x:auto;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg)}
+.qt-tbl-wrap{overflow-x:auto;border:1px solid var(--border2);border-radius:var(--radius);background:var(--c-bg)}
 .qt-tbl{width:100%;border-collapse:collapse;font-size:12px}
 .qt-tbl th{background:var(--bg2);padding:7px 10px;text-align:left;font-weight:500;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border2);white-space:nowrap;cursor:pointer;user-select:none}
-.qt-tbl th:hover{color:var(--text)}
-.qt-tbl td{padding:7px 10px;border-bottom:1px solid var(--border2);white-space:nowrap;font-size:12px;color:var(--text)}
+.qt-tbl th:hover{color:var(--c-text)}
+.qt-tbl td{padding:7px 10px;border-bottom:1px solid var(--border2);white-space:nowrap;font-size:12px;color:var(--c-text)}
 .qt-tbl tr:last-child td{border-bottom:none}
 .qt-tbl tr:hover td{background:var(--bg2)}
 .qt-price{font-weight:500}
@@ -630,26 +935,26 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .qt-col-resizer:hover,.qt-col-resizer.resizing{background:var(--blue);opacity:.4}
 .qt-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:none;align-items:center;justify-content:center}
 .qt-modal-bg.open{display:flex}
-.qt-modal{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:92%;max-width:720px;max-height:90vh;overflow-y:auto}
+.qt-modal{background:var(--c-bg);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:92%;max-width:720px;max-height:90vh;overflow-y:auto}
 .qt-modal-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
 .qt-modal-title{font-size:15px;font-weight:600}
 .qt-mclose{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2);line-height:1}
-.qt-mclose:hover{color:var(--text)}
+.qt-mclose:hover{color:var(--c-text)}
 .qt-p3warn{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red-text);border-radius:var(--radius-xs);padding:7px 10px;margin-bottom:10px;font-size:12px;display:none}
 .qt-p3warn.show{display:block}
 .qt-pp{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
 .qt-pp-val{font-size:20px;font-weight:600}
 .qt-pp-lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
 .qt-pg{display:flex;align-items:center;gap:6px;margin-top:10px;justify-content:flex-end}
-.qt-pg-btn{background:var(--bg);border:1px solid var(--border2);color:var(--text2);padding:4px 10px;border-radius:var(--radius-xs);cursor:pointer;font-size:12px;font-family:inherit}
+.qt-pg-btn{background:var(--c-bg);border:1px solid var(--border2);color:var(--text2);padding:4px 10px;border-radius:var(--radius-xs);cursor:pointer;font-size:12px;font-family:inherit}
 .qt-pg-btn:hover{border-color:var(--blue);color:var(--blue-text)}
 .qt-pg-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
 .qt-kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:12px}
-.qt-kpi{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px}
+.qt-kpi{background:var(--c-bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px}
 .qt-kpi-val{font-size:22px;font-weight:600;margin-bottom:2px}
 .qt-kpi-lbl{font-size:11px;color:var(--text2)}
 .qt-cc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-bottom:14px}
-.qt-cc{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px}
+.qt-cc{background:var(--c-bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px}
 .qt-cc-name{font-weight:600;font-size:13px;margin-bottom:8px}
 .qt-cc-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
 .qt-mode-btn{display:inline-flex;align-items:center;padding:6px 12px;border:1px solid var(--border);border-radius:var(--radius-xs);cursor:pointer;font-size:12px;color:var(--text2);background:var(--bg2);transition:all .15s;user-select:none}
@@ -1014,7 +1319,7 @@ function init(){
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  const idx=['performance','projects','targets','export','quotes'].indexOf(name);
+  const idx=['performance','projects','targets','export','quotes','cesipc'].indexOf(name);
   document.querySelectorAll('.tab')[idx].classList.add('active');
   document.getElementById('panel-'+name).classList.add('active');
   if(name==='performance'){renderPerf();renderPivot();}
@@ -1305,7 +1610,7 @@ function renderImportQtList(){
     const statusLabel={open:'⭕ 跟进中',confirmed:'🔶 已确认订单',won:'✅ 已成交',pause:'⏸️ 暂无进展',lost:'❌ 丢单','':'—'}[g.deal]||'—';
     const modelsStr=[...new Set(g.quotes.map(x=>x.model).filter(Boolean))].join(' / ');
     const qtySummary=[...new Set(g.quotes.map(x=>x.qty).filter(Boolean))].map(q=>q+'台').join(' / ');
-    return`<div style="border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;background:var(--bg)">
+    return`<div style="border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;background:var(--c-bg)">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap">
         <div style="flex:1;min-width:0">
           <div style="font-weight:600;font-size:13px;margin-bottom:3px">${g.project||'（无项目名称）'}</div>
@@ -1535,7 +1840,7 @@ function renderProjects(){
       </div>
 
       <div id="${crmId}" style="display:none;margin-bottom:6px">
-        <div style="background:#FFFBF0;border:1px solid #F0D070;border-radius:var(--radius-xs);padding:8px 10px;font-size:12px;white-space:pre-wrap;font-family:monospace;line-height:1.8;color:var(--text);user-select:all">${buildCRMTextFull(latest,allEntriesForCard)}</div>
+        <div style="background:#FFFBF0;border:1px solid #F0D070;border-radius:var(--radius-xs);padding:8px 10px;font-size:12px;white-space:pre-wrap;font-family:monospace;line-height:1.8;color:var(--c-text);user-select:all">${buildCRMTextFull(latest,allEntriesForCard)}</div>
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
@@ -3493,7 +3798,7 @@ function qtRenderHistoryInModal(hist){
       +(isLatest?'<span style="font-size:10px;color:var(--blue-text);background:var(--blue-bg);padding:1px 6px;border-radius:8px">最新</span>':'')
       +'</div>'
       +(parentQ&&parentQ.project?'<div style="color:var(--text2);font-size:11px;margin-top:3px">'+parentQ.project+'</div>':'')
-      +((h.model||h.cpu||h.partno)?'<div style="color:var(--text);font-size:11px;font-weight:500;margin-top:3px">'+(h.model?'<b>'+h.model+'</b>':'')+(h.cpu?' · '+h.cpu:'')+(h.partno?' · 料号:'+h.partno:'')+'</div>':'')
+      +((h.model||h.cpu||h.partno)?'<div style="color:var(--c-text);font-size:11px;font-weight:500;margin-top:3px">'+(h.model?'<b>'+h.model+'</b>':'')+(h.cpu?' · '+h.cpu:'')+(h.partno?' · 料号:'+h.partno:'')+'</div>':'')
       +(parts.length?'<div style="color:var(--text2);font-size:11px;margin-top:2px">'+parts.join(' · ')+(h.shipping?' · 🚢 '+h.shipping:'')+'</div>':(!h.shipping?'':'<div style="color:var(--text2);font-size:11px;margin-top:2px">🚢 '+h.shipping+'</div>'))
       +(h.custom?'<div style="color:var(--text2);font-size:11px;margin-top:2px">🔧 '+h.custom+'</div>':'')
       +(h.notes?'<div style="color:var(--text2);font-size:11px;margin-top:2px;font-style:italic">📝 '+h.notes+'</div>':'')
@@ -3695,5 +4000,947 @@ function qtSeed(){
   }
 })();
 </script>
+
+<!-- ===== CESIPC Document Generator ===== -->
+<div id="panel-cesipc" class="panel">
+<div class="cesipc-root">
+
+
+<header>
+  <div class="logo" style="width:auto;padding:0 8px;font-size:13px;letter-spacing:1px;font-family:'Arial Black',Arial,sans-serif;">CESIPC</div>
+  <h1>Order Document Generator</h1>
+  <nav>
+    <button class="tab-btn active" onclick="cesipcSwitchTab('quotation',this)">Quotation 报价单</button>
+    <button class="tab-btn" onclick="cesipcSwitchTab('pi',this)">PI 形式发票</button>
+    <button class="tab-btn" onclick="cesipcSwitchTab('ci',this)">CI 商业发票</button>
+    <button class="tab-btn" onclick="cesipcSwitchTab('packing',this)">Packing 装箱单</button>
+  </nav>
+</header>
+
+<div class="app">
+<aside>
+  <div>
+    <div class="stitle">📋 订单信息</div>
+    <div class="fg"><label>文件编号 (PI No. / Quotation No.)</label><input type="text" id="docNo" placeholder="e.g. CH260402EW01" oninput="updDisp()"/></div>
+    <div class="fg"><label>文件日期</label><input type="date" id="docDate" oninput="autoValidUntil()"/></div>
+    <div class="fg"><label>有效期（报价单，自动+7天）</label><input type="date" id="validUntil"/></div>
+    <div class="fg"><label>货币</label><select id="currency"><option>USD</option><option>EUR</option><option>CNY</option></select></div>
+  </div>
+  <div class="divider"></div>
+  <div>
+    <div class="stitle">🏢 我方信息 Seller</div>
+    <div class="fg"><label>公司名称</label><input type="text" id="sCo" value="Cloud Embedded Technology Limited"/></div>
+    <div class="fg"><label>地址</label><textarea id="sAddr" rows="2">Building 1B, Shangzhi Tech Park, Fenghuang Str., Guangming Dis., Shenzhen, China 518107</textarea></div>
+    <div class="fg"><label>联系人</label><input type="text" id="sCt" value="Everly"/></div>
+    <div class="fg"><label>电话</label><input type="text" id="sTel" value="+86-198-6007-5914"/></div>
+    <div class="fg"><label>邮箱</label><input type="text" id="sEmail" value="sales11@cesipc.com"/></div>
+    <div class="fg"><label>网站</label><input type="text" id="sWeb" value="www.cesipc.com"/></div>
+  </div>
+  <div class="divider"></div>
+  <div>
+    <div class="stitle">🧑‍💼 客户信息 Buyer</div>
+    <div class="fg"><label>公司名称</label><input type="text" id="bCo" placeholder="e.g. CEN TRIGHR"/></div>
+    <div class="fg"><label>地址</label><textarea id="bAddr" rows="2" placeholder="客户地址"></textarea></div>
+    <div class="fg"><label>联系人</label><input type="text" id="bCt" placeholder="联系人"/></div>
+    <div class="fg"><label>电话</label><input type="text" id="bTel" placeholder="+1-xxx-xxx"/></div>
+    <div class="fg"><label>邮箱</label><input type="text" id="bEmail" placeholder="buyer@co.com"/></div>
+  </div>
+  <div class="divider"></div>
+  <div>
+    <div class="stitle">🚚 贸易条款 <span style="font-size:9px;color:var(--muted);text-transform:none;letter-spacing:0;">（填完点💾保存，下次可下拉选）</span></div>
+    <div class="fg"><label>Trade Terms</label><div class="mem-wrap" id="mw-tradeTerm"><input class="mem-input" id="tradeTerm" value="DAP (Delivered at Place)" onfocus="openMem('tradeTerm')" onblur="closeMem('tradeTerm')"/><button class="mem-save" onmousedown="saveMem('tradeTerm')" title="保存此项">💾</button><div class="mem-drop" id="md-tradeTerm"></div></div></div>
+    <div class="fg"><label>Payment Terms</label><div class="mem-wrap" id="mw-payTerm"><input class="mem-input" id="payTerm" value="100% advance payment via T/T" onfocus="openMem('payTerm')" onblur="closeMem('payTerm')"/><button class="mem-save" onmousedown="saveMem('payTerm')" title="保存此项">💾</button><div class="mem-drop" id="md-payTerm"></div></div></div>
+    <div class="fg"><label>Lead Time</label><div class="mem-wrap" id="mw-leadTime"><input class="mem-input" id="leadTime" value="15–20 working days after payment confirmation" onfocus="openMem('leadTime')" onblur="closeMem('leadTime')"/><button class="mem-save" onmousedown="saveMem('leadTime')" title="保存此项">💾</button><div class="mem-drop" id="md-leadTime"></div></div></div>
+    <div class="fg"><label>Warranty</label><div class="mem-wrap" id="mw-warranty"><input class="mem-input" id="warranty" value="2 years limited hardware warranty from shipment date" onfocus="openMem('warranty')" onblur="closeMem('warranty')"/><button class="mem-save" onmousedown="saveMem('warranty')" title="保存此项">💾</button><div class="mem-drop" id="md-warranty"></div></div></div>
+  </div>
+  <div class="divider"></div>
+  <div>
+    <div class="stitle">🏦 银行信息</div>
+    <div class="fg"><label>Account Name</label><input type="text" id="bkAcNm" value="Cloud Embedded Technology Limited"/></div>
+    <div class="fg"><label>Bank Name</label><input type="text" id="bkNm" value="Citibank (Hong Kong) Limited"/></div>
+    <div class="fg"><label>Account No.</label><input type="text" id="bkAc" value="25039041417585"/></div>
+    <div class="fg"><label>SWIFT / BIC</label><input type="text" id="bkSW" value="CITIHKAX"/></div>
+    <div class="fg"><label>Bank Address</label><input type="text" id="bkAd" value="11/F Citi Tower 83 Hoi Bun Road Kwun Tong HK"/></div>
+  </div>
+</aside>
+
+<main>
+  <!-- Q -->
+  <div class="tab-content active" id="tab-quotation">
+    <div class="tw">
+      <div class="th"><h3>📄 Quotation — 报价单</h3>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <div class="mode-toggle">
+            <button id="q-mode-split" class="on" onclick="setMode('q','split')">分拆报价</button>
+            <button id="q-mode-simple" onclick="setMode('q','simple')">整合报价</button>
+          </div>
+          <button class="btn btn-g btn-sm" onclick="addR('q')">＋ 添加行</button>
+          <button class="btn btn-p" onclick="showDoc('q')">预览 / 打印</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+      <table id="q-table"><thead id="q-thead"><tr>
+        <th style="width:26px">#</th><th style="width:96px">Part No.</th>
+        <th>Description</th><th style="width:48px">Qty</th>
+        <th style="width:78px">Barebone $</th><th style="width:68px">RAM $</th>
+        <th style="width:68px">SSD $</th><th style="width:68px">Shipping $</th>
+        <th style="width:78px">All-Incl. $</th><th style="width:78px">Grand Total</th>
+        <th style="width:30px"></th>
+      </tr></thead>
+      <tbody id="q-b"></tbody>
+      <tfoot>
+        <tr><td colspan="3" style="text-align:right;color:var(--muted);font-size:10px;">Qty / Subtotal</td>
+          <td id="q-tq" class="amt">0</td><td colspan="5" id="q-mid-spacer"></td>
+          <td id="q-ta" class="amt">0.00</td><td></td></tr>
+        <tr><td id="q-sh-lbl" colspan="8" style="text-align:right;color:var(--muted);font-size:10px;padding-right:6px;">Shipping</td>
+          <td><input type="number" id="q-sh" value="0" min="0" step="0.01" oninput="cQ()" style="text-align:right;width:72px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--c-text);padding:3px 4px;font-size:11px;"/></td><td></td></tr>
+        <tr class="trow"><td id="q-total-lbl" colspan="9" style="text-align:right;padding-right:8px;font-size:11px;">TOTAL AMOUNT DUE</td>
+          <td id="q-gt" class="amt" style="font-size:13px;color:#fff;">0.00</td><td></td></tr>
+      </tfoot></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PI -->
+  <div class="tab-content" id="tab-pi">
+    <div class="tw">
+      <div class="th"><h3>📄 Proforma Invoice — 形式发票</h3>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <div class="mode-toggle">
+            <button id="pi-mode-split" class="on" onclick="setMode('pi','split')">分拆报价</button>
+            <button id="pi-mode-simple" onclick="setMode('pi','simple')">整合报价</button>
+          </div>
+          <button class="btn btn-g btn-sm" onclick="addR('pi')">＋ 添加行</button>
+          <button class="btn btn-p" onclick="showDoc('pi')">预览 / 打印</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+      <table id="pi-table"><thead id="pi-thead"><tr>
+        <th style="width:26px">#</th><th style="width:96px">Part No.</th>
+        <th>Description</th><th style="width:48px">Qty</th>
+        <th style="width:78px">Barebone $</th><th style="width:68px">RAM $</th>
+        <th style="width:68px">SSD $</th><th style="width:68px">Shipping $</th>
+        <th style="width:78px">All-Incl. $</th><th style="width:78px">Grand Total</th>
+        <th style="width:30px"></th>
+      </tr></thead>
+      <tbody id="pi-b"></tbody>
+      <tfoot>
+        <tr><td colspan="3" style="text-align:right;color:var(--muted);font-size:10px;">Qty / Subtotal</td>
+          <td id="pi-tq" class="amt">0</td><td colspan="5" id="pi-mid-spacer"></td>
+          <td id="pi-ta" class="amt">0.00</td><td></td></tr>
+        <tr><td id="pi-sh-lbl" colspan="8" style="text-align:right;color:var(--muted);font-size:10px;padding-right:6px;">Shipping</td>
+          <td><input type="number" id="pi-sh" value="0" min="0" step="0.01" oninput="cPI()" style="text-align:right;width:72px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--c-text);padding:3px 4px;font-size:11px;"/></td><td></td></tr>
+        <tr class="trow"><td id="pi-total-lbl" colspan="9" style="text-align:right;padding-right:8px;font-size:11px;">TOTAL AMOUNT DUE</td>
+          <td id="pi-gt" class="amt" style="font-size:13px;color:#fff;">0.00</td><td></td></tr>
+      </tfoot></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- CI -->
+  <div class="tab-content" id="tab-ci">
+    <div class="tw">
+      <div class="th"><h3>📄 Commercial Invoice — 商业发票</h3>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-g btn-sm" onclick="addR('ci')">＋ 添加行</button>
+          <button class="btn btn-p" onclick="showDoc('ci')">预览 / 打印</button>
+        </div>
+      </div>
+      <table><thead><tr>
+        <th style="width:26px">#</th><th style="width:96px">Model Name</th>
+        <th style="width:86px">HS Code</th><th>Description</th>
+        <th style="width:60px">Qty (PCS)</th><th style="width:90px">Unit Price (USD)</th>
+        <th style="width:90px">Amount (USD)</th><th style="width:30px"></th>
+      </tr></thead>
+      <tbody id="ci-b"></tbody>
+      <tfoot>
+        <tr><td colspan="4" style="text-align:right;color:var(--muted);font-size:10px;">Subtotal</td>
+          <td id="ci-tq" class="amt">0</td><td></td>
+          <td id="ci-ta" class="amt">0.00</td><td></td></tr>
+        <tr><td colspan="5" style="text-align:right;color:var(--muted);font-size:10px;padding-right:6px;">Shipping</td><td></td>
+          <td><input type="number" id="ci-sh" value="0" min="0" step="0.01" oninput="cCI()" style="text-align:right;width:84px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--c-text);padding:3px 4px;font-size:11px;"/></td><td></td></tr>
+        <tr class="trow"><td colspan="6" style="text-align:right;padding-right:8px;font-size:11px;">TOTAL AMOUNT DUE</td>
+          <td id="ci-gt" class="amt" style="font-size:13px;color:#fff;">0.00</td><td></td></tr>
+      </tfoot></table>
+    </div>
+  </div>
+
+  <!-- PK -->
+  <div class="tab-content" id="tab-packing">
+    <div class="tw">
+      <div class="th"><h3>📦 Packing List — 装箱单</h3>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-g btn-sm" onclick="addR('pk')">＋ 添加行</button>
+          <button class="btn btn-p" onclick="showDoc('pk')">预览 / 打印</button>
+        </div>
+      </div>
+      <table><thead><tr>
+        <th style="width:26px">#</th><th style="width:88px">Model</th>
+        <th>Description</th><th style="width:54px">PCS</th>
+        <th style="width:66px">Packing</th><th style="width:54px">Cartons</th>
+        <th style="width:54px">Qty/Ctn</th><th style="width:56px">N.W(KG)</th>
+        <th style="width:56px">G.W(KG)</th><th style="width:46px">L(cm)</th>
+        <th style="width:46px">W(cm)</th><th style="width:46px">H(cm)</th>
+        <th style="width:68px">CBM(m³)</th><th style="width:30px"></th>
+      </tr></thead>
+      <tbody id="pk-b"></tbody>
+      <tfoot>
+        <tr class="trow">
+          <td colspan="3" style="text-align:right;padding-right:6px;">TOTAL</td>
+          <td id="pk-tp" class="amt" style="color:#D9E2EC;">0</td><td></td>
+          <td id="pk-tc" class="amt" style="color:#D9E2EC;">0</td><td></td>
+          <td id="pk-tnw" class="amt" style="color:#D9E2EC;">0.00</td>
+          <td id="pk-tgw" class="amt" style="color:#D9E2EC;">0.00</td>
+          <td colspan="3"></td>
+          <td id="pk-tcbm" class="amt" style="color:#D9E2EC;">0.00000</td><td></td>
+        </tr>
+      </tfoot></table>
+    </div>
+  </div>
+</main>
+</div>
+
+<!-- FLOATING FORMAT TOOLBAR -->
+<div id="fmt-bar" style="display:none;position:fixed;z-index:2000;background:#1e222d;border:1px solid #2a2f3d;border-radius:8px;padding:5px 8px;gap:5px;align-items:center;box-shadow:0 6px 20px rgba(0,0,0,.5);">
+  <button class="rt-btn" id="fb-bold" title="Bold" onmousedown="fmtExec('bold')"><b>B</b></button>
+  <button class="rt-btn" id="fb-italic" title="Italic" onmousedown="fmtExec('italic')"><i>I</i></button>
+  <button class="rt-btn" id="fb-under" title="Underline" onmousedown="fmtExec('underline')"><u>U</u></button>
+  <div style="width:1px;height:16px;background:#2a2f3d;margin:0 2px;"></div>
+  <input type="color" id="fb-color" value="#E8732A" title="字体颜色" style="width:22px;height:22px;border:none;background:none;cursor:pointer;padding:0;" onmousedown="event.stopPropagation()" oninput="fmtColor(this.value)"/>
+  <button class="rt-btn" title="清除格式" onmousedown="fmtExec('removeFormat')" style="font-size:10px;">✕</button>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="ov">
+  <div class="pctrl">
+    <button class="doc-print" onclick="exportPDF()">🖨 打印 / 保存 PDF</button>
+    <button class="doc-close" onclick="closeOv()">✕ 关闭</button>
+  </div>
+  <div class="paper" id="paper"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+
+</div>
+</div>
+
+
+<script>
+// ===== CESIPC Document Generator Script =====
+
+let rc={q:0,pi:0,ci:0,pk:0};
+let _curDocType='q';
+let _fmtTarget=null;
+const g=id=>(document.getElementById(id)?.value||'').trim();
+const fa=n=>isNaN(parseFloat(n))?'0.00':parseFloat(n).toFixed(2);
+function fd(v){if(!v)return'';const d=new Date(v+'T00:00:00');return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
+function ini(s){return(s||'').trim().split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()).join('');}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+
+// ── auto valid-until = docDate + 7 ──
+function autoValidUntil(){
+  const v=document.getElementById('docDate').value;
+  if(!v)return;
+  const d=new Date(v+'T00:00:00');d.setDate(d.getDate()+7);
+  document.getElementById('validUntil').value=d.toISOString().split('T')[0];
+}
+function updDisp(){}  // kept for compatibility
+
+// ── memory dropdowns ──
+const MEM_KEYS=['tradeTerm','payTerm','leadTime','warranty'];
+function loadMems(){
+  MEM_KEYS.forEach(k=>{
+    const saved=JSON.parse(localStorage.getItem('mem_'+k)||'[]');
+    renderMemDrop(k,saved);
+  });
+}
+function saveMem(k){
+  const val=document.getElementById(k)?.value?.trim();
+  if(!val)return;
+  const saved=JSON.parse(localStorage.getItem('mem_'+k)||'[]');
+  if(!saved.includes(val)){saved.unshift(val);localStorage.setItem('mem_'+k,JSON.stringify(saved.slice(0,20)));}
+  renderMemDrop(k,saved);
+  toast('✅ 已保存');
+}
+function delMem(k,val){
+  const saved=JSON.parse(localStorage.getItem('mem_'+k)||'[]').filter(x=>x!==val);
+  localStorage.setItem('mem_'+k,JSON.stringify(saved));
+  renderMemDrop(k,saved);
+}
+function renderMemDrop(k,saved){
+  const drop=document.getElementById('md-'+k);if(!drop)return;
+  drop.innerHTML=saved.map(v=>`<div class="mem-opt" onmousedown="pickMem('${k}',${JSON.stringify(v)})"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v}</span><span class="mem-del" onmousedown="event.stopPropagation();delMem('${k}',${JSON.stringify(v)})">✕</span></div>`).join('');
+}
+function pickMem(k,val){document.getElementById(k).value=val;closeMem(k);}
+function openMem(k){
+  const drop=document.getElementById('md-'+k);if(drop)drop.classList.add('open');
+}
+function closeMem(k){
+  setTimeout(()=>{const drop=document.getElementById('md-'+k);if(drop)drop.classList.remove('open');},150);
+}
+
+// ── floating format toolbar ──
+const fBar=document.getElementById('fmt-bar');
+document.addEventListener('selectionchange',()=>{
+  const sel=window.getSelection();
+  if(!sel||sel.isCollapsed||!sel.toString().trim()){fBar.style.display='none';return;}
+  // only show inside main table cells
+  const anc=sel.anchorNode?.parentElement;
+  if(!anc?.closest('td[contenteditable]')){fBar.style.display='none';return;}
+  _fmtTarget=anc.closest('td[contenteditable]');
+  const r=sel.getRangeAt(0).getBoundingClientRect();
+  fBar.style.display='flex';
+  fBar.style.top=(r.top+window.scrollY-44)+'px';
+  fBar.style.left=Math.max(4,r.left+window.scrollX-10)+'px';
+});
+document.addEventListener('mousedown',e=>{if(!e.target.closest('#fmt-bar'))fBar.style.display='none';});
+function fmtExec(cmd){document.execCommand(cmd,false,null);}
+function fmtColor(c){document.execCommand('foreColor',false,c);}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const today=new Date(), iso=d=>d.toISOString().split('T')[0];
+  document.getElementById('docDate').value=iso(today);
+  const v=new Date(today);v.setDate(v.getDate()+7);
+  document.getElementById('validUntil').value=iso(v);
+  ['q','pi','ci','pk'].forEach(t=>addR(t));
+  loadMems();
+});
+function cesipcSwitchTab(name,btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');btn.classList.add('active');
+}
+
+// ── price mode: 'split' = Barebone/RAM/SSD, 'simple' = Configured System ──
+const _mode={q:'split',pi:'split'};
+
+function setMode(t,m){
+  _mode[t]=m;
+  // toggle buttons
+  document.getElementById(t+'-mode-split').classList.toggle('on', m==='split');
+  document.getElementById(t+'-mode-simple').classList.toggle('on', m==='simple');
+
+  const isSplit = m==='split';
+  // Rebuild thead
+  const thead = document.getElementById(t+'-thead');
+  thead.innerHTML = isSplit
+    ? `<tr><th style="width:26px">#</th><th style="width:96px">Part No.</th>
+        <th>Description</th><th style="width:48px">Qty</th>
+        <th style="width:78px">Barebone $</th><th style="width:68px">RAM $</th>
+        <th style="width:68px">SSD $</th><th style="width:68px">Shipping $</th>
+        <th style="width:78px">All-Incl. $</th><th style="width:78px">Grand Total</th>
+        <th style="width:30px"></th></tr>`
+    : `<tr><th style="width:26px">#</th><th style="width:96px">Part No.</th>
+        <th>Description</th><th style="width:48px">Qty</th>
+        <th style="width:110px">Unit Price<br>(Configured System)</th>
+        <th style="width:78px">Grand Total</th>
+        <th style="width:30px"></th></tr>`;
+
+  // Update ffoot colspan
+  document.getElementById(t+'-mid-spacer').colSpan = isSplit ? 5 : 1;
+  document.getElementById(t+'-sh-lbl').colSpan    = isSplit ? 8 : 4;
+  document.getElementById(t+'-total-lbl').colSpan = isSplit ? 9 : 5;
+
+  // Rebuild all existing rows in new mode
+  const tbody = document.getElementById(t+'-b');
+  const rows = [...tbody.querySelectorAll('tr')];
+  // Capture current values before rebuild
+  const saved = rows.map(tr=>{
+    const inp = tr.querySelectorAll('input');
+    const ce  = tr.querySelector('td[contenteditable]');
+    return {
+      pn: inp[0]?.value||'', ds: ce?.innerHTML||'',
+      qty: inp[1]?.value||'0',
+      bb:  inp[2]?.value||'', ram: inp[3]?.value||'',
+      ssd: inp[4]?.value||'', sh:  inp[5]?.value||'',
+      ai:  inp[6]?.value||'',
+      cfg: isSplit ? (inp[6]?.value||inp[2]?.value||'') : (inp[2]?.value||'')
+    };
+  });
+
+  tbody.innerHTML='';
+  rc[t]=0;
+  saved.forEach(s=>{
+    addR(t, s);
+  });
+  if(t==='q') cQ(); else cPI();
+}
+
+function addR(t, prefill){
+  const id=++rc[t];
+  if(t==='q'||t==='pi'){
+    const tbody=document.getElementById(t+'-b');
+    const tr=document.createElement('tr');tr.id=t+'-r-'+id;
+    const cf=t==='q'?'cQ':'cPI';
+    const p=prefill||{};
+    const isSplit=_mode[t]==='split';
+
+    if(isSplit){
+      tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc[t]}</td>
+        <td><input type="text" placeholder="EPC-S1092A" value="${p.pn||''}"/></td>
+        <td contenteditable="true" style="min-width:160px;font-size:11px;padding:6px 5px;outline:none;border:1px solid transparent;border-radius:5px;color:var(--c-text);" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds||''}</td>
+        <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
+        <td><input type="number" value="${p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:70px;text-align:right;" oninput="${cf}()"/></td>
+        <td><input type="number" value="${p.ram||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;"/></td>
+        <td><input type="number" value="${p.ssd||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;"/></td>
+        <td><input type="number" value="${p.sh||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;"/></td>
+        <td><input type="number" value="${p.ai||''}" min="0" step="0.01" placeholder="0.00" style="width:70px;text-align:right;" oninput="${cf}()"/></td>
+        <td class="amt" id="${t}-a-${id}">0.00</td>
+        <td><button class="btn btn-d btn-sm" onclick="delR('${t}',${id})">✕</button></td>`;
+    } else {
+      // simple mode: Part No. | Description | Qty | Unit Price (Configured) | Grand Total
+      tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc[t]}</td>
+        <td><input type="text" placeholder="EPC-S1092A" value="${p.pn||''}"/></td>
+        <td contenteditable="true" style="min-width:160px;font-size:11px;padding:6px 5px;outline:none;border:1px solid transparent;border-radius:5px;color:var(--c-text);" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds||''}</td>
+        <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
+        <td><input type="number" value="${p.cfg||p.ai||p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:100px;text-align:right;" oninput="${cf}()"/></td>
+        <td class="amt" id="${t}-a-${id}">0.00</td>
+        <td><button class="btn btn-d btn-sm" onclick="delR('${t}',${id})">✕</button></td>`;
+    }
+    tbody.appendChild(tr);
+    if(t==='q')cQ();else cPI();
+  }
+  if(t==='ci'){
+    const tbody=document.getElementById('ci-b');
+    const tr=document.createElement('tr');tr.id='ci-r-'+id;
+    tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc.ci}</td>
+      <td><input type="text" placeholder="EPC-S1092A" style="width:86px;"/></td>
+      <td><input type="text" placeholder="8471504090" style="width:78px;"/></td>
+      <td><input type="text" placeholder="Industrial Computer" style="min-width:110px;width:100%;"/></td>
+      <td><input type="number" value="0" min="0" style="width:52px;" oninput="cCI()"/></td>
+      <td><input type="number" value="" min="0" step="0.01" placeholder="0.00" style="width:82px;text-align:right;" oninput="cCI()"/></td>
+      <td class="amt" id="ci-a-${id}">0.00</td>
+      <td><button class="btn btn-d btn-sm" onclick="delR('ci',${id})">✕</button></td>`;
+    tbody.appendChild(tr);cCI();
+  }
+  if(t==='pk'){
+    const tbody=document.getElementById('pk-b');
+    const tr=document.createElement('tr');tr.id='pk-r-'+id;
+    tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc.pk}</td>
+      <td><input type="text" placeholder="EPC-S1092A" style="width:80px;"/></td>
+      <td><input type="text" placeholder="Industrial Computer" style="min-width:90px;width:100%;"/></td>
+      <td><input type="number" value="0" min="0" style="width:46px;" oninput="cPK()"/></td>
+      <td><input type="text" value="Carton" style="width:58px;"/></td>
+      <td><input type="number" value="1" min="0" style="width:46px;" oninput="cPK()"/></td>
+      <td><input type="number" value="0" min="0" style="width:46px;"/></td>
+      <td><input type="number" value="0" min="0" step="0.01" style="width:50px;" oninput="cPK()"/></td>
+      <td><input type="number" value="0" min="0" step="0.01" style="width:50px;" oninput="cPK()"/></td>
+      <td><input type="number" value="0" min="0" step="0.1" style="width:40px;" oninput="cCBM(${id})"/></td>
+      <td><input type="number" value="0" min="0" step="0.1" style="width:40px;" oninput="cCBM(${id})"/></td>
+      <td><input type="number" value="0" min="0" step="0.1" style="width:40px;" oninput="cCBM(${id})"/></td>
+      <td class="amt" id="pk-c-${id}">0.00000</td>
+      <td><button class="btn btn-d btn-sm" onclick="delR('pk',${id})">✕</button></td>`;
+    tbody.appendChild(tr);cPK();
+  }
+}
+function delR(t,id){
+  const el=document.getElementById(t+'-r-'+id);if(el)el.remove();
+  if(t==='q')cQ();else if(t==='pi')cPI();else if(t==='ci')cCI();else cPK();
+}
+
+// calc
+function cQ(){
+  const isSplit=_mode.q==='split';
+  let tq=0,ta=0;
+  document.querySelectorAll('#q-b tr').forEach(tr=>{
+    const i=tr.querySelectorAll('input');
+    let qty,p;
+    if(isSplit){
+      qty=parseFloat(i[1]?.value)||0;
+      const allIn=parseFloat(i[6]?.value)||0,bare=parseFloat(i[2]?.value)||0;
+      p=allIn||bare;
+    }else{
+      qty=parseFloat(i[1]?.value)||0;
+      p=parseFloat(i[2]?.value)||0;
+    }
+    const a=qty*p;tq+=qty;ta+=a;
+    const id=tr.id.split('-').pop();
+    const el=document.getElementById('q-a-'+id);if(el)el.textContent=fa(a);
+  });
+  document.getElementById('q-tq').textContent=tq;
+  document.getElementById('q-ta').textContent=fa(ta);
+  const sh=parseFloat(document.getElementById('q-sh')?.value)||0;
+  document.getElementById('q-gt').textContent=fa(ta+sh);
+}
+function cPI(){
+  const isSplit=_mode.pi==='split';
+  let tq=0,ta=0;
+  document.querySelectorAll('#pi-b tr').forEach(tr=>{
+    const i=tr.querySelectorAll('input');
+    let qty,p;
+    if(isSplit){
+      qty=parseFloat(i[1]?.value)||0;
+      const allIn=parseFloat(i[6]?.value)||0,bare=parseFloat(i[2]?.value)||0;
+      p=allIn||bare;
+    }else{
+      qty=parseFloat(i[1]?.value)||0;
+      p=parseFloat(i[2]?.value)||0;
+    }
+    const a=qty*p;tq+=qty;ta+=a;
+    const id=tr.id.split('-').pop();
+    const el=document.getElementById('pi-a-'+id);if(el)el.textContent=fa(a);
+  });
+  document.getElementById('pi-tq').textContent=tq;
+  document.getElementById('pi-ta').textContent=fa(ta);
+  const sh=parseFloat(document.getElementById('pi-sh')?.value)||0;
+  document.getElementById('pi-gt').textContent=fa(ta+sh);
+}
+function cCI(){
+  let tq=0,ta=0;
+  document.querySelectorAll('#ci-b tr').forEach(tr=>{
+    const i=tr.querySelectorAll('input');
+    const qty=parseFloat(i[1]?.value)||0,u=parseFloat(i[2]?.value)||0,a=qty*u;
+    tq+=qty;ta+=a;
+    const id=tr.id.split('-').pop();
+    const el=document.getElementById('ci-a-'+id);if(el)el.textContent=fa(a);
+  });
+  document.getElementById('ci-tq').textContent=tq;
+  document.getElementById('ci-ta').textContent=fa(ta);
+  const sh=parseFloat(document.getElementById('ci-sh')?.value)||0;
+  document.getElementById('ci-gt').textContent=fa(ta+sh);
+}
+function cCBM(id){
+  const tr=document.getElementById('pk-r-'+id);if(!tr)return;
+  const i=tr.querySelectorAll('input');
+  const ctns=parseFloat(i[4]?.value)||0,l=parseFloat(i[8]?.value)||0,w=parseFloat(i[9]?.value)||0,h=parseFloat(i[10]?.value)||0;
+  const cbm=ctns*(l/100)*(w/100)*(h/100);
+  const el=document.getElementById('pk-c-'+id);if(el)el.textContent=cbm.toFixed(5);
+  cPK();
+}
+function cPK(){
+  let tp=0,tc=0,tnw=0,tgw=0,tcbm=0;
+  document.querySelectorAll('#pk-b tr').forEach(tr=>{
+    const i=tr.querySelectorAll('input');
+    const pcs=parseFloat(i[2]?.value)||0,ctns=parseFloat(i[4]?.value)||0;
+    const nw=parseFloat(i[6]?.value)||0,gw=parseFloat(i[7]?.value)||0;
+    const id=tr.id.split('-').pop();
+    const cbm=parseFloat(document.getElementById('pk-c-'+id)?.textContent)||0;
+    tp+=pcs;tc+=ctns;tnw+=nw*pcs;tgw+=gw*pcs;tcbm+=cbm;
+  });
+  document.getElementById('pk-tp').textContent=tp;
+  document.getElementById('pk-tc').textContent=tc;
+  document.getElementById('pk-tnw').textContent=fa(tnw);
+  document.getElementById('pk-tgw').textContent=fa(tgw);
+  document.getElementById('pk-tcbm').textContent=tcbm.toFixed(5);
+}
+
+// ─── data collectors ───
+function getQRows(){
+  const rows=[];
+  const isSplit=_mode.q==='split';
+  document.querySelectorAll('#q-b tr').forEach((tr,i)=>{
+    const inp=tr.querySelectorAll('input');
+    const ce=tr.querySelector('td[contenteditable]');
+    const id=tr.id.split('-').pop();
+    if(isSplit){
+      rows.push({n:i+1,pn:inp[0]?.value||'',ds:ce?.innerHTML||'',
+        qty:inp[1]?.value||'0',bb:inp[2]?.value,ram:inp[3]?.value,ssd:inp[4]?.value,
+        sh:inp[5]?.value,ai:inp[6]?.value,
+        tot:document.getElementById('q-a-'+id)?.textContent||'0.00',od:i%2===0,simple:false});
+    }else{
+      rows.push({n:i+1,pn:inp[0]?.value||'',ds:ce?.innerHTML||'',
+        qty:inp[1]?.value||'0',cfg:inp[2]?.value,
+        tot:document.getElementById('q-a-'+id)?.textContent||'0.00',od:i%2===0,simple:true});
+    }
+  });return rows;
+}
+function getPIRows(){
+  const rows=[];
+  const isSplit=_mode.pi==='split';
+  document.querySelectorAll('#pi-b tr').forEach((tr,i)=>{
+    const inp=tr.querySelectorAll('input');
+    const ce=tr.querySelector('td[contenteditable]');
+    const id=tr.id.split('-').pop();
+    if(isSplit){
+      rows.push({n:i+1,pn:inp[0]?.value||'',ds:ce?.innerHTML||'',
+        qty:inp[1]?.value||'0',bb:inp[2]?.value,ram:inp[3]?.value,ssd:inp[4]?.value,
+        sh:inp[5]?.value,ai:inp[6]?.value,
+        tot:document.getElementById('pi-a-'+id)?.textContent||'0.00',od:i%2===0,simple:false});
+    }else{
+      rows.push({n:i+1,pn:inp[0]?.value||'',ds:ce?.innerHTML||'',
+        qty:inp[1]?.value||'0',cfg:inp[2]?.value,
+        tot:document.getElementById('pi-a-'+id)?.textContent||'0.00',od:i%2===0,simple:true});
+    }
+  });return rows;
+}
+function getCIRows(){
+  const rows=[];
+  document.querySelectorAll('#ci-b tr').forEach((tr,i)=>{
+    const inp=tr.querySelectorAll('input');
+    const id=tr.id.split('-').pop();
+    rows.push({n:i+1,mo:inp[0]?.value||'',hs:inp[1]?.value||'',ds:inp[2]?.value||'',
+      qty:inp[3]?.value||'0',up:inp[4]?.value?parseFloat(inp[4].value).toFixed(2):'',
+      amt:document.getElementById('ci-a-'+id)?.textContent||'0.00',od:i%2===0});
+  });return rows;
+}
+function getPKRows(){
+  const rows=[];
+  document.querySelectorAll('#pk-b tr').forEach((tr,i)=>{
+    const inp=tr.querySelectorAll('input');
+    const id=tr.id.split('-').pop();
+    rows.push({n:i+1,mo:inp[0]?.value||'',ds:inp[1]?.value||'',pcs:inp[2]?.value||'0',
+      pk:inp[3]?.value||'',ct:inp[4]?.value||'0',qc:inp[5]?.value||'0',
+      nw:inp[6]?.value||'0',gw:inp[7]?.value||'0',
+      l:inp[8]?.value||'0',w:inp[9]?.value||'0',h:inp[10]?.value||'0',
+      cbm:document.getElementById('pk-c-'+id)?.textContent||'0.00000',od:i%2===0});
+  });return rows;
+}
+
+// ─── html helpers ───
+function sellerStr(){
+  return `${g('sCo')}<br>${g('sAddr').replace(/\n/g,'<br>')}<br>Contact Person: ${g('sCt')}<br>Tel: ${g('sTel')}<br>Email: ${g('sEmail')}<br>Web: ${g('sWeb')}`;
+}
+function buyerStr(){
+  return `Company: ${g('bCo')||'&nbsp;'}<br>Address: ${g('bAddr').replace(/\n/g,' ')||'&nbsp;'}<br>Contact Person: ${g('bCt')||'&nbsp;'}<br>Tel: ${g('bTel')||'&nbsp;'}<br>Email: ${g('bEmail')||'&nbsp;'}`;
+}
+function shipEmpty(){return`Company: &nbsp;<br>Address: &nbsp;<br>Contact Person: &nbsp;<br>Tel: &nbsp;<br>Email: &nbsp;`;}
+function dno(){return g('docNo')||'—';}
+function cur(){return g('currency');}
+
+function metaRows(pairs){
+  return pairs.map(([l,v])=>`<tr><td class="ml">${l}</td><td class="mv">${v}</td></tr>`).join('');
+}
+function kvRows(pairs){
+  return pairs.map(([k,v,red],i)=>`<tr class="${i%2===0?'od':'ev'}"><td class="k">${k}</td><td class="${red?'vr':'vn'}">${v}</td></tr>`).join('');
+}
+function bankRows(){
+  return kvRows([['Account Name',g('bkAcNm'),false],['Bank Name',g('bkNm'),false],
+    ['Account No.',g('bkAc'),false],['SWIFT / BIC',g('bkSW'),false],['Bank Address',g('bkAd'),false]]);
+}
+function p$(v){return v?'$'+parseFloat(v).toFixed(2):'';}
+
+function qItemRows(rows){
+  return rows.map(r=>{
+    if(r.simple){
+      return`<tr class="${r.od?'od':'ev'}">
+        <td class="rn">${r.n}</td><td>${r.pn}</td>
+        <td class="la" style="text-align:left;">${r.ds}</td>
+        <td class="ct">${r.qty}</td>
+        <td class="nr">${r.cfg?'$'+parseFloat(r.cfg).toFixed(2):''}</td>
+        <td class="nr">$${r.tot}</td>
+      </tr>`;
+    }
+    return`<tr class="${r.od?'od':'ev'}">
+      <td class="rn">${r.n}</td><td>${r.pn}</td>
+      <td class="la" style="text-align:left;">${r.ds}</td>
+      <td class="ct">${r.qty}</td>
+      <td class="nr">${p$(r.bb)}</td><td class="nr">${p$(r.ram)}</td>
+      <td class="nr">${p$(r.ssd)}</td><td class="nr">${p$(r.sh)}</td>
+      <td class="nr">${p$(r.ai)}</td><td class="nr">$${r.tot}</td>
+    </tr>`;
+  }).join('');
+}
+function ciItemRows(rows){
+  return rows.map(r=>`<tr class="${r.od?'od':'ev'}">
+    <td class="ct">${r.n}</td><td class="ct">${r.mo}</td><td class="ct">${r.hs}</td>
+    <td class="ct">${r.ds}</td><td class="ct">${r.qty}</td>
+    <td class="nr">${r.up?'$'+r.up:''}</td><td class="nr">$${r.amt}</td>
+  </tr>`).join('');
+}
+function pkItemRows(rows){
+  return rows.map(r=>`<tr class="${r.od?'od':'ev'}">
+    <td class="ct">${r.n}</td><td class="ct">${r.mo}</td><td class="ct">${r.ds}</td>
+    <td class="ct">${r.pcs}</td><td class="ct">${r.pk}</td><td class="ct">${r.ct}</td>
+    <td class="ct">${r.qc}</td><td class="ct">${r.nw}</td><td class="ct">${r.gw}</td>
+    <td class="ct">${r.l}</td><td class="ct">${r.w}</td><td class="ct">${r.h}</td>
+    <td class="ct">${r.cbm}</td>
+  </tr>`).join('');
+}
+
+function subBlock(tqty,tamt,ship,grand,cols){
+  // cols = 10 (split Q/PI), 6 (simple Q/PI), 7 (CI)
+  const c=g('currency');
+  if(cols===10){
+    return`<table style="width:100%;border-collapse:collapse;margin-top:3pt;">
+      <thead><tr class="sub-hdr-row">
+        <td colspan="3" style="background:#1A3C5E;padding:3pt;border:0.5pt solid #2E75B6;"></td>
+        <td style="background:#1A3C5E;color:#fff;font-weight:700;padding:3pt 4pt;border:0.5pt solid #2E75B6;text-align:center;font-size:7pt;">Qty</td>
+        <td style="background:#1A3C5E;color:#fff;font-weight:700;padding:3pt 4pt;border:0.5pt solid #2E75B6;text-align:center;font-size:7pt;">Products</td>
+        <td colspan="3" style="background:#1A3C5E;padding:3pt;border:0.5pt solid #2E75B6;"></td>
+        <td style="background:#1A3C5E;color:#fff;font-weight:700;padding:3pt 4pt;border:0.5pt solid #2E75B6;text-align:center;font-size:7pt;">Shipping</td>
+        <td style="background:#1A3C5E;color:#fff;font-weight:700;padding:3pt 4pt;border:0.5pt solid #2E75B6;text-align:center;font-size:7pt;">Tax / VAT</td>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td colspan="3" class="sub-data-row lbl" style="background:#F2F7FB;color:#2E75B6;text-align:right;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">Subtotal</td>
+          <td class="sub-data-row" style="background:#F2F7FB;text-align:center;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">${tqty}</td>
+          <td class="sub-data-row" style="background:#F2F7FB;text-align:center;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">${c} ${tamt}</td>
+          <td colspan="3" style="background:#F2F7FB;border:0.5pt solid #E0E8F0;"></td>
+          <td class="sub-data-row" style="background:#F2F7FB;text-align:center;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">${c} ${ship}</td>
+          <td class="sub-data-row" style="background:#F2F7FB;text-align:center;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">0</td>
+        </tr>
+        <tr class="total-amt-row">
+          <td colspan="8" style="text-align:right;padding:4pt 8pt;font-size:10pt;">TOTAL AMOUNT DUE:</td>
+          <td colspan="2" style="text-align:center;padding:4pt 8pt;font-size:10pt;">${c} ${grand}</td>
+        </tr>
+      </tbody>
+    </table>`;
+  }else if(cols===6){
+    // simple mode (Configured System) — 6 cols: # PartNo Desc Qty UnitPrice GrandTotal
+    return`<table style="width:100%;border-collapse:collapse;margin-top:3pt;">
+      <thead><tr class="sub-hdr-row">
+        <td colspan="3" style="background:#1A3C5E;padding:3pt;border:0.5pt solid #2E75B6;"></td>
+        <td style="background:#1A3C5E;color:#fff;font-weight:700;padding:3pt 4pt;border:0.5pt solid #2E75B6;text-align:center;font-size:7pt;">Qty</td>
+        <td style="background:#1A3C5E;color:#fff;font-weight:700;padding:3pt 4pt;border:0.5pt solid #2E75B6;text-align:center;font-size:7pt;">Shipping</td>
+        <td style="background:#1A3C5E;color:#fff;font-weight:700;padding:3pt 4pt;border:0.5pt solid #2E75B6;text-align:center;font-size:7pt;">Tax / VAT</td>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td colspan="3" style="background:#F2F7FB;color:#2E75B6;font-weight:700;text-align:right;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">Subtotal</td>
+          <td style="background:#F2F7FB;text-align:center;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">${tqty}</td>
+          <td style="background:#F2F7FB;text-align:center;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">${c} ${ship}</td>
+          <td style="background:#F2F7FB;text-align:center;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">0</td>
+        </tr>
+        <tr class="total-amt-row">
+          <td colspan="4" style="text-align:right;padding:4pt 8pt;font-size:10pt;">TOTAL AMOUNT DUE:</td>
+          <td colspan="2" style="text-align:center;padding:4pt 8pt;font-size:10pt;">${c} ${grand}</td>
+        </tr>
+      </tbody>
+    </table>`;
+  }else{
+    // CI
+    return`<table style="width:100%;border-collapse:collapse;margin-top:3pt;">
+      <tr><td colspan="4" style="background:#2E75B6;color:#fff;font-weight:700;text-align:right;padding:3pt 6pt;font-size:7.5pt;border:0.5pt solid #2E75B6;">Subtotal</td>
+        <td style="background:#D9E2EC;color:#1A1A2E;font-weight:700;text-align:center;padding:3pt 6pt;font-size:7.5pt;border:0.5pt solid #2E75B6;">${tqty}</td>
+        <td style="background:#D9E2EC;border:0.5pt solid #2E75B6;"></td>
+        <td style="background:#D9E2EC;color:#1A1A2E;font-weight:700;text-align:center;padding:3pt 6pt;font-size:7.5pt;border:0.5pt solid #2E75B6;">${c} ${tamt}</td>
+      </tr>
+      <tr><td colspan="5" style="background:#2E75B6;color:#fff;font-weight:700;text-align:right;padding:3pt 6pt;font-size:7.5pt;border:0.5pt solid #2E75B6;">Shipping</td>
+        <td style="background:#D9E2EC;border:0.5pt solid #2E75B6;"></td>
+        <td style="background:#D9E2EC;color:#1A1A2E;text-align:center;padding:3pt 6pt;font-size:7.5pt;border:0.5pt solid #2E75B6;">${c} ${ship}</td>
+      </tr>
+      <tr><td colspan="5" style="background:#1A3C5E;color:#fff;font-weight:700;text-align:right;padding:4pt 8pt;font-size:9.5pt;border:0.5pt solid #1A3C5E;">TOTAL AMOUNT DUE:</td>
+        <td colspan="2" style="background:#D9E2EC;color:#1A1A2E;font-weight:700;text-align:center;padding:4pt 8pt;font-size:9.5pt;border:0.5pt solid #2E75B6;">${c} ${grand}</td>
+      </tr>
+    </table>`;
+  }
+}
+
+function sigs(navy=true){
+  const cls=navy?'navy':'blue';
+  return`<div class="sigs">
+    <div class="sig"><div class="sig-h ${cls}">AUTHORIZED SIGNATURE</div><div class="sig-b ${navy?'a':'b'}">Company Stamp &amp; Authorized Signature</div></div>
+    <div class="sig"><div class="sig-h ${cls}">CUSTOMER ACCEPTANCE</div><div class="sig-b ${navy?'a':'b'}">Company Stamp &amp; Authorized Signature</div></div>
+  </div>`;
+}
+
+// ─── builders ───
+function buildQ(){
+  const rows=getQRows(),c=cur(),no=dno(),dt=fd(g('docDate'));
+  const tq=document.getElementById('q-tq').textContent;
+  const ta=document.getElementById('q-ta').textContent;
+  const sh=fa(document.getElementById('q-sh')?.value||0);
+  const gt=document.getElementById('q-gt').textContent;
+  return`
+  <div class="xhdr">
+    <div class="xhdr-top">
+      <div class="xhdr-logo"><div class="logo-box">CESIPC</div></div>
+      <div class="xhdr-co">${g('sCo')}</div>
+      <div class="xhdr-doctype">QUOTATION</div>
+    </div>
+    <div class="xhdr-addr-row">
+      <div class="xhdr-addr">${g('sAddr').replace(/\n/g,'<br>')}<br>Contact Person: ${g('sCt')}<br>Tel: ${g('sTel')}<br>Email: ${g('sEmail')}<br>Web: ${g('sWeb')}</div>
+      <div class="xhdr-meta"><table class="meta-t">${metaRows([['Quotation No.',no],['Date',dt],['Valid Until',fd(g('validUntil'))],['Currency',c],['Prepared By',g('sCt')]])}</table></div>
+    </div>
+  </div>
+  <div class="parties">
+    <div class="party"><div class="party-h">BILL TO</div><div class="party-b">${buyerStr()}</div></div>
+    <div class="party"><div class="party-h">SHIP TO &nbsp;(if different)</div><div class="party-b">${shipEmpty()}</div></div>
+  </div>
+  <div class="items"><table>
+    <thead><tr>
+      ${_mode.q==='split'
+        ? `<th style="width:20pt">#</th><th style="width:54pt">Part No.</th>
+           <th class="la">Description</th><th style="width:26pt">Qty</th>
+           <th style="width:46pt">Unit Price<br>(Barebone)</th>
+           <th style="width:40pt">Unit Price<br>(RAM)</th>
+           <th style="width:40pt">Unit Price<br>(SSD)</th>
+           <th style="width:40pt">Unit Price<br>(Shipping)</th>
+           <th style="width:50pt">Unit Price<br>(All Included)</th>
+           <th style="width:50pt">Grand Total</th>`
+        : `<th style="width:20pt">#</th><th style="width:54pt">Part No.</th>
+           <th class="la">Description</th><th style="width:26pt">Qty</th>
+           <th style="width:80pt">Unit Price<br>(Configured System)</th>
+           <th style="width:50pt">Grand Total</th>`}
+    </tr></thead>
+    <tbody>${qItemRows(rows)}</tbody>
+  </table></div>
+  ${subBlock(tq,ta,sh,gt,_mode.q==='split'?10:6)}
+  <div class="sec-h">TERMS &amp; CONDITIONS</div>
+  <table class="kv-t">${kvRows([['Trade Terms',g('tradeTerm'),true],['Payment Terms',g('payTerm'),false],['Lead Time',g('leadTime'),true],['Warranty',g('warranty'),false],['Validity','Barebone pricing valid 3 months; RAM &amp; SSD pricing valid 7 days',false]])}</table>
+  <div class="sec-h">BANK / REMITTANCE DETAILS</div>
+  <table class="kv-t">${bankRows()}</table>
+  <div class="sec-h">NOTES</div>
+  <div style="background:#F2F7FB;padding:4pt 6pt;font-size:7.5pt;color:#1A1A2E;border:0.5pt solid #E0E8F0;">
+    1. All prices are quoted in ${c} unless otherwise stated. &nbsp; 2. Please quote the Quotation No. on your purchase order. &nbsp; 3. Prices are subject to change if order is placed after the validity period.</div>
+  ${sigs(true)}`;
+}
+
+function buildPI(){
+  const rows=getPIRows(),c=cur(),no=dno(),dt=fd(g('docDate'));
+  const tq=document.getElementById('pi-tq').textContent;
+  const ta=document.getElementById('pi-ta').textContent;
+  const sh=fa(document.getElementById('pi-sh')?.value||0);
+  const gt=document.getElementById('pi-gt').textContent;
+  return`
+  <div class="xhdr">
+    <div class="xhdr-top">
+      <div class="xhdr-logo"><div class="logo-box">CESIPC</div></div>
+      <div class="xhdr-co">${g('sCo')}</div>
+      <div class="xhdr-doctype">Proforma Invoice</div>
+    </div>
+    <div class="xhdr-addr-row">
+      <div class="xhdr-addr">${g('sAddr').replace(/\n/g,'<br>')}<br>Contact Person: ${g('sCt')}<br>Tel: ${g('sTel')}<br>Email: ${g('sEmail')}<br>Web: ${g('sWeb')}</div>
+      <div class="xhdr-meta"><table class="meta-t">${metaRows([['PI No.',no],['Date',dt],['PO No.',no],['Date',dt],['Currency',c],['Prepared By',g('sCt')]])}</table></div>
+    </div>
+  </div>
+  <div class="parties">
+    <div class="party"><div class="party-h">BILL TO</div><div class="party-b">${buyerStr()}</div></div>
+    <div class="party"><div class="party-h">SHIP TO &nbsp;(if different)</div><div class="party-b">${shipEmpty()}</div></div>
+  </div>
+  <div class="items"><table>
+    <thead><tr>
+      ${_mode.pi==='split'
+        ? `<th style="width:20pt">#</th><th style="width:54pt">Part No.</th>
+           <th class="la">Description</th><th style="width:26pt">Qty</th>
+           <th style="width:46pt">Unit Price<br>(Barebone)</th>
+           <th style="width:40pt">Unit Price<br>(RAM)</th>
+           <th style="width:40pt">Unit Price<br>(SSD)</th>
+           <th style="width:40pt">Unit Price<br>(Shipping)</th>
+           <th style="width:50pt">Unit Price<br>(All Included)</th>
+           <th style="width:50pt">Grand Total</th>`
+        : `<th style="width:20pt">#</th><th style="width:54pt">Part No.</th>
+           <th class="la">Description</th><th style="width:26pt">Qty</th>
+           <th style="width:80pt">Unit Price<br>(Configured System)</th>
+           <th style="width:50pt">Grand Total</th>`}
+    </tr></thead>
+    <tbody>${qItemRows(rows)}</tbody>
+  </table></div>
+  ${subBlock(tq,ta,sh,gt,_mode.pi==='split'?10:6)}
+  <div class="sec-h">TERMS &amp; CONDITIONS</div>
+  <table class="kv-t">${kvRows([['Trade Terms',g('tradeTerm'),true],['Payment Terms',g('payTerm'),false],['Lead Time',g('leadTime'),true],['Warranty',g('warranty'),false]])}</table>
+  <div class="sec-h">BANK / REMITTANCE DETAILS</div>
+  <table class="kv-t">${bankRows()}</table>
+  ${sigs(true)}`;
+}
+
+function buildCI(){
+  const rows=getCIRows(),c=cur(),no=dno(),dt=fd(g('docDate'));
+  const tq=document.getElementById('ci-tq').textContent;
+  const ta=document.getElementById('ci-ta').textContent;
+  const sh=fa(document.getElementById('ci-sh')?.value||0);
+  const gt=document.getElementById('ci-gt').textContent;
+  return`
+  <div class="xhdr">
+    <div class="xhdr-top">
+      <div class="xhdr-logo"><div class="logo-box">CESIPC</div></div>
+      <div class="xhdr-co">${g('sCo')}</div>
+      <div class="xhdr-doctype">Commercial Invoice</div>
+    </div>
+    <div class="xhdr-addr-row">
+      <div class="xhdr-addr">${g('sAddr').replace(/\n/g,'<br>')}<br>Contact Person: ${g('sCt')}<br>Tel: ${g('sTel')}<br>Email: ${g('sEmail')}<br>Web: ${g('sWeb')}</div>
+      <div class="xhdr-meta"><table class="meta-t">${metaRows([['Invoice No.',no],['Date',dt],['PO No.',no],['Date',dt],['Currency',c],['Prepared By',g('sCt')]])}</table></div>
+    </div>
+  </div>
+  <div class="parties">
+    <div class="party"><div class="party-h">BILL TO</div><div class="party-b">${buyerStr()}</div></div>
+    <div class="party"><div class="party-h">SHIP TO &nbsp;(if different)</div><div class="party-b">${shipEmpty()}</div></div>
+  </div>
+  <div class="items"><table>
+    <thead><tr class="ci-hdr">
+      <th style="width:20pt">#</th><th style="width:60pt">Model Name</th>
+      <th style="width:54pt">HS Code</th><th class="la">Description</th>
+      <th style="width:32pt">Qty<br>(PCS)</th>
+      <th style="width:54pt">Unit Price<br>(USD)</th>
+      <th style="width:54pt">Amount<br>(USD)</th>
+    </tr></thead>
+    <tbody>${ciItemRows(rows)}</tbody>
+  </table></div>
+  ${subBlock(tq,ta,sh,gt,7)}
+  <table class="kv-t" style="margin-top:6pt;"><tr class="od">
+    <td class="k" style="background:#2E75B6;color:#fff;">Trade Terms</td>
+    <td class="vr">${g('tradeTerm')}</td>
+  </tr></table>
+  ${sigs(false)}`;
+}
+
+function buildPK(){
+  const rows=getPKRows(),c=cur(),no=dno(),dt=fd(g('docDate'));
+  const tp=document.getElementById('pk-tp').textContent;
+  const tc=document.getElementById('pk-tc').textContent;
+  const tnw=document.getElementById('pk-tnw').textContent;
+  const tgw=document.getElementById('pk-tgw').textContent;
+  const tcbm=document.getElementById('pk-tcbm').textContent;
+  return`
+  <div class="xhdr">
+    <div class="xhdr-top">
+      <div class="xhdr-logo"><div class="logo-box">CESIPC</div></div>
+      <div class="xhdr-co">${g('sCo')}</div>
+      <div class="xhdr-doctype">Packing List</div>
+    </div>
+    <div class="xhdr-addr-row">
+      <div class="xhdr-addr">${g('sAddr').replace(/\n/g,'<br>')}<br>Contact Person: ${g('sCt')}<br>Tel: ${g('sTel')}<br>Email: ${g('sEmail')}<br>Web: ${g('sWeb')}</div>
+      <div class="xhdr-meta"><table class="meta-t">${metaRows([['PI No.',no],['Date',dt],['PO No.',no],['Date',dt],['Currency',c],['Prepared By',g('sCt')]])}</table></div>
+    </div>
+  </div>
+  <div class="sr-h">SHIPPER / RECEIVER DETAILS</div>
+  <div class="sr-row">
+    <div class="sr-blk"><div class="sr-sub">SHIPPER</div><div class="sr-body">${sellerStr()}</div></div>
+    <div class="sr-blk"><div class="sr-sub">RECEIVER</div><div class="sr-body">${buyerStr()}</div></div>
+  </div>
+  <div class="items" style="margin-top:6pt;"><table style="font-size:7pt;">
+    <thead><tr>
+      <th style="width:18pt">Marks<br>No.</th><th style="width:50pt">Model Name</th>
+      <th class="la">Description</th><th style="width:28pt">Units<br>(PCS)</th>
+      <th style="width:34pt">Packing<br>Type</th><th style="width:28pt">Carton<br>QTY</th>
+      <th style="width:32pt">QTY Each<br>Carton</th><th style="width:28pt">N.W<br>(KG)</th>
+      <th style="width:28pt">G.W<br>(KG)</th><th style="width:24pt">L<br>(CM)</th>
+      <th style="width:24pt">W<br>(CM)</th><th style="width:24pt">H<br>(CM)</th>
+      <th style="width:42pt">CBM (M³)</th>
+    </tr></thead>
+    <tbody>${pkItemRows(rows)}</tbody>
+    <tfoot>
+      <tr class="pk-tot">
+        <td class="hd" colspan="3">TOTAL</td>
+        <td class="vl">${tp}</td>
+        <td class="hd"></td>
+        <td class="vl">${tc}</td>
+        <td class="hd"></td>
+        <td class="vl">${tnw}</td>
+        <td class="vl">${tgw}</td>
+        <td class="hd" colspan="3"></td>
+        <td class="vl">${tcbm}</td>
+      </tr>
+    </tfoot>
+  </table></div>
+  ${sigs(false)}`;
+}
+
+// ─── show/close ───
+function showDoc(t){
+  _curDocType=t;
+  const paper=document.getElementById('paper');
+  if(t==='q') paper.innerHTML=buildQ();
+  else if(t==='pi') paper.innerHTML=buildPI();
+  else if(t==='ci') paper.innerHTML=buildCI();
+  else paper.innerHTML=buildPK();
+  document.getElementById('ov').classList.add('open');
+}
+function exportPDF(){
+  const no=g('docNo');
+  let prefix='CESIPC';
+  if(_curDocType==='q') prefix='CESIPC Quotation'+(no?'-'+no:'');
+  else if(_curDocType==='pi') prefix='CESIPC PI'+(no?'-'+no:'');
+  else if(_curDocType==='ci') prefix='CESIPC CI'+(no?'-'+no:'');
+  else prefix='CESIPC Packing List'+(no?'-'+no:'');
+  document.title=prefix;
+  window.print();
+  setTimeout(()=>{document.title='CESIPC — Order Document Generator';},1000);
+}
+function closeOv(){document.getElementById('ov').classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOv();});
+
+</script>
+
 </body>
 </html>
