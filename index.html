@@ -1237,7 +1237,7 @@ function weekInfoOfDay(dateStr){
   // 特殊：如果 mon < firstMon，说明这个周的周一在本月1号之前，按理应归上月 → 但调用方已经用mon所在月，不会到这里
   // 计算周序号：(mon - firstMon) / 7 + 1
   const diffMs=mon.getTime()-firstMon.getTime();
-  const weekIdx=Math.round(diffMs/(7*24*3600*1000)); // 0-based
+  const weekIdx=Math.floor(diffMs/(7*24*3600*1000)); // 0-based
   const weekNum=weekIdx+1;
   const labels=['第一周','第二周','第三周','第四周','第五周'];
   const week=labels[Math.min(weekNum-1,4)]||'第五周';
