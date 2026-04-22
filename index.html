@@ -117,7 +117,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <input type="hidden" id="perf-month" value="">
     <input type="hidden" id="perf-week" value="">
     <div class="grid2">
-      <div class="field"><label>类型</label><select id="perf-type" onchange="toggleAmt()"><option value="业绩">业绩</option><option value="回款">回款</option><option value="新成交">新成交</option></select></div>
+      <div class="field"><label>类型</label><select id="perf-type" onchange="toggleAmt()"><option value="业绩">业绩</option><option value="回款">回款</option><option value="销售成交">新成交 — 销售成交</option><option value="借测成交">新成交 — 借测成交</option></select></div>
       <div class="field"><label>客户名称</label><input id="perf-client" placeholder="客户名称" oninput="toggleAmt()"></div>
     </div>
     <div id="amt-row" class="grid2">
@@ -138,7 +138,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <option value="month">年度按月</option>
           <option value="fy">财年对比</option>
         </select>
-        <select class="ym-s" id="pivot-type" onchange="renderPivot()"><option value="业绩">业绩</option><option value="回款">回款</option><option value="新成交">新成交</option></select>
+        <select class="ym-s" id="pivot-type" onchange="renderPivot()"><option value="业绩">业绩</option><option value="回款">回款</option><option value="新成交">新成交（全部）</option><option value="销售成交">销售成交</option><option value="借测成交">借测成交</option></select>
       </div>
     </div>
     <div id="pivot-wrap" style="overflow-x:auto"></div>
@@ -465,12 +465,29 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div id="sw-weekly" class="sub-panel">
     <div class="card">
       <div class="card-header"><span class="card-title">导出周报</span></div>
-      <div class="hint">业绩&回款数据 + 已保存的周报内容 合并生成。请先在「填写周报/月报」中保存对应周次的内容。</div>
+      <div class="hint">业绩&amp;回款数据 + 已保存的周报内容 合并生成。请先在「填写周报/月报」中保存对应周次的内容。</div>
       <div class="grid3">
         <div class="field"><label>财年</label><select id="ew-fy"></select></div>
         <div class="field"><label>月份</label><select id="ew-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select></div>
         <div class="field"><label>周次</label><select id="ew-week"><option>第一周</option><option selected>第二周</option><option>第三周</option><option>第四周</option><option>第五周</option></select></div>
       </div>
+      <div class="slabel">📊 目标设定（用于计算完成比例）</div>
+      <div class="grid3">
+        <div class="field"><label>月度业绩目标（W）<span style="font-size:11px;color:var(--text3)"> 如：50</span></label><input id="ew-target-perf-month" type="number" placeholder="如：50" step="0.01"></div>
+        <div class="field"><label>年度业绩目标（W）<span style="font-size:11px;color:var(--text3)"> 如：600</span></label><input id="ew-target-perf-year" type="number" placeholder="如：600" step="0.01"></div>
+        <div class="field"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>月度回款目标（W）<span style="font-size:11px;color:var(--text3)"> 如：60</span></label><input id="ew-target-collect-month" type="number" placeholder="如：60" step="0.01"></div>
+        <div class="field"><label>年度回款目标（W）<span style="font-size:11px;color:var(--text3)"> 如：700</span></label><input id="ew-target-collect-year" type="number" placeholder="如：700" step="0.01"></div>
+        <div class="field"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>月度新客目标（个）</label><input id="ew-target-deal-month" type="number" placeholder="如：3"></div>
+        <div class="field"><label>年度新客目标（个）</label><input id="ew-target-deal-year" type="number" placeholder="如：30"></div>
+        <div class="field"></div>
+      </div>
+      <div class="field"><label>截至本月应收货款（W）<span style="font-size:11px;color:var(--text3)"> 如：12.5</span></label><input id="ew-receivable" type="number" placeholder="如：12.5" step="0.01"></div>
       <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="genWeekly()">生成周报</button></div>
     </div>
     <div id="generated-weeklies"></div>
@@ -479,11 +496,28 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div id="sw-monthly" class="sub-panel">
     <div class="card">
       <div class="card-header"><span class="card-title">导出月报</span></div>
-      <div class="hint">业绩&回款数据（含年度截至累计）+ 已保存的月报内容 合并生成。请先在「填写周报/月报」中保存对应月份的内容。</div>
+      <div class="hint">业绩&amp;回款数据（含年度截至累计）+ 已保存的月报内容 合并生成。请先在「填写周报/月报」中保存对应月份的内容。</div>
       <div class="grid2">
         <div class="field"><label>财年</label><select id="em-fy"></select></div>
         <div class="field"><label>月份</label><select id="em-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select></div>
       </div>
+      <div class="slabel">📊 目标设定（用于计算完成比例）</div>
+      <div class="grid3">
+        <div class="field"><label>月度业绩目标（W）</label><input id="em-target-perf-month" type="number" placeholder="如：50" step="0.01"></div>
+        <div class="field"><label>年度业绩目标（W）</label><input id="em-target-perf-year" type="number" placeholder="如：600" step="0.01"></div>
+        <div class="field"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>月度回款目标（W）</label><input id="em-target-collect-month" type="number" placeholder="如：60" step="0.01"></div>
+        <div class="field"><label>年度回款目标（W）</label><input id="em-target-collect-year" type="number" placeholder="如：700" step="0.01"></div>
+        <div class="field"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>月度新客目标（个）</label><input id="em-target-deal-month" type="number" placeholder="如：3"></div>
+        <div class="field"><label>年度新客目标（个）</label><input id="em-target-deal-year" type="number" placeholder="如：30"></div>
+        <div class="field"></div>
+      </div>
+      <div class="field"><label>截至本月应收货款（W）</label><input id="em-receivable" type="number" placeholder="如：12.5" step="0.01"></div>
       <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="genMonthly()">生成月报</button></div>
     </div>
     <div id="generated-monthlies"></div>
@@ -652,7 +686,7 @@ function onPerfDateChange(){
 
 function toggleAmt(){
   const type=document.getElementById('perf-type').value;
-  const isNew=type==='新成交';
+  const isNew=type==='销售成交'||type==='借测成交';
   document.getElementById('amt-row').style.display=isNew?'none':'grid';
   document.getElementById('amt-row-note').style.display=isNew?'block':'none';
 }
@@ -665,7 +699,7 @@ function addPerf(){
   const week=document.getElementById('perf-week').value;
   const type=document.getElementById('perf-type').value,client=document.getElementById('perf-client').value.trim();
   if(!client){alert('请填写客户名称');return;}
-  const noAmt=type==='新成交';
+  const noAmt=type==='销售成交'||type==='借测成交';
   const amount=noAmt?0:(parseFloat(document.getElementById('perf-amount').value)||0);
   const note=noAmt?document.getElementById('perf-note-deal').value.trim():document.getElementById('perf-note').value.trim();
   if(editId){
@@ -691,7 +725,9 @@ function editPerf(id){
   const day=wDays[p.week]||'01';
   document.getElementById('perf-date').value=`${cy}-${mm}-${day}`;
   document.getElementById('perf-week-badge').textContent=`${p.month}月 ${p.week}`;
-  document.getElementById('perf-type').value=p.type;
+  // 兼容旧「新成交」类型，默认映射为「销售成交」
+  const typeVal=(p.type==='新成交')?'销售成交':p.type;
+  document.getElementById('perf-type').value=typeVal;
   document.getElementById('perf-client').value=p.client;
   document.getElementById('perf-amount').value=p.noAmount?'':p.amount;
   document.getElementById('perf-note').value=p.noAmount?'':p.note||'';
@@ -725,7 +761,7 @@ function renderPerf(){
   const md=state.perf.filter(p=>p.fy===fy&&p.month===month);
   const ts=md.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
   const tr=md.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
-  const nd=md.filter(p=>p.type==='新成交');
+  const nd=md.filter(p=>p.type==='新成交'||p.type==='销售成交'||p.type==='借测成交');
   document.getElementById('metrics').innerHTML=`
     <div class="metric"><div class="metric-label">${month}月总业绩</div><div class="metric-value" style="color:#185FA5">${fmt(ts)}</div></div>
     <div class="metric"><div class="metric-label">${month}月总回款</div><div class="metric-value" style="color:#1D9E75">${fmt(tr)}</div></div>
@@ -737,9 +773,13 @@ function renderPerf(){
     const wd=md.filter(p=>p.week===w);if(!wd.length)return;
     const ws=wd.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
     const wr=wd.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
-    const wn=wd.filter(p=>p.type==='新成交');
+    const wn=wd.filter(p=>p.type==='新成交'||p.type==='销售成交'||p.type==='借测成交');
+    const wnSale=wd.filter(p=>p.type==='销售成交').length;
+    const wnBorrow=wd.filter(p=>p.type==='借测成交').length;
+    const wnOld=wd.filter(p=>p.type==='新成交').length;
+    const wnLabel=wnSale||wnBorrow?`销售${wnSale}+借测${wnBorrow}个`:(wnOld?`${wnOld}家`:'');
     html+=`<div class="card"><div class="card-header"><span class="card-title">${fy} ${month}月 ${w}</span>
-      <span class="inline-flex">${ws?`<span class="badge badge-blue">业绩 ${fmt(ws)}</span>`:''}${wr?`<span class="badge badge-green">回款 ${fmt(wr)}</span>`:''}${wn.length?`<span class="badge badge-amber">新成交 ${wn.length}家</span>`:''}</span></div>`;
+      <span class="inline-flex">${ws?`<span class="badge badge-blue">业绩 ${fmt(ws)}</span>`:''}${wr?`<span class="badge badge-green">回款 ${fmt(wr)}</span>`:''}${wn.length?`<span class="badge badge-amber">新成交 ${wnLabel}</span>`:''}</span></div>`;
     wd.forEach(p=>{
       const dc=p.type==='业绩'?'#378ADD':p.type==='回款'?'#1D9E75':'#EF9F27';
       const bc=p.type==='业绩'?'badge-blue':p.type==='回款'?'badge-green':'badge-amber';
@@ -762,8 +802,13 @@ function renderPivot(){
   const fy=document.getElementById('view-fy').value;
   const month=document.getElementById('view-month').value;
   let html='';
+  const isDeal=type==='新成交'||type==='销售成交'||type==='借测成交';
+  function pivotFilter(arr,t){
+    if(t==='新成交')return arr.filter(p=>p.type==='新成交'||p.type==='销售成交'||p.type==='借测成交');
+    return arr.filter(p=>p.type===t);
+  }
   if(mode==='week'){
-    const md=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.type===type);
+    const md=pivotFilter(state.perf.filter(p=>p.fy===fy&&p.month===month),type);
     const weeks=['第一周','第二周','第三周','第四周','第五周'];
     const clients=[...new Set(md.map(p=>p.client))];
     if(!clients.length){document.getElementById('pivot-wrap').innerHTML='<div style="font-size:12px;color:var(--text2);padding:8px">暂无数据</div>';return;}
@@ -775,40 +820,40 @@ function renderPivot(){
     clients.forEach(c=>{
       const rows=md.filter(p=>p.client===c);const total=rows.reduce((a,b)=>a+b.amount,0);grand+=total;
       html+=`<tr><td style="font-size:12px">${c}</td>`;
-      activeWeeks.forEach(w=>{const a=rows.filter(p=>p.week===w).reduce((x,b)=>x+b.amount,0);colT[w]+=a;html+=`<td class="nr" style="font-size:12px">${type==='新成交'?(rows.some(p=>p.week===w)?'✓':'—'):a?fmt(a):'—'}</td>`;});
-      html+=type==='新成交'?`<td class="nr" style="font-size:12px">✓</td>`:`<td class="nr" style="font-size:12px;font-weight:500">${total?fmt(total):'—'}</td>`;html+='</tr>';
+      activeWeeks.forEach(w=>{const a=rows.filter(p=>p.week===w).reduce((x,b)=>x+b.amount,0);colT[w]+=a;html+=`<td class="nr" style="font-size:12px">${isDeal?(rows.some(p=>p.week===w)?'✓':'—'):a?fmt(a):'—'}</td>`;});
+      html+=isDeal?`<td class="nr" style="font-size:12px">✓</td>`:`<td class="nr" style="font-size:12px;font-weight:500">${total?fmt(total):'—'}</td>`;html+='</tr>';
     });
     html+=`<tr class="tr"><td style="font-size:12px">合计</td>`;
-    activeWeeks.forEach(w=>{html+=`<td class="nr" style="font-size:12px">${type==='新成交'?md.filter(p=>p.week===w).length+'家':(colT[w]?fmt(colT[w]):'—')}</td>`;});
-    html+=type==='新成交'?`<td class="nr" style="font-size:12px">${clients.length}家</td>`:`<td class="nr" style="font-size:12px">${fmt(grand)}</td>`;
+    activeWeeks.forEach(w=>{html+=`<td class="nr" style="font-size:12px">${isDeal?md.filter(p=>p.week===w).length+'家':(colT[w]?fmt(colT[w]):'—')}</td>`;});
+    html+=isDeal?`<td class="nr" style="font-size:12px">${clients.length}家</td>`:`<td class="nr" style="font-size:12px">${fmt(grand)}</td>`;
     html+='</tr></tbody></table>';
   } else if(mode==='month'){
-    const fyData=state.perf.filter(p=>p.fy===fy&&p.type===type);
+    const fyData=pivotFilter(state.perf.filter(p=>p.fy===fy),type);
     const activeMonths=MONTHS_ORDER.filter(m=>fyData.some(p=>p.month===m));
     if(!activeMonths.length){document.getElementById('pivot-wrap').innerHTML='<div style="font-size:12px;color:var(--text2);padding:8px">暂无数据</div>';return;}
     html=`<table class="pivot-tbl"><thead><tr><th>${fy} 各月</th>`;
     activeMonths.forEach(m=>{html+=`<th class="nr">${m}月</th>`;});
     html+=`<th class="nr">年度合计</th></tr></thead><tbody>`;
-    const rowLabel=type==='新成交'?'新成交家数':type==='业绩'?'业绩金额':'回款金额';
+    const rowLabel=isDeal?'新成交数量':type==='业绩'?'业绩金额':'回款金额';
     let total=0;
     html+=`<tr><td style="font-size:12px">${rowLabel}</td>`;
-    activeMonths.forEach(m=>{const v=fyData.filter(p=>p.month===m).reduce((a,b)=>a+(type==='新成交'?1:b.amount),0);total+=v;html+=`<td class="nr" style="font-size:12px">${type==='新成交'?v+'家':fmt(v)}</td>`;});
-    html+=`<td class="nr" style="font-size:12px;font-weight:500">${type==='新成交'?total+'家':fmt(total)}</td></tr>`;
+    activeMonths.forEach(m=>{const v=fyData.filter(p=>p.month===m).reduce((a,b)=>a+(isDeal?1:b.amount),0);total+=v;html+=`<td class="nr" style="font-size:12px">${isDeal?v+'个':fmt(v)}</td>`;});
+    html+=`<td class="nr" style="font-size:12px;font-weight:500">${isDeal?total+'个':fmt(total)}</td></tr>`;
     html+='</tbody></table>';
   } else {
     const allFYs=[...new Set(state.perf.map(p=>p.fy))].sort();
     if(!allFYs.length){document.getElementById('pivot-wrap').innerHTML='<div style="font-size:12px;color:var(--text2);padding:8px">暂无数据</div>';return;}
-    const activeMonths=MONTHS_ORDER.filter(m=>state.perf.some(p=>p.type===type&&p.month===m));
+    const activeMonths=MONTHS_ORDER.filter(m=>pivotFilter(state.perf,type).some(p=>p.month===m));
     html=`<table class="pivot-tbl"><thead><tr><th>财年对比</th>`;
     activeMonths.forEach(m=>{html+=`<th class="nr">${m}月</th>`;});
     html+=`<th class="nr">年度合计</th></tr></thead><tbody>`;
     allFYs.forEach(f=>{
-      const fyData=state.perf.filter(p=>p.fy===f&&p.type===type);
+      const fyData=pivotFilter(state.perf.filter(p=>p.fy===f),type);
       if(!fyData.length)return;
       let total=0;
       html+=`<tr><td style="font-size:12px;font-weight:500">${f}</td>`;
-      activeMonths.forEach(m=>{const v=fyData.filter(p=>p.month===m).reduce((a,b)=>a+(type==='新成交'?1:b.amount),0);total+=v;html+=`<td class="nr" style="font-size:12px">${v?(type==='新成交'?v+'家':fmt(v)):'—'}</td>`;});
-      html+=`<td class="nr" style="font-size:12px;font-weight:500">${type==='新成交'?total+'家':fmt(total)}</td></tr>`;
+      activeMonths.forEach(m=>{const v=fyData.filter(p=>p.month===m).reduce((a,b)=>a+(isDeal?1:b.amount),0);total+=v;html+=`<td class="nr" style="font-size:12px">${v?(isDeal?v+'个':fmt(v)):'—'}</td>`;});
+      html+=`<td class="nr" style="font-size:12px;font-weight:500">${isDeal?total+'个':fmt(total)}</td></tr>`;
     });
     html+='</tbody></table>';
   }
@@ -2092,17 +2137,83 @@ function buildNextLonglineTxt(nlongNew,nlongFollowup,nlongVisit,nlongKeyorders,n
   r+=`4）售后情况：\n${nlongAftersales||'暂无'}\n`;
   return r;
 }
+function fmtW(yuan){
+  // Format yuan to xxW with up to 2 decimal places, e.g. 235400 -> 23.54W, 9000 -> 0.9W
+  const w=yuan/10000;
+  // Remove trailing zeros: use toPrecision-like approach
+  const str=parseFloat(w.toFixed(2)).toString();
+  return str+'W';
+}
+function pctStr(actual,target){
+  if(!target||target<=0)return'—%';
+  return Math.round(actual/target*100)+'%';
+}
+function isNewDeal(type){return type==='新成交'||type==='销售成交'||type==='借测成交';}
+
 function genWeekly(){
   const fy=document.getElementById('ew-fy').value,month=document.getElementById('ew-month').value,week=document.getElementById('ew-week').value;
-  const wd=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.week===week&&p.type==='新成交');
-  const pd=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.type==='新成交');
+  const mIdx=fyMonthIdx(month);
+
+  // 业绩
+  const weekPerf=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.week===week&&p.type==='业绩');
+  const monthPerf=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.type==='业绩');
+  const fyPerf=state.perf.filter(p=>p.fy===fy&&fyMonthIdx(p.month)<=mIdx&&p.type==='业绩');
+  const weekPerfAmt=weekPerf.reduce((a,b)=>a+b.amount,0);
+  const monthPerfAmt=monthPerf.reduce((a,b)=>a+b.amount,0);
+  const fyPerfAmt=fyPerf.reduce((a,b)=>a+b.amount,0);
+
+  // 回款
+  const weekCollect=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.week===week&&p.type==='回款');
+  const monthCollect=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.type==='回款');
+  const fyCollect=state.perf.filter(p=>p.fy===fy&&fyMonthIdx(p.month)<=mIdx&&p.type==='回款');
+  const weekCollectAmt=weekCollect.reduce((a,b)=>a+b.amount,0);
+  const monthCollectAmt=monthCollect.reduce((a,b)=>a+b.amount,0);
+  const fyCollectAmt=fyCollect.reduce((a,b)=>a+b.amount,0);
+
+  // 新成交
+  const weekDeals=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.week===week&&isNewDeal(p.type));
+  const weekSale=weekDeals.filter(p=>p.type==='销售成交'||p.type==='新成交');
+  const weekBorrow=weekDeals.filter(p=>p.type==='借测成交');
+  const monthDeals=state.perf.filter(p=>p.fy===fy&&p.month===month&&isNewDeal(p.type));
+  const monthSale=monthDeals.filter(p=>p.type==='销售成交'||p.type==='新成交');
+  const monthBorrow=monthDeals.filter(p=>p.type==='借测成交');
+  const fyDeals=state.perf.filter(p=>p.fy===fy&&fyMonthIdx(p.month)<=mIdx&&isNewDeal(p.type));
+
+  // 目标值
+  const tPerfMonth=parseFloat(document.getElementById('ew-target-perf-month').value)||0;
+  const tPerfYear=parseFloat(document.getElementById('ew-target-perf-year').value)||0;
+  const tCollectMonth=parseFloat(document.getElementById('ew-target-collect-month').value)||0;
+  const tCollectYear=parseFloat(document.getElementById('ew-target-collect-year').value)||0;
+  const tDealMonth=parseFloat(document.getElementById('ew-target-deal-month').value)||0;
+  const tDealYear=parseFloat(document.getElementById('ew-target-deal-year').value)||0;
+  const receivable=parseFloat(document.getElementById('ew-receivable').value)||0;
+
+  // 新成交公司名列表（月度，来自业绩&回款记录里有新成交的客户）
+  const monthDealClients=[...new Set(monthDeals.map(p=>p.client))];
+  const weekDealClients=[...new Set(weekDeals.map(p=>p.client))];
+  const fyDealCount=fyDeals.length;
+
   const wr=state.weeklies.find(w=>w.fy===fy&&w.month===month&&w.week===week);
   let r=`【${fy} ${month}月 ${week} 周报】\n${'─'.repeat(30)}\n\n`;
-  r+=`➡️ 本周新成交：${wd.length}家\n`;
-  wd.forEach(p=>{r+=`  ${p.client}${p.note?'（'+p.note+'）':''}\n`;});
-  r+=`➡️ 本月总新成交：${pd.length}家\n`;
-  pd.forEach(p=>{r+=`  ${p.client}${p.note?'（'+p.note+'）':''}\n`;});
-  r+='\n';
+
+  // 1. 业绩
+  r+=`1. 本周业绩：${fmtW(weekPerfAmt)}；截至本月总业绩：${fmtW(monthPerfAmt)}；月度目标完成比例：${pctStr(monthPerfAmt,tPerfMonth*10000)}\n`;
+  r+=`本财年总业绩：${fmtW(fyPerfAmt)}；年度目标完成比例：${pctStr(fyPerfAmt,tPerfYear*10000)}\n\n`;
+
+  // 2. 回款
+  r+=`2. 本周回款：${fmtW(weekCollectAmt)}；截至本月总回款：${fmtW(monthCollectAmt)}；月度目标完成比例：${pctStr(monthCollectAmt,tCollectMonth*10000)}\n`;
+  r+=`本财年总收款：${fmtW(fyCollectAmt)}；年度目标完成比例：${pctStr(fyCollectAmt,tCollectYear*10000)}\n`;
+  r+=`截至本月应收货款：${receivable?fmtW(receivable*10000):'—W'}\n\n`;
+
+  // 3. 新成交
+  r+=`3. 新成交\n`;
+  r+=`本周借测成交${weekBorrow.length}个；销售成交${weekSale.length}个；\n`;
+  if(weekDealClients.length){r+=`公司名：${weekDealClients.join('、')}\n`;}
+  r+=`本月借测成交${monthBorrow.length}个；销售成交${monthSale.length}个；月度目标完成比例：${pctStr(monthDeals.length,tDealMonth)}\n`;
+  if(monthDealClients.length){r+=`公司名：${monthDealClients.join('、')}\n`;}
+  r+=`本财年成交数量：${fyDealCount}个；年度目标完成比例：${pctStr(fyDealCount,tDealYear)}\n\n`;
+
+  r+=`${'─'.repeat(28)}\n\n`;
   r+=`重点项目（按项目节点划分）\n`;
   const allGrouped={};state.projects.forEach(p=>{const k=p.name||p.client;if(!allGrouped[k])allGrouped[k]=[];allGrouped[k].push(p);});
   function projBlock(stages){
@@ -2193,15 +2304,55 @@ function delGenWeekly(id){if(!confirm('确认删除？'))return;state.genWeeklie
 function genMonthly(){
   const fy=document.getElementById('em-fy').value,month=document.getElementById('em-month').value;
   const mIdx=fyMonthIdx(month);
-  const dM=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.type==='新成交');
-  const dC=state.perf.filter(p=>p.fy===fy&&fyMonthIdx(p.month)<=mIdx&&p.type==='新成交');
+
+  // 业绩
+  const monthPerf=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.type==='业绩');
+  const fyPerf=state.perf.filter(p=>p.fy===fy&&fyMonthIdx(p.month)<=mIdx&&p.type==='业绩');
+  const monthPerfAmt=monthPerf.reduce((a,b)=>a+b.amount,0);
+  const fyPerfAmt=fyPerf.reduce((a,b)=>a+b.amount,0);
+
+  // 回款
+  const monthCollect=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.type==='回款');
+  const fyCollect=state.perf.filter(p=>p.fy===fy&&fyMonthIdx(p.month)<=mIdx&&p.type==='回款');
+  const monthCollectAmt=monthCollect.reduce((a,b)=>a+b.amount,0);
+  const fyCollectAmt=fyCollect.reduce((a,b)=>a+b.amount,0);
+
+  // 新成交
+  const monthDeals=state.perf.filter(p=>p.fy===fy&&p.month===month&&isNewDeal(p.type));
+  const monthSale=monthDeals.filter(p=>p.type==='销售成交'||p.type==='新成交');
+  const monthBorrow=monthDeals.filter(p=>p.type==='借测成交');
+  const fyDeals=state.perf.filter(p=>p.fy===fy&&fyMonthIdx(p.month)<=mIdx&&isNewDeal(p.type));
+  const monthDealClients=[...new Set(monthDeals.map(p=>p.client))];
+  const fyDealCount=fyDeals.length;
+
+  // 目标值
+  const tPerfMonth=parseFloat(document.getElementById('em-target-perf-month').value)||0;
+  const tPerfYear=parseFloat(document.getElementById('em-target-perf-year').value)||0;
+  const tCollectMonth=parseFloat(document.getElementById('em-target-collect-month').value)||0;
+  const tCollectYear=parseFloat(document.getElementById('em-target-collect-year').value)||0;
+  const tDealMonth=parseFloat(document.getElementById('em-target-deal-month').value)||0;
+  const tDealYear=parseFloat(document.getElementById('em-target-deal-year').value)||0;
+  const receivable=parseFloat(document.getElementById('em-receivable').value)||0;
+
   const mm=(state.monthlies||[]).find(m=>m.fy===fy&&m.month===month);
   let r=`【${fy} ${month}月 月报】\n${'─'.repeat(30)}\n\n`;
-  r+=`➡️ 本月新成交：${dM.length}家\n`;
-  if(dM.length)dM.forEach(p=>{r+=`  ${p.client}${p.note?'（'+p.note+'）':''}\n`;});else r+=`  （暂无）\n`;
-  r+=`➡️ 截至本月总新成交：${dC.length}家\n`;
-  dC.forEach(p=>{r+=`  ${p.client}${p.note?'（'+p.note+'）':''}\n`;});
-  r+='\n';
+
+  // 1. 业绩
+  r+=`1. 本月总业绩：${fmtW(monthPerfAmt)}；月度目标完成比例：${pctStr(monthPerfAmt,tPerfMonth*10000)}\n`;
+  r+=`本财年总业绩：${fmtW(fyPerfAmt)}；年度目标完成比例：${pctStr(fyPerfAmt,tPerfYear*10000)}\n\n`;
+
+  // 2. 回款
+  r+=`2. 本月总回款：${fmtW(monthCollectAmt)}；月度目标完成比例：${pctStr(monthCollectAmt,tCollectMonth*10000)}\n`;
+  r+=`本财年总收款：${fmtW(fyCollectAmt)}；年度目标完成比例：${pctStr(fyCollectAmt,tCollectYear*10000)}\n`;
+  r+=`截至本月应收货款：${receivable?fmtW(receivable*10000):'—W'}\n\n`;
+
+  // 3. 新成交
+  r+=`3. 新成交\n`;
+  r+=`本月借测成交${monthBorrow.length}个；销售成交${monthSale.length}个；月度目标完成比例：${pctStr(monthDeals.length,tDealMonth)}\n`;
+  if(monthDealClients.length){r+=`公司名：${monthDealClients.join('、')}\n`;}
+  r+=`本财年成交数量：${fyDealCount}个；年度目标完成比例：${pctStr(fyDealCount,tDealYear)}\n\n`;
+
+  r+=`${'─'.repeat(28)}\n\n`;
   r+=`重点项目（按项目节点划分）\n`;
   if(mm&&(mm.p1||mm.p2||mm.p3||mm.p4||mm.p5||mm.p6)){
     r+=`1）合同签订（含走流程）：\n${mm.p1||'（暂无）'}\n\n`;
