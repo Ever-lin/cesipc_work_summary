@@ -2989,10 +2989,10 @@ function qtNormalizeCompany(raw){
 
 function qtLoad(){
   try{const r=localStorage.getItem(QT_KEY);qtQuotes=r?JSON.parse(r):[];}catch{qtQuotes=[];}
-  if(!qtQuotes.length){qtQuotes=qtSeed();qtSave();}
+  if(!qtQuotes.length){qtQuotes=qtSeed();qtPersist();}
   qtQuotes=qtQuotes.map(q=>({...q,company:qtNormalizeCompany(q.company||q.customer||'')}));
 }
-function qtSave(){localStorage.setItem(QT_KEY,JSON.stringify(qtQuotes));}
+function qtPersist(){localStorage.setItem(QT_KEY,JSON.stringify(qtQuotes));}
 
 function qSwitchView(v,btn){
   document.getElementById('qt-view-list').style.display=v==='list'?'':'none';
