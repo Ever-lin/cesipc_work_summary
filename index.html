@@ -636,10 +636,13 @@ function switchWrite(id,btn){
 function onPerfDateChange(){
   const val=document.getElementById('perf-date').value;
   if(!val){document.getElementById('perf-week-badge').textContent='';return;}
+  const info=weekInfoOfDay(val);
   const parts=val.split('-');
-  const calY=parts[0],m=parseInt(parts[1],10);
-  const week=weekOfDay(val);
-  const fy=getFY(calY,m);
+  const calY=parts[0];
+  // Use owner month (week's Monday's month) for FY and month assignment
+  const m=info?parseInt(info.month,10):parseInt(parts[1],10);
+  const week=info?info.week:weekOfDay(val);
+  const fy=getFY(info?info.year:calY,m);
   document.getElementById('perf-month').value=String(m);
   document.getElementById('perf-week').value=week;
   // Update FY selector to match
@@ -872,11 +875,13 @@ function renderProjects(){
     // apply month/week filter on latest record date
     if(pjMonth!=='all'){
       const rd=latest.recordDate||'';
-      const m=rd?String(parseInt(rd.split('-')[1],10)):'';
+      const info=rd?weekInfoOfDay(rd):null;
+      const m=info?info.month:(rd?String(parseInt(rd.split('-')[1],10)):'');
       if(m!==pjMonth)return;
     }
     if(pjWeek!=='all'){
-      if(weekOfDay(latest.recordDate)!==pjWeek)return;
+      const info=weekInfoOfDay(latest.recordDate);
+      if(!info||info.week!==pjWeek)return;
     }
     counts[latest.status]=(counts[latest.status]||0)+1;
   });
@@ -899,12 +904,14 @@ function renderProjects(){
     // month filter
     if(pjMonth!=='all'){
       const rd=latest.recordDate||'';
-      const m=rd?String(parseInt(rd.split('-')[1],10)):'';
+      const info=rd?weekInfoOfDay(rd):null;
+      const m=info?info.month:(rd?String(parseInt(rd.split('-')[1],10)):'');
       if(m!==pjMonth)return;
     }
     // week filter
     if(pjWeek!=='all'){
-      if(weekOfDay(latest.recordDate)!==pjWeek)return;
+      const info=weekInfoOfDay(latest.recordDate);
+      if(!info||info.week!==pjWeek)return;
     }
     const stOk=pjS==='all'||latest.status===pjS;
     if(!stOk)return;
@@ -1204,11 +1211,54 @@ function delProjectEntry(id,groupName){
 }
 
 // 自动填充4个项目文本框
-// 根据日期中的「日」推算第几周（1-7→第一周, 8-14→第二周, 15-21→第三周, 22-28→第四周, 29+→第五周）
+// 自然周规则：周一为一周开始，周日为结束。跨月的周归属于【周一所在的月份】。
+// 返回 { week:'第N周', month:'M', year:'YYYY' } 表示该日期所属周的归属月份和周序号
+function weekInfoOfDay(dateStr){
+  if(!dateStr)return null;
+  const dt=new Date(dateStr+'T00:00:00');
+  if(isNaN(dt.getTime()))return null;
+  // 找到本周周一（getDay: 0=周日,1=周一,...,6=周六）
+  const dow=dt.getDay(); // 0=Sun
+  const diffToMon=dow===0?-6:1-dow; // 周日往前推6天，其他往前推到周一
+  const mon=new Date(dt);
+  mon.setDate(dt.getDate()+diffToMon);
+  // 周归属：以周一所在月份为准
+  const ownerYear=mon.getFullYear();
+  const ownerMonth=mon.getMonth()+1; // 1-12
+  // 在 ownerYear-ownerMonth 这个月里，找出所有自然周的周一，按顺序排
+  // 第一个周一：找该月1号的下一个周一（或1号本身如果是周一）
+  const firstDay=new Date(ownerYear,ownerMonth-1,1);
+  const fdow=firstDay.getDay();
+  const daysToFirstMon=fdow===0?1:(fdow===1?0:8-fdow);
+  const firstMon=new Date(ownerYear,ownerMonth-1,1+daysToFirstMon);
+  // 如果月份1号本身前还有周一（即fdow!==1且月初之前有跨月周），第一周周一可能在上月
+  // 但因为我们以周一归属月份，该月的"第一周"的周一就是 ≥ 该月1日的第一个周一
+  // 不过，如果1号之前的周一在上月，那上月那个周不算本月，本月第一周从下一个周一开始
+  // 特殊：如果 mon < firstMon，说明这个周的周一在本月1号之前，按理应归上月 → 但调用方已经用mon所在月，不会到这里
+  // 计算周序号：(mon - firstMon) / 7 + 1
+  const diffMs=mon.getTime()-firstMon.getTime();
+  const weekIdx=Math.round(diffMs/(7*24*3600*1000)); // 0-based
+  const weekNum=weekIdx+1;
+  const labels=['第一周','第二周','第三周','第四周','第五周'];
+  const week=labels[Math.min(weekNum-1,4)]||'第五周';
+  return{week,month:String(ownerMonth),year:String(ownerYear)};
+}
+// 兼容旧接口：只返回周名称，归属判断按日期本身所在月份（用于周报/月报的项目筛选仍以recordDate的自然月为主）
 function weekOfDay(dateStr){
   if(!dateStr)return null;
-  const d=parseInt(dateStr.split('-')[2],10);
-  if(d<=7)return'第一周';if(d<=14)return'第二周';if(d<=21)return'第三周';if(d<=28)return'第四周';return'第五周';
+  const info=weekInfoOfDay(dateStr);
+  return info?info.week:null;
+}
+// 获取某日期所属周的归属月份（以周一所在月为准）
+function ownerMonthOfDay(dateStr){
+  if(!dateStr)return null;
+  const info=weekInfoOfDay(dateStr);
+  return info?info.month:null;
+}
+// 获取某日期所属周的归属月份+周次（以周一所在月为准）
+function ownerWeekOfDay(dateStr){
+  if(!dateStr)return null;
+  return weekInfoOfDay(dateStr);
 }
 function fillProjTextareas(prefix){
   const CATS=[
@@ -1235,12 +1285,12 @@ function fillProjTextareas(prefix){
         const entries=grouped[k].sort((a,b)=>b.id-a.id);
         const inMonth=entries.filter(p=>{
           if(!p.recordDate)return false;
-          const parts=p.recordDate.split('-');
-          return String(parseInt(parts[1],10))===String(selMonth);
+          const info=weekInfoOfDay(p.recordDate);
+          return info&&info.month===String(selMonth)&&info.week===selWeek;
         });
         if(inMonth.length>0){
           const latest=inMonth[0];
-          if(weekOfDay(latest.recordDate)===selWeek&&cat.stages.includes(latest.progressStage)){
+          if(cat.stages.includes(latest.progressStage)){
             matchingGroups.push(latest);
           }
         }
@@ -1540,7 +1590,7 @@ function fillDailyFollowup(){
   autoResize(el);
 }
 
-// 周报：自动填充本周跟进客户（根据项目记录日期属于所选月份+周次）
+// 周报：自动填充本周跟进客户（根据项目记录日期归属于所选月份+周次，以周一所在月为准）
 function fillWeeklyFollowup(){
   const selMonth=document.getElementById('w-month')?.value;
   const selWeek=document.getElementById('w-week')?.value;
@@ -1549,8 +1599,8 @@ function fillWeeklyFollowup(){
     state.projects
       .filter(p=>{
         if(!p.recordDate)return false;
-        const m=String(parseInt(p.recordDate.split('-')[1],10));
-        return m===String(selMonth)&&weekOfDay(p.recordDate)===selWeek&&(p.client||p.name);
+        const info=weekInfoOfDay(p.recordDate);
+        return info&&info.month===String(selMonth)&&info.week===selWeek&&(p.client||p.name);
       })
       .map(p=>p.client||p.name)
   )];
@@ -1562,7 +1612,7 @@ function fillWeeklyFollowup(){
   autoResize(el);
 }
 
-// 月报：自动填充本月跟进客户（根据项目记录日期属于所选月份）
+// 月报：自动填充本月跟进客户（以周一所在月为准）
 function fillMonthlyFollowup(){
   const selMonth=document.getElementById('wm-month')?.value;
   if(!selMonth)return;
@@ -1570,8 +1620,8 @@ function fillMonthlyFollowup(){
     state.projects
       .filter(p=>{
         if(!p.recordDate)return false;
-        const m=String(parseInt(p.recordDate.split('-')[1],10));
-        return m===String(selMonth)&&(p.client||p.name);
+        const info=weekInfoOfDay(p.recordDate);
+        return info&&info.month===String(selMonth)&&(p.client||p.name);
       })
       .map(p=>p.client||p.name)
   )];
@@ -1600,30 +1650,18 @@ function fillNextPlanTextareas(prefix){
   if(prefix==='w'){
     const selWeek=document.getElementById('w-week')?.value;
     const selMonth=document.getElementById('w-month')?.value;
-    const selFY=document.getElementById('w-fy')?.value;
-    // We need the calendar year for this FY+month
-    const calY=selFY&&selMonth?calYearOfFYMonth(selFY,selMonth):new Date().getFullYear().toString();
-    // Build set of dates belonging to that week in that month+year
     matchFn=(actionTime)=>{
       if(!actionTime)return false;
-      const parts=actionTime.split('-');
-      if(parts.length<3)return false;
-      const am=String(parseInt(parts[1],10));
-      const ay=parts[0];
-      return am===String(selMonth)&&ay===calY&&weekOfDay(actionTime)===selWeek;
+      const info=weekInfoOfDay(actionTime);
+      return info&&info.month===String(selMonth)&&info.week===selWeek;
     };
   } else {
     // monthly
     const selMonth=document.getElementById('wm-month')?.value;
-    const selFY=document.getElementById('wm-fy')?.value;
-    const calY=selFY&&selMonth?calYearOfFYMonth(selFY,selMonth):new Date().getFullYear().toString();
     matchFn=(actionTime)=>{
       if(!actionTime)return false;
-      const parts=actionTime.split('-');
-      if(parts.length<3)return false;
-      const am=String(parseInt(parts[1],10));
-      const ay=parts[0];
-      return am===String(selMonth)&&ay===calY;
+      const info=weekInfoOfDay(actionTime);
+      return info&&info.month===String(selMonth);
     };
   }
   NEXT_CATS.forEach(cat=>{
@@ -2239,8 +2277,8 @@ function exportProjectsExcel(){
   Object.keys(grouped).forEach(k=>{
     const entries=grouped[k].sort((a,b)=>b.id-a.id);
     const latest=entries[0];
-    if(pjMonth!=='all'){const rd=latest.recordDate||'';const m=rd?String(parseInt(rd.split('-')[1],10)):'';if(m!==pjMonth)return;}
-    if(pjWeek!=='all'){if(weekOfDay(latest.recordDate)!==pjWeek)return;}
+    if(pjMonth!=='all'){const rd=latest.recordDate||'';const info=rd?weekInfoOfDay(rd):null;const m=info?info.month:(rd?String(parseInt(rd.split('-')[1],10)):'');if(m!==pjMonth)return;}
+    if(pjWeek!=='all'){const info=weekInfoOfDay(latest.recordDate);if(!info||info.week!==pjWeek)return;}
     if(pjS!=='all'&&latest.status!==pjS)return;
     if(pjQ){const hay=(k+' '+(latest.client||'')+' '+(latest.progress||'')).toLowerCase();if(!hay.includes(pjQ))return;}
     const sc=SC[latest.status]||{label:latest.status};
