@@ -1649,8 +1649,11 @@ function renderImportQtList(){
         </div>
         ${(()=>{
           // Check if this project is already linked in state.projects
+          // 兼容：通过 linkedQuoteProject 或项目名称匹配
           const projName = g.project||'';
-          const alreadyLinked = projName && state.projects.some(p=>p.linkedQuoteProject===projName);
+          const alreadyLinked = projName && state.projects.some(p=>
+            p.linkedQuoteProject===projName || (p.name||p.client)===projName
+          );
           // Check if there's a newer quote update after last sync
           const lastSync = qtQuotes.filter(q=>q.project===projName&&q.lastSyncedAt).map(q=>q.lastSyncedAt).sort().pop()||'';
           const latestQuoteSnap = qtQuotes.filter(q=>q.project===projName).flatMap(q=>(q.priceHistory||[])).map(h=>h.savedAt||'').sort().pop()||'';
@@ -1663,8 +1666,8 @@ function renderImportQtList(){
           const dealChanged = lastSync && curDeal !== syncedDeal;
           const stageChanged = lastSync && curStage !== syncedStage;
           const hasUpdate = alreadyLinked && (snapNewer || dealChanged || stageChanged);
-          if(alreadyLinked && !hasUpdate) return '<span style="background:var(--green-bg);color:var(--green-text);border:1px solid #C0DD97;border-radius:var(--radius-xs);padding:5px 12px;font-size:12px;font-weight:600">✅ 已导入</span><button onclick="importFromQuoteGroup('+gi+')" style="flex-shrink:0;background:transparent;color:var(--blue-text);border:1px solid var(--blue);border-radius:var(--radius-xs);padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit">↻ 重新导入</button>';
-          if(alreadyLinked && hasUpdate) return '<button onclick="syncQuoteToProject(\''+projName+'\')" style="flex-shrink:0;background:var(--amber-bg);color:var(--amber-text);border:1px solid var(--amber);border-radius:var(--radius-xs);padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit">⚠️ 有更新，点击同步</button>';
+          if(alreadyLinked && hasUpdate) return '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px"><span style="background:var(--green-bg);color:var(--green-text);border:1px solid #C0DD97;border-radius:var(--radius-xs);padding:3px 10px;font-size:11px;font-weight:600">✅ 已导入</span><button onclick="syncQuoteToProject(\''+projName+'\')" style="flex-shrink:0;background:var(--amber-bg);color:var(--amber-text);border:1px solid var(--amber);border-radius:var(--radius-xs);padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit">⚠️ 有更新，点击同步</button></div>';
+          if(alreadyLinked && !hasUpdate) return '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px"><span style="background:var(--green-bg);color:var(--green-text);border:1px solid #C0DD97;border-radius:var(--radius-xs);padding:3px 10px;font-size:11px;font-weight:600">✅ 已导入</span><button onclick="importFromQuoteGroup('+gi+')" style="flex-shrink:0;background:transparent;color:var(--blue-text);border:1px solid var(--blue);border-radius:var(--radius-xs);padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit">↻ 重新导入</button></div>';
           return '<button onclick="importFromQuoteGroup('+gi+')" style="flex-shrink:0;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-xs);padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit">导入此项目</button>';
         })()}
       </div>
@@ -1676,38 +1679,85 @@ function renderImportQtList(){
 
 function importFromQuoteGroup(gi){
   const g=window._iqtGroups[gi];if(!g)return;
-  // Fill project name
-  document.getElementById('proj-name').value=g.project||'';
-  // Fill company/client
-  document.getElementById('proj-client').value=g.company||'';
-  // Fill status from deal
-  if(g.deal){
-    const status=qtDealToStatus(g.deal);
-    document.getElementById('proj-status').value=status;
-    const badge=document.getElementById('proj-status-badge');
-    if(badge)badge.textContent='';
+  const projName=g.project||'';
+
+  // ── 检查是否已导入过 ──
+  const alreadyLinked = projName && state.projects.some(p=>p.linkedQuoteProject===projName);
+  if(alreadyLinked){
+    // 已导入过：切换到「追加进展」模式，自动填入最新跟进记录并预填报价更新
+    const linkedEntries=state.projects.filter(p=>p.linkedQuoteProject===projName).sort((a,b)=>b.id-a.id);
+    const latest=linkedEntries[0];
+    if(latest){
+      // 填入项目基本信息（来自最新的已有记录）
+      document.getElementById('proj-name').value=latest.name||projName;
+      document.getElementById('proj-client').value=latest.client||g.company||'';
+      // 状态/进度：以报价管理最新为准
+      if(g.deal){
+        const status=qtDealToStatus(g.deal);
+        document.getElementById('proj-status').value=status;
+        const badge=document.getElementById('proj-status-badge');
+        if(badge){const sc=SC[status]||{label:status};badge.textContent=sc.label;}
+      } else {
+        document.getElementById('proj-status').value=latest.status||'跟进中';
+      }
+      if(g.stage){
+        document.getElementById('proj-progress-stage').value=g.stage;
+      } else {
+        document.getElementById('proj-progress-stage').value=latest.progressStage||'';
+      }
+      // 数量：以报价管理最新为准，或保留已有
+      const qtys=[...new Set(g.quotes.map(x=>x.qty).filter(Boolean))];
+      document.getElementById('proj-quantity').value=qtys.length?(qtys.join(' / ')+'台'):(latest.quantity||'');
+      // 项目报价：保留已有记录（不覆盖），追加模式下由用户手动更新
+      document.getElementById('proj-quote').value=latest.quote||'';
+      // 其他字段：来自最新记录
+      document.getElementById('proj-requirement').value=latest.requirement||'';
+      document.getElementById('proj-action-content').value='';
+      document.getElementById('proj-action-time').value='';
+      document.getElementById('proj-confirm-points').value='';
+      document.getElementById('proj-risks').value='';
+      document.getElementById('proj-decision-maker').value=latest.decisionMaker||'';
+      document.getElementById('proj-priority').value=latest.priority||'中';
+      document.getElementById('proj-date').value=todayStr();
+      // 跟进详情：预填上次最新的跟进（提示用户基础上再追加）
+      document.getElementById('proj-progress').value='';
+    }
+  } else {
+    // 首次导入：正常填入
+    document.getElementById('proj-name').value=projName;
+    document.getElementById('proj-client').value=g.company||'';
+    if(g.deal){
+      const status=qtDealToStatus(g.deal);
+      document.getElementById('proj-status').value=status;
+      const badge=document.getElementById('proj-status-badge');
+      if(badge){const sc=SC[status]||{label:status};badge.textContent=sc.label;}
+    }
+    if(g.stage){
+      document.getElementById('proj-progress-stage').value=g.stage;
+    }
+    const qty=[...new Set(g.quotes.map(x=>x.qty).filter(Boolean))];
+    if(qty.length)document.getElementById('proj-quantity').value=qty.join(' / ')+'台';
+    // Build quote text
+    const blocks=[];
+    g.quotes.forEach(q=>{
+      const text=qtBuildQuoteText(q);
+      if(text.trim())blocks.push(text.trim());
+    });
+    document.getElementById('proj-quote').value=blocks.join('\n\n');
+    document.getElementById('proj-progress').value='';
+    document.getElementById('proj-date').value=todayStr();
   }
-  // Fill progress stage
-  if(g.stage){
-    document.getElementById('proj-progress-stage').value=g.stage;
-  }
-  // Fill quantity - take first non-empty qty across all quotes
-  const qty=[...new Set(g.quotes.map(x=>x.qty).filter(Boolean))];
-  if(qty.length)document.getElementById('proj-quantity').value=qty.join(' / ')+'台';
-  // Build quote text: each quote record as a rich block separated by blank line
-  const blocks=[];
-  g.quotes.forEach(q=>{
-    const text=qtBuildQuoteText(q);
-    if(text.trim())blocks.push(text.trim());
-  });
-  document.getElementById('proj-quote').value=blocks.join('\n\n');
+
   // Auto-resize the textarea
-  setTimeout(()=>{const el=document.getElementById('proj-quote');if(el&&el.tagName==='TEXTAREA'){el.style.height='auto';el.style.height=el.scrollHeight+'px';}},50);
-  // Record the link: store quoteProjectName on the form so submitProject can save it
-  window._pendingLinkedQuoteProject = g.project||'';
-  // Also record sync time on all matching quotes
+  setTimeout(()=>{
+    ['proj-quote','proj-progress'].forEach(id=>{const el=document.getElementById(id);if(el&&el.tagName==='TEXTAREA'){el.style.height='auto';el.style.height=el.scrollHeight+'px';}});
+  },50);
+
+  // Record the link
+  window._pendingLinkedQuoteProject = projName;
+  // Record sync time on all matching quotes
   const syncTime = new Date().toISOString();
-  qtQuotes.forEach(q=>{if(q.project===g.project){q.linkedProjectName=g.project;q.lastSyncedAt=syncTime;q.lastSyncedDeal=g.deal||'';q.lastSyncedStage=g.stage||'';}});
+  qtQuotes.forEach(q=>{if(q.project===projName){q.linkedProjectName=projName;q.lastSyncedAt=syncTime;q.lastSyncedDeal=g.deal||'';q.lastSyncedStage=g.stage||'';}});
   qtPersist();
   closeImportFromQuotes();
   // Scroll to form
@@ -3501,7 +3551,10 @@ function importBackup(evt){
 function syncQuoteToProject(quoteProjectName){
   if(!quoteProjectName)return;
   // Find linked project entries (latest one per project group)
-  const linkedEntries=state.projects.filter(p=>p.linkedQuoteProject===quoteProjectName);
+  // 兼容旧记录：通过 linkedQuoteProject 或项目名称匹配
+  const linkedEntries=state.projects.filter(p=>
+    p.linkedQuoteProject===quoteProjectName || (p.name||p.client)===quoteProjectName
+  );
   if(!linkedEntries.length){alert('未找到已导入的项目情况记录');return;}
   // Get quote group
   const groups=qtGroupedByProject();
@@ -3532,21 +3585,42 @@ function syncQuoteToProject(quoteProjectName){
   // Update the LATEST entry in the linked group (highest id)
   const latestEntry=linkedEntries.reduce((a,b)=>b.id>a.id?b:a);
 
-  if(newQuoteText&&latestEntry.quote!==newQuoteText){
-    latestEntry.quote=newQuoteText;
-    changes.push('项目报价');
+  // ── 项目报价：不覆盖，只追加新内容 ──
+  if(newQuoteText){
+    const existingQuote=(latestEntry.quote||'').trim();
+    // 提取新报价中已有的行，避免重复追加
+    const newLines=newQuoteText.trim().split('\n');
+    const newLinesUnique=newLines.filter(line=>!existingQuote.includes(line.trim())||!line.trim());
+    const hasNewContent=newLinesUnique.some(l=>l.trim());
+    if(!existingQuote){
+      latestEntry.quote=newQuoteText;
+      changes.push('项目报价（新增）');
+    } else if(hasNewContent&&newQuoteText!==existingQuote){
+      // 追加：在原有内容后加入新内容
+      latestEntry.quote=existingQuote+'\n\n'+newQuoteText.trim();
+      changes.push('项目报价（已追加）');
+    }
   }
+  // ── 当前状态（deal → status）：以最新为准，覆盖 ──
   if(newStatus&&latestEntry.status!==newStatus){
     latestEntry.status=newStatus;
     changes.push('当前状态→'+newStatus);
   }
+  // ── 项目进度（stage → progressStage）：以最新为准，覆盖 ──
   if(newStage&&latestEntry.progressStage!==newStage){
     latestEntry.progressStage=newStage;
     changes.push('项目进度→'+newStage);
   }
+  // ── 项目数量：以最新为准，覆盖 ──
   if(newQty&&latestEntry.quantity!==newQty){
     latestEntry.quantity=newQty;
     changes.push('项目数量→'+newQty);
+  }
+  // ── 客户名称：以最新为准，覆盖 ──
+  const newCompany=g.quotes[0]&&g.quotes[0].company?g.company:'';
+  if(newCompany&&latestEntry.client!==newCompany){
+    latestEntry.client=newCompany;
+    changes.push('客户名称→'+newCompany);
   }
   latestEntry.savedAt=new Date().toLocaleString('zh-CN');
 
@@ -3661,7 +3735,7 @@ function qtRender(){
         ${(r.priceHistory&&r.priceHistory.length)?'<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="qtOpenEdit(\''+r.id+'\')" title="'+r.priceHistory.length+'次价格变更">📋'+r.priceHistory.length+'</button>':''}
         ${(()=>{
           if(!r.project)return'';
-          const linked=state.projects.some(p=>p.linkedQuoteProject===r.project);
+          const linked=state.projects.some(p=>p.linkedQuoteProject===r.project||(p.name||p.client)===r.project);
           if(!linked)return'';
           const lastSync=qtQuotes.filter(q=>q.project===r.project&&q.lastSyncedAt).map(q=>q.lastSyncedAt).sort().pop()||'';
           const latestSnap=qtQuotes.filter(q=>q.project===r.project).flatMap(q=>(q.priceHistory||[])).map(h=>h.savedAt||'').sort().pop()||'';
