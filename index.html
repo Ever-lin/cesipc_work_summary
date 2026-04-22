@@ -2308,14 +2308,14 @@ function genWeekly(){
   // 2. 回款
   r+=`2. 本周回款：${fmtW(weekCollectAmt)}；截至本月总回款：${fmtW(monthCollectAmt)}；月度目标完成比例：${pctStr(monthCollectAmt,tCollectMonth*10000)}\n`;
   r+=`本财年总收款：${fmtW(fyCollectAmt)}；年度目标完成比例：${pctStr(fyCollectAmt,tCollectYear*10000)}\n`;
-  r+=`截至本月应收货款：${receivable?fmtW(receivable*10000):'—W'}\n\n`;
+  r+=`截至本月应收货款：${receivableW?fmtW(receivableW*10000):'—W'}\n\n`;
 
   // 3. 新成交
   r+=`3. 新成交\n`;
   r+=`本周借测成交${weekBorrow.length}个；销售成交${weekSale.length}个；\n`;
-  if(weekDealClients.length){r+=`公司名：${weekDealClients.join('、')}\n`;}
+  if(weekDealClients.length){r+=`公司名：\n${weekDealClients.join('\n')}\n`;}
   r+=`本月借测成交${monthBorrow.length}个；销售成交${monthSale.length}个；月度目标完成比例：${pctStr(monthDeals.length,tDealMonth)}\n`;
-  if(monthDealClients.length){r+=`公司名：${monthDealClients.join('、')}\n`;}
+  if(monthDealClients.length){r+=`公司名：\n${monthDealClients.join('\n')}\n`;}
   r+=`本财年成交数量：${fyDealCount}个；年度目标完成比例：${pctStr(fyDealCount,tDealYear)}\n\n`;
 
   r+=`${'─'.repeat(28)}\n\n`;
@@ -2456,7 +2456,7 @@ function genMonthly(){
   // 3. 新成交
   r+=`3. 新成交\n`;
   r+=`本月借测成交${monthBorrow.length}个；销售成交${monthSale.length}个；月度目标完成比例：${pctStr(monthDeals.length,tDealMonth)}\n`;
-  if(monthDealClients.length){r+=`公司名：${monthDealClients.join('、')}\n`;}
+  if(monthDealClients.length){r+=`公司名：\n${monthDealClients.join('\n')}\n`;}
   r+=`本财年成交数量：${fyDealCount}个；年度目标完成比例：${pctStr(fyDealCount,tDealYear)}\n\n`;
 
   r+=`${'─'.repeat(28)}\n\n`;
