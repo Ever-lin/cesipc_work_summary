@@ -1144,6 +1144,16 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         </div>
         <!-- 整机报价区域 -->
         <div id="qf-total-section" style="grid-column:1/-1;display:none">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0;">
+            <div class="field">
+              <label>RAM 规格</label>
+              <input type="text" id="qf-total-ram" placeholder="e.g. 8GB DDR4" list="qf-ram-dl">
+            </div>
+            <div class="field">
+              <label>SSD 规格</label>
+              <input type="text" id="qf-total-ssd" placeholder="e.g. 256GB M.2 SSD" list="qf-ssd-dl">
+            </div>
+          </div>
           <div class="field">
             <label style="display:flex;align-items:center;justify-content:space-between">
               <span>整机配置总价 (Configured System)</span>
@@ -2083,7 +2093,7 @@ function renderProjects(){
       </div>
 
       <div id="${crmId}" style="display:none;margin-bottom:6px">
-        <div style="background:#FFFBF0;border:1px solid #F0D070;border-radius:var(--radius-xs);padding:8px 10px;font-size:12px;white-space:pre-wrap;font-family:monospace;line-height:1.8;color:var(--text);user-select:all">${buildCRMTextFull(latest,allEntriesForCard)}</div>
+        <div style="background:#FFFBF0;border:1px solid #F0D070;border-radius:var(--radius-xs);padding:8px 10px;font-size:12px;white-space:pre-wrap;font-family:monospace;line-height:1.8;color:var(--text);user-select:text;cursor:text">${buildCRMTextFull(latest,allEntriesForCard)}</div>
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
@@ -4109,6 +4119,11 @@ function qtOpenEdit(id){
   // total mode
   document.getElementById('qf-total-price').value=r.totalPrice!=null?r.totalPrice:'';
   document.getElementById('qf-total-cur').value=r.totalCur||'USD';
+  // total mode RAM/SSD spec
+  const totRamEl=document.getElementById('qf-total-ram');
+  if(totRamEl&&r.pmode==='total')totRamEl.value=r.ram||'';
+  const totSsdEl=document.getElementById('qf-total-ssd');
+  if(totSsdEl&&r.pmode==='total')totSsdEl.value=r.ssd||'';
   // final price
   const priceEl=document.getElementById('qf-price');
   priceEl.value=r.price!=null?r.price:'';
@@ -4273,6 +4288,14 @@ function qtRenderProductRows(){
           <div style="grid-column:1/-1;font-size:10px;color:var(--text3)">💡 P 自动合计三项</div>
         </div>
         <!-- 整机区 -->
+        <div id="${dlid}-tt-specs" style="grid-template-columns:1fr 1fr;gap:8px;${pmode==='total'?'display:grid':'display:none'}">
+          <div class="field"><label style="font-size:11px">RAM 规格</label>
+            <input data-f="tt-ram" value="${d.ram||''}" placeholder="8GB DDR4" style="font-size:12px;padding:5px 8px">
+          </div>
+          <div class="field"><label style="font-size:11px">SSD 规格</label>
+            <input data-f="tt-ssd" value="${d.ssd||''}" placeholder="256GB M.2 SSD" style="font-size:12px;padding:5px 8px">
+          </div>
+        </div>
         <div class="field" id="${dlid}-tt" style="${ttShow}"><label style="font-size:11px">整机总价 / 报价 P</label>
           <div style="display:flex;gap:4px">
             <select data-f="price-cur" style="width:auto;padding:3px 5px;font-size:11px;border:1px solid var(--border);border-radius:4px;background:var(--bg)">
@@ -4427,10 +4450,10 @@ function qtBuildSnap(mode){
     priceCur:document.getElementById('qf-price-cur').value,
     barbone:mode==='breakdown'?(parseFloat(document.getElementById('qf-barbone').value)||null):null,
     barboneCur:document.getElementById('qf-barbone-cur').value,
-    ram:mode==='breakdown'?document.getElementById('qf-ram').value.trim():'',
+    ram:mode==='breakdown'?document.getElementById('qf-ram').value.trim():(document.getElementById('qf-total-ram')?.value.trim()||''),
     ramp:mode==='breakdown'?(parseFloat(document.getElementById('qf-ramp').value)||null):null,
     rampCur:document.getElementById('qf-ramp-cur').value,
-    ssd:mode==='breakdown'?document.getElementById('qf-ssd').value.trim():'',
+    ssd:mode==='breakdown'?document.getElementById('qf-ssd').value.trim():(document.getElementById('qf-total-ssd')?.value.trim()||''),
     ssdp:mode==='breakdown'?(parseFloat(document.getElementById('qf-ssdp').value)||null):null,
     ssdpCur:document.getElementById('qf-ssdp-cur').value,
     totalPrice:mode==='total'?(parseFloat(document.getElementById('qf-total-price').value)||null):null,
@@ -4577,6 +4600,11 @@ function qtSave(){
         const inp=el.querySelector(`[data-f="${f}"]`);
         if(inp)_qtProdRows[i][f]=inp.value;
       });
+      // total mode RAM/SSD spec (no price)
+      const ttRamInp=el.querySelector('[data-f="tt-ram"]');
+      if(ttRamInp&&_qtProdRows[i].pmode==='total')_qtProdRows[i].ram=ttRamInp.value;
+      const ttSsdInp=el.querySelector('[data-f="tt-ssd"]');
+      if(ttSsdInp&&_qtProdRows[i].pmode==='total')_qtProdRows[i].ssd=ttSsdInp.value;
       // price: 分项模式取 data-priceinput，整机模式取 data-ttinput
       const pmode2=_qtProdRows[i]?.pmode||'breakdown';
       const priceInp2=el.querySelector(pmode2==='breakdown'?'[data-priceinput]':'[data-ttinput]');
@@ -4615,10 +4643,10 @@ function qtSave(){
         price,priceCur:d['price-cur']||'USD',
         barbone:mode==='breakdown'?(parseFloat(d.barbone)||null):null,
         barboneCur:d['barbone-cur']||'USD',
-        ram:mode==='breakdown'?(d.ram||''):'',
+        ram:d.ram||'',
         ramp:mode==='breakdown'?(parseFloat(d.ramp)||null):null,
         rampCur:d['ramp-cur']||'USD',
-        ssd:mode==='breakdown'?(d.ssd||''):'',
+        ssd:d.ssd||'',
         ssdp:mode==='breakdown'?(parseFloat(d.ssdp)||null):null,
         ssdpCur:d['ssdp-cur']||'USD',
         totalPrice:mode==='total'?price:null,
@@ -4656,7 +4684,7 @@ function qtSave(){
     document.getElementById('qf-siblings-info').style.display='none';
     document.getElementById('qf-history-wrap').style.display='none';
     // 清空单品区产品字段，保留项目信息
-    ['qf-model','qf-partno','qf-cpu','qf-custom','qf-ram','qf-ramp','qf-ssd','qf-ssdp','qf-barbone','qf-p3','qf-price','qf-shipping','qf-total-price'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    ['qf-model','qf-partno','qf-cpu','qf-custom','qf-ram','qf-ramp','qf-ssd','qf-ssdp','qf-barbone','qf-p3','qf-price','qf-shipping','qf-total-price','qf-total-ram','qf-total-ssd'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
     document.getElementById('qf-qty').value='';
     var bd=document.querySelector('input[name="qf-pmode"][value="breakdown"]');
     if(bd){bd.checked=true;if(typeof qtTogglePriceMode==="function")qtTogglePriceMode();}
@@ -4736,7 +4764,7 @@ function qtSaveAndAddProduct(){
   // 清空产品字段，切换为新增单品模式
   qtEditId=null;
   document.getElementById('qt-modal-title').textContent='新增产品报价（同项目）';
-  ['qf-model','qf-partno','qf-cpu','qf-custom','qf-ram','qf-ramp','qf-ssd','qf-ssdp','qf-barbone','qf-p3','qf-price','qf-shipping','qf-total-price'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['qf-model','qf-partno','qf-cpu','qf-custom','qf-ram','qf-ramp','qf-ssd','qf-ssdp','qf-barbone','qf-p3','qf-price','qf-shipping','qf-total-price','qf-total-ram','qf-total-ssd'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('qf-qty').value='';
   var bd=document.querySelector('input[name="qf-pmode"][value="breakdown"]');
   if(bd){bd.checked=true;if(typeof qtTogglePriceMode==='function')qtTogglePriceMode();}
@@ -5064,7 +5092,7 @@ function qtSeed(){
     <div class="fg"><label>公司名称</label>
       <div style="position:relative;">
         <input type="text" id="bCo" placeholder="e.g. CEN TRIGHR" oninput="onBuyerCoInput()" onblur="setTimeout(()=>closeBuyerDrop(),180)" autocomplete="off"/>
-        <div id="bco-drop" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:2px;background:var(--c-surface);border:1px solid var(--c-border);border-radius:7px;z-index:300;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15);font-size:11px;"></div>
+        <div id="bco-drop" style="display:none;position:fixed;left:0;top:0;width:260px;background:var(--c-surface);border:1px solid var(--c-border);border-radius:7px;z-index:9999;max-height:200px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.25);font-size:11px;"></div>
       </div>
     </div>
     <div class="fg"><label>地址</label><textarea id="bAddr" rows="2" placeholder="客户地址"></textarea></div>
@@ -5092,6 +5120,18 @@ function qtSeed(){
 </aside>
 
 <main>
+  <!-- ── Format Toolbar (inside main, only visible in cesipc tab) ── -->
+  <div id="persist-fmt-bar" style="background:#f0eeea;border-bottom:1px solid #d8d6ce;padding:4px 14px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;position:sticky;top:0;z-index:50;">
+    <span style="font-size:10px;color:#888;margin-right:3px;white-space:nowrap;">✏️ 格式（在Description框选中文字后点）：</span>
+    <button onmousedown="event.preventDefault();fmtExec('bold')" style="background:#1A3C5E;border:none;border-radius:4px;color:#fff;font-weight:700;font-size:12px;padding:2px 8px;cursor:pointer;" title="加粗">B</button>
+    <button onmousedown="event.preventDefault();fmtExec('italic')" style="background:transparent;border:1px solid #ccc;border-radius:4px;color:#444;font-style:italic;font-size:12px;padding:2px 8px;cursor:pointer;" title="斜体">I</button>
+    <button onmousedown="event.preventDefault();fmtExec('underline')" style="background:transparent;border:1px solid #ccc;border-radius:4px;color:#444;text-decoration:underline;font-size:12px;padding:2px 8px;cursor:pointer;" title="下划线">U</button>
+    <div style="width:1px;height:16px;background:#ccc;margin:0 2px;"></div>
+    <label style="font-size:10px;color:#666;display:flex;align-items:center;gap:3px;cursor:pointer;" title="字体颜色"><span>字色</span><input type="color" value="#E8732A" style="width:20px;height:18px;border:none;background:none;cursor:pointer;padding:0;border-radius:3px;" onmousedown="event.stopPropagation()" oninput="fmtColor(this.value)"></label>
+    <label style="font-size:10px;color:#666;display:flex;align-items:center;gap:3px;cursor:pointer;" title="高亮背景色"><span>🖍高亮</span><input type="color" value="#FFFF00" style="width:20px;height:18px;border:none;background:none;cursor:pointer;padding:0;border-radius:3px;" onmousedown="event.stopPropagation()" oninput="fmtBg(this.value)"></label>
+    <div style="width:1px;height:16px;background:#ccc;margin:0 2px;"></div>
+    <button onmousedown="event.preventDefault();fmtExec('removeFormat')" style="background:transparent;border:1px solid #ccc;border-radius:4px;color:#888;font-size:10px;padding:2px 7px;cursor:pointer;" title="清除格式">✕ 清除</button>
+  </div>
   <!-- Q -->
   <div class="tab-content active" id="tab-quotation">
     <div class="tw">
@@ -5255,12 +5295,20 @@ function qtSeed(){
 
 <!-- FLOATING FORMAT TOOLBAR -->
 <div id="fmt-bar" style="display:none;position:fixed;z-index:2000;background:#1e222d;border:1px solid #2a2f3d;border-radius:8px;padding:5px 8px;gap:5px;align-items:center;box-shadow:0 6px 20px rgba(0,0,0,.5);">
-  <button class="rt-btn" id="fb-bold" title="Bold" onmousedown="fmtExec('bold')"><b>B</b></button>
-  <button class="rt-btn" id="fb-italic" title="Italic" onmousedown="fmtExec('italic')"><i>I</i></button>
-  <button class="rt-btn" id="fb-under" title="Underline" onmousedown="fmtExec('underline')"><u>U</u></button>
+  <button class="rt-btn" id="fb-bold" title="Bold (加粗)" onmousedown="event.preventDefault();fmtExec('bold')"><b style="color:#fff">B</b></button>
+  <button class="rt-btn" id="fb-italic" title="Italic (斜体)" onmousedown="event.preventDefault();fmtExec('italic')"><i style="color:#ccc">I</i></button>
+  <button class="rt-btn" id="fb-under" title="Underline (下划线)" onmousedown="event.preventDefault();fmtExec('underline')"><u style="color:#ccc">U</u></button>
   <div style="width:1px;height:16px;background:#2a2f3d;margin:0 2px;"></div>
-  <input type="color" id="fb-color" value="#E8732A" title="字体颜色" style="width:22px;height:22px;border:none;background:none;cursor:pointer;padding:0;" onmousedown="event.stopPropagation()" oninput="fmtColor(this.value)"/>
-  <button class="rt-btn" title="清除格式" onmousedown="fmtExec('removeFormat')" style="font-size:10px;">✕</button>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+    <span style="font-size:9px;color:#888;line-height:1">字色</span>
+    <input type="color" id="fb-color" value="#E8732A" title="字体颜色" style="width:22px;height:18px;border:none;background:none;cursor:pointer;padding:0;" onmousedown="event.stopPropagation()" oninput="fmtColor(this.value)"/>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+    <span style="font-size:9px;color:#888;line-height:1">背景</span>
+    <input type="color" id="fb-bgcolor" value="#FFFF00" title="标记颜色 (背景高亮)" style="width:22px;height:18px;border:none;background:none;cursor:pointer;padding:0;" onmousedown="event.stopPropagation()" oninput="fmtBg(this.value)"/>
+  </div>
+  <div style="width:1px;height:16px;background:#2a2f3d;margin:0 2px;"></div>
+  <button class="rt-btn" title="清除格式" onmousedown="event.preventDefault();fmtExec('removeFormat')" style="font-size:10px;color:#aaa;">✕</button>
 </div>
 
 
@@ -5386,10 +5434,11 @@ const fBar=document.getElementById('fmt-bar');
 document.addEventListener('selectionchange',()=>{
   const sel=window.getSelection();
   if(!sel||sel.isCollapsed||!sel.toString().trim()){fBar.style.display='none';return;}
-  // only show inside main table cells
+  // show inside any contenteditable (td or div)
   const anc=sel.anchorNode?.parentElement;
-  if(!anc?.closest('td[contenteditable]')){fBar.style.display='none';return;}
-  _fmtTarget=anc.closest('td[contenteditable]');
+  const ce=anc?.closest('[contenteditable="true"]');
+  if(!ce){fBar.style.display='none';return;}
+  _fmtTarget=ce;
   const r=sel.getRangeAt(0).getBoundingClientRect();
   fBar.style.display='flex';
   fBar.style.top=(r.top+window.scrollY-44)+'px';
@@ -5398,6 +5447,7 @@ document.addEventListener('selectionchange',()=>{
 document.addEventListener('mousedown',e=>{if(!e.target.closest('#fmt-bar'))fBar.style.display='none';});
 function fmtExec(cmd){document.execCommand(cmd,false,null);}
 function fmtColor(c){document.execCommand('foreColor',false,c);}
+function fmtBg(c){document.execCommand('hiliteColor',false,c);}
 
 document.addEventListener('DOMContentLoaded',()=>{
   const today=new Date(), iso=d=>d.toISOString().split('T')[0];
@@ -6322,6 +6372,14 @@ function onBuyerCoInput() {
   const drop = document.getElementById('bco-drop');
   if (!drop) return;
   if (!val) { drop.style.display = 'none'; return; }
+  // Position fixed relative to the input element (escapes aside overflow clipping)
+  const inputEl = document.getElementById('bCo');
+  if (inputEl) {
+    const rect = inputEl.getBoundingClientRect();
+    drop.style.left = rect.left + 'px';
+    drop.style.top = (rect.bottom + 2) + 'px';
+    drop.style.width = rect.width + 'px';
+  }
 
   // Collect all saved docs that match, grouped by company
   // Each company shows all its unique addr+contact combos as sub-options
