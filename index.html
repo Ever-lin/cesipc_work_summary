@@ -1729,9 +1729,10 @@ function importFromQuoteGroup(gi){
       } else {
         document.getElementById('proj-progress-stage').value=latest.progressStage||'';
       }
-      // 数量：以报价管理最新为准，或保留已有
-      const qtys=[...new Set(g.quotes.map(x=>x.qty).filter(Boolean))];
-      document.getElementById('proj-quantity').value=qtys.length?(qtys.join(' / ')+'台'):(latest.quantity||'');
+      // 数量：以报价管理最新为准，或保留已有（格式：4台FPM-1702K / 1台UTC-W1582A）
+      const qtyParts=g.quotes.filter(x=>x.qty).map(x=>`${x.qty}台${x.model||''}`.trim());
+      const uniqueQtyParts=[...new Set(qtyParts)];
+      document.getElementById('proj-quantity').value=uniqueQtyParts.length?uniqueQtyParts.join(' / '):(latest.quantity||'');
       // 项目报价：保留已有记录（不覆盖），追加模式下由用户手动更新
       document.getElementById('proj-quote').value=latest.quote||'';
       // 其他字段：来自最新记录
@@ -1759,8 +1760,9 @@ function importFromQuoteGroup(gi){
     if(g.stage){
       document.getElementById('proj-progress-stage').value=g.stage;
     }
-    const qty=[...new Set(g.quotes.map(x=>x.qty).filter(Boolean))];
-    if(qty.length)document.getElementById('proj-quantity').value=qty.join(' / ')+'台';
+    const qtyParts=g.quotes.filter(x=>x.qty).map(x=>`${x.qty}台${x.model||''}`.trim());
+    const uniqueQtyParts=[...new Set(qtyParts)];
+    if(uniqueQtyParts.length)document.getElementById('proj-quantity').value=uniqueQtyParts.join(' / ');
     // Build quote text — 按产品分块，每块一个产品
     const blocks=[];
     g.quotes.forEach((q,qi)=>{
