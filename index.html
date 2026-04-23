@@ -88,8 +88,12 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 }
 
   #panel-cesipc .cesipc-root {
-    --c-bg: #f5f4f0; --surface: #ffffff; --surface2: #f0eeea;
-    --c-border: #d8d6ce; --text: #1a1a18; --c-text: #1a1a18; --muted: #666660;
+    --c-bg: #f5f4f0;
+    --c-surface: #ffffff; --surface: #ffffff;
+    --c-surface2: #f0eeea; --surface2: #f0eeea;
+    --c-border: #d8d6ce;
+    --c-text: #1a1a18; --text: #1a1a18;
+    --c-muted: #666660; --muted: #666660;
     --c-danger: #c0392b; --radius: 10px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -332,10 +336,11 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   .pk-tot td.vl { background: #D9E2EC; color: #1A1A2E; }
 
   @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
     #panel-cesipc .cesipc-root { background: #fff !important; }
     header, aside, .pctrl { display: none !important; }
     .overlay { position: static !important; background: none !important; padding: 0 !important; display: block !important; overflow: visible !important; }
-    .paper { box-shadow: none !important; width: 100% !important; padding: 8mm !important; min-height: unset !important; }
+    .paper { box-shadow: none !important; width: 210mm !important; padding: 11mm 13mm !important; min-height: unset !important; }
   }
 
   /* ── Price mode toggle ── */
@@ -5151,7 +5156,6 @@ function exportPDF(){
   else if(_curDocType==='ci') prefix='CESIPC CI'+(no?'-'+no:'');
   else prefix='CESIPC Packing List'+(no?'-'+no:'');
 
-  // 只打印 paper 内容，不打印整个页面
   const paper=document.getElementById('paper');
   if(!paper)return;
 
@@ -5159,37 +5163,88 @@ function exportPDF(){
   const styles=Array.from(document.querySelectorAll('style')).map(s=>s.innerHTML).join('\n');
 
   const iframe=document.createElement('iframe');
-  iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:0;height:0;border:none;';
+  iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:210mm;height:297mm;border:none;visibility:hidden;';
   document.body.appendChild(iframe);
 
   const doc=iframe.contentDocument||iframe.contentWindow.document;
   doc.open();
+  // 包裹在完整的父级结构中，确保 #panel-cesipc .cesipc-root 选择器能正确匹配
   doc.write(`<!DOCTYPE html><html><head>
     <meta charset="UTF-8">
     <title>${prefix}</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
       ${styles}
-      @page { margin: 0; size: A4; }
-      body { margin: 0; padding: 0; background: #fff; }
-      .paper { box-shadow: none !important; width: 210mm !important; min-height: unset !important; }
+      /* 打印专用覆盖 */
+      @page { margin: 0; size: A4 portrait; }
+      html, body { margin: 0; padding: 0; background: #fff; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+      /* 隐藏所有非 paper 内容 */
+      #panel-cesipc .cesipc-root header,
+      #panel-cesipc .cesipc-root aside,
+      #panel-cesipc .cesipc-root main > *:not(.overlay),
+      .pctrl { display: none !important; }
+      /* overlay 静态展示 */
+      #panel-cesipc .cesipc-root .overlay {
+        position: static !important;
+        background: none !important;
+        padding: 0 !important;
+        display: flex !important;
+        overflow: visible !important;
+        align-items: flex-start !important;
+      }
+      .paper {
+        box-shadow: none !important;
+        width: 210mm !important;
+        min-height: unset !important;
+        padding: 11mm 13mm !important;
+        margin: 0 !important;
+      }
+      @media print {
+        #panel-cesipc .cesipc-root header,
+        #panel-cesipc .cesipc-root aside,
+        .pctrl { display: none !important; }
+        #panel-cesipc .cesipc-root .overlay {
+          position: static !important;
+          background: none !important;
+          padding: 0 !important;
+          display: flex !important;
+        }
+        .paper {
+          box-shadow: none !important;
+          width: 210mm !important;
+          min-height: unset !important;
+        }
+      }
     </style>
   </head><body>
-    <div class="paper">${paper.innerHTML}</div>
+    <div id="panel-cesipc"><div class="cesipc-root">
+      <div class="overlay open" id="ov">
+        <div class="pctrl"></div>
+        <div class="paper" id="paper">${paper.innerHTML}</div>
+      </div>
+    </div></div>
   </body></html>`);
   doc.close();
 
-  iframe.contentWindow.focus();
-  setTimeout(()=>{
-    // Set title for PDF filename
+  // 等待字体加载完成再打印，避免字体未就绪导致排版错乱
+  const doprint=()=>{
     const origTitle=document.title;
     iframe.contentDocument.title=prefix;
+    iframe.style.visibility='visible';
+    iframe.contentWindow.focus();
     iframe.contentWindow.print();
     setTimeout(()=>{
       document.body.removeChild(iframe);
       document.title=origTitle;
-    },1000);
-  },600);
+    },1500);
+  };
+  // 优先用 fonts.ready，不支持则回退 setTimeout
+  if(iframe.contentDocument.fonts && iframe.contentDocument.fonts.ready){
+    iframe.contentDocument.fonts.ready.then(()=>setTimeout(doprint,200));
+  } else {
+    setTimeout(doprint,1200);
+  }
 }
 function closeOv(){document.getElementById('ov').classList.remove('open');}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOv();});
