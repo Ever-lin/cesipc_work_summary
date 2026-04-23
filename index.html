@@ -975,8 +975,9 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 <!-- LIST VIEW -->
 <div id="qt-view-list">
   <div class="qt-bar">
-    <div class="qt-search"><span class="qt-search-ic">🔍</span><input id="qt-search" placeholder="搜索项目、型号、CPU…" oninput="qtRender()"></div>
+    <div class="qt-search"><span class="qt-search-ic">🔍</span><input id="qt-search" placeholder="搜索项目、型号、CPU、业务…" oninput="qtRender()"></div>
     <select class="ym-s" id="qt-f-company" onchange="qtRender()"><option value="">全部公司</option></select>
+    <select class="ym-s" id="qt-f-contact" onchange="qtRender()"><option value="">全部业务</option></select>
     <select class="ym-s" id="qt-f-status" onchange="qtRender()"><option value="">全部状态</option><option value="open">⭕ 跟进中</option><option value="confirmed">🔶 已确认订单</option><option value="won">✅ 已成交</option><option value="pause">⏸️ 暂无进展</option><option value="lost">❌ 丢单</option></select>
     <select class="ym-s" id="qt-f-p3" onchange="qtRender()"><option value="">全部价格</option><option value="below">⚠️ 低于P3</option><option value="ok">✅ 高于P3</option></select>
     <button class="btn btn-primary btn-sm" onclick="qtOpenAdd()">＋ 新增报价</button>
@@ -987,6 +988,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <thead><tr>
         <th onclick="qtSort('deal')">状态 ↕</th>
         <th onclick="qtSort('company')">公司 ↕</th>
+        <th onclick="qtSort('contact')">对接业务 ↕</th>
         <th onclick="qtSort('project')">项目 ↕</th>
         <th onclick="qtSort('date')">日期 ↕</th>
         <th onclick="qtSort('model')">型号 ↕</th>
@@ -1012,6 +1014,8 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div class="qt-kpi-grid" id="qt-kpis"></div>
   <div class="slabel">公司概况</div>
   <div class="qt-cc-grid" id="qt-ccs"></div>
+  <div class="slabel">业务概况</div>
+  <div class="qt-cc-grid" id="qt-contacts"></div>
   <div class="slabel">低于P3的报价</div>
   <div class="qt-tbl-wrap">
     <table class="qt-tbl"><thead><tr><th>状态</th><th>公司</th><th>项目</th><th>型号</th><th>报价(P)</th><th>P3</th><th>价差</th></tr></thead>
@@ -1032,6 +1036,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <option value="ENT Group Company Limited">ENT Group Company Limited</option>
           <option value="其他">其他</option>
         </select>
+      </div>
+      <div class="field"><label>对接业务 <span style="font-size:11px;color:var(--text2);font-weight:400">（联系人/业务员）</span></label>
+        <input id="qf-contact" placeholder="如：张三 / Sales-Alice" list="qf-contact-dl">
+        <datalist id="qf-contact-dl"></datalist>
       </div>
       <div class="field"><label>日期</label><input type="date" id="qf-date"></div>
       <div class="field"><label>型号</label><input id="qf-model" placeholder="EPC-W1592A"></div>
@@ -3689,11 +3697,13 @@ function qSwitchView(v,btn){
 function qtFiltered(){
   const q=(document.getElementById('qt-search').value||'').toLowerCase();
   const co=document.getElementById('qt-f-company').value;
+  const ct=document.getElementById('qt-f-contact').value;
   const st=document.getElementById('qt-f-status').value;
   const p3f=document.getElementById('qt-f-p3').value;
   return qtQuotes.filter(r=>{
-    if(q&&!`${r.project} ${r.model} ${r.cpu} ${r.ram} ${r.ssd} ${r.stage||''}`.toLowerCase().includes(q))return false;
+    if(q&&!`${r.project} ${r.model} ${r.cpu} ${r.ram} ${r.ssd} ${r.stage||''} ${r.contact||''}`.toLowerCase().includes(q))return false;
     if(co&&r.company!==co)return false;
+    if(ct&&r.contact!==ct)return false;
     if(st&&r.deal!==st)return false;
     if(p3f){const d=r.p3?r.price-r.p3:null;if(p3f==='below'&&(d===null||d>=0))return false;if(p3f==='ok'&&(d===null||d<0))return false;}
     return true;
@@ -3721,6 +3731,7 @@ function qtRender(){
     return`<tr>
       <td>${dealBadge(r.deal)}</td>
       <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis">${r.company||'—'}</td>
+      <td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;color:var(--blue-text);font-weight:500">${r.contact||'<span style="color:var(--text3)">—</span>'}</td>
       <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${r.project||''}">${r.project||'—'}</td>
       <td>${r.date||'—'}</td>
       <td><b>${r.model||'—'}</b></td>
@@ -3756,7 +3767,7 @@ function qtRender(){
         <button class="btn btn-danger btn-xs" onclick="qtDel('${r.id}')">删</button>
       </span></td>
     </tr>`;
-  }).join(''):`<tr><td colspan="15" style="text-align:center;padding:24px;color:var(--text2)">没有找到匹配的报价</td></tr>`;
+  }).join(''):`<tr><td colspan="16" style="text-align:center;padding:24px;color:var(--text2)">没有找到匹配的报价</td></tr>`;
   setTimeout(qtInitResizableCols,0);
   // pagination
   const pg=document.getElementById('qt-pg');
@@ -3806,13 +3817,21 @@ function qtUpdateCompanyFilter(){
   const companies=[...new Set(qtQuotes.map(q=>q.company).filter(Boolean))].sort();
   const sel=document.getElementById('qt-f-company');const cur=sel.value;
   sel.innerHTML='<option value="">全部公司</option>'+companies.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
+
+  const contacts=[...new Set(qtQuotes.map(q=>q.contact).filter(Boolean))].sort();
+  const csel=document.getElementById('qt-f-contact');const ccur=csel.value;
+  csel.innerHTML='<option value="">全部业务</option>'+contacts.map(c=>`<option value="${c}"${c===ccur?' selected':''}>${c}</option>`).join('');
+
+  // update datalist for contact input autocomplete
+  const dl=document.getElementById('qf-contact-dl');
+  if(dl)dl.innerHTML=contacts.map(c=>`<option value="${c}">`).join('');
 }
 
 // Modal
 function qtOpenAdd(){
   qtEditId=null;
   document.getElementById('qt-modal-title').textContent='新增报价';
-  ['qf-project','qf-model','qf-partno','qf-cpu','qf-ram','qf-ssd','qf-custom','qf-notes','qf-shipping'].forEach(id=>document.getElementById(id).value='');
+  ['qf-project','qf-model','qf-partno','qf-cpu','qf-ram','qf-ssd','qf-custom','qf-notes','qf-shipping','qf-contact'].forEach(id=>document.getElementById(id).value='');
   ['qf-qty','qf-barbone','qf-ramp','qf-ssdp','qf-price','qf-p3','qf-total-price'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('qf-stage').value='';
   delete document.getElementById('qf-price').dataset.manualEdit;
@@ -3832,6 +3851,7 @@ function qtOpenEdit(id){
   document.getElementById('qt-modal-title').textContent='编辑报价';
   document.getElementById('qf-project').value=r.project||'';
   document.getElementById('qf-company').value=r.company||'ENT Group Company Limited';
+  document.getElementById('qf-contact').value=r.contact||'';
   document.getElementById('qf-date').value=r.date||'';
   document.getElementById('qf-model').value=r.model||'';
   document.getElementById('qf-partno').value=r.partno||'';
@@ -4099,6 +4119,7 @@ function qtSave(){
     id:qtEditId||Date.now(),
     project:document.getElementById('qf-project').value.trim(),
     company:document.getElementById('qf-company').value,
+    contact:document.getElementById('qf-contact').value.trim(),
     date:document.getElementById('qf-date').value,
     model:document.getElementById('qf-model').value.trim(),
     partno:document.getElementById('qf-partno').value.trim(),
@@ -4170,6 +4191,77 @@ function qtRenderDash(){
       <div class="qt-cc-row"><span style="color:var(--red-text)">丢单</span><span style="color:var(--red-text)">${cl}</span></div>
     </div>`;
   }).join('');
+
+  // 业务概况
+  const contacts=[...new Set(qtQuotes.map(q=>q.contact).filter(Boolean))].sort();
+  const noContact=qtQuotes.filter(q=>!q.contact);
+  const allContactGroups=[
+    ...contacts.map(ct=>({name:ct,qs:qtQuotes.filter(q=>q.contact===ct),isUnassigned:false})),
+    ...(noContact.length?[{name:'（未指定业务）',qs:noContact,isUnassigned:true}]:[])
+  ];
+  document.getElementById('qt-contacts').innerHTML=allContactGroups.length
+    ? allContactGroups.map(({name,qs,isUnassigned})=>{
+        const tw=qs.filter(q=>q.deal==='won').length;
+        const to=qs.filter(q=>q.deal==='open').length;
+        const tc=qs.filter(q=>q.deal==='confirmed').length;
+        const tl=qs.filter(q=>q.deal==='lost').length;
+        const tp=qs.filter(q=>q.deal==='pause').length;
+        // 涉及的公司（去重）
+        const cos=[...new Set(qs.map(q=>q.company).filter(Boolean))];
+
+        // 按项目名称去重，取每个项目最新的成单状态
+        const projMap={};
+        qs.forEach(q=>{
+          const p=q.project||'';if(!p)return;
+          if(!projMap[p]||q.date>projMap[p].date)projMap[p]=q;
+        });
+        const projects=Object.values(projMap).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+
+        // 按项目前缀分组（取第一个"_"前的词）
+        const prefixMap={};
+        projects.forEach(q=>{
+          const prefix=(q.project||'').split('_')[0]||'其他';
+          if(!prefixMap[prefix])prefixMap[prefix]=[];
+          prefixMap[prefix].push(q);
+        });
+
+        const dealIcon=d=>d==='won'?'✅':d==='confirmed'?'🔶':d==='open'?'⭕':d==='pause'?'⏸️':d==='lost'?'❌':'—';
+        const dealColor=d=>d==='won'?'var(--green-text)':d==='confirmed'?'var(--amber-text)':d==='open'?'var(--blue-text)':d==='pause'?'var(--gray-text)':d==='lost'?'var(--red-text)':'var(--text3)';
+
+        const projHtml=Object.entries(prefixMap).map(([prefix,pqs])=>{
+          const rows=pqs.map(q=>{
+            // 提取项目编号+简称：去掉前缀，取下划线分隔的第1~2段
+            const parts=(q.project||'').split('_');
+            const label=parts.slice(1,3).join(' ') || q.project;
+            return`<div style="display:flex;align-items:baseline;gap:5px;padding:2px 0;border-bottom:1px solid var(--border2)">
+              <span style="font-size:11px;color:${dealColor(q.deal)};flex-shrink:0">${dealIcon(q.deal)}</span>
+              <span style="font-size:11px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${q.project||''}">${label}</span>
+              <span style="font-size:10px;color:var(--text3);flex-shrink:0">${(q.date||'').slice(2,10)}</span>
+            </div>`;
+          }).join('');
+          return`<div style="margin-top:7px">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:3px;padding-bottom:2px;border-bottom:2px solid var(--border2)">${prefix} · ${pqs.length}个</div>
+            ${rows}
+          </div>`;
+        }).join('');
+
+        return`<div class="qt-cc" style="min-width:200px">
+          <div class="qt-cc-name" style="${isUnassigned?'color:var(--text3);font-weight:400;font-size:12px':''}">
+            ${isUnassigned?'':'👤 '}${name}
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px">
+            <span style="font-size:12px;color:var(--text2)">共 <b>${projects.length}</b> 个项目</span>
+            ${tw?`<span style="font-size:12px;color:var(--green-text)">✅ ${tw}</span>`:''}
+            ${tc?`<span style="font-size:12px;color:var(--amber-text)">🔶 ${tc}</span>`:''}
+            ${to?`<span style="font-size:12px;color:var(--blue-text)">⭕ ${to}</span>`:''}
+            ${tp?`<span style="font-size:12px;color:var(--gray-text)">⏸️ ${tp}</span>`:''}
+            ${tl?`<span style="font-size:12px;color:var(--red-text)">❌ ${tl}</span>`:''}
+          </div>
+          ${projHtml}
+          ${cos.length?`<div style="margin-top:7px;padding-top:5px;border-top:1px solid var(--border2);font-size:11px;color:var(--text2)">${cos.map(c=>`<span style="display:inline-block;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:1px 7px;margin:1px 2px">${c}</span>`).join('')}</div>`:''}
+        </div>`;
+      }).join('')
+    : `<div style="color:var(--text3);font-size:12px;padding:8px">尚未为报价指定业务，可在编辑报价时填写「对接业务」字段。</div>`;
   const dealBadge=d=>d==='won'?'<span class="badge qt-stat-won">✅ 已成交</span>':d==='lost'?'<span class="badge qt-stat-lost">❌ 丢单</span>':d==='open'?'<span class="badge qt-stat-open">⭕ 跟进中</span>':d==='confirmed'?'<span class="badge qt-stat-confirmed">🔶 已确认订单</span>':d==='pause'?'<span class="badge qt-stat-pause">⏸️ 暂无进展</span>':'<span class="badge badge-gray">—</span>';
   document.getElementById('qt-below-body').innerHTML=belowP3.length?belowP3.map(r=>`<tr>
     <td>${dealBadge(r.deal)}</td><td>${r.company||'—'}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">${r.project||'—'}</td>
