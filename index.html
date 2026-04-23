@@ -3882,7 +3882,7 @@ function qtRender(){
       <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;color:var(--text2);font-size:11px">${r.stage||'—'}</td>
       <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>
       <td><span style="display:flex;gap:4px;flex-wrap:wrap">
-        ${r.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="doDocImportFromQuotes(\''+r.project+'\',(r.barbone!=null)?\'split\':\'combined\')" title="导入此项目到单据生成">💰 导入</button>':''}
+        ${r.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="qtImportToDoc(\''+r.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
         <button class="btn btn-xs" onclick="qtOpenEdit('${r.id}')">编辑</button>
         ${(r.priceHistory&&r.priceHistory.length)?'<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="qtOpenEdit(\''+r.id+'\')" title="'+r.priceHistory.length+'次价格变更">📋'+r.priceHistory.length+'</button>':''}
         ${(()=>{
@@ -5007,7 +5007,12 @@ function qtSeed(){
   <div class="divider"></div>
   <div>
     <div class="stitle">🧑‍💼 客户信息 Buyer</div>
-    <div class="fg"><label>公司名称</label><input type="text" id="bCo" placeholder="e.g. CEN TRIGHR"/></div>
+    <div class="fg"><label>公司名称</label>
+      <div style="position:relative;">
+        <input type="text" id="bCo" placeholder="e.g. CEN TRIGHR" oninput="onBuyerCoInput()" onblur="setTimeout(()=>closeBuyerDrop(),180)" autocomplete="off"/>
+        <div id="bco-drop" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:2px;background:var(--c-surface);border:1px solid var(--c-border);border-radius:7px;z-index:300;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15);font-size:11px;"></div>
+      </div>
+    </div>
     <div class="fg"><label>地址</label><textarea id="bAddr" rows="2" placeholder="客户地址"></textarea></div>
     <div class="fg"><label>联系人</label><input type="text" id="bCt" placeholder="联系人"/></div>
     <div class="fg"><label>电话</label><input type="text" id="bTel" placeholder="+1-xxx-xxx"/></div>
@@ -5043,7 +5048,6 @@ function qtSeed(){
             <button id="q-mode-simple" onclick="setMode('q','simple')">整合报价</button>
           </div>
           <button class="btn btn-g btn-sm" onclick="addR('q')">＋ 添加行</button>
-          <button class="btn btn-g btn-sm" onclick="openDocImportFromQuotes()" style="color:#1D9E75;border-color:#1D9E75;" title="从报价管理导入项目行">💰 从报价导入</button>
           <button class="btn btn-p" onclick="showDoc('q')">预览 / 打印</button>
         </div>
       </div>
@@ -6201,13 +6205,97 @@ function renderSavedDocsList() {
 }
 
 // ─── Project name autocomplete (from qtQuotes projects) ───
+
+// ─── Buyer company autocomplete & autofill ───
+function onBuyerCoInput() {
+  const val = (document.getElementById('bCo')?.value || '').toLowerCase().trim();
+  const drop = document.getElementById('bco-drop');
+  if (!drop) return;
+  if (!val) { drop.style.display = 'none'; return; }
+
+  // Collect all saved docs that match, grouped by company
+  // Each company shows all its unique addr+contact combos as sub-options
+  const docs = getAllDocs();
+
+  // Group by company name → array of unique {bAddr,bCt,bTel,bEmail,proj,savedAt}
+  const coMap = {};
+  docs.forEach(d => {
+    const co = (d.fields?.bCo || '').trim();
+    if (!co || !co.toLowerCase().includes(val)) return;
+    if (!coMap[co]) coMap[co] = [];
+    // Deduplicate by bAddr+bCt combo
+    const key = (d.fields?.bAddr||'') + '|' + (d.fields?.bCt||'');
+    if (!coMap[co].find(x => x._key === key)) {
+      coMap[co].push({
+        _key: key,
+        bCo: co,
+        bAddr: d.fields?.bAddr || '',
+        bCt:   d.fields?.bCt   || '',
+        bTel:  d.fields?.bTel  || '',
+        bEmail:d.fields?.bEmail|| '',
+        proj:  d.proj || '',
+        savedAt: d.savedAt || ''
+      });
+    }
+  });
+
+  const companies = Object.keys(coMap);
+  if (!companies.length) { drop.style.display = 'none'; return; }
+
+  drop.innerHTML = companies.map(co => {
+    const variants = coMap[co];
+    if (variants.length === 1) {
+      // Single record — flat row
+      const v = variants[0];
+      const sub = [v.bCt, v.bAddr].filter(Boolean).join(' · ').substring(0, 50);
+      return `<div onmousedown="pickBuyerFields(${JSON.stringify(v)})"
+        style="padding:7px 10px;cursor:pointer;border-bottom:1px solid var(--c-border);"
+        onmouseover="this.style.background='var(--blue-bg)'" onmouseout="this.style.background=''">
+        <div style="font-weight:600;font-size:12px;">${co}</div>
+        ${sub ? `<div style="font-size:10px;color:var(--c-muted);margin-top:1px;">${sub}</div>` : ''}
+      </div>`;
+    } else {
+      // Multiple records — show company header + sub-rows
+      const subRows = variants.map(v => {
+        const sub = [v.bCt, v.bAddr].filter(Boolean).join(' · ').substring(0, 55);
+        return `<div onmousedown="pickBuyerFields(${JSON.stringify(v)})"
+          style="padding:5px 10px 5px 18px;cursor:pointer;border-bottom:1px solid var(--c-border);"
+          onmouseover="this.style.background='var(--blue-bg)'" onmouseout="this.style.background=''">
+          <div style="font-size:11px;color:var(--c-text);">${sub || '（无联系人/地址）'}</div>
+          ${v.proj ? `<div style="font-size:10px;color:var(--c-muted);">来自：${v.proj}</div>` : ''}
+        </div>`;
+      }).join('');
+      return `<div style="border-bottom:1px solid var(--c-border);">
+        <div style="padding:7px 10px 3px;font-weight:600;font-size:12px;color:var(--c-text);background:var(--c-surface2);">${co} <span style="font-size:10px;font-weight:400;color:var(--c-muted);">(${variants.length} 条记录)</span></div>
+        ${subRows}
+      </div>`;
+    }
+  }).join('');
+  drop.style.display = 'block';
+}
+
+function pickBuyerFields(v) {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  set('bCo',    v.bCo);
+  set('bAddr',  v.bAddr);
+  set('bCt',    v.bCt);
+  set('bTel',   v.bTel);
+  set('bEmail', v.bEmail);
+  closeBuyerDrop();
+}
+
+function closeBuyerDrop() {
+  const drop = document.getElementById('bco-drop');
+  if (drop) drop.style.display = 'none';
+}
+
 function onDocProjectInput() {
   const val = (document.getElementById('docProject')?.value || '').toLowerCase();
   const drop = document.getElementById('doc-proj-drop');
   if (!val) { drop.style.display = 'none'; return; }
   // Get unique project names from saved docs + qtQuotes
   const docProjs = getAllDocs().map(d => d.proj);
-  const qtProjs = (window.qtQuotes || []).map(q => q.project).filter(Boolean);
+  const qtProjs = (qtQuotes || []).map(q => q.project).filter(Boolean);
   const all = [...new Set([...docProjs, ...qtProjs])];
   const matches = all.filter(p => p.toLowerCase().includes(val)).slice(0, 8);
   if (!matches.length) { drop.style.display = 'none'; return; }
@@ -6249,7 +6337,7 @@ function renderDocIqList() {
   const list = document.getElementById('diq-list');
   if (!list) return;
 
-  const allQuotes = window.qtQuotes || [];
+  const allQuotes = qtQuotes || [];
   // Group by project
   const projectMap = {};
   allQuotes.forEach(qt => {
@@ -6321,8 +6409,19 @@ function renderDocIqList() {
   }).join('');
 }
 
+
+function qtImportToDoc(id) {
+  const r = qtQuotes.find(q => String(q.id) === String(id));
+  if (!r || !r.project) return;
+  // Determine mode: if any quote in the project has barbone, use split
+  const projectQuotes = qtQuotes.filter(q => q.project === r.project);
+  const hasSplit = projectQuotes.some(q => q.barbone != null);
+  const mode = hasSplit ? 'split' : 'combined';
+  doDocImportFromQuotes(r.project, mode);
+}
+
 function doDocImportFromQuotes(proj, mode) {
-  const allQuotes = window.qtQuotes || [];
+  const allQuotes = qtQuotes || [];
   const items = allQuotes.filter(q => (q.project || '（无项目名）') === proj);
   if (!items.length) { alert('未找到该项目的报价记录'); return; }
 
