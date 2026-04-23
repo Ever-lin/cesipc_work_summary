@@ -1032,7 +1032,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <!-- 基本信息 -->
       <div class="field" style="grid-column:1/-1"><label>项目名称</label><input id="qf-project" placeholder="如：ENT_项目5_260210_EPC-W1592A"></div>
       <div class="field"><label>公司</label>
-        <select id="qf-company">
+        <select id="qf-company" onchange="qtUpdateContactDl()">
           <option value="ENT Group Company Limited">ENT Group Company Limited</option>
           <option value="其他">其他</option>
         </select>
@@ -1042,11 +1042,11 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <datalist id="qf-contact-dl"></datalist>
       </div>
       <div class="field"><label>日期</label><input type="date" id="qf-date"></div>
-      <div class="field"><label>型号</label><input id="qf-model" placeholder="EPC-W1592A"></div>
+      <div class="field"><label>型号</label><input id="qf-model" placeholder="EPC-W1592A" list="qf-model-dl"><datalist id="qf-model-dl"></datalist></div>
       <div class="field"><label>料号</label><input id="qf-partno" placeholder="选填"></div>
       <div class="field"><label>数量 (Q)</label><input type="number" id="qf-qty" min="0" placeholder="0"></div>
-      <div class="field"><label>CPU</label><input id="qf-cpu" placeholder="i5-10210U"></div>
-      <div class="field"><label>Custom / 附加功能</label><input id="qf-custom" placeholder="Windows 11 Pro OEM…"></div>
+      <div class="field"><label>CPU</label><input id="qf-cpu" placeholder="i5-10210U" list="qf-cpu-dl"><datalist id="qf-cpu-dl"></datalist></div>
+      <div class="field"><label>Custom / 附加功能</label><input id="qf-custom" placeholder="Windows 11 Pro OEM…" list="qf-custom-dl"><datalist id="qf-custom-dl"></datalist></div>
 
       <!-- 报价模式切换 -->
       <div class="field" style="grid-column:1/-1">
@@ -1074,7 +1074,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           </label>
           <input type="number" id="qf-barbone" min="0" oninput="qtCalc()" placeholder="0">
         </div>
-        <div class="field"><label>RAM 规格</label><input id="qf-ram" placeholder="8GB DDR4"></div>
+        <div class="field"><label>RAM 规格</label><input id="qf-ram" placeholder="8GB DDR4" list="qf-ram-dl"><datalist id="qf-ram-dl"></datalist></div>
         <div class="field">
           <label style="display:flex;align-items:center;justify-content:space-between">
             <span>RAM 价格</span>
@@ -1084,7 +1084,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           </label>
           <input type="number" id="qf-ramp" min="0" oninput="qtCalc()" placeholder="0">
         </div>
-        <div class="field"><label>SSD 规格</label><input id="qf-ssd" placeholder="256 GB M.2 SSD"></div>
+        <div class="field"><label>SSD 规格</label><input id="qf-ssd" placeholder="256 GB M.2 SSD" list="qf-ssd-dl"><datalist id="qf-ssd-dl"></datalist></div>
         <div class="field">
           <label style="display:flex;align-items:center;justify-content:space-between">
             <span>SSD 价格</span>
@@ -3822,9 +3822,30 @@ function qtUpdateCompanyFilter(){
   const csel=document.getElementById('qt-f-contact');const ccur=csel.value;
   csel.innerHTML='<option value="">全部业务</option>'+contacts.map(c=>`<option value="${c}"${c===ccur?' selected':''}>${c}</option>`).join('');
 
-  // update datalist for contact input autocomplete
+  // 更新各字段的 datalist（全局去重，频次排序）
+  const uniq=(arr)=>{
+    const freq={};arr.filter(Boolean).forEach(v=>{freq[v]=(freq[v]||0)+1;});
+    return Object.entries(freq).sort((a,b)=>b[1]-a[1]).map(e=>e[0]);
+  };
+  const setDl=(id,vals)=>{const dl=document.getElementById(id);if(dl)dl.innerHTML=vals.map(v=>`<option value="${v}">`).join('');};
+
+  setDl('qf-model-dl',  uniq(qtQuotes.map(q=>q.model)));
+  setDl('qf-cpu-dl',    uniq(qtQuotes.map(q=>q.cpu)));
+  setDl('qf-custom-dl', uniq(qtQuotes.map(q=>q.custom)));
+  setDl('qf-ram-dl',    uniq(qtQuotes.map(q=>q.ram)));
+  setDl('qf-ssd-dl',    uniq(qtQuotes.map(q=>q.ssd)));
+  // qf-contact-dl 默认全量，输入公司后按公司过滤（见 qtUpdateContactDl）
+  setDl('qf-contact-dl', uniq(contacts));
+}
+
+// 根据当前选中公司过滤对接业务下拉
+function qtUpdateContactDl(){
+  const co=document.getElementById('qf-company').value;
+  const all=co
+    ? [...new Set(qtQuotes.filter(q=>q.company===co).map(q=>q.contact).filter(Boolean))].sort()
+    : [...new Set(qtQuotes.map(q=>q.contact).filter(Boolean))].sort();
   const dl=document.getElementById('qf-contact-dl');
-  if(dl)dl.innerHTML=contacts.map(c=>`<option value="${c}">`).join('');
+  if(dl)dl.innerHTML=all.map(v=>`<option value="${v}">`).join('');
 }
 
 // Modal
@@ -4206,10 +4227,9 @@ function qtRenderDash(){
         const tc=qs.filter(q=>q.deal==='confirmed').length;
         const tl=qs.filter(q=>q.deal==='lost').length;
         const tp=qs.filter(q=>q.deal==='pause').length;
-        // 涉及的公司（去重）
         const cos=[...new Set(qs.map(q=>q.company).filter(Boolean))];
 
-        // 按项目名称去重，取每个项目最新的成单状态
+        // 按项目名称去重，取每个项目最新状态
         const projMap={};
         qs.forEach(q=>{
           const p=q.project||'';if(!p)return;
@@ -4217,7 +4237,7 @@ function qtRenderDash(){
         });
         const projects=Object.values(projMap).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
 
-        // 按项目前缀分组（取第一个"_"前的词）
+        // 按前缀分组
         const prefixMap={};
         projects.forEach(q=>{
           const prefix=(q.project||'').split('_')[0]||'其他';
@@ -4228,37 +4248,64 @@ function qtRenderDash(){
         const dealIcon=d=>d==='won'?'✅':d==='confirmed'?'🔶':d==='open'?'⭕':d==='pause'?'⏸️':d==='lost'?'❌':'—';
         const dealColor=d=>d==='won'?'var(--green-text)':d==='confirmed'?'var(--amber-text)':d==='open'?'var(--blue-text)':d==='pause'?'var(--gray-text)':d==='lost'?'var(--red-text)':'var(--text3)';
 
-        const projHtml=Object.entries(prefixMap).map(([prefix,pqs])=>{
+        const uid='ct-'+Math.random().toString(36).slice(2,7);
+
+        // 每个前缀一个可折叠的小标签块
+        const prefixChips=Object.entries(prefixMap).map(([prefix,pqs],pi)=>{
+          const gid=uid+'-'+pi;
+          const pwon=pqs.filter(q=>q.deal==='won').length;
+          const popen=pqs.filter(q=>q.deal==='open').length;
+          const pconf=pqs.filter(q=>q.deal==='confirmed').length;
+          const plost=pqs.filter(q=>q.deal==='lost').length;
+          const ppause=pqs.filter(q=>q.deal==='pause').length;
+
           const rows=pqs.map(q=>{
-            // 提取项目编号+简称：去掉前缀，取下划线分隔的第1~2段
             const parts=(q.project||'').split('_');
-            const label=parts.slice(1,3).join(' ') || q.project;
-            return`<div style="display:flex;align-items:baseline;gap:5px;padding:2px 0;border-bottom:1px solid var(--border2)">
-              <span style="font-size:11px;color:${dealColor(q.deal)};flex-shrink:0">${dealIcon(q.deal)}</span>
-              <span style="font-size:11px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${q.project||''}">${label}</span>
+            const label=parts.slice(1,3).join(' ')||q.project;
+            return`<div style="display:flex;align-items:center;gap:5px;padding:3px 6px;border-radius:4px;background:var(--bg2);margin:2px 0">
+              <span style="font-size:11px;flex-shrink:0;color:${dealColor(q.deal)}">${dealIcon(q.deal)}</span>
+              <span style="font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)" title="${q.project||''}">${label}</span>
               <span style="font-size:10px;color:var(--text3);flex-shrink:0">${(q.date||'').slice(2,10)}</span>
             </div>`;
           }).join('');
-          return`<div style="margin-top:7px">
-            <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:3px;padding-bottom:2px;border-bottom:2px solid var(--border2)">${prefix} · ${pqs.length}个</div>
-            ${rows}
+
+          // 小状态点
+          const dots=[
+            pwon?`<span style="color:var(--green-text);font-size:11px">✅${pwon}</span>`:'',
+            pconf?`<span style="color:var(--amber-text);font-size:11px">🔶${pconf}</span>`:'',
+            popen?`<span style="color:var(--blue-text);font-size:11px">⭕${popen}</span>`:'',
+            ppause?`<span style="color:var(--gray-text);font-size:11px">⏸️${ppause}</span>`:'',
+            plost?`<span style="color:var(--red-text);font-size:11px">❌${plost}</span>`:'',
+          ].filter(Boolean).join('');
+
+          return`<div style="margin-bottom:6px;border:1px solid var(--border2);border-radius:6px;overflow:hidden">
+            <div onclick="var d=document.getElementById('${gid}');var arr=document.getElementById('${gid}-arr');var open=d.style.display==='none';d.style.display=open?'block':'none';arr.textContent=open?'▾':'▸';"
+              style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--bg);cursor:pointer;user-select:none;gap:6px">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <span style="font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.5px">${prefix}</span>
+                <span style="font-size:11px;color:var(--text3)">${pqs.length}个项目</span>
+                <span style="display:flex;gap:4px">${dots}</span>
+              </div>
+              <span id="${gid}-arr" style="font-size:11px;color:var(--text3)">▸</span>
+            </div>
+            <div id="${gid}" style="display:none;padding:6px 6px 4px">${rows}</div>
           </div>`;
         }).join('');
 
-        return`<div class="qt-cc" style="min-width:200px">
+        return`<div class="qt-cc" style="min-width:220px;max-width:320px">
           <div class="qt-cc-name" style="${isUnassigned?'color:var(--text3);font-weight:400;font-size:12px':''}">
             ${isUnassigned?'':'👤 '}${name}
           </div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px">
-            <span style="font-size:12px;color:var(--text2)">共 <b>${projects.length}</b> 个项目</span>
-            ${tw?`<span style="font-size:12px;color:var(--green-text)">✅ ${tw}</span>`:''}
-            ${tc?`<span style="font-size:12px;color:var(--amber-text)">🔶 ${tc}</span>`:''}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--border2)">
+            <span style="font-size:12px;color:var(--text2)"><b>${projects.length}</b> 个项目</span>
+            ${tw?`<span style="font-size:12px;color:var(--green-text);font-weight:600">✅ ${tw}</span>`:''}
+            ${tc?`<span style="font-size:12px;color:var(--amber-text);font-weight:600">🔶 ${tc}</span>`:''}
             ${to?`<span style="font-size:12px;color:var(--blue-text)">⭕ ${to}</span>`:''}
             ${tp?`<span style="font-size:12px;color:var(--gray-text)">⏸️ ${tp}</span>`:''}
             ${tl?`<span style="font-size:12px;color:var(--red-text)">❌ ${tl}</span>`:''}
           </div>
-          ${projHtml}
-          ${cos.length?`<div style="margin-top:7px;padding-top:5px;border-top:1px solid var(--border2);font-size:11px;color:var(--text2)">${cos.map(c=>`<span style="display:inline-block;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:1px 7px;margin:1px 2px">${c}</span>`).join('')}</div>`:''}
+          ${prefixChips}
+          ${cos.length?`<div style="margin-top:4px;font-size:11px;color:var(--text2)">${cos.map(c=>`<span style="display:inline-block;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:1px 7px;margin:1px 2px">${c}</span>`).join('')}</div>`:''}
         </div>`;
       }).join('')
     : `<div style="color:var(--text3);font-size:12px;padding:8px">尚未为报价指定业务，可在编辑报价时填写「对接业务」字段。</div>`;
