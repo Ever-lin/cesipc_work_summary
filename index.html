@@ -1004,7 +1004,6 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <select class="ym-s" id="qt-f-p3" onchange="qtRender()"><option value="">全部价格</option><option value="below">⚠️ 低于P3</option><option value="ok">✅ 高于P3</option></select>
     <button class="btn btn-primary btn-sm" onclick="qtOpenAdd()">＋ 新增报价</button>
     <button class="btn btn-sm" onclick="qtExportCSV()">⬇ 导出CSV</button>
-    <button class="btn btn-sm" onclick="openDocImportFromQuotes()" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97;white-space:nowrap" title="将报价导入到📄单据生成的 Quotation">💰 导入到单据</button>
   </div>
   <div class="qt-tbl-wrap">
     <table class="qt-tbl">
@@ -3883,6 +3882,7 @@ function qtRender(){
       <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;color:var(--text2);font-size:11px">${r.stage||'—'}</td>
       <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>
       <td><span style="display:flex;gap:4px;flex-wrap:wrap">
+        ${r.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="doDocImportFromQuotes(\''+r.project+'\',(r.barbone!=null)?\'split\':\'combined\')" title="导入此项目到单据生成">💰 导入</button>':''}
         <button class="btn btn-xs" onclick="qtOpenEdit('${r.id}')">编辑</button>
         ${(r.priceHistory&&r.priceHistory.length)?'<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="qtOpenEdit(\''+r.id+'\')" title="'+r.priceHistory.length+'次价格变更">📋'+r.priceHistory.length+'</button>':''}
         ${(()=>{
