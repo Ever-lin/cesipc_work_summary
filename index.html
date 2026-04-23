@@ -5060,6 +5060,7 @@ function qtSeed(){
             <button id="pi-mode-simple" onclick="setMode('pi','simple')">整合报价</button>
           </div>
           <button class="btn btn-g btn-sm" onclick="addR('pi')">＋ 添加行</button>
+          <button class="btn btn-g btn-sm" onclick="syncFromQ('pi')" title="将 Quotation 的行数据一键复制到 PI" style="color:#2E75B6;border-color:#2E75B6;">⇩ 从 Quotation 同步</button>
           <button class="btn btn-p" onclick="showDoc('pi')">预览 / 打印</button>
         </div>
       </div>
@@ -5092,6 +5093,7 @@ function qtSeed(){
       <div class="th"><h3>📄 Commercial Invoice — 商业发票</h3>
         <div style="display:flex;gap:6px;">
           <button class="btn btn-g btn-sm" onclick="addR('ci')">＋ 添加行</button>
+          <button class="btn btn-g btn-sm" onclick="syncFromQ('ci')" title="将 Quotation 的行数据一键复制到 CI" style="color:#2E75B6;border-color:#2E75B6;">⇩ 从 Quotation 同步</button>
           <button class="btn btn-p" onclick="showDoc('ci')">预览 / 打印</button>
         </div>
       </div>
@@ -5120,6 +5122,7 @@ function qtSeed(){
       <div class="th"><h3>📦 Packing List — 装箱单</h3>
         <div style="display:flex;gap:6px;">
           <button class="btn btn-g btn-sm" onclick="addR('pk')">＋ 添加行</button>
+          <button class="btn btn-g btn-sm" onclick="syncFromQ('pk')" title="将 Quotation 的行数据一键复制到 Packing List" style="color:#2E75B6;border-color:#2E75B6;">⇩ 从 Quotation 同步</button>
           <button class="btn btn-p" onclick="showDoc('pk')">预览 / 打印</button>
         </div>
       </div>
@@ -5979,6 +5982,109 @@ function exportPDF(){
     setTimeout(doprint,1200);
   }
 }
+
+// ─── Sync Quotation rows → PI / CI / Packing List ───
+function syncFromQ(target) {
+  const qRows = getQRows();
+  if (!qRows.length) {
+    alert('Quotation 暂无数据，请先在 Quotation 填写行项目。');
+    return;
+  }
+
+  const targetNames = { pi: 'Proforma Invoice', ci: 'Commercial Invoice', pk: 'Packing List' };
+  const confirmed = confirm(
+    `将 Quotation 的 ${qRows.length} 行数据同步到 ${targetNames[target]}？\n\n` +
+    `⚠️ 这将清空 ${targetNames[target]} 现有所有行，然后重新填入。`
+  );
+  if (!confirmed) return;
+
+  // Clear existing rows
+  const tbody = document.getElementById(
+    target === 'pk' ? 'pk-b' : target + '-b'
+  );
+  tbody.innerHTML = '';
+  const rcKey = target;
+  rc[rcKey] = 0;
+
+  if (target === 'pi') {
+    // PI shares same structure as Q — reuse addR with prefill
+    qRows.forEach(r => {
+      addR('pi', {
+        pn:  r.pn,
+        ds:  r.ds,
+        qty: r.qty,
+        bb:  r.bb  || '',
+        ram: r.ram || '',
+        ssd: r.ssd || '',
+        sh:  r.sh  || '',
+        ai:  r.ai  || '',
+        cfg: r.cfg || ''
+      });
+    });
+    // Copy shipping total
+    const qSh = document.getElementById('q-sh')?.value || '0';
+    const piSh = document.getElementById('pi-sh');
+    if (piSh) { piSh.value = qSh; }
+    // Sync mode
+    const qMode = _mode.q;
+    if (_mode.pi !== qMode) setMode('pi', qMode);
+    cPI();
+
+  } else if (target === 'ci') {
+    // CI cols: Model | HS Code | Description | Qty | Unit Price | Amount
+    // Map from Q: pn → Model, ds → Description, qty → Qty
+    // Unit price: use All-Incl if available, else Barebone; or cfg in simple mode
+    qRows.forEach(r => {
+      const unitPrice = r.simple
+        ? (r.cfg || '')
+        : (r.ai || r.bb || '');
+      const id = ++rc.ci;
+      const tr = document.createElement('tr');
+      tr.id = 'ci-r-' + id;
+      tr.innerHTML = `<td style="color:#8899AA;text-align:center;">${rc.ci}</td>
+        <td><input type="text" value="${r.pn}" style="width:86px;"/></td>
+        <td><input type="text" placeholder="8471504090" style="width:78px;"/></td>
+        <td><input type="text" value="${r.ds.replace(/<[^>]+>/g,' ').trim()}" style="min-width:110px;width:100%;"/></td>
+        <td><input type="number" value="${r.qty}" min="0" style="width:52px;" oninput="cCI()"/></td>
+        <td><input type="number" value="${unitPrice}" min="0" step="0.01" placeholder="0.00" style="width:82px;text-align:right;" oninput="cCI()"/></td>
+        <td class="amt" id="ci-a-${id}">0.00</td>
+        <td><button class="btn btn-d btn-sm" onclick="delR('ci',${id})">✕</button></td>`;
+      tbody.appendChild(tr);
+    });
+    // Sync shipping
+    const qSh = document.getElementById('q-sh')?.value || '0';
+    const ciSh = document.getElementById('ci-sh');
+    if (ciSh) { ciSh.value = qSh; }
+    cCI();
+
+  } else if (target === 'pk') {
+    // PK cols: # | Model | Description | PCS | Packing | Cartons | Qty/Ctn | NW | GW | L | W | H | CBM | ✕
+    qRows.forEach(r => {
+      const id = ++rc.pk;
+      const tr = document.createElement('tr');
+      tr.id = 'pk-r-' + id;
+      tr.innerHTML = `<td style="color:#8899AA;text-align:center;">${rc.pk}</td>
+        <td><input type="text" value="${r.pn}" style="width:80px;"/></td>
+        <td><input type="text" value="${r.ds.replace(/<[^>]+>/g,' ').trim()}" style="min-width:90px;width:100%;"/></td>
+        <td><input type="number" value="${r.qty}" min="0" style="width:46px;" oninput="cPK()"/></td>
+        <td><input type="text" value="Carton" style="width:58px;"/></td>
+        <td><input type="number" value="" min="0" style="width:46px;" oninput="cPK()"/></td>
+        <td><input type="number" value="" min="0" style="width:46px;"/></td>
+        <td><input type="number" value="" min="0" step="0.01" style="width:50px;" oninput="cPK()"/></td>
+        <td><input type="number" value="" min="0" step="0.01" style="width:50px;" oninput="cPK()"/></td>
+        <td><input type="number" value="" min="0" step="0.01" style="width:40px;" oninput="cCBM(${id})"/></td>
+        <td><input type="number" value="" min="0" step="0.01" style="width:40px;" oninput="cCBM(${id})"/></td>
+        <td><input type="number" value="" min="0" step="0.01" style="width:40px;" oninput="cCBM(${id})"/></td>
+        <td id="pk-c-${id}">0.00000</td>
+        <td><button class="btn btn-d btn-sm" onclick="delR('pk',${id})">✕</button></td>`;
+      tbody.appendChild(tr);
+    });
+    cPK();
+  }
+
+  toast('✅ 已从 Quotation 同步 ' + qRows.length + ' 行数据');
+}
+
 function closeOv(){document.getElementById('ov').classList.remove('open');}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOv();});
 
