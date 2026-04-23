@@ -4475,7 +4475,25 @@ function qtSave(){
     });
 
     qtPersist();qtRender();qtUpdateCompanyFilter();
-    qtCloseModal();
+    // 保存后不关闭弹窗，切换为单品模式以便继续新增
+    qtEditId=null;
+    document.getElementById('qt-modal-title').textContent='新增产品报价（同项目）';
+    document.getElementById('qf-single-wrap').style.display='';
+    document.getElementById('qf-multi-wrap').style.display='none';
+    document.getElementById('qf-siblings-info').style.display='none';
+    document.getElementById('qf-history-wrap').style.display='none';
+    // 清空单品区产品字段，保留项目信息
+    ['qf-model','qf-partno','qf-cpu','qf-custom','qf-ram','qf-ramp','qf-ssd','qf-ssdp','qf-barbone','qf-p3','qf-price','qf-shipping','qf-total-price'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('qf-qty').value='';
+    var bd=document.querySelector('input[name="qf-pmode"][value="breakdown"]');
+    if(bd){bd.checked=true;if(typeof qtTogglePriceMode==="function")qtTogglePriceMode();}
+    if(typeof qtCalc==="function")qtCalc();
+    document.getElementById('qt-add-product-btn').style.display='';
+    document.querySelector('.qt-modal').scrollTop=0;
+    const saveBtnM=document.querySelector('#qt-modal-bg .btn-primary');
+    const origM=saveBtnM.textContent;
+    saveBtnM.textContent='✅ 已保存';
+    setTimeout(()=>{saveBtnM.textContent=origM;},1200);
     return;
   }
 
@@ -4525,11 +4543,11 @@ function qtSave(){
   document.getElementById('qt-add-product-btn').style.display='';
   const saveBtn=document.querySelector('#qt-modal-bg .btn-primary');
   const orig=saveBtn.textContent;
-  saveBtn.textContent='✅ 已保存';saveBtn.disabled=true;
-  setTimeout(()=>{saveBtn.textContent=orig;saveBtn.disabled=false;},1200);
+  saveBtn.textContent='✅ 已保存';
+  setTimeout(()=>{saveBtn.textContent=orig;},1200);
 }
 function qtSaveAndAddProduct(){
-  qtSave();
+  // "继续新增"时，当前产品已保存，只需清空产品字段并保留项目共有信息
   var proj=document.getElementById('qf-project').value.trim();
   var company=document.getElementById('qf-company').value;
   var contact=document.getElementById('qf-contact').value.trim();
@@ -4537,29 +4555,27 @@ function qtSaveAndAddProduct(){
   var deal=document.getElementById('qf-deal').value;
   var stage=document.getElementById('qf-stage').value.trim();
   var notes=document.getElementById('qf-notes').value.trim();
-  setTimeout(function(){
-    qtEditId=null;
-    document.getElementById('qt-modal-title').textContent='新增产品报价（同项目）';
-    ['qf-model','qf-partno','qf-cpu','qf-custom','qf-ram','qf-ramp','qf-ssd','qf-ssdp','qf-barbone','qf-p3','qf-price','qf-shipping','qf-total-price'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
-    document.getElementById('qf-qty').value='';
-    var bd=document.querySelector('input[name="qf-pmode"][value="breakdown"]');
-    if(bd){bd.checked=true;if(typeof qtTogglePriceMode==='function')qtTogglePriceMode();}
-    document.getElementById('qf-project').value=proj;
-    document.getElementById('qf-company').value=company;
-    if(typeof qtUpdateContactDl==='function')qtUpdateContactDl();
-    document.getElementById('qf-contact').value=contact;
-    document.getElementById('qf-date').value=date;
-    document.getElementById('qf-deal').value=deal;
-    document.getElementById('qf-stage').value=stage;
-    document.getElementById('qf-notes').value=notes;
-    document.getElementById('qf-single-wrap').style.display='';
-    document.getElementById('qf-multi-wrap').style.display='none';
-    document.getElementById('qf-siblings-info').style.display='none';
-    document.getElementById('qf-history-wrap').style.display='none';
-    document.getElementById('qt-add-product-btn').style.display='none';
-    if(typeof qtCalc==='function')qtCalc();
-    document.querySelector('.qt-modal').scrollTop=0;
-  },350);
+  qtEditId=null;
+  document.getElementById('qt-modal-title').textContent='新增产品报价（同项目）';
+  ['qf-model','qf-partno','qf-cpu','qf-custom','qf-ram','qf-ramp','qf-ssd','qf-ssdp','qf-barbone','qf-p3','qf-price','qf-shipping','qf-total-price'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('qf-qty').value='';
+  var bd=document.querySelector('input[name="qf-pmode"][value="breakdown"]');
+  if(bd){bd.checked=true;if(typeof qtTogglePriceMode==='function')qtTogglePriceMode();}
+  document.getElementById('qf-project').value=proj;
+  document.getElementById('qf-company').value=company;
+  if(typeof qtUpdateContactDl==='function')qtUpdateContactDl();
+  document.getElementById('qf-contact').value=contact;
+  document.getElementById('qf-date').value=date;
+  document.getElementById('qf-deal').value=deal;
+  document.getElementById('qf-stage').value=stage;
+  document.getElementById('qf-notes').value=notes;
+  document.getElementById('qf-single-wrap').style.display='';
+  document.getElementById('qf-multi-wrap').style.display='none';
+  document.getElementById('qf-siblings-info').style.display='none';
+  document.getElementById('qf-history-wrap').style.display='none';
+  document.getElementById('qt-add-product-btn').style.display='none';
+  if(typeof qtCalc==='function')qtCalc();
+  document.querySelector('.qt-modal').scrollTop=0;
 }
 function qtDel(id){if(!confirm('确认删除？'))return;qtQuotes=qtQuotes.filter(q=>String(q.id)!==String(id));qtPersist();qtRender();qtUpdateCompanyFilter();}
 
