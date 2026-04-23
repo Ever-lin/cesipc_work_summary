@@ -1042,137 +1042,136 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <datalist id="qf-contact-dl"></datalist>
       </div>
       <div class="field"><label>日期</label><input type="date" id="qf-date"></div>
-      <div class="field"><label>型号</label><input id="qf-model" placeholder="EPC-W1592A" list="qf-model-dl"><datalist id="qf-model-dl"></datalist></div>
-      <div class="field"><label>料号</label><input id="qf-partno" placeholder="选填"></div>
-      <div class="field"><label>数量 (Q)</label><input type="number" id="qf-qty" min="0" placeholder="0"></div>
-      <div class="field"><label>CPU</label><input id="qf-cpu" placeholder="i5-10210U" list="qf-cpu-dl"><datalist id="qf-cpu-dl"></datalist></div>
-      <div class="field"><label>Custom / 附加功能</label><input id="qf-custom" placeholder="Windows 11 Pro OEM…" list="qf-custom-dl"><datalist id="qf-custom-dl"></datalist></div>
-
-      <!-- 报价模式切换 -->
-      <div class="field" style="grid-column:1/-1">
-        <label style="margin-bottom:6px">报价方式</label>
-        <div style="display:flex;gap:8px">
-          <label class="qt-mode-btn" id="qt-mode-btn-breakdown">
-            <input type="radio" name="qf-pmode" value="breakdown" onchange="qtTogglePriceMode()" checked style="display:none">
-            <span>📋 分项报价（Barbone + RAM + SSD）</span>
-          </label>
-          <label class="qt-mode-btn" id="qt-mode-btn-total">
-            <input type="radio" name="qf-pmode" value="total" onchange="qtTogglePriceMode()" style="display:none">
-            <span>📦 整机报价（Configured System）</span>
-          </label>
-        </div>
-      </div>
-
-      <!-- 分项报价区域 -->
-      <div id="qf-breakdown-section" style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="field">
-          <label style="display:flex;align-items:center;justify-content:space-between">
-            <span>准系统价 (Barbone)</span>
-            <select id="qf-barbone-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
-              <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
-            </select>
-          </label>
-          <input type="number" id="qf-barbone" min="0" oninput="qtCalc()" placeholder="0">
-        </div>
-        <div class="field"><label>RAM 规格</label><input id="qf-ram" placeholder="8GB DDR4" list="qf-ram-dl"><datalist id="qf-ram-dl"></datalist></div>
-        <div class="field">
-          <label style="display:flex;align-items:center;justify-content:space-between">
-            <span>RAM 价格</span>
-            <select id="qf-ramp-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
-              <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
-            </select>
-          </label>
-          <input type="number" id="qf-ramp" min="0" oninput="qtCalc()" placeholder="0">
-        </div>
-        <div class="field"><label>SSD 规格</label><input id="qf-ssd" placeholder="256 GB M.2 SSD" list="qf-ssd-dl"><datalist id="qf-ssd-dl"></datalist></div>
-        <div class="field">
-          <label style="display:flex;align-items:center;justify-content:space-between">
-            <span>SSD 价格</span>
-            <select id="qf-ssdp-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
-              <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
-            </select>
-          </label>
-          <input type="number" id="qf-ssdp" min="0" oninput="qtCalc()" placeholder="0">
-        </div>
-        <div class="field" style="grid-column:1/-1">
-          <label style="color:var(--text2);font-size:11px">💡 报价 (P) 将自动合计以上三项（统一换算为所选货币）</label>
-        </div>
-      </div>
-
-      <!-- 整机报价区域 -->
-      <div id="qf-total-section" style="grid-column:1/-1;display:none">
-        <div class="field">
-          <label style="display:flex;align-items:center;justify-content:space-between">
-            <span>整机配置总价 (Configured System)</span>
-            <select id="qf-total-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
-              <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
-            </select>
-          </label>
-          <input type="number" id="qf-total-price" min="0" oninput="qtCalc()" placeholder="直接填写整机总价">
-        </div>
-      </div>
-
-      <!-- P3 参考价 -->
-      <div class="field">
-        <label style="display:flex;align-items:center;justify-content:space-between">
-          <span>P3 参考价</span>
-          <select id="qf-p3-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
-            <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
-          </select>
-        </label>
-        <input type="number" id="qf-p3" min="0" oninput="qtCalc();" onchange="qtCalc();" placeholder="0">
-      </div>
-
-      <!-- 运费 -->
-      <div class="field">
-        <label>运费备注（选填）</label>
-        <input id="qf-shipping" placeholder="如：10台 每台运费$70">
-      </div>
-
-      <!-- 成单状态 -->
-      <div class="field">
-        <label>成单状态</label>
+      <div class="field"><label>运费备注（选填）</label><input id="qf-shipping" placeholder="如：10台 每台运费$70"></div>
+      <div class="field"><label>成单状态</label>
         <select id="qf-deal">
           <option value="">—</option><option value="open">⭕ 跟进中</option><option value="confirmed">🔶 已确认订单</option><option value="won">✅ 已成交</option><option value="pause">⏸️ 暂无进展</option><option value="lost">❌ 丢单</option>
         </select>
       </div>
-
-      <!-- 项目进度（与项目情况联动） -->
-      <div class="field">
-        <label>项目进度<span style="font-size:11px;color:var(--text2);margin-left:4px">（与项目情况一致）</span></label>
-        <input id="qf-stage" placeholder="如：产品报价 / 方案设计 / 合同签订…" list="qf-stage-dl">
+      <div class="field"><label>项目进度<span style="font-size:11px;color:var(--text2);margin-left:4px">（与项目情况一致）</span></label>
+        <input id="qf-stage" placeholder="如：产品报价 / 方案设计…" list="qf-stage-dl">
         <datalist id="qf-stage-dl">
           <option value="需求确认"><option value="方案设计"><option value="产品报价"><option value="合同签订"><option value="生产/交付"><option value="安装/验收"><option value="项目完结"><option value="项目延期"><option value="项目停止">
           <option value="拟标"><option value="挂网"><option value="招标"><option value="投标"><option value="封标"><option value="评标"><option value="定标"><option value="流标废标">
         </datalist>
       </div>
+      <div class="field" style="grid-column:1/-1"><label>备注</label><textarea id="qf-notes" style="min-height:40px"></textarea></div>
+    </div>
 
-      <!-- 价格汇总面板 -->
-      <div style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;margin-bottom:2px">
-        <div class="qt-pp" style="grid-column:unset">
-          <div><div class="qt-pp-val" id="qpp-cost" style="color:var(--text2)">—</div><div class="qt-pp-lbl">P3 参考价</div></div>
-          <div><div class="qt-pp-val" id="qpp-price" style="color:var(--blue-text)">—</div><div class="qt-pp-lbl">报价 (P)</div></div>
-          <div><div class="qt-pp-val" id="qpp-diff">—</div><div class="qt-pp-lbl">P − P3 价差</div></div>
+    <!-- ── 单品编辑区（编辑已有记录时显示） ── -->
+    <div id="qf-single-wrap">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin:10px 0 6px;padding-top:8px;border-top:1px solid var(--border2)">产品 &amp; 报价</div>
+      <div class="grid2">
+        <div class="field"><label>型号</label><input id="qf-model" placeholder="EPC-W1592A" list="qf-model-dl"><datalist id="qf-model-dl"></datalist></div>
+        <div class="field"><label>料号</label><input id="qf-partno" placeholder="选填"></div>
+        <div class="field"><label>数量 (Q)</label><input type="number" id="qf-qty" min="0" placeholder="0"></div>
+        <div class="field"><label>CPU</label><input id="qf-cpu" placeholder="i5-10210U" list="qf-cpu-dl"><datalist id="qf-cpu-dl"></datalist></div>
+        <div class="field" style="grid-column:1/-1"><label>Custom / 附加功能</label><input id="qf-custom" placeholder="Windows 11 Pro OEM…" list="qf-custom-dl"><datalist id="qf-custom-dl"></datalist></div>
+        <!-- 报价模式切换 -->
+        <div class="field" style="grid-column:1/-1">
+          <label style="margin-bottom:6px">报价方式</label>
+          <div style="display:flex;gap:8px">
+            <label class="qt-mode-btn" id="qt-mode-btn-breakdown">
+              <input type="radio" name="qf-pmode" value="breakdown" onchange="qtTogglePriceMode()" checked style="display:none">
+              <span>📋 分项（Barbone+RAM+SSD）</span>
+            </label>
+            <label class="qt-mode-btn" id="qt-mode-btn-total">
+              <input type="radio" name="qf-pmode" value="total" onchange="qtTogglePriceMode()" style="display:none">
+              <span>📦 整机报价</span>
+            </label>
+          </div>
         </div>
-
+        <!-- 分项报价区域 -->
+        <div id="qf-breakdown-section" style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="field">
+            <label style="display:flex;align-items:center;justify-content:space-between">
+              <span>准系统价 (Barbone)</span>
+              <select id="qf-barbone-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+                <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+              </select>
+            </label>
+            <input type="number" id="qf-barbone" min="0" oninput="qtCalc()" placeholder="0">
+          </div>
+          <div class="field"><label>RAM 规格</label><input id="qf-ram" placeholder="8GB DDR4" list="qf-ram-dl"><datalist id="qf-ram-dl"></datalist></div>
+          <div class="field">
+            <label style="display:flex;align-items:center;justify-content:space-between">
+              <span>RAM 价格</span>
+              <select id="qf-ramp-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+                <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+              </select>
+            </label>
+            <input type="number" id="qf-ramp" min="0" oninput="qtCalc()" placeholder="0">
+          </div>
+          <div class="field"><label>SSD 规格</label><input id="qf-ssd" placeholder="256 GB M.2 SSD" list="qf-ssd-dl"><datalist id="qf-ssd-dl"></datalist></div>
+          <div class="field">
+            <label style="display:flex;align-items:center;justify-content:space-between">
+              <span>SSD 价格</span>
+              <select id="qf-ssdp-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+                <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+              </select>
+            </label>
+            <input type="number" id="qf-ssdp" min="0" oninput="qtCalc()" placeholder="0">
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <label style="color:var(--text2);font-size:11px">💡 报价 (P) 将自动合计以上三项</label>
+          </div>
+        </div>
+        <!-- 整机报价区域 -->
+        <div id="qf-total-section" style="grid-column:1/-1;display:none">
+          <div class="field">
+            <label style="display:flex;align-items:center;justify-content:space-between">
+              <span>整机配置总价 (Configured System)</span>
+              <select id="qf-total-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+                <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+              </select>
+            </label>
+            <input type="number" id="qf-total-price" min="0" oninput="qtCalc()" placeholder="直接填写整机总价">
+          </div>
+        </div>
+        <!-- P3 参考价 -->
+        <div class="field">
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>P3 参考价</span>
+            <select id="qf-p3-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+              <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+            </select>
+          </label>
+          <input type="number" id="qf-p3" min="0" oninput="qtCalc();" onchange="qtCalc();" placeholder="0">
+        </div>
+        <!-- 最终报价 -->
+        <div class="field" style="grid-column:1/-1">
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>报价 (P) — 最终报给客户的价格（以此为准）</span>
+            <select id="qf-price-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
+              <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
+            </select>
+          </label>
+          <input type="number" id="qf-price" min="0" oninput="this.dataset.manualEdit='1';qtCalc();" onchange="this.dataset.manualEdit='1';qtCalc();" placeholder="0" style="font-size:15px;font-weight:600">
+        </div>
+        <!-- 价格汇总面板 -->
+        <div style="grid-column:1/-1">
+          <div class="qt-pp" style="grid-column:unset">
+            <div><div class="qt-pp-val" id="qpp-cost" style="color:var(--text2)">—</div><div class="qt-pp-lbl">P3 参考价</div></div>
+            <div><div class="qt-pp-val" id="qpp-price" style="color:var(--blue-text)">—</div><div class="qt-pp-lbl">报价 (P)</div></div>
+            <div><div class="qt-pp-val" id="qpp-diff">—</div><div class="qt-pp-lbl">P − P3 价差</div></div>
+          </div>
+        </div>
       </div>
-
-      <!-- 最终报价 -->
-      <div class="field" style="grid-column:1/-1">
-        <label style="display:flex;align-items:center;justify-content:space-between">
-          <span>报价 (P) — 最终报给客户的价格（以此为准）</span>
-          <select id="qf-price-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
-            <option value="USD">$ USD</option><option value="CNY">¥ CNY</option>
-          </select>
-        </label>
-        <input type="number" id="qf-price" min="0" oninput="this.dataset.manualEdit='1';qtCalc();" onchange="this.dataset.manualEdit='1';qtCalc();" placeholder="0" style="font-size:15px;font-weight:600">
-      </div>
-      <div class="field" style="grid-column:1/-1"><label>备注</label><textarea id="qf-notes" style="min-height:52px"></textarea></div>
       <!-- 历史价格记录 -->
-      <div id="qf-history-wrap" style="grid-column:1/-1;display:none">
+      <div id="qf-history-wrap" style="display:none;margin-top:8px">
         <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;padding-top:4px;border-top:1px solid var(--border2)">📋 价格变更历史</div>
         <div id="qf-history-list" style="font-size:12px"></div>
       </div>
+    </div>
+
+    <!-- ── 多产品输入区（新增时显示） ── -->
+    <div id="qf-multi-wrap" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 6px;padding-top:8px;border-top:1px solid var(--border2)">
+        <span style="font-size:12px;font-weight:600;color:var(--text2)">产品列表</span>
+        <button class="btn btn-sm" onclick="qtAddProductRow()" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)">＋ 加一行</button>
+      </div>
+      <div id="qf-product-rows"></div>
+    </div>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--border2)">
       <button class="btn" onclick="qtCloseModal()">取消</button>
@@ -1750,13 +1749,16 @@ function importFromQuoteGroup(gi){
     }
     const qty=[...new Set(g.quotes.map(x=>x.qty).filter(Boolean))];
     if(qty.length)document.getElementById('proj-quantity').value=qty.join(' / ')+'台';
-    // Build quote text
+    // Build quote text — 按产品分块，每块一个产品
     const blocks=[];
-    g.quotes.forEach(q=>{
+    g.quotes.forEach((q,qi)=>{
       const text=qtBuildQuoteText(q);
-      if(text.trim())blocks.push(text.trim());
+      if(text.trim()){
+        const header=g.quotes.length>1?`【产品${qi+1}】${q.model||''}${q.cpu?' · '+q.cpu:''}\n`:'';
+        blocks.push(header+text.trim());
+      }
     });
-    document.getElementById('proj-quote').value=blocks.join('\n\n');
+    document.getElementById('proj-quote').value=blocks.join('\n\n─────\n\n');
     document.getElementById('proj-progress').value='';
     document.getElementById('proj-date').value=todayStr();
   }
@@ -3852,24 +3854,24 @@ function qtUpdateContactDl(){
 function qtOpenAdd(){
   qtEditId=null;
   document.getElementById('qt-modal-title').textContent='新增报价';
-  ['qf-project','qf-model','qf-partno','qf-cpu','qf-ram','qf-ssd','qf-custom','qf-notes','qf-shipping','qf-contact'].forEach(id=>document.getElementById(id).value='');
-  ['qf-qty','qf-barbone','qf-ramp','qf-ssdp','qf-price','qf-p3','qf-total-price'].forEach(id=>document.getElementById(id).value='');
+  ['qf-project','qf-contact','qf-notes','qf-shipping'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('qf-stage').value='';
-  delete document.getElementById('qf-price').dataset.manualEdit;
   document.getElementById('qf-date').value=todayStr();
   document.getElementById('qf-company').value='ENT Group Company Limited';
   document.getElementById('qf-deal').value='';
-  // reset mode to breakdown
-  document.querySelector('input[name="qf-pmode"][value="breakdown"]').checked=true;
-  ['qf-barbone-cur','qf-ramp-cur','qf-ssdp-cur','qf-price-cur','qf-p3-cur','qf-total-cur'].forEach(id=>document.getElementById(id).value='USD');
-  qtTogglePriceMode();
-  document.getElementById('qf-history-wrap').style.display='none';
+  // 新增模式：显示多产品区，隐藏单品区
+  document.getElementById('qf-single-wrap').style.display='none';
+  document.getElementById('qf-multi-wrap').style.display='block';
+  qtInitProductRows();
   document.getElementById('qt-modal-bg').classList.add('open');
 }
 function qtOpenEdit(id){
   const r=qtQuotes.find(q=>String(q.id)===String(id));if(!r)return;
   qtEditId=id;
   document.getElementById('qt-modal-title').textContent='编辑报价';
+  // 编辑模式：显示单品区，隐藏多产品区
+  document.getElementById('qf-single-wrap').style.display='block';
+  document.getElementById('qf-multi-wrap').style.display='none';
   document.getElementById('qf-project').value=r.project||'';
   document.getElementById('qf-company').value=r.company||'ENT Group Company Limited';
   document.getElementById('qf-contact').value=r.contact||'';
@@ -3914,6 +3916,194 @@ function qtOpenEdit(id){
   document.getElementById('qt-modal-bg').classList.add('open');
 }
 function qtCloseModal(){document.getElementById('qt-modal-bg').classList.remove('open');}
+
+// ── 多产品行管理 ──
+let _qtProdRows=[];
+function qtInitProductRows(){
+  _qtProdRows=[];
+  qtAddProductRow();
+}
+function qtAddProductRow(data={}){
+  const idx=_qtProdRows.length;
+  _qtProdRows.push(data);
+  qtRenderProductRows();
+}
+function qtRemoveProductRow(idx){
+  _qtProdRows.splice(idx,1);
+  qtRenderProductRows();
+}
+function qtGetRowDls(){
+  // 获取当前所有 datalist 选项（供行内 datalist 复用）
+  const get=id=>{const el=document.getElementById(id);return el?el.innerHTML:'';};
+  return{model:get('qf-model-dl'),cpu:get('qf-cpu-dl'),ram:get('qf-ram-dl'),ssd:get('qf-ssd-dl'),custom:get('qf-custom-dl')};
+}
+function qtRenderProductRows(){
+  const dls=qtGetRowDls();
+  const wrap=document.getElementById('qf-product-rows');
+  if(!wrap)return;
+  // 先保存已输入的值
+  wrap.querySelectorAll('.qf-prod-row').forEach((el,i)=>{
+    if(!_qtProdRows[i])return;
+    ['model','partno','qty','cpu','custom','ram','ramp','ssd','ssdp','barbone','price','p3'].forEach(f=>{
+      const inp=el.querySelector(`[data-f="${f}"]`);
+      if(inp)_qtProdRows[i][f]=inp.value;
+    });
+    ['ramp-cur','ssdp-cur','barbone-cur','price-cur','p3-cur'].forEach(f=>{
+      const sel=el.querySelector(`[data-f="${f}"]`);
+      if(sel)_qtProdRows[i][f]=sel.value;
+    });
+    const modeEl=el.querySelector('[data-f="pmode"]:checked');
+    if(modeEl)_qtProdRows[i].pmode=modeEl.value;
+  });
+
+  wrap.innerHTML=_qtProdRows.map((d,i)=>{
+    const pmode=d.pmode||'breakdown';
+    const bdShow=pmode==='breakdown'?'':'display:none';
+    const ttShow=pmode==='total'?'':'display:none';
+    const dlid=`prdl-${i}`;
+    return`<div class="qf-prod-row" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:10px;margin-bottom:8px;position:relative">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:12px;font-weight:600;color:var(--blue-text)">产品 ${i+1}</span>
+        ${_qtProdRows.length>1?`<button onclick="qtRemoveProductRow(${i})" style="background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:3px;font-size:11px;padding:1px 8px;cursor:pointer">✕ 删除</button>`:''}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="field"><label style="font-size:11px">型号</label>
+          <input data-f="model" value="${d.model||''}" placeholder="EPC-W1592A" list="${dlid}-model" style="font-size:12px;padding:5px 8px">
+          <datalist id="${dlid}-model">${dls.model}</datalist>
+        </div>
+        <div class="field"><label style="font-size:11px">数量</label>
+          <input data-f="qty" type="number" value="${d.qty||''}" placeholder="0" min="0" style="font-size:12px;padding:5px 8px">
+        </div>
+        <div class="field"><label style="font-size:11px">CPU</label>
+          <input data-f="cpu" value="${d.cpu||''}" placeholder="i5-10210U" list="${dlid}-cpu" style="font-size:12px;padding:5px 8px">
+          <datalist id="${dlid}-cpu">${dls.cpu}</datalist>
+        </div>
+        <div class="field"><label style="font-size:11px">料号</label>
+          <input data-f="partno" value="${d.partno||''}" placeholder="选填" style="font-size:12px;padding:5px 8px">
+        </div>
+        <div class="field" style="grid-column:1/-1"><label style="font-size:11px">Custom / 附加功能</label>
+          <input data-f="custom" value="${d.custom||''}" placeholder="Windows 11 Pro OEM…" list="${dlid}-custom" style="font-size:12px;padding:5px 8px">
+          <datalist id="${dlid}-custom">${dls.custom}</datalist>
+        </div>
+        <!-- 报价方式 -->
+        <div style="grid-column:1/-1;display:flex;gap:6px;margin-bottom:2px">
+          <label style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;font-size:11px;cursor:pointer;background:${pmode==='breakdown'?'var(--blue-bg)':'var(--bg)'}">
+            <input type="radio" name="pmode-${i}" data-f="pmode" value="breakdown" ${pmode==='breakdown'?'checked':''} onchange="qtRowModeChange(${i},this)" style="margin:0">
+            📋 分项
+          </label>
+          <label style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;font-size:11px;cursor:pointer;background:${pmode==='total'?'var(--blue-bg)':'var(--bg)'}">
+            <input type="radio" name="pmode-${i}" data-f="pmode" value="total" ${pmode==='total'?'checked':''} onchange="qtRowModeChange(${i},this)" style="margin:0">
+            📦 整机
+          </label>
+        </div>
+        <!-- 分项区 -->
+        <div class="field" id="${dlid}-bd" style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px;${bdShow}">
+          <div class="field"><label style="font-size:11px">准系统 (Barbone)</label>
+            <div style="display:flex;gap:4px">
+              <select data-f="barbone-cur" style="width:auto;padding:3px 5px;font-size:11px;border:1px solid var(--border);border-radius:4px;background:var(--bg)">
+                <option value="USD" ${(d['barbone-cur']||'USD')==='USD'?'selected':''}>$</option>
+                <option value="CNY" ${(d['barbone-cur'])==='CNY'?'selected':''}>¥</option>
+              </select>
+              <input data-f="barbone" type="number" value="${d.barbone||''}" placeholder="0" min="0" oninput="qtRowCalc(${i})" style="font-size:12px;padding:5px 8px">
+            </div>
+          </div>
+          <div class="field"><label style="font-size:11px">RAM 规格</label>
+            <input data-f="ram" value="${d.ram||''}" placeholder="8GB DDR4" list="${dlid}-ram" style="font-size:12px;padding:5px 8px">
+            <datalist id="${dlid}-ram">${dls.ram}</datalist>
+          </div>
+          <div class="field"><label style="font-size:11px">RAM 价格</label>
+            <div style="display:flex;gap:4px">
+              <select data-f="ramp-cur" style="width:auto;padding:3px 5px;font-size:11px;border:1px solid var(--border);border-radius:4px;background:var(--bg)">
+                <option value="USD" ${(d['ramp-cur']||'USD')==='USD'?'selected':''}>$</option>
+                <option value="CNY" ${(d['ramp-cur'])==='CNY'?'selected':''}>¥</option>
+              </select>
+              <input data-f="ramp" type="number" value="${d.ramp||''}" placeholder="0" min="0" oninput="qtRowCalc(${i})" style="font-size:12px;padding:5px 8px">
+            </div>
+          </div>
+          <div class="field"><label style="font-size:11px">SSD 规格</label>
+            <input data-f="ssd" value="${d.ssd||''}" placeholder="256 GB M.2 SSD" list="${dlid}-ssd" style="font-size:12px;padding:5px 8px">
+            <datalist id="${dlid}-ssd">${dls.ssd}</datalist>
+          </div>
+          <div class="field"><label style="font-size:11px">SSD 价格</label>
+            <div style="display:flex;gap:4px">
+              <select data-f="ssdp-cur" style="width:auto;padding:3px 5px;font-size:11px;border:1px solid var(--border);border-radius:4px;background:var(--bg)">
+                <option value="USD" ${(d['ssdp-cur']||'USD')==='USD'?'selected':''}>$</option>
+                <option value="CNY" ${(d['ssdp-cur'])==='CNY'?'selected':''}>¥</option>
+              </select>
+              <input data-f="ssdp" type="number" value="${d.ssdp||''}" placeholder="0" min="0" oninput="qtRowCalc(${i})" style="font-size:12px;padding:5px 8px">
+            </div>
+          </div>
+          <div style="grid-column:1/-1;font-size:10px;color:var(--text3)">💡 P 自动合计三项</div>
+        </div>
+        <!-- 整机区 -->
+        <div class="field" id="${dlid}-tt" style="${ttShow}"><label style="font-size:11px">整机总价</label>
+          <div style="display:flex;gap:4px">
+            <select data-f="price-cur" style="width:auto;padding:3px 5px;font-size:11px;border:1px solid var(--border);border-radius:4px;background:var(--bg)">
+              <option value="USD" ${(d['price-cur']||'USD')==='USD'?'selected':''}>$</option>
+              <option value="CNY" ${(d['price-cur'])==='CNY'?'selected':''}>¥</option>
+            </select>
+            <input data-f="price" type="number" value="${d.price||''}" placeholder="0" min="0" oninput="qtRowCalc(${i})" style="font-size:13px;font-weight:600;padding:5px 8px">
+          </div>
+        </div>
+        <!-- 最终报价P（分项模式下显示） -->
+        <div class="field" id="${dlid}-prow" style="${pmode==='breakdown'?'':'display:none'}">
+          <label style="font-size:11px;display:flex;justify-content:space-between">
+            <span>报价 P（最终）</span>
+            <select data-f="price-cur" style="width:auto;padding:2px 5px;font-size:10px;border:1px solid var(--border);border-radius:3px;background:var(--bg)">
+              <option value="USD" ${(d['price-cur']||'USD')==='USD'?'selected':''}>$</option>
+              <option value="CNY" ${(d['price-cur'])==='CNY'?'selected':''}>¥</option>
+            </select>
+          </label>
+          <input data-f="price" type="number" value="${d.price||''}" placeholder="0" min="0" data-manual="" style="font-size:13px;font-weight:600;padding:5px 8px" oninput="this.dataset.manual='1';qtRowCalc(${i})">
+        </div>
+        <div class="field"><label style="font-size:11px">P3 参考价</label>
+          <div style="display:flex;gap:4px">
+            <select data-f="p3-cur" style="width:auto;padding:3px 5px;font-size:11px;border:1px solid var(--border);border-radius:4px;background:var(--bg)">
+              <option value="USD" ${(d['p3-cur']||'USD')==='USD'?'selected':''}>$</option>
+              <option value="CNY" ${(d['p3-cur'])==='CNY'?'selected':''}>¥</option>
+            </select>
+            <input data-f="p3" type="number" value="${d.p3||''}" placeholder="0" min="0" oninput="qtRowCalc(${i})" style="font-size:12px;padding:5px 8px">
+          </div>
+        </div>
+        <!-- 价差提示 -->
+        <div id="${dlid}-diff" style="grid-column:1/-1;font-size:11px;min-height:16px"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function qtRowModeChange(i, radio){
+  if(!_qtProdRows[i])return;
+  _qtProdRows[i].pmode=radio.value;
+  qtRenderProductRows();
+}
+
+function qtRowCalc(i){
+  const wrap=document.getElementById('qf-product-rows');
+  if(!wrap)return;
+  const row=wrap.querySelectorAll('.qf-prod-row')[i];if(!row)return;
+  const pmode=_qtProdRows[i]?.pmode||'breakdown';
+  const g=f=>{const el=row.querySelector(`[data-f="${f}"]`);return el?el.value:'';};
+  if(pmode==='breakdown'){
+    const b=parseFloat(g('barbone'))||0;
+    const rp=parseFloat(g('ramp'))||0;
+    const sp=parseFloat(g('ssdp'))||0;
+    const sum=b+rp+sp;
+    // 找分项模式下的 price input（在 prow 里的）
+    const prow=row.querySelector(`#prdl-${i}-prow`);
+    const priceInp=prow?prow.querySelector('[data-f="price"]'):null;
+    if(priceInp&&!priceInp.dataset.manual){priceInp.value=sum>0?sum:'';}
+  }
+  const priceAll=row.querySelectorAll('[data-f="price"]');
+  const priceVal=parseFloat(priceAll[priceAll.length-1]?.value)||0;
+  const p3Val=parseFloat(g('p3'))||0;
+  const diffEl=row.querySelector(`#prdl-${i}-diff`);
+  if(diffEl&&priceVal>0&&p3Val>0){
+    const d=priceVal-p3Val;
+    const sym=(g('price-cur')||'USD')==='CNY'?'¥':'$';
+    diffEl.innerHTML=`<span style="color:${d<0?'var(--red-text)':'#1D9E75'};font-weight:600">${d>=0?'▲ +':'▼ '}${sym}${Math.abs(d).toFixed(2)} vs P3</span>${d<0?' ⚠️ 低于P3':''} `;
+  } else if(diffEl){diffEl.innerHTML='';}
+}
 
 function qtTogglePriceMode(){
   const mode=document.querySelector('input[name="qf-pmode"]:checked').value;
@@ -4132,8 +4322,91 @@ function qtRenderHistoryInModal(hist){
   }).join('');
 }
 function qtSave(){
+  const isMulti=document.getElementById('qf-multi-wrap').style.display!=='none';
+
+  if(isMulti){
+    // ── 多产品新增模式 ──
+    // 先把当前 DOM 值同步回 _qtProdRows
+    const wrap=document.getElementById('qf-product-rows');
+    wrap.querySelectorAll('.qf-prod-row').forEach((el,i)=>{
+      if(!_qtProdRows[i])return;
+      ['model','partno','qty','cpu','custom','ram','ramp','ssd','ssdp','barbone','p3'].forEach(f=>{
+        const inp=el.querySelector(`[data-f="${f}"]`);
+        if(inp)_qtProdRows[i][f]=inp.value;
+      });
+      // price: 取最后一个 price input（分项用 prow 里的，整机用 tt 里的）
+      const priceInps=el.querySelectorAll('[data-f="price"]');
+      if(priceInps.length)_qtProdRows[i].price=priceInps[priceInps.length-1].value;
+      ['ramp-cur','ssdp-cur','barbone-cur','price-cur','p3-cur'].forEach(f=>{
+        const sel=el.querySelector(`[data-f="${f}"]`);
+        if(sel)_qtProdRows[i][f]=sel.value;
+      });
+      const modeEl=el.querySelector('[data-f="pmode"]:checked');
+      if(modeEl)_qtProdRows[i].pmode=modeEl.value;
+    });
+
+    // 验证：至少一行有价格
+    const validRows=_qtProdRows.filter(d=>parseFloat(d.price)>0);
+    if(!validRows.length){alert('请至少填写一个产品的报价 (P)');return;}
+
+    const proj=document.getElementById('qf-project').value.trim();
+    const company=document.getElementById('qf-company').value;
+    const contact=document.getElementById('qf-contact').value.trim();
+    const date=document.getElementById('qf-date').value;
+    const deal=document.getElementById('qf-deal').value;
+    const stage=document.getElementById('qf-stage').value.trim();
+    const notes=document.getElementById('qf-notes').value.trim();
+    const shipping=document.getElementById('qf-shipping').value.trim();
+    const now=new Date().toISOString().slice(0,16).replace('T',' ');
+
+    validRows.forEach(d=>{
+      const mode=d.pmode||'breakdown';
+      const price=parseFloat(d.price)||null;
+      const snap={
+        savedAt:now,pmode:mode,
+        price,priceCur:d['price-cur']||'USD',
+        barbone:mode==='breakdown'?(parseFloat(d.barbone)||null):null,
+        barboneCur:d['barbone-cur']||'USD',
+        ram:mode==='breakdown'?(d.ram||''):'',
+        ramp:mode==='breakdown'?(parseFloat(d.ramp)||null):null,
+        rampCur:d['ramp-cur']||'USD',
+        ssd:mode==='breakdown'?(d.ssd||''):'',
+        ssdp:mode==='breakdown'?(parseFloat(d.ssdp)||null):null,
+        ssdpCur:d['ssdp-cur']||'USD',
+        totalPrice:mode==='total'?price:null,
+        totalCur:d['price-cur']||'USD',
+        qty:d.qty||'',
+        p3:parseFloat(d.p3)||null,
+        p3Cur:d['p3-cur']||'USD',
+        stage,deal,
+        model:d.model||'',cpu:d.cpu||'',partno:d.partno||'',
+        custom:d.custom||'',shipping,notes,
+      };
+      const obj={
+        id:Date.now()+Math.random(),
+        project:proj,company,contact,date,
+        model:d.model||'',partno:d.partno||'',qty:d.qty||'',
+        cpu:d.cpu||'',custom:d.custom||'',pmode:mode,
+        barbone:snap.barbone,barboneCur:snap.barboneCur,
+        ram:snap.ram,ramp:snap.ramp,rampCur:snap.rampCur,
+        ssd:snap.ssd,ssdp:snap.ssdp,ssdpCur:snap.ssdpCur,
+        totalPrice:snap.totalPrice,totalCur:snap.totalCur,
+        price,priceCur:snap.priceCur,
+        p3:snap.p3,p3Cur:snap.p3Cur,
+        shipping,deal,stage,notes,
+        priceHistory:[snap],
+      };
+      qtQuotes.unshift(obj);
+    });
+
+    qtPersist();qtRender();qtUpdateCompanyFilter();
+    qtCloseModal();
+    return;
+  }
+
+  // ── 单品编辑模式（原有逻辑）──
   const price=parseFloat(document.getElementById('qf-price').value);
-  if(isNaN(price)||price<=0){alert('\u8BF7\u586B\u5199\u62A5\u4EF7 (P)');return;}
+  if(isNaN(price)||price<=0){alert('请填写报价 (P)');return;}
   const mode=document.querySelector('input[name="qf-pmode"]:checked').value;
   const snap=qtBuildSnap(mode);
   const obj={
@@ -4169,14 +4442,14 @@ function qtSave(){
     obj.priceHistory=[snap];
     qtQuotes.unshift(obj);
     qtEditId=String(obj.id);
-    document.getElementById('qt-modal-title').textContent='\u7F16\u8F91\u62A5\u4EF7';
+    document.getElementById('qt-modal-title').textContent='编辑报价';
   }
   qtPersist();qtRender();qtUpdateCompanyFilter();
   const r=qtQuotes.find(q=>String(q.id)===String(qtEditId));
   qtRenderHistoryInModal(r?r.priceHistory:[]);
   const saveBtn=document.querySelector('#qt-modal-bg .btn-primary');
   const orig=saveBtn.textContent;
-  saveBtn.textContent='\u2705 \u5DF2\u4FDD\u5B58';saveBtn.disabled=true;
+  saveBtn.textContent='✅ 已保存';saveBtn.disabled=true;
   setTimeout(()=>{saveBtn.textContent=orig;saveBtn.disabled=false;},1200);
 }
 function qtDel(id){if(!confirm('确认删除？'))return;qtQuotes=qtQuotes.filter(q=>String(q.id)!==String(id));qtPersist();qtRender();qtUpdateCompanyFilter();}
@@ -4200,26 +4473,46 @@ function qtRenderDash(){
     {v:companies.length,l:'公司数',c:'var(--text)'},
     {v:belowP3.length,l:'低于P3',c:'var(--red-text)'},
   ].map(k=>`<div class="qt-kpi"><div class="qt-kpi-val" style="color:${k.c}">${k.v}</div><div class="qt-kpi-lbl">${k.l}</div></div>`).join('');
+
+  // 公司卡片 — 可点击，选中后高亮并过滤业务概况
+  if(!window.qtDashFilterCo)window.qtDashFilterCo='';
   document.getElementById('qt-ccs').innerHTML=companies.map(c=>{
     const cqs=qtQuotes.filter(q=>q.company===c);
     const cw=cqs.filter(q=>q.deal==='won').length;
     const co=cqs.filter(q=>q.deal==='open').length;
     const cl=cqs.filter(q=>q.deal==='lost').length;
-    return`<div class="qt-cc"><div class="qt-cc-name">${c}</div>
+    const isSel=window.qtDashFilterCo===c;
+    return`<div class="qt-cc" onclick="window.qtDashFilterCo=(window.qtDashFilterCo===\`${c.replace(/`/g,"'")}\`?'':String.raw\`${c.replace(/`/g,"'")}\`);qtRenderDash();"
+      style="cursor:pointer;transition:all .15s;${isSel
+        ?'border:2px solid var(--blue);background:var(--blue-bg);box-shadow:0 0 0 2px var(--blue-bg)'
+        :'border:1px solid var(--border2);'}">
+      <div class="qt-cc-name" style="${isSel?'color:var(--blue-text)':''}">${isSel?'🔵 ':''}${c}</div>
       <div class="qt-cc-row"><span style="color:var(--text2)">总报价</span><span>${cqs.length}</span></div>
       <div class="qt-cc-row"><span style="color:var(--green-text)">成单</span><span style="color:var(--green-text)">${cw}</span></div>
       <div class="qt-cc-row"><span style="color:var(--blue-text)">跟进</span><span style="color:var(--blue-text)">${co}</span></div>
       <div class="qt-cc-row"><span style="color:var(--red-text)">丢单</span><span style="color:var(--red-text)">${cl}</span></div>
+      ${isSel?'<div style="font-size:10px;color:var(--blue-text);margin-top:4px;text-align:center">点击取消筛选</div>':''}
     </div>`;
   }).join('');
 
-  // 业务概况
+  // 业务概况 — 选中公司时，有关联该公司的业务员置顶+高亮
+  const filterCo=window.qtDashFilterCo||'';
   const contacts=[...new Set(qtQuotes.map(q=>q.contact).filter(Boolean))].sort();
   const noContact=qtQuotes.filter(q=>!q.contact);
-  const allContactGroups=[
+  let allContactGroups=[
     ...contacts.map(ct=>({name:ct,qs:qtQuotes.filter(q=>q.contact===ct),isUnassigned:false})),
     ...(noContact.length?[{name:'（未指定业务）',qs:noContact,isUnassigned:true}]:[])
   ];
+  // 有公司筛选时：把该公司相关的业务员排到前面
+  if(filterCo){
+    allContactGroups=allContactGroups.sort((a,b)=>{
+      const aHas=a.qs.some(q=>q.company===filterCo);
+      const bHas=b.qs.some(q=>q.company===filterCo);
+      if(aHas&&!bHas)return -1;
+      if(!aHas&&bHas)return 1;
+      return 0;
+    });
+  }
   document.getElementById('qt-contacts').innerHTML=allContactGroups.length
     ? allContactGroups.map(({name,qs,isUnassigned})=>{
         const tw=qs.filter(q=>q.deal==='won').length;
@@ -4228,8 +4521,7 @@ function qtRenderDash(){
         const tl=qs.filter(q=>q.deal==='lost').length;
         const tp=qs.filter(q=>q.deal==='pause').length;
         const cos=[...new Set(qs.map(q=>q.company).filter(Boolean))];
-
-        // 按项目名称去重，取每个项目最新状态
+        const isHighlighted=filterCo&&cos.includes(filterCo);
         const projMap={};
         qs.forEach(q=>{
           const p=q.project||'';if(!p)return;
@@ -4292,7 +4584,7 @@ function qtRenderDash(){
           </div>`;
         }).join('');
 
-        return`<div class="qt-cc" style="min-width:220px;max-width:320px">
+        return`<div class="qt-cc" style="min-width:220px;max-width:320px;${isHighlighted?'border:2px solid var(--blue);background:var(--blue-bg)':'border:1px solid var(--border2)'}">
           <div class="qt-cc-name" style="${isUnassigned?'color:var(--text3);font-weight:400;font-size:12px':''}">
             ${isUnassigned?'':'👤 '}${name}
           </div>
