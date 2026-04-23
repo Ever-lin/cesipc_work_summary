@@ -78,6 +78,11 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .collapse-hdr:hover{opacity:.85}
 @media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr}.metric-grid{grid-template-columns:repeat(2,1fr)}}
 .term-item{padding:2px 4px;cursor:pointer;border-radius:3px}.term-item:hover{background:var(--blue-bg);color:var(--blue-text)}
+
+  /* ── saved docs panel ── */
+  #saved-docs-panel { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 7px; overflow: hidden; }
+  #doc-proj-drop { font-family: 'Sora', sans-serif; }
+  #doc-proj-drop > div { font-size: 11px; }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style id="cesipc-styles">
@@ -4970,10 +4975,23 @@ function qtSeed(){
 <aside>
   <div>
     <div class="stitle">📋 订单信息</div>
+    <div class="fg"><label>项目名称</label>
+      <div style="display:flex;gap:4px;align-items:center;">
+        <input type="text" id="docProject" placeholder="如 Sky_项目28_260422_EPC-S1022A询价" oninput="onDocProjectInput()" autocomplete="off" style="flex:1;"/>
+        <div id="doc-proj-drop" style="display:none;position:absolute;z-index:200;background:var(--c-surface);border:1px solid var(--c-border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);max-height:180px;overflow-y:auto;min-width:220px;margin-top:2px;font-size:11px;"></div>
+      </div>
+    </div>
     <div class="fg"><label>文件编号 (PI No. / Quotation No.)</label><input type="text" id="docNo" placeholder="e.g. CH260402EW01" oninput="updDisp()"/></div>
     <div class="fg"><label>文件日期</label><input type="date" id="docDate" oninput="autoValidUntil()"/></div>
     <div class="fg"><label>有效期（报价单，自动+7天）</label><input type="date" id="validUntil"/></div>
     <div class="fg"><label>货币</label><select id="currency"><option>USD</option><option>EUR</option><option>CNY</option></select></div>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+    <button class="btn btn-p" style="flex:1;" onclick="saveDocState()">💾 保存单据</button>
+    <button class="btn btn-g" style="flex:1;" onclick="toggleSavedDocs()">📂 已保存</button>
+  </div>
+  <div id="saved-docs-panel" style="display:none;">
+    <div id="saved-docs-list" style="max-height:220px;overflow-y:auto;margin-top:4px;"></div>
   </div>
   <div class="divider"></div>
   <div>
@@ -5983,17 +6001,251 @@ function exportPDF(){
   }
 }
 
+
+// ─── Document Save / Load ───
+const DOC_KEY = 'cesipc_docs_v1';
+
+function getAllDocs() {
+  try { return JSON.parse(localStorage.getItem(DOC_KEY) || '[]'); } catch { return []; }
+}
+function persistDocs(docs) {
+  localStorage.setItem(DOC_KEY, JSON.stringify(docs));
+}
+
+function captureRows(t) {
+  if (t === 'q' || t === 'pi') {
+    return getQRows().map ? (t === 'q' ? getQRows() : getPIRows()) : [];
+  }
+  if (t === 'ci') return getCIRows();
+  if (t === 'pk') return getPKRows();
+  return [];
+}
+
+function saveDocState() {
+  const proj = (document.getElementById('docProject')?.value || '').trim();
+  if (!proj) { alert('请先填写「项目名称」再保存。'); return; }
+
+  // Collect all field values
+  const fields = ['docNo','docDate','validUntil','currency',
+    'sCo','sAddr','sCt','sTel','sEmail','sWeb',
+    'bCo','bAddr','bCt','bTel','bEmail',
+    'tradeTerm','payTerm','leadTime','warranty',
+    'bkAcNm','bkNm','bkAc','bkSW','bkAd'];
+  const fieldVals = {};
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    fieldVals[id] = el ? el.value : '';
+  });
+
+  // Collect row data raw (input values)
+  function rawRows(tbodyId) {
+    const rows = [];
+    document.querySelectorAll('#' + tbodyId + ' tr').forEach(tr => {
+      const inputs = [...tr.querySelectorAll('input,select,textarea')].map(el => el.value);
+      const ce = tr.querySelector('td[contenteditable]');
+      rows.push({ inputs, ds: ce ? ce.innerHTML : '' });
+    });
+    return rows;
+  }
+
+  const doc = {
+    proj,
+    savedAt: new Date().toLocaleString('zh-CN'),
+    fields: fieldVals,
+    modes: { q: _mode.q, pi: _mode.pi },
+    sh: {
+      q:  document.getElementById('q-sh')?.value  || '0',
+      pi: document.getElementById('pi-sh')?.value || '0',
+      ci: document.getElementById('ci-sh')?.value || '0',
+    },
+    rows: {
+      q:  rawRows('q-b'),
+      pi: rawRows('pi-b'),
+      ci: rawRows('ci-b'),
+      pk: rawRows('pk-b'),
+    }
+  };
+
+  const docs = getAllDocs();
+  const idx = docs.findIndex(d => d.proj === proj);
+  if (idx >= 0) {
+    doc.id = docs[idx].id;
+    docs[idx] = doc;
+  } else {
+    doc.id = Date.now();
+    docs.unshift(doc);
+  }
+  persistDocs(docs);
+  renderSavedDocsList();
+  toast('💾 已保存：' + proj);
+}
+
+function loadDocState(id) {
+  const docs = getAllDocs();
+  const doc = docs.find(d => d.id === id);
+  if (!doc) return;
+
+  // Restore fields
+  Object.entries(doc.fields || {}).forEach(([fid, val]) => {
+    const el = document.getElementById(fid);
+    if (el) el.value = val;
+  });
+
+  // Set project name
+  const projEl = document.getElementById('docProject');
+  if (projEl) projEl.value = doc.proj || '';
+
+  // Restore modes
+  if (doc.modes) {
+    if (_mode.q !== doc.modes.q) setMode('q', doc.modes.q);
+    if (_mode.pi !== doc.modes.pi) setMode('pi', doc.modes.pi);
+  }
+
+  // Restore rows helper
+  function restoreRows(tbodyId, rawRows, cfFn) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const t = tbodyId.split('-')[0]; // 'q','pi','ci','pk'
+    rc[t] = 0;
+    (rawRows || []).forEach(r => {
+      const id = ++rc[t];
+      // Build a dummy row via addR with empty prefill, then overwrite values
+      addR(t);
+      const tr = document.getElementById(t + '-r-' + id);
+      if (!tr) return;
+      const inputs = tr.querySelectorAll('input,select,textarea');
+      (r.inputs || []).forEach((val, i) => { if (inputs[i]) inputs[i].value = val; });
+      const ce = tr.querySelector('td[contenteditable]');
+      if (ce && r.ds) ce.innerHTML = r.ds;
+    });
+    if (cfFn) cfFn();
+  }
+
+  restoreRows('q-b',  doc.rows?.q,  cQ);
+  restoreRows('pi-b', doc.rows?.pi, cPI);
+  restoreRows('ci-b', doc.rows?.ci, cCI);
+  restoreRows('pk-b', doc.rows?.pk, cPK);
+
+  // Restore shipping totals
+  if (doc.sh) {
+    ['q','pi','ci'].forEach(t => {
+      const el = document.getElementById(t + '-sh');
+      if (el) el.value = doc.sh[t] || '0';
+    });
+    cQ(); cPI(); cCI();
+  }
+
+  toast('📂 已加载：' + doc.proj);
+}
+
+function deleteDoc(id, e) {
+  e.stopPropagation();
+  const docs = getAllDocs();
+  const doc = docs.find(d => d.id === id);
+  if (!doc) return;
+  if (!confirm('删除「' + doc.proj + '」的保存记录？')) return;
+  persistDocs(docs.filter(d => d.id !== id));
+  renderSavedDocsList();
+  toast('🗑 已删除');
+}
+
+function toggleSavedDocs() {
+  const panel = document.getElementById('saved-docs-panel');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) renderSavedDocsList();
+}
+
+function renderSavedDocsList() {
+  const list = document.getElementById('saved-docs-list');
+  if (!list) return;
+  const docs = getAllDocs();
+  if (!docs.length) {
+    list.innerHTML = '<div style="padding:8px;font-size:11px;color:var(--c-muted);text-align:center;">暂无保存记录</div>';
+    return;
+  }
+  list.innerHTML = docs.map(d => `
+    <div onclick="loadDocState(${d.id})" style="padding:7px 10px;border-bottom:1px solid var(--c-border);cursor:pointer;display:flex;align-items:flex-start;gap:6px;font-size:11px;" onmouseover="this.style.background='var(--c-surface2)'" onmouseout="this.style.background=''">
+      <div style="flex:1;overflow:hidden;">
+        <div style="font-weight:600;color:var(--c-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.proj}</div>
+        <div style="color:var(--c-muted);font-size:10px;margin-top:2px;">${d.fields?.docNo || ''} · ${d.savedAt || ''}</div>
+      </div>
+      <button onclick="deleteDoc(${d.id},event)" style="background:none;border:none;cursor:pointer;color:var(--c-muted);font-size:12px;padding:0;flex-shrink:0;" title="删除">🗑</button>
+    </div>`).join('');
+}
+
+// ─── Project name autocomplete (from qtQuotes projects) ───
+function onDocProjectInput() {
+  const val = (document.getElementById('docProject')?.value || '').toLowerCase();
+  const drop = document.getElementById('doc-proj-drop');
+  if (!val) { drop.style.display = 'none'; return; }
+  // Get unique project names from saved docs + qtQuotes
+  const docProjs = getAllDocs().map(d => d.proj);
+  const qtProjs = (window.qtQuotes || []).map(q => q.project).filter(Boolean);
+  const all = [...new Set([...docProjs, ...qtProjs])];
+  const matches = all.filter(p => p.toLowerCase().includes(val)).slice(0, 8);
+  if (!matches.length) { drop.style.display = 'none'; return; }
+  drop.innerHTML = matches.map(p =>
+    `<div onmousedown="pickDocProject('${p.replace(/'/g,"&#39;")}')" style="padding:6px 10px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onmouseover="this.style.background='var(--blue-bg)'" onmouseout="this.style.background=''">${p}</div>`
+  ).join('');
+  // Position drop below input
+  const input = document.getElementById('docProject');
+  const rect = input.getBoundingClientRect();
+  drop.style.top = (rect.bottom + window.scrollY) + 'px';
+  drop.style.left = rect.left + 'px';
+  drop.style.display = 'block';
+}
+function pickDocProject(val) {
+  const el = document.getElementById('docProject');
+  if (el) el.value = val;
+  document.getElementById('doc-proj-drop').style.display = 'none';
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#docProject') && !e.target.closest('#doc-proj-drop')) {
+    const drop = document.getElementById('doc-proj-drop');
+    if (drop) drop.style.display = 'none';
+  }
+});
+
 // ─── Sync Quotation rows → PI / CI / Packing List ───
 function syncFromQ(target) {
-  const qRows = getQRows();
+  // Try to load Q rows from saved doc matching current project name
+  const proj = (document.getElementById('docProject')?.value || '').trim();
+  let qRows = getQRows();
+  let sourceLabel = '当前 Quotation';
+
+  if (proj) {
+    const docs = getAllDocs();
+    const saved = docs.find(d => d.proj === proj);
+    if (saved && saved.rows?.q?.length) {
+      // Restore Q rows from saved doc temporarily to get structured rows
+      // Instead, reconstruct from raw saved data
+      const rawQ = saved.rows.q;
+      const isSplit = (saved.modes?.q || 'split') === 'split';
+      qRows = rawQ.map((r, i) => {
+        const inp = r.inputs || [];
+        if (isSplit) {
+          return { n: i+1, pn: inp[0]||'', ds: r.ds||'', qty: inp[1]||'0',
+            bb: inp[2]||'', ram: inp[3]||'', ssd: inp[4]||'', sh: inp[5]||'',
+            ai: inp[6]||'', tot: '0.00', od: i%2===0, simple: false };
+        } else {
+          return { n: i+1, pn: inp[0]||'', ds: r.ds||'', qty: inp[1]||'0',
+            cfg: inp[2]||'', tot: '0.00', od: i%2===0, simple: true };
+        }
+      });
+      sourceLabel = '已保存项目「' + proj + '」的 Quotation';
+    }
+  }
+
   if (!qRows.length) {
-    alert('Quotation 暂无数据，请先在 Quotation 填写行项目。');
+    alert('暂无 Quotation 数据。\n请先在 Quotation 填写行项目，或保存含项目名称的单据后再同步。');
     return;
   }
 
   const targetNames = { pi: 'Proforma Invoice', ci: 'Commercial Invoice', pk: 'Packing List' };
   const confirmed = confirm(
-    `将 Quotation 的 ${qRows.length} 行数据同步到 ${targetNames[target]}？\n\n` +
+    `将${sourceLabel}的 ${qRows.length} 行数据同步到 ${targetNames[target]}？\n\n` +
     `⚠️ 这将清空 ${targetNames[target]} 现有所有行，然后重新填入。`
   );
   if (!confirmed) return;
@@ -6082,7 +6334,7 @@ function syncFromQ(target) {
     cPK();
   }
 
-  toast('✅ 已从 Quotation 同步 ' + qRows.length + ' 行数据');
+  toast('✅ 已从' + sourceLabel + '同步 ' + qRows.length + ' 行');
 }
 
 function closeOv(){document.getElementById('ov').classList.remove('open');}
