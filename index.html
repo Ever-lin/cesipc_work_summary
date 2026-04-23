@@ -1140,6 +1140,11 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           </label>
           <input type="number" id="qf-p3" min="0" oninput="qtCalc();" onchange="qtCalc();" placeholder="0">
         </div>
+        <!-- 运费 -->
+        <div class="field">
+          <label>运费备注（选填）</label>
+          <input id="qf-shipping" placeholder="如：10台 每台运费$70">
+        </div>
         <!-- 最终报价 -->
         <div class="field" style="grid-column:1/-1">
           <label style="display:flex;align-items:center;justify-content:space-between">
@@ -3861,7 +3866,7 @@ function qtUpdateContactDl(){
 function qtOpenAdd(){
   qtEditId=null;
   document.getElementById('qt-modal-title').textContent='新增报价';
-  ['qf-project','qf-contact','qf-notes','qf-shipping'].forEach(id=>document.getElementById(id).value='');
+  ['qf-project','qf-contact','qf-notes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('qf-stage').value='';
   document.getElementById('qf-date').value=todayStr();
   document.getElementById('qf-company').value='ENT Group Company Limited';
@@ -3907,7 +3912,7 @@ function qtOpenEdit(id){
   document.getElementById('qf-qty').value=r.qty||'';
   document.getElementById('qf-cpu').value=r.cpu||'';
   document.getElementById('qf-custom').value=r.custom||'';
-  document.getElementById('qf-shipping').value=r.shipping||'';
+  const shipEl=document.getElementById('qf-shipping');if(shipEl)shipEl.value=r.shipping||'';
   document.getElementById('qf-deal').value=r.deal||'';
   document.getElementById('qf-stage').value=r.stage||'';
   document.getElementById('qf-notes').value=r.notes||'';
