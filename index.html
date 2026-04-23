@@ -48,6 +48,8 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .metric-label{font-size:12px;color:var(--text2);margin-bottom:4px}
 .metric-value{font-size:19px;font-weight:500}
 .project-item{border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;background:var(--bg);margin-bottom:8px}
+.proj-done{transition:opacity .2s,filter .2s}
+.proj-done:hover{opacity:1!important;filter:none!important}
 .inline-flex{display:flex;align-items:center;gap:8px}
 .filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
 .ym-s{width:auto;padding:5px 10px;font-size:13px}
@@ -1895,6 +1897,9 @@ function renderProjects(){
     const crmId='crm_'+latest.id;
     const cardId='card_'+k.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
     const isHighlighted=_projHighlight&&_projHighlight===k;
+    const isDone=['项目完结','项目停止'].includes(latest.progressStage);
+    const doneStyle=isDone?'opacity:0.45;filter:grayscale(0.5);':'';
+    const doneBorder=isDone?'border-color:#ccc;border-left:3px solid #bbb;':'';
     const allEntriesForCard=entries.slice().sort((a,b)=>b.id-a.id);
     const historyBullets=allEntriesForCard.filter(e=>e.progress&&e.progress.trim()).map(e=>{
       const date=e.recordDate||'';
@@ -1923,7 +1928,7 @@ function renderProjects(){
       </div>`;
     }).join(''):'';
 
-    html+=`<div class="project-item" id="${cardId}" style="${isHighlighted?'border-color:#185FA5;box-shadow:0 0 0 3px #B8D4F0;':''}">
+    html+=`<div class="project-item${isDone?' proj-done':''}" id="${cardId}" style="${doneStyle}${doneBorder}${isHighlighted?'border-color:#185FA5;box-shadow:0 0 0 3px #B8D4F0;':''}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
         <div>
           <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:2px">${latest.client}</div>
