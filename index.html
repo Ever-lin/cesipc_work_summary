@@ -3987,43 +3987,95 @@ function qtRenderHistoryInModal(hist){
   const list=document.getElementById('qf-history-list');
   if(!hist||!hist.length){wrap.style.display='none';return;}
   wrap.style.display='block';
-  // Backfill missing fields in old snapshots from the parent quote record
   const parentQ=qtQuotes.find(q=>String(q.id)===String(qtEditId));
   const backfill=parentQ?{model:parentQ.model||'',cpu:parentQ.cpu||'',partno:parentQ.partno||'',custom:parentQ.custom||'',shipping:parentQ.shipping||'',notes:parentQ.notes||''}:{};
   const fc=s=>s==='CNY'?'\xA5':'$';
-  list.innerHTML=hist.slice().reverse().map((h,idx)=>{
-    // Apply backfill only for fields missing in the snapshot
+
+  // 准备完整 snapshot 数组（最新在前），用于与上一条对比
+  const snapshots=hist.slice().reverse().map(h=>{
     if(!h.model&&backfill.model)h=Object.assign({},h,{model:backfill.model});
     if(!h.cpu&&backfill.cpu)h=Object.assign({},h,{cpu:backfill.cpu});
     if(!h.partno&&backfill.partno)h=Object.assign({},h,{partno:backfill.partno});
     if(!h.custom&&backfill.custom)h=Object.assign({},h,{custom:backfill.custom});
     if(!h.shipping&&backfill.shipping)h=Object.assign({},h,{shipping:backfill.shipping});
+    return h;
+  });
+
+  // 判断某字段是否相对上一条（时间轴更早那条）发生了变化
+  // snapshots[0]=最新, snapshots[1]=次新, 所以 prev = snapshots[idx+1]
+  const changed=(idx,field)=>{
+    if(idx>=snapshots.length-1)return false; // 最早那条无"前一条"可比
+    const cur=snapshots[idx];const prev=snapshots[idx+1];
+    const cv=cur[field]!=null?String(cur[field]):'';
+    const pv=prev[field]!=null?String(prev[field]):'';
+    return cv!==pv&&cv!=='';
+  };
+
+  // 高亮包装：changed 则用醒目样式
+  const hl=(idx,field,text,baseStyle)=>{
+    if(!changed(idx,field))return'<span style="'+baseStyle+'">'+text+'</span>';
+    // 橙色高亮 + 加粗，表示此字段有变动
+    return'<span style="'+baseStyle+';color:#C05C00;font-weight:700;background:#FFF3E0;border-radius:3px;padding:0 3px">'+text+' ↑</span>';
+  };
+
+  // 价格变动方向（相对上一条）
+  const priceDelta=(idx)=>{
+    if(idx>=snapshots.length-1)return'';
+    const cur=parseFloat(snapshots[idx].price);
+    const prev=parseFloat(snapshots[idx+1].price);
+    if(isNaN(cur)||isNaN(prev)||cur===prev)return'';
+    const diff=(cur-prev).toFixed(2);
+    const up=cur>prev;
+    return'<span style="font-size:11px;font-weight:600;color:'+(up?'#C05C00':'#1D9E75')
+      +';background:'+(up?'#FFF3E0':'var(--green-bg)')
+      +';border-radius:3px;padding:1px 5px;margin-left:2px">'
+      +(up?'▲ +':'▼ ')+diff+'</span>';
+  };
+
+  const curId=qtEditId;
+  list.innerHTML=snapshots.map((h,idx)=>{
     const parts=[];
-    if(h.barbone!=null)parts.push('准系统 '+fc(h.barboneCur||'USD')+h.barbone);
-    if(h.ramp!=null)parts.push('RAM('+(h.ram||'—')+') '+fc(h.rampCur||'USD')+h.ramp);
-    if(h.ssdp!=null)parts.push('SSD('+(h.ssd||'—')+') '+fc(h.ssdpCur||'USD')+h.ssdp);
-    if(h.totalPrice!=null)parts.push('整机 '+fc(h.totalCur||'USD')+h.totalPrice);
-    if(h.qty)parts.push('数量:'+h.qty+'台');
-    // P-P3 差价
+    if(h.barbone!=null)parts.push({field:'barbone',text:'准系统 '+fc(h.barboneCur||'USD')+h.barbone});
+    if(h.ramp!=null)parts.push({field:'ramp',text:'RAM('+(h.ram||'—')+') '+fc(h.rampCur||'USD')+h.ramp});
+    if(h.ssdp!=null)parts.push({field:'ssdp',text:'SSD('+(h.ssd||'—')+') '+fc(h.ssdpCur||'USD')+h.ssdp});
+    if(h.totalPrice!=null)parts.push({field:'totalPrice',text:'整机 '+fc(h.totalCur||'USD')+h.totalPrice});
+    if(h.qty)parts.push({field:'qty',text:'数量:'+h.qty+'台'});
+
     const diffStr=(h.price!=null&&h.p3!=null)?(()=>{
       const d=h.price-h.p3;const sym=fc(h.priceCur||'USD');const p3sym=fc(h.p3Cur||'USD');
       return'P−P3:'+(d>=0?'+':'')+sym+d+'（P3: '+p3sym+h.p3+'）';
     })():'';
     const isLatest=idx===0;
-    const curId=qtEditId;
-    return'<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 4px;border-bottom:1px solid var(--border2)'+(isLatest?';background:var(--blue-bg);border-radius:4px':'')+'">'
+
+    const partsHtml=parts.map(p=>hl(idx,p.field,p.text,'color:var(--text2)')).join('<span style="color:var(--border)"> · </span>');
+    const shippingHtml=h.shipping?hl(idx,'shipping','🚢 '+h.shipping,'color:var(--text2)'):'';
+
+    return'<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 6px;border-bottom:1px solid var(--border2);border-radius:4px;margin-bottom:2px'
+      +(isLatest?';background:var(--blue-bg)':';background:var(--bg)')+'">'
       +'<div style="flex:1;min-width:0">'
-      +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
+      // ── 第一行：时间 + 价格 + 变动箭头 + 差价 + 最新标签
+      +'<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">'
       +'<span style="color:var(--text3);white-space:nowrap;font-size:11px">'+(h.savedAt||'—')+'</span>'
-      +'<span style="color:var(--blue-text);font-weight:600;white-space:nowrap">'+fc(h.priceCur||'USD')+(h.price||'—')+'</span>'
+      +hl(idx,'price',fc(h.priceCur||'USD')+(h.price||'—'),'color:var(--blue-text);font-weight:600;white-space:nowrap')
+      +priceDelta(idx)
       +(diffStr?'<span style="font-size:11px;color:'+(h.price!=null&&h.p3!=null&&h.price-h.p3<0?'var(--red-text)':'#1D9E75')+'">'+diffStr+'</span>':'')
-      +(isLatest?'<span style="font-size:10px;color:var(--blue-text);background:var(--blue-bg);padding:1px 6px;border-radius:8px">最新</span>':'')
+      +(isLatest?'<span style="font-size:10px;color:var(--blue-text);background:#C9DFF7;padding:1px 6px;border-radius:8px;font-weight:600">最新</span>':'')
       +'</div>'
+      // ── 项目名
       +(parentQ&&parentQ.project?'<div style="color:var(--text2);font-size:11px;margin-top:3px">'+parentQ.project+'</div>':'')
-      +((h.model||h.cpu||h.partno)?'<div style="color:var(--text);font-size:11px;font-weight:500;margin-top:3px">'+(h.model?'<b>'+h.model+'</b>':'')+(h.cpu?' · '+h.cpu:'')+(h.partno?' · 料号:'+h.partno:'')+'</div>':'')
-      +(parts.length?'<div style="color:var(--text2);font-size:11px;margin-top:2px">'+parts.join(' · ')+(h.shipping?' · 🚢 '+h.shipping:'')+'</div>':(!h.shipping?'':'<div style="color:var(--text2);font-size:11px;margin-top:2px">🚢 '+h.shipping+'</div>'))
-      +(h.custom?'<div style="color:var(--text2);font-size:11px;margin-top:2px">🔧 '+h.custom+'</div>':'')
-      +(h.notes?'<div style="color:var(--text2);font-size:11px;margin-top:2px;font-style:italic">📝 '+h.notes+'</div>':'')
+      // ── 型号/CPU/料号
+      +((h.model||h.cpu||h.partno)?'<div style="font-size:11px;font-weight:500;margin-top:3px">'
+        +(h.model?hl(idx,'model','<b>'+h.model+'</b>','color:var(--text)'):'')
+        +(h.cpu?'<span style="color:var(--text2)"> · </span>'+hl(idx,'cpu',h.cpu,'color:var(--text)'):'')
+        +(h.partno?'<span style="color:var(--text2)"> · 料号:</span>'+hl(idx,'partno',h.partno,'color:var(--text)'):'')
+        +'</div>':'')
+      // ── 价格明细
+      +((parts.length||h.shipping)?'<div style="font-size:11px;margin-top:3px">'+partsHtml+(shippingHtml?(parts.length?'<span style="color:var(--border)"> · </span>':'')+shippingHtml:'')+'</div>':'')
+      // ── 自定义配置
+      +(h.custom?'<div style="font-size:11px;margin-top:2px">'+hl(idx,'custom','🔧 '+h.custom,'color:var(--text2)')+'</div>':'')
+      // ── 备注
+      +(h.notes?'<div style="font-size:11px;margin-top:2px;font-style:italic">'+hl(idx,'notes','📝 '+h.notes,'color:var(--text2)')+'</div>':'')
+      // ── 阶段/成交状态
       +((h.stage||h.deal)?(()=>{
         const dealMap={won:'✅ 已成交',open:'⭕ 跟进中',confirmed:'🔶 已确认订单',lost:'❌ 丢单',pause:'⏸️ 暂无进展'};
         const dealColor={won:'#1D9E75',open:'var(--blue-text)',confirmed:'#633806',lost:'var(--red-text)',pause:'var(--gray-text)'};
@@ -4994,7 +5046,7 @@ function buildQ(){
   <table class="kv-t">${bankRows()}</table>
   <div class="sec-h">NOTES</div>
   <div style="background:#F2F7FB;padding:4pt 6pt;font-size:7.5pt;color:#1A1A2E;border:0.5pt solid #E0E8F0;">
-    1. All prices are quoted in ${c} unless otherwise stated. &nbsp; 2. Please quote the Quotation No. on your purchase order. &nbsp; 3. Prices are subject to change if order is placed after the validity period.</div>
+    1. All prices are quoted in ${c} unless otherwise stated.<br>2. Please quote the Quotation No. on your purchase order.<br>3. Prices are subject to change if order is placed after the validity period.</div>
   ${sigs(true)}`;
 }
 
