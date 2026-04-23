@@ -1180,9 +1180,12 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div id="qf-product-rows"></div>
     </div>
     </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--border2)">
-      <button class="btn" onclick="qtCloseModal()">取消</button>
-      <button class="btn btn-primary" onclick="qtSave()">保存</button>
+    <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--border2)">
+      <button class="btn" id="qt-add-product-btn" onclick="qtSaveAndAddProduct()" style="display:none;background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)">＋ 继续新增产品报价</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn" onclick="qtCloseModal()">取消</button>
+        <button class="btn btn-primary" onclick="qtSave()">保存</button>
+      </div>
     </div>
   </div>
 </div>
@@ -3866,6 +3869,7 @@ function qtUpdateContactDl(){
 function qtOpenAdd(){
   qtEditId=null;
   document.getElementById('qt-modal-title').textContent='新增报价';
+  document.getElementById('qt-add-product-btn').style.display='none';
   ['qf-project','qf-contact','qf-notes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('qf-stage').value='';
   document.getElementById('qf-date').value=todayStr();
@@ -3880,6 +3884,7 @@ function qtOpenAdd(){
 function qtOpenEdit(id){
   const r=qtQuotes.find(q=>String(q.id)===String(id));if(!r)return;
   qtEditId=id;
+  document.getElementById('qt-add-product-btn').style.display='none';
   // 显示型号+项目
   const titleLabel=r.model?`编辑报价 · ${r.model}`:'编辑报价';
   document.getElementById('qt-modal-title').textContent=titleLabel;
@@ -4517,10 +4522,44 @@ function qtSave(){
   qtPersist();qtRender();qtUpdateCompanyFilter();
   const r=qtQuotes.find(q=>String(q.id)===String(qtEditId));
   qtRenderHistoryInModal(r?r.priceHistory:[]);
+  document.getElementById('qt-add-product-btn').style.display='';
   const saveBtn=document.querySelector('#qt-modal-bg .btn-primary');
   const orig=saveBtn.textContent;
   saveBtn.textContent='✅ 已保存';saveBtn.disabled=true;
   setTimeout(()=>{saveBtn.textContent=orig;saveBtn.disabled=false;},1200);
+}
+function qtSaveAndAddProduct(){
+  qtSave();
+  var proj=document.getElementById('qf-project').value.trim();
+  var company=document.getElementById('qf-company').value;
+  var contact=document.getElementById('qf-contact').value.trim();
+  var date=document.getElementById('qf-date').value;
+  var deal=document.getElementById('qf-deal').value;
+  var stage=document.getElementById('qf-stage').value.trim();
+  var notes=document.getElementById('qf-notes').value.trim();
+  setTimeout(function(){
+    qtEditId=null;
+    document.getElementById('qt-modal-title').textContent='新增产品报价（同项目）';
+    ['qf-model','qf-partno','qf-cpu','qf-custom','qf-ram','qf-ramp','qf-ssd','qf-ssdp','qf-barbone','qf-p3','qf-price','qf-shipping','qf-total-price'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('qf-qty').value='';
+    var bd=document.querySelector('input[name="qf-pmode"][value="breakdown"]');
+    if(bd){bd.checked=true;if(typeof qtTogglePriceMode==='function')qtTogglePriceMode();}
+    document.getElementById('qf-project').value=proj;
+    document.getElementById('qf-company').value=company;
+    if(typeof qtUpdateContactDl==='function')qtUpdateContactDl();
+    document.getElementById('qf-contact').value=contact;
+    document.getElementById('qf-date').value=date;
+    document.getElementById('qf-deal').value=deal;
+    document.getElementById('qf-stage').value=stage;
+    document.getElementById('qf-notes').value=notes;
+    document.getElementById('qf-single-wrap').style.display='';
+    document.getElementById('qf-multi-wrap').style.display='none';
+    document.getElementById('qf-siblings-info').style.display='none';
+    document.getElementById('qf-history-wrap').style.display='none';
+    document.getElementById('qt-add-product-btn').style.display='none';
+    if(typeof qtCalc==='function')qtCalc();
+    document.querySelector('.qt-modal').scrollTop=0;
+  },350);
 }
 function qtDel(id){if(!confirm('确认删除？'))return;qtQuotes=qtQuotes.filter(q=>String(q.id)!==String(id));qtPersist();qtRender();qtUpdateCompanyFilter();}
 
