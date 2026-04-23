@@ -160,9 +160,9 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   .btn-d:hover { background: rgba(255,92,110,.2); }
 
   #panel-cesipc .cesipc-root table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  #panel-cesipc .cesipc-root thead tr { background: var(--c-surface2); }
+  #panel-cesipc .cesipc-root thead tr { background: #1A3C5E; }
   #panel-cesipc .cesipc-root th { padding: 8px 9px; text-align: left; font-size: 10px; font-weight: 600;
-    color: var(--c-muted); letter-spacing: .4px; white-space: nowrap; }
+    color: #fff; letter-spacing: .4px; white-space: nowrap; }
   #panel-cesipc .cesipc-root td { padding: 6px 6px; border-bottom: 1px solid var(--c-border); vertical-align: middle; }
   #panel-cesipc .cesipc-root td input, td textarea, td select { background: transparent; border: 1px solid transparent;
     border-radius: 5px; color: var(--text); font-family: 'Sora', sans-serif;
@@ -5029,7 +5029,7 @@ function qtSeed(){
         <tr><td colspan="3" style="text-align:right;color:var(--muted);font-size:10px;">Qty / Subtotal</td>
           <td id="q-tq" class="amt">0</td><td colspan="5" id="q-mid-spacer"></td>
           <td id="q-ta" class="amt">0.00</td><td></td></tr>
-        <tr><td id="q-sh-lbl" colspan="8" style="text-align:right;color:var(--muted);font-size:10px;padding-right:6px;">Shipping</td>
+        <tr><td id="q-sh-lbl" colspan="8" style="text-align:right;color:var(--muted);font-size:10px;padding-right:6px;">Shipping <span style="font-size:9px;opacity:.6">(auto: Qty × Shipping/unit)</span></td>
           <td><input type="number" id="q-sh" value="0" min="0" step="0.01" oninput="cQ()" style="text-align:right;width:72px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--c-text);padding:3px 4px;font-size:11px;"/></td><td></td></tr>
         <tr class="trow"><td id="q-total-lbl" colspan="9" style="text-align:right;padding-right:8px;font-size:11px;">TOTAL AMOUNT DUE</td>
           <td id="q-gt" class="amt" style="font-size:13px;color:#fff;">0.00</td><td></td></tr>
@@ -5065,7 +5065,7 @@ function qtSeed(){
         <tr><td colspan="3" style="text-align:right;color:var(--muted);font-size:10px;">Qty / Subtotal</td>
           <td id="pi-tq" class="amt">0</td><td colspan="5" id="pi-mid-spacer"></td>
           <td id="pi-ta" class="amt">0.00</td><td></td></tr>
-        <tr><td id="pi-sh-lbl" colspan="8" style="text-align:right;color:var(--muted);font-size:10px;padding-right:6px;">Shipping</td>
+        <tr><td id="pi-sh-lbl" colspan="8" style="text-align:right;color:var(--muted);font-size:10px;padding-right:6px;">Shipping <span style="font-size:9px;opacity:.6">(auto: Qty × Shipping/unit)</span></td>
           <td><input type="number" id="pi-sh" value="0" min="0" step="0.01" oninput="cPI()" style="text-align:right;width:72px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--c-text);padding:3px 4px;font-size:11px;"/></td><td></td></tr>
         <tr class="trow"><td id="pi-total-lbl" colspan="9" style="text-align:right;padding-right:8px;font-size:11px;">TOTAL AMOUNT DUE</td>
           <td id="pi-gt" class="amt" style="font-size:13px;color:#fff;">0.00</td><td></td></tr>
@@ -5195,7 +5195,7 @@ function saveMem(k){
   const val=document.getElementById(k)?.value?.trim();
   if(!val)return;
   const saved=JSON.parse(localStorage.getItem('mem_'+k)||'[]');
-  if(!saved.includes(val)){saved.unshift(val);localStorage.setItem('mem_'+k,JSON.stringify(saved.slice(0,20)));}
+  if(!saved.includes(val)){saved.unshift(val);localStorage.setItem('mem_'+k,JSON.stringify(saved));}
   renderMemDrop(k,saved);
   toast('✅ 已保存');
 }
@@ -5320,7 +5320,7 @@ function addR(t, prefill){
         <td><input type="number" value="${p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:70px;text-align:right;" oninput="${cf}()"/></td>
         <td><input type="number" value="${p.ram||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;"/></td>
         <td><input type="number" value="${p.ssd||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;"/></td>
-        <td><input type="number" value="${p.sh||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;"/></td>
+        <td><input type="number" value="${p.sh||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;" oninput="${cf}()"/></td>
         <td><input type="number" value="${p.ai||''}" min="0" step="0.01" placeholder="0.00" style="width:70px;text-align:right;" oninput="${cf}()"/></td>
         <td class="amt" id="${t}-a-${id}">0.00</td>
         <td><button class="btn btn-d btn-sm" onclick="delR('${t}',${id})">✕</button></td>`;
@@ -5378,7 +5378,7 @@ function delR(t,id){
 // calc
 function cQ(){
   const isSplit=_mode.q==='split';
-  let tq=0,ta=0;
+  let tq=0,ta=0,tsh=0;
   document.querySelectorAll('#q-b tr').forEach(tr=>{
     const i=tr.querySelectorAll('input');
     let qty,p;
@@ -5386,6 +5386,8 @@ function cQ(){
       qty=parseFloat(i[1]?.value)||0;
       const allIn=parseFloat(i[6]?.value)||0,bare=parseFloat(i[2]?.value)||0;
       p=allIn||bare;
+      const rowSh=parseFloat(i[5]?.value)||0;
+      tsh+=qty*rowSh;
     }else{
       qty=parseFloat(i[1]?.value)||0;
       p=parseFloat(i[2]?.value)||0;
@@ -5396,12 +5398,13 @@ function cQ(){
   });
   document.getElementById('q-tq').textContent=tq;
   document.getElementById('q-ta').textContent=fa(ta);
+  if(isSplit){const shEl=document.getElementById('q-sh');if(shEl)shEl.value=tsh.toFixed(2);}
   const sh=parseFloat(document.getElementById('q-sh')?.value)||0;
   document.getElementById('q-gt').textContent=fa(ta+sh);
 }
 function cPI(){
   const isSplit=_mode.pi==='split';
-  let tq=0,ta=0;
+  let tq=0,ta=0,tsh=0;
   document.querySelectorAll('#pi-b tr').forEach(tr=>{
     const i=tr.querySelectorAll('input');
     let qty,p;
@@ -5409,6 +5412,8 @@ function cPI(){
       qty=parseFloat(i[1]?.value)||0;
       const allIn=parseFloat(i[6]?.value)||0,bare=parseFloat(i[2]?.value)||0;
       p=allIn||bare;
+      const rowSh=parseFloat(i[5]?.value)||0;
+      tsh+=qty*rowSh;
     }else{
       qty=parseFloat(i[1]?.value)||0;
       p=parseFloat(i[2]?.value)||0;
@@ -5419,6 +5424,7 @@ function cPI(){
   });
   document.getElementById('pi-tq').textContent=tq;
   document.getElementById('pi-ta').textContent=fa(ta);
+  if(isSplit){const shEl=document.getElementById('pi-sh');if(shEl)shEl.value=tsh.toFixed(2);}
   const sh=parseFloat(document.getElementById('pi-sh')?.value)||0;
   document.getElementById('pi-gt').textContent=fa(ta+sh);
 }
@@ -5866,10 +5872,10 @@ function showDoc(t){
 function exportPDF(){
   const no=g('docNo');
   let prefix='CESIPC';
-  if(_curDocType==='q') prefix='CESIPC Quotation'+(no?'-'+no:'');
-  else if(_curDocType==='pi') prefix='CESIPC PI'+(no?'-'+no:'');
-  else if(_curDocType==='ci') prefix='CESIPC CI'+(no?'-'+no:'');
-  else prefix='CESIPC Packing List'+(no?'-'+no:'');
+  if(_curDocType==='q') prefix='Quotation'+(no?' — '+no:'');
+  else if(_curDocType==='pi') prefix='Proforma Invoice'+(no?' — '+no:'');
+  else if(_curDocType==='ci') prefix='Commercial Invoice'+(no?' — '+no:'');
+  else prefix='Packing List'+(no?' — '+no:'');
 
   const paper=document.getElementById('paper');
   if(!paper)return;
