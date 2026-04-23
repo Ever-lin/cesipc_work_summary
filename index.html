@@ -5042,6 +5042,7 @@ function qtSeed(){
             <button id="q-mode-simple" onclick="setMode('q','simple')">整合报价</button>
           </div>
           <button class="btn btn-g btn-sm" onclick="addR('q')">＋ 添加行</button>
+          <button class="btn btn-g btn-sm" onclick="openDocImportFromQuotes()" style="color:#1D9E75;border-color:#1D9E75;" title="从报价管理导入项目行">💰 从报价导入</button>
           <button class="btn btn-p" onclick="showDoc('q')">预览 / 打印</button>
         </div>
       </div>
@@ -5168,6 +5169,29 @@ function qtSeed(){
     </div>
   </div>
 </main>
+</div>
+
+<!-- ===== 单据生成：从报价管理导入 Modal ===== -->
+<div id="doc-import-qt-bg" style="position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:500;display:none;align-items:center;justify-content:center;">
+  <div style="background:#fff;border:1px solid #d8d6ce;border-radius:10px;padding:22px 22px 16px;width:96%;max-width:820px;max-height:90vh;overflow-y:auto;font-family:'Sora',sans-serif;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <span style="font-size:15px;font-weight:600;color:#1a1a18;">💰 从报价管理导入到单据</span>
+      <button onclick="closeDocImportFromQuotes()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#666;line-height:1;">✕</button>
+    </div>
+    <div style="font-size:12px;color:#666;background:#f0f7ff;border:1px solid #b8d4f0;border-radius:6px;padding:8px 12px;margin-bottom:12px;line-height:1.7;">
+      选择一个报价项目，系统将自动填入<b>客户公司名</b>并导入所有型号行到 Quotation 报价单。<br>
+      分拆报价模式会带入 Barebone / RAM / SSD 价格；整合报价模式会带入总价。
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <input id="diq-search" placeholder="🔍 搜索项目名称、型号、公司…" oninput="renderDocIqList()"
+        style="flex:1;min-width:180px;padding:7px 10px;border:1px solid #d8d6ce;border-radius:6px;font-size:13px;font-family:'Sora',sans-serif;outline:none;">
+      <select id="diq-mode" onchange="renderDocIqList()" style="padding:6px 10px;border:1px solid #d8d6ce;border-radius:6px;font-size:12px;font-family:'Sora',sans-serif;background:#f5f4f0;">
+        <option value="split">分拆报价 (Barebone+RAM+SSD)</option>
+        <option value="simple">整合报价 (总价)</option>
+      </select>
+    </div>
+    <div id="diq-list" style="font-size:13px;"></div>
+  </div>
 </div>
 
 <!-- FLOATING FORMAT TOOLBAR -->
@@ -6208,7 +6232,172 @@ document.addEventListener('click', e => {
   }
 });
 
-// ─── Sync Quotation rows → PI / CI / Packing List ───
+// ─── Doc Generator: Import from Quote Management ───
+function openDocImportFromQuotes() {
+  const bg = document.getElementById('doc-import-qt-bg');
+  bg.style.display = 'flex';
+  document.getElementById('diq-search').value = '';
+  renderDocIqList();
+}
+function closeDocImportFromQuotes() {
+  document.getElementById('doc-import-qt-bg').style.display = 'none';
+}
+
+function renderDocIqList() {
+  const q = (document.getElementById('diq-search')?.value || '').toLowerCase();
+  const list = document.getElementById('diq-list');
+  if (!list) return;
+
+  const allQuotes = window.qtQuotes || [];
+  // Group by project
+  const projectMap = {};
+  allQuotes.forEach(qt => {
+    const proj = qt.project || '（无项目名）';
+    const co = qt.company || '';
+    if (!projectMap[proj]) projectMap[proj] = { company: co, items: [], date: qt.date || '' };
+    if (qt.date > projectMap[proj].date) { projectMap[proj].date = qt.date; projectMap[proj].company = co; }
+    projectMap[proj].items.push(qt);
+  });
+
+  // Filter
+  const projKeys = Object.keys(projectMap).filter(proj => {
+    if (!q) return true;
+    const co = projectMap[proj].company.toLowerCase();
+    const models = projectMap[proj].items.map(i => (i.model || '').toLowerCase()).join(' ');
+    return proj.toLowerCase().includes(q) || co.includes(q) || models.includes(q);
+  }).sort((a, b) => (projectMap[b].date || '').localeCompare(projectMap[a].date || ''));
+
+  if (!projKeys.length) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:#999;font-size:13px;">暂无匹配的报价记录</div>';
+    return;
+  }
+
+  const mode = document.getElementById('diq-mode')?.value || 'split';
+
+  list.innerHTML = projKeys.map(proj => {
+    const pg = projectMap[proj];
+    const itemsHtml = pg.items.map((it, idx) => {
+      const bb = it.barbone != null ? `$${parseFloat(it.barbone).toFixed(2)}` : '—';
+      const ram = it.ramp != null ? `$${parseFloat(it.ramp).toFixed(2)}` : '—';
+      const ssd = it.ssdp != null ? `$${parseFloat(it.ssdp).toFixed(2)}` : '—';
+      const total = it.price != null ? `$${parseFloat(it.price).toFixed(2)}` : '—';
+      const ramSpec = it.ram || '';
+      const ssdSpec = it.ssd || '';
+      const desc = [it.cpu, ramSpec, ssdSpec, it.custom].filter(Boolean).join(' / ');
+      if (mode === 'split') {
+        return `<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:4px;background:${idx%2===0?'#f5f4f0':'#fff'};font-size:11px;flex-wrap:wrap;">
+          <span style="font-weight:600;min-width:110px;color:#1A3C5E;">${it.model || '—'}</span>
+          <span style="color:#666;flex:1;min-width:120px;">${desc}</span>
+          <span style="font-family:monospace;color:#185FA5;white-space:nowrap;">BB: ${bb}</span>
+          <span style="font-family:monospace;color:#1D9E75;white-space:nowrap;">RAM: ${ram}</span>
+          <span style="font-family:monospace;color:#BA7517;white-space:nowrap;">SSD: ${ssd}</span>
+          <span style="font-family:monospace;font-weight:600;color:#1A3C5E;white-space:nowrap;">P: ${total}</span>
+        </div>`;
+      } else {
+        return `<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:4px;background:${idx%2===0?'#f5f4f0':'#fff'};font-size:11px;flex-wrap:wrap;">
+          <span style="font-weight:600;min-width:110px;color:#1A3C5E;">${it.model || '—'}</span>
+          <span style="color:#666;flex:1;min-width:120px;">${desc}</span>
+          <span style="font-family:monospace;font-weight:600;color:#1A3C5E;white-space:nowrap;">总价: ${total}</span>
+        </div>`;
+      }
+    }).join('');
+
+    const safeProjJson = JSON.stringify(proj);
+    const safeModeJson = JSON.stringify(mode);
+    return `<div style="border:1px solid #e8e6de;border-radius:8px;margin-bottom:10px;overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#1A3C5E;flex-wrap:wrap;gap:6px;">
+        <div>
+          <div style="font-weight:600;color:#fff;font-size:12px;">${proj}</div>
+          <div style="color:#9db8d4;font-size:10px;margin-top:1px;">${pg.company} · ${pg.items.length} 个型号 · ${pg.date || ''}</div>
+        </div>
+        <button onclick="doDocImportFromQuotes(${safeProjJson},${safeModeJson})"
+          style="background:#E8732A;color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;">
+          ✓ 导入此项目
+        </button>
+      </div>
+      <div style="padding:4px 0;">${itemsHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+function doDocImportFromQuotes(proj, mode) {
+  const allQuotes = window.qtQuotes || [];
+  const items = allQuotes.filter(q => (q.project || '（无项目名）') === proj);
+  if (!items.length) { alert('未找到该项目的报价记录'); return; }
+
+  const company = items[0].company || '';
+
+  const confirmed = confirm(
+    `将「${proj}」的 ${items.length} 个型号导入到 Quotation？\n\n` +
+    `· 客户公司名将设为：${company}\n` +
+    `· 报价模式将切换为：${mode === 'split' ? '分拆报价' : '整合报价'}\n` +
+    `· 将清空 Quotation 现有所有行，然后重新填入。`
+  );
+  if (!confirmed) return;
+
+  // Set buyer company name
+  const bCoEl = document.getElementById('bCo');
+  if (bCoEl && company) bCoEl.value = company;
+
+  // Set project name
+  const projEl = document.getElementById('docProject');
+  if (projEl && proj !== '（无项目名）') projEl.value = proj;
+
+  // Switch mode if needed
+  if (_mode.q !== mode) setMode('q', mode);
+
+  // Clear existing Q rows
+  const tbody = document.getElementById('q-b');
+  tbody.innerHTML = '';
+  rc.q = 0;
+
+  // Add rows
+  items.forEach(it => {
+    const ramSpec = it.ram || '';
+    const ssdSpec = it.ssd || '';
+    const descParts = [it.cpu, ramSpec, ssdSpec, it.custom].filter(Boolean);
+    const desc = descParts.join(' / ');
+
+    if (mode === 'split') {
+      addR('q', {
+        pn:  it.model  || '',
+        ds:  desc,
+        qty: it.qty    || '1',
+        bb:  it.barbone != null ? String(it.barbone) : '',
+        ram: it.ramp   != null ? String(it.ramp)    : '',
+        ssd: it.ssdp   != null ? String(it.ssdp)    : '',
+        sh:  '',
+        ai:  it.price  != null ? String(it.price)   : '',
+      });
+    } else {
+      addR('q', {
+        pn:  it.model  || '',
+        ds:  desc,
+        qty: it.qty    || '1',
+        cfg: it.price  != null ? String(it.price)   : '',
+      });
+    }
+  });
+
+  cQ();
+  closeDocImportFromQuotes();
+
+  // Switch to quotation tab
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-quotation').classList.add('active');
+  const qBtn = [...document.querySelectorAll('.tab-btn')].find(b => b.textContent.includes('Quotation'));
+  if (qBtn) qBtn.classList.add('active');
+
+  toast(`✅ 已从报价管理导入「${proj}」共 ${items.length} 行`);
+}
+
+// Close modal on background click
+document.getElementById('doc-import-qt-bg')?.addEventListener('click', function(e) {
+  if (e.target === this) closeDocImportFromQuotes();
+});
+
+
 function syncFromQ(target) {
   // Try to load Q rows from saved doc matching current project name
   const proj = (document.getElementById('docProject')?.value || '').trim();
