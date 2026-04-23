@@ -283,12 +283,13 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   .items th { color: #fff; font-weight: 700; padding: 3.5pt 4pt; text-align: center;
     border: 0.5pt solid #2E75B6; font-size: 7pt; white-space: normal; }
   .items th.la { text-align: left; }
-  .items td { padding: 3pt 4pt; border: 0.5pt solid #E0E8F0; vertical-align: top; color: #1A1A2E; }
+  .items td { padding: 3pt 4pt; border: 0.5pt solid #E0E8F0; vertical-align: middle; color: #1A1A2E; text-align: center; }
   .items tr.od td { background: #F2F7FB; }
   .items tr.ev td { background: #FFFFFF; }
   .items td.rn { color: #8899AA; text-align: center; }
   .items td.nr { text-align: right; }
   .items td.ct { text-align: center; }
+  .items td.pn { text-align: center; white-space: pre-line; }
 
   /* subtotal block */
   .sub-hdr-row td { background: #1A3C5E; color: #fff; font-weight: 700;
@@ -397,7 +398,8 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 <body>
 
 <div class="page-header">
-  <span class="page-title">工作总结管理工具 v7</span>
+  <span class="page-title" id="app-title-display" onclick="startTitleEdit()" title="点击重命名" style="cursor:pointer;" title="点击可重命名">工作总结管理工具 v7</span>
+  <input id="app-title-input" style="display:none;font-size:15px;font-weight:600;color:var(--text);background:var(--bg2);border:1px solid var(--blue);border-radius:var(--radius-xs);padding:2px 8px;max-width:320px;" onblur="saveTitleEdit()" onkeydown="if(event.key==='Enter')saveTitleEdit();if(event.key==='Escape')cancelTitleEdit();">
   <div class="inline-flex">
     <button class="btn btn-sm" onclick="exportBackup()" title="导出全部数据为JSON备份">💾 备份数据</button>
     <label class="btn btn-sm" style="cursor:pointer;margin:0" title="从JSON文件恢复数据">📂 恢复数据<input type="file" accept=".json" onchange="importBackup(event)" style="display:none"></label>
@@ -1054,10 +1056,12 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <!-- 基本信息 -->
       <div class="field" style="grid-column:1/-1"><label>项目名称</label><input id="qf-project" placeholder="如：ENT_项目5_260210_EPC-W1592A"></div>
       <div class="field"><label>公司</label>
-        <select id="qf-company" onchange="qtUpdateContactDl()">
-          <option value="ENT Group Company Limited">ENT Group Company Limited</option>
-          <option value="其他">其他</option>
-        </select>
+        <div style="position:relative;">
+          <input id="qf-company" placeholder="输入公司名称" oninput="qtUpdateContactDl();qtCompanyInput()" autocomplete="off" list="qf-company-dl">
+          <datalist id="qf-company-dl">
+            <option value="ENT Group Company Limited">
+          </datalist>
+        </div>
       </div>
       <div class="field"><label>对接业务 <span style="font-size:11px;color:var(--text2);font-weight:400">（联系人/业务员）</span></label>
         <input id="qf-contact" placeholder="如：张三 / Sales-Alice" list="qf-contact-dl">
@@ -3657,6 +3661,40 @@ function exportProjectsExcel(){
 }
 
 
+function startTitleEdit(){
+  const disp=document.getElementById('app-title-display');
+  const inp=document.getElementById('app-title-input');
+  inp.value=disp.textContent;
+  disp.style.display='none';
+  inp.style.display='inline-block';
+  inp.focus();inp.select();
+}
+function saveTitleEdit(){
+  const disp=document.getElementById('app-title-display');
+  const inp=document.getElementById('app-title-input');
+  const val=inp.value.trim()||'工作总结管理工具';
+  disp.textContent=val;
+  document.title=val;
+  inp.style.display='none';
+  disp.style.display='';
+  try{localStorage.setItem('ws6_appTitle',val);}catch(e){}
+}
+function cancelTitleEdit(){
+  const disp=document.getElementById('app-title-display');
+  const inp=document.getElementById('app-title-input');
+  inp.style.display='none';
+  disp.style.display='';
+}
+(function loadAppTitle(){
+  try{
+    const t=localStorage.getItem('ws6_appTitle');
+    if(t){
+      const d=document.getElementById('app-title-display');
+      if(d){d.textContent=t;document.title=t;}
+    }
+  }catch(e){}
+})();
+
 function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
 function autoResizeAll(){document.querySelectorAll('textarea.auto-resize').forEach(autoResize);}
 document.addEventListener('input',e=>{if(e.target.classList.contains('auto-resize'))autoResize(e.target);});
@@ -3965,6 +4003,8 @@ function qtUpdateCompanyFilter(){
   };
   const setDl=(id,vals)=>{const dl=document.getElementById(id);if(dl)dl.innerHTML=vals.map(v=>`<option value="${v}">`).join('');};
 
+  // Update company datalist for free-text input
+  setDl('qf-company-dl', uniq(companies));
   setDl('qf-model-dl',  uniq(qtQuotes.map(q=>q.model)));
   setDl('qf-cpu-dl',    uniq(qtQuotes.map(q=>q.cpu)));
   setDl('qf-custom-dl', uniq(qtQuotes.map(q=>q.custom)));
@@ -3974,9 +4014,23 @@ function qtUpdateCompanyFilter(){
   setDl('qf-contact-dl', uniq(contacts));
 }
 
+// 根据当前输入公司过滤对接业务下拉，同时保存新公司名到 datalist
+function qtCompanyInput(){
+  const co=document.getElementById('qf-company').value.trim();
+  // Save new company to datalist if not already there
+  const dl=document.getElementById('qf-company-dl');
+  if(dl&&co){
+    const existing=[...dl.querySelectorAll('option')].map(o=>o.value);
+    if(!existing.includes(co)){
+      const opt=document.createElement('option');opt.value=co;dl.appendChild(opt);
+    }
+  }
+  qtUpdateContactDl();
+}
+
 // 根据当前选中公司过滤对接业务下拉
 function qtUpdateContactDl(){
-  const co=document.getElementById('qf-company').value;
+  const co=(document.getElementById('qf-company').value||'').trim();
   const all=co
     ? [...new Set(qtQuotes.filter(q=>q.company===co).map(q=>q.contact).filter(Boolean))].sort()
     : [...new Set(qtQuotes.map(q=>q.contact).filter(Boolean))].sort();
@@ -5117,7 +5171,7 @@ function qtSeed(){
       <div class="th"><h3>📄 Commercial Invoice — 商业发票</h3>
         <div style="display:flex;gap:6px;">
           <button class="btn btn-g btn-sm" onclick="addR('ci')">＋ 添加行</button>
-          <button class="btn btn-g btn-sm" onclick="syncFromQ('ci')" title="将 Quotation 的行数据一键复制到 CI" style="color:#2E75B6;border-color:#2E75B6;">⇩ 从 Quotation 同步</button>
+          <button class="btn btn-g btn-sm" onclick="syncFromQ('ci')" title="从 Quotation 或 PI 同步行数据到 CI" style="color:#2E75B6;border-color:#2E75B6;">⇩ 从 Q/PI 同步</button>
           <button class="btn btn-p" onclick="showDoc('ci')">预览 / 打印</button>
         </div>
       </div>
@@ -5146,7 +5200,7 @@ function qtSeed(){
       <div class="th"><h3>📦 Packing List — 装箱单</h3>
         <div style="display:flex;gap:6px;">
           <button class="btn btn-g btn-sm" onclick="addR('pk')">＋ 添加行</button>
-          <button class="btn btn-g btn-sm" onclick="syncFromQ('pk')" title="将 Quotation 的行数据一键复制到 Packing List" style="color:#2E75B6;border-color:#2E75B6;">⇩ 从 Quotation 同步</button>
+          <button class="btn btn-g btn-sm" onclick="syncFromQ('pk')" title="从 Quotation 或 PI 同步行数据到 Packing List" style="color:#2E75B6;border-color:#2E75B6;">⇩ 从 Q/PI 同步</button>
           <button class="btn btn-p" onclick="showDoc('pk')">预览 / 打印</button>
         </div>
       </div>
@@ -5395,14 +5449,16 @@ function setMode(t,m){
   // Capture current values before rebuild
   const saved = rows.map(tr=>{
     const inp = tr.querySelectorAll('input');
+    const ta  = tr.querySelector('textarea');
     const ce  = tr.querySelector('div[contenteditable],td[contenteditable]');
+    const pn  = ta ? ta.value : (inp[0]?.value||'');
     return {
-      pn: inp[0]?.value||'', ds: ce?.innerHTML||'',
-      qty: inp[1]?.value||'0',
-      bb:  inp[2]?.value||'', ram: inp[3]?.value||'',
-      ssd: inp[4]?.value||'', sh:  inp[5]?.value||'',
-      ai:  inp[6]?.value||'',
-      cfg: isSplit ? (inp[6]?.value||inp[2]?.value||'') : (inp[2]?.value||'')
+      pn, ds: ce?.innerHTML||'',
+      qty: inp[0]?.value||'0',
+      bb:  inp[1]?.value||'', ram: inp[2]?.value||'',
+      ssd: inp[3]?.value||'', sh:  inp[4]?.value||'',
+      ai:  inp[5]?.value||'',
+      cfg: isSplit ? (inp[5]?.value||inp[1]?.value||'') : (inp[1]?.value||'')
     };
   });
 
@@ -5425,7 +5481,7 @@ function addR(t, prefill){
 
     if(isSplit){
       tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc[t]}</td>
-        <td><input type="text" placeholder="EPC-S1092A" value="${p.pn||''}"/></td>
+        <td><textarea placeholder="EPC-S1092A&#10;料号" style="width:90px;min-height:28px;resize:vertical;font-size:11px;padding:4px 5px;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--c-text);font-family:inherit;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.pn||''}</textarea></td>
         <td style="padding:0;position:relative;min-width:160px;"><div contenteditable="true" style="min-width:160px;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;color:var(--c-text);min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds||''}</div><button onmousedown="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
         <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
         <td><input type="number" value="${p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:70px;text-align:right;" oninput="${cf}()"/></td>
@@ -5438,7 +5494,7 @@ function addR(t, prefill){
     } else {
       // simple mode: Part No. | Description | Qty | Unit Price (Configured) | Grand Total
       tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc[t]}</td>
-        <td><input type="text" placeholder="EPC-S1092A" value="${p.pn||''}"/></td>
+        <td><textarea placeholder="EPC-S1092A&#10;料号" style="width:90px;min-height:28px;resize:vertical;font-size:11px;padding:4px 5px;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--c-text);font-family:inherit;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.pn||''}</textarea></td>
         <td style="padding:0;position:relative;min-width:160px;"><div contenteditable="true" style="min-width:160px;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;color:var(--c-text);min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds||''}</div><button onmousedown="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
         <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
         <td><input type="number" value="${p.cfg||p.ai||p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:100px;text-align:right;" oninput="${cf}()"/></td>
@@ -5494,14 +5550,14 @@ function cQ(){
     const i=tr.querySelectorAll('input');
     let qty,p;
     if(isSplit){
-      qty=parseFloat(i[1]?.value)||0;
-      const allIn=parseFloat(i[6]?.value)||0,bare=parseFloat(i[2]?.value)||0;
+      qty=parseFloat(i[0]?.value)||0;
+      const allIn=parseFloat(i[5]?.value)||0,bare=parseFloat(i[1]?.value)||0;
       p=allIn||bare;
-      const rowSh=parseFloat(i[5]?.value)||0;
+      const rowSh=parseFloat(i[4]?.value)||0;
       tsh+=qty*rowSh;
     }else{
-      qty=parseFloat(i[1]?.value)||0;
-      p=parseFloat(i[2]?.value)||0;
+      qty=parseFloat(i[0]?.value)||0;
+      p=parseFloat(i[1]?.value)||0;
     }
     const a=qty*p;tq+=qty;ta+=a;
     const id=tr.id.split('-').pop();
@@ -5520,14 +5576,14 @@ function cPI(){
     const i=tr.querySelectorAll('input');
     let qty,p;
     if(isSplit){
-      qty=parseFloat(i[1]?.value)||0;
-      const allIn=parseFloat(i[6]?.value)||0,bare=parseFloat(i[2]?.value)||0;
+      qty=parseFloat(i[0]?.value)||0;
+      const allIn=parseFloat(i[5]?.value)||0,bare=parseFloat(i[1]?.value)||0;
       p=allIn||bare;
-      const rowSh=parseFloat(i[5]?.value)||0;
+      const rowSh=parseFloat(i[4]?.value)||0;
       tsh+=qty*rowSh;
     }else{
-      qty=parseFloat(i[1]?.value)||0;
-      p=parseFloat(i[2]?.value)||0;
+      qty=parseFloat(i[0]?.value)||0;
+      p=parseFloat(i[1]?.value)||0;
     }
     const a=qty*p;tq+=qty;ta+=a;
     const id=tr.id.split('-').pop();
@@ -5584,16 +5640,18 @@ function getQRows(){
   const isSplit=_mode.q==='split';
   document.querySelectorAll('#q-b tr').forEach((tr,i)=>{
     const inp=tr.querySelectorAll('input');
+    const ta=tr.querySelector('textarea');
     const ce=tr.querySelector('div[contenteditable],td[contenteditable]');
     const id=tr.id.split('-').pop();
+    const pn=ta?ta.value:inp[0]?.value||'';
     if(isSplit){
-      rows.push({n:i+1,pn:inp[0]?.value||'',ds:ce?.innerHTML||'',
-        qty:inp[1]?.value||'0',bb:inp[2]?.value,ram:inp[3]?.value,ssd:inp[4]?.value,
-        sh:inp[5]?.value,ai:inp[6]?.value,
+      rows.push({n:i+1,pn,ds:ce?.innerHTML||'',
+        qty:inp[0]?.value||'0',bb:inp[1]?.value,ram:inp[2]?.value,ssd:inp[3]?.value,
+        sh:inp[4]?.value,ai:inp[5]?.value,
         tot:document.getElementById('q-a-'+id)?.textContent||'0.00',od:i%2===0,simple:false});
     }else{
-      rows.push({n:i+1,pn:inp[0]?.value||'',ds:ce?.innerHTML||'',
-        qty:inp[1]?.value||'0',cfg:inp[2]?.value,
+      rows.push({n:i+1,pn,ds:ce?.innerHTML||'',
+        qty:inp[0]?.value||'0',cfg:inp[1]?.value,
         tot:document.getElementById('q-a-'+id)?.textContent||'0.00',od:i%2===0,simple:true});
     }
   });return rows;
@@ -5603,16 +5661,18 @@ function getPIRows(){
   const isSplit=_mode.pi==='split';
   document.querySelectorAll('#pi-b tr').forEach((tr,i)=>{
     const inp=tr.querySelectorAll('input');
+    const ta=tr.querySelector('textarea');
     const ce=tr.querySelector('div[contenteditable],td[contenteditable]');
     const id=tr.id.split('-').pop();
+    const pn=ta?ta.value:inp[0]?.value||'';
     if(isSplit){
-      rows.push({n:i+1,pn:inp[0]?.value||'',ds:ce?.innerHTML||'',
-        qty:inp[1]?.value||'0',bb:inp[2]?.value,ram:inp[3]?.value,ssd:inp[4]?.value,
-        sh:inp[5]?.value,ai:inp[6]?.value,
+      rows.push({n:i+1,pn,ds:ce?.innerHTML||'',
+        qty:inp[0]?.value||'0',bb:inp[1]?.value,ram:inp[2]?.value,ssd:inp[3]?.value,
+        sh:inp[4]?.value,ai:inp[5]?.value,
         tot:document.getElementById('pi-a-'+id)?.textContent||'0.00',od:i%2===0,simple:false});
     }else{
-      rows.push({n:i+1,pn:inp[0]?.value||'',ds:ce?.innerHTML||'',
-        qty:inp[1]?.value||'0',cfg:inp[2]?.value,
+      rows.push({n:i+1,pn,ds:ce?.innerHTML||'',
+        qty:inp[0]?.value||'0',cfg:inp[1]?.value,
         tot:document.getElementById('pi-a-'+id)?.textContent||'0.00',od:i%2===0,simple:true});
     }
   });return rows;
@@ -5665,9 +5725,10 @@ function p$(v){return v?'$'+parseFloat(v).toFixed(2):'';}
 
 function qItemRows(rows){
   return rows.map(r=>{
+    const pnHtml=r.pn.replace(/\n/g,'<br>');
     if(r.simple){
       return`<tr class="${r.od?'od':'ev'}">
-        <td class="rn">${r.n}</td><td>${r.pn}</td>
+        <td class="rn">${r.n}</td><td class="pn" style="text-align:center;">${pnHtml}</td>
         <td class="la" style="text-align:left;">${r.ds}</td>
         <td class="ct">${r.qty}</td>
         <td class="nr">${r.cfg?'$'+parseFloat(r.cfg).toFixed(2):''}</td>
@@ -5675,7 +5736,7 @@ function qItemRows(rows){
       </tr>`;
     }
     return`<tr class="${r.od?'od':'ev'}">
-      <td class="rn">${r.n}</td><td>${r.pn}</td>
+      <td class="rn">${r.n}</td><td class="pn" style="text-align:center;">${pnHtml}</td>
       <td class="la" style="text-align:left;">${r.ds}</td>
       <td class="ct">${r.qty}</td>
       <td class="nr">${p$(r.bb)}</td><td class="nr">${p$(r.ram)}</td>
@@ -6548,19 +6609,30 @@ document.getElementById('doc-import-qt-bg')?.addEventListener('click', function(
 
 
 function syncFromQ(target) {
-  // Try to load Q rows from saved doc matching current project name
+  // Determine source: if called from CI/PK, offer choice between Q and PI as source
+  let sourceType = 'q';
+  if (target === 'ci' || target === 'pk') {
+    const hasQ = document.querySelectorAll('#q-b tr').length > 0;
+    const hasPI = document.querySelectorAll('#pi-b tr').length > 0;
+    if (hasPI && hasQ) {
+      const choice = confirm('选择同步来源：\n\n点击「确定」→ 从 PI (形式发票) 同步\n点击「取消」→ 从 Quotation (报价单) 同步');
+      sourceType = choice ? 'pi' : 'q';
+    } else if (hasPI && !hasQ) {
+      sourceType = 'pi';
+    }
+  }
+
+  // Try to load rows from saved doc matching current project name
   const proj = (document.getElementById('docProject')?.value || '').trim();
-  let qRows = getQRows();
-  let sourceLabel = '当前 Quotation';
+  let qRows = sourceType === 'pi' ? getPIRows() : getQRows();
+  let sourceLabel = sourceType === 'pi' ? '当前 PI' : '当前 Quotation';
 
   if (proj) {
     const docs = getAllDocs();
     const saved = docs.find(d => d.proj === proj);
-    if (saved && saved.rows?.q?.length) {
-      // Restore Q rows from saved doc temporarily to get structured rows
-      // Instead, reconstruct from raw saved data
-      const rawQ = saved.rows.q;
-      const isSplit = (saved.modes?.q || 'split') === 'split';
+    if (saved && saved.rows?.[sourceType]?.length) {
+      const rawQ = saved.rows[sourceType];
+      const isSplit = (saved.modes?.[sourceType] || 'split') === 'split';
       qRows = rawQ.map((r, i) => {
         const inp = r.inputs || [];
         if (isSplit) {
@@ -6572,12 +6644,12 @@ function syncFromQ(target) {
             cfg: inp[2]||'', tot: '0.00', od: i%2===0, simple: true };
         }
       });
-      sourceLabel = '已保存项目「' + proj + '」的 Quotation';
+      sourceLabel = '已保存项目「' + proj + '」的 ' + (sourceType === 'pi' ? 'PI' : 'Quotation');
     }
   }
 
   if (!qRows.length) {
-    alert('暂无 Quotation 数据。\n请先在 Quotation 填写行项目，或保存含项目名称的单据后再同步。');
+    alert((sourceType === 'pi' ? '暂无 PI 数据。\n请先在 PI 填写行项目。' : '暂无 Quotation 数据。\n请先在 Quotation 填写行项目，或保存含项目名称的单据后再同步。'));
     return;
   }
 
@@ -6632,7 +6704,7 @@ function syncFromQ(target) {
       const tr = document.createElement('tr');
       tr.id = 'ci-r-' + id;
       tr.innerHTML = `<td style="color:#8899AA;text-align:center;">${rc.ci}</td>
-        <td><input type="text" value="${r.pn}" style="width:86px;"/></td>
+        <td><input type="text" value="${r.pn.split('\n')[0]}" style="width:86px;"/></td>
         <td><input type="text" placeholder="8471504090" style="width:78px;"/></td>
         <td><input type="text" value="${r.ds.replace(/<[^>]+>/g,' ').trim()}" style="min-width:110px;width:100%;"/></td>
         <td><input type="number" value="${r.qty}" min="0" style="width:52px;" oninput="cCI()"/></td>
@@ -6654,7 +6726,7 @@ function syncFromQ(target) {
       const tr = document.createElement('tr');
       tr.id = 'pk-r-' + id;
       tr.innerHTML = `<td style="color:#8899AA;text-align:center;">${rc.pk}</td>
-        <td><input type="text" value="${r.pn}" style="width:80px;"/></td>
+        <td><input type="text" value="${r.pn.split('\n')[0]}" style="width:80px;"/></td>
         <td><input type="text" value="${r.ds.replace(/<[^>]+>/g,' ').trim()}" style="min-width:90px;width:100%;"/></td>
         <td><input type="number" value="${r.qty}" min="0" style="width:46px;" oninput="cPK()"/></td>
         <td><input type="text" value="Carton" style="width:58px;"/></td>
