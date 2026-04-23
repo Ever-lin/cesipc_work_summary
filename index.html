@@ -3884,7 +3884,7 @@ function qtOpenAdd(){
 function qtOpenEdit(id){
   const r=qtQuotes.find(q=>String(q.id)===String(id));if(!r)return;
   qtEditId=id;
-  document.getElementById('qt-add-product-btn').style.display='none';
+  document.getElementById('qt-add-product-btn').style.display='';
   // 显示型号+项目
   const titleLabel=r.model?`编辑报价 · ${r.model}`:'编辑报价';
   document.getElementById('qt-modal-title').textContent=titleLabel;
@@ -4547,7 +4547,7 @@ function qtSave(){
   setTimeout(()=>{saveBtn.textContent=orig;},1200);
 }
 function qtSaveAndAddProduct(){
-  // "继续新增"时，当前产品已保存，只需清空产品字段并保留项目共有信息
+  // 如果当前是编辑模式（qtEditId存在），先尝试保存；若有价格则保存，否则直接跳过
   var proj=document.getElementById('qf-project').value.trim();
   var company=document.getElementById('qf-company').value;
   var contact=document.getElementById('qf-contact').value.trim();
@@ -4555,6 +4555,12 @@ function qtSaveAndAddProduct(){
   var deal=document.getElementById('qf-deal').value;
   var stage=document.getElementById('qf-stage').value.trim();
   var notes=document.getElementById('qf-notes').value.trim();
+  // 若当前单品区有价格填写则先保存
+  var priceVal=parseFloat(document.getElementById('qf-price').value);
+  if(!isNaN(priceVal)&&priceVal>0){
+    qtSave();
+  }
+  // 清空产品字段，切换为新增单品模式
   qtEditId=null;
   document.getElementById('qt-modal-title').textContent='新增产品报价（同项目）';
   ['qf-model','qf-partno','qf-cpu','qf-custom','qf-ram','qf-ramp','qf-ssd','qf-ssdp','qf-barbone','qf-p3','qf-price','qf-shipping','qf-total-price'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
