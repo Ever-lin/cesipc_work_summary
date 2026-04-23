@@ -432,7 +432,22 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <input type="hidden" id="perf-week" value="">
     <div class="grid2">
       <div class="field"><label>类型</label><select id="perf-type" onchange="toggleAmt()"><option value="业绩">业绩</option><option value="回款">回款</option><option value="销售成交">新成交 — 销售成交</option><option value="借测成交">新成交 — 借测成交</option></select></div>
-      <div class="field"><label>客户名称</label><input id="perf-client" placeholder="客户名称" oninput="toggleAmt()"></div>
+      <div class="field" style="position:relative">
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          <span>客户名称</span>
+          <span id="unpaid-hint" style="display:none;font-size:11px;color:var(--blue-text);background:var(--blue-bg);padding:2px 7px;border-radius:10px;cursor:pointer" onclick="toggleUnpaidPanel()">💡 点击选择未回款业绩 ▾</span>
+        </label>
+        <input id="perf-client" placeholder="客户名称" oninput="onPerfClientInput()" autocomplete="off" list="perf-client-dl">
+        <datalist id="perf-client-dl"></datalist>
+        <!-- 未回款业绩快速选择面板 -->
+        <div id="unpaid-panel" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:200;background:var(--bg);border:1px solid var(--blue);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:280px;overflow-y:auto;margin-top:2px">
+          <div style="padding:8px 10px;font-size:11px;font-weight:600;color:var(--blue-text);background:var(--blue-bg);border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center">
+            <span>📋 选择未回款业绩（点击自动填入）</span>
+            <span onclick="toggleUnpaidPanel()" style="cursor:pointer;font-size:14px;color:var(--text2)">✕</span>
+          </div>
+          <div id="unpaid-list" style="padding:4px 0"></div>
+        </div>
+      </div>
     </div>
     <div id="amt-row" class="grid2">
       <div class="field"><label>金额（¥）</label><input id="perf-amount" type="number" placeholder="如：19740"></div>
@@ -1388,7 +1403,91 @@ function toggleAmt(){
   const isNew=type==='销售成交'||type==='借测成交';
   document.getElementById('amt-row').style.display=isNew?'none':'grid';
   document.getElementById('amt-row-note').style.display=isNew?'block':'none';
+  // 回款类型：显示未回款提示并刷新面板
+  const isCollect=type==='回款';
+  document.getElementById('unpaid-hint').style.display=isCollect?'':'none';
+  if(isCollect)renderUnpaidList();else{document.getElementById('unpaid-panel').style.display='none';}
 }
+
+// ── 计算某客户的未回款金额（业绩总额 - 回款总额）──
+function getUnpaidPerf(){
+  const perf=state.perf||[];
+  // 按客户聚合业绩
+  const perfMap={};
+  perf.filter(p=>p.type==='业绩'&&!p.noAmount).forEach(p=>{
+    const k=p.client;
+    if(!perfMap[k])perfMap[k]={client:k,perfTotal:0,collectTotal:0,entries:[]};
+    perfMap[k].perfTotal+=p.amount||0;
+    perfMap[k].entries.push(p);
+  });
+  // 按客户聚合回款
+  perf.filter(p=>p.type==='回款'&&!p.noAmount).forEach(p=>{
+    const k=p.client;
+    if(!perfMap[k])perfMap[k]={client:k,perfTotal:0,collectTotal:0,entries:[]};
+    perfMap[k].collectTotal+=p.amount||0;
+  });
+  // 只返回未完全回款的客户（未回款额 > 0）
+  return Object.values(perfMap)
+    .map(r=>({...r,unpaid:r.perfTotal-r.collectTotal}))
+    .filter(r=>r.unpaid>0.01)
+    .sort((a,b)=>b.unpaid-a.unpaid);
+}
+
+function renderUnpaidList(){
+  const list=getUnpaidPerf();
+  const container=document.getElementById('unpaid-list');
+  if(!list.length){
+    container.innerHTML='<div style="padding:12px 14px;font-size:12px;color:var(--text2)">暂无未回款的业绩记录</div>';
+    return;
+  }
+  container.innerHTML=list.map(r=>{
+    const pct=r.perfTotal>0?Math.round((r.collectTotal/r.perfTotal)*100):0;
+    const latestNote=r.entries.length?r.entries[r.entries.length-1].note||'':'';
+    return`<div onclick="selectUnpaidClient('${r.client.replace(/'/g,"\\'")}',${r.unpaid},'${latestNote.replace(/'/g,"\\'")}',${r.perfTotal},${r.collectTotal})"
+      style="padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border2);transition:background .1s"
+      onmouseover="this.style.background='var(--blue-bg)'" onmouseout="this.style.background=''">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+        <span style="font-size:13px;font-weight:500;color:var(--text)">${r.client}</span>
+        <span style="font-size:12px;font-weight:600;color:var(--red-text)">未回款 ¥${Math.round(r.unpaid).toLocaleString('zh-CN')}</span>
+      </div>
+      <div style="display:flex;gap:12px;font-size:11px;color:var(--text2)">
+        <span>业绩 ¥${Math.round(r.perfTotal).toLocaleString('zh-CN')}</span>
+        <span>已回款 ¥${Math.round(r.collectTotal).toLocaleString('zh-CN')}</span>
+        <span style="color:${pct>=80?'var(--green-text)':'var(--amber-text)'}">已回 ${pct}%</span>
+        ${latestNote?`<span>备注：${latestNote.slice(0,20)}${latestNote.length>20?'…':''}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectUnpaidClient(client,unpaid,note,perfTotal,collectTotal){
+  document.getElementById('perf-client').value=client;
+  document.getElementById('perf-amount').value=Math.round(unpaid);
+  if(note)document.getElementById('perf-note').value=note;
+  document.getElementById('unpaid-panel').style.display='none';
+}
+
+function toggleUnpaidPanel(){
+  const panel=document.getElementById('unpaid-panel');
+  const isOpen=panel.style.display!=='none';
+  if(isOpen){panel.style.display='none';}
+  else{renderUnpaidList();panel.style.display='block';}
+}
+
+function onPerfClientInput(){
+  toggleAmt();
+  // 关闭快捷面板（用户开始手动输入）
+  document.getElementById('unpaid-panel').style.display='none';
+}
+
+// 点击外部关闭未回款面板
+document.addEventListener('click',function(e){
+  const panel=document.getElementById('unpaid-panel');
+  if(panel&&panel.style.display!=='none'){
+    const wrap=panel.closest('[style*="position:relative"]')||panel.parentElement;
+    if(!wrap||!wrap.contains(e.target))panel.style.display='none';
+  }
+});
 
 function addPerf(){
   const editId=document.getElementById('perf-edit-id').value;
