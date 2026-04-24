@@ -5741,6 +5741,13 @@ function qtSeed(){
     <div class="fg"><label>SWIFT / BIC</label><input type="text" id="bkSW" value="CITIHKAX"/></div>
     <div class="fg"><label>Bank Address</label><input type="text" id="bkAd" value="11/F Citi Tower 83 Hoi Bun Road Kwun Tong HK"/></div>
   </div>
+  <div class="divider"></div>
+  <div>
+    <div class="stitle">📝 自定义区块</div>
+    <div style="font-size:11px;color:var(--c-muted);margin-bottom:8px;">可添加额外栏目（蓝色标题 + 浅蓝内容），显示在 PDF 的 NOTES 之后</div>
+    <div id="custom-sections-list"></div>
+    <button class="btn btn-g btn-sm" style="width:100%;margin-top:4px;" onclick="addCustomSection()">＋ 新增区块</button>
+  </div>
 </aside>
 
 <main>
@@ -6118,6 +6125,38 @@ function calcAI(el){
   }
 }
 
+// ── Custom Extra Sections ──
+let _csId=0;
+function addCustomSection(){
+  const id=++_csId;
+  const list=document.getElementById('custom-sections-list');
+  const wrap=document.createElement('div');
+  wrap.id='cs-'+id;
+  wrap.style.cssText='border:1px solid var(--c-border);border-radius:7px;padding:8px;margin-bottom:8px;background:var(--c-surface2);';
+  wrap.innerHTML=`
+    <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;">
+      <input id="cs-title-${id}" type="text" placeholder="区块标题 e.g. SPECIAL FEATURES" style="flex:1;padding:5px 8px;border:1px solid var(--c-border);border-radius:5px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
+      <button class="btn btn-d btn-sm" onclick="document.getElementById('cs-${id}').remove()" style="flex-shrink:0;">✕</button>
+    </div>
+    <textarea id="cs-body-${id}" placeholder="内容（支持换行）" rows="3" style="width:100%;padding:6px 8px;border:1px solid var(--c-border);border-radius:5px;font-size:11px;font-family:'Sora',sans-serif;background:var(--c-surface);color:var(--c-text);resize:vertical;outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"></textarea>`;
+  list.appendChild(wrap);
+}
+
+function buildCustomSectionsPDF(){
+  const list=document.getElementById('custom-sections-list');
+  if(!list)return'';
+  let html='';
+  list.querySelectorAll('[id^="cs-"]').forEach(wrap=>{
+    const id=wrap.id.replace('cs-','');
+    const title=(document.getElementById('cs-title-'+id)?.value||'').trim();
+    const body=(document.getElementById('cs-body-'+id)?.value||'').trim();
+    if(!title&&!body)return;
+    html+=`<div class="sec-h">${title||'EXTRA'}</div>
+    <div style="background:#E6F1FB;padding:4pt 6pt;font-size:7.5pt;color:#1A1A2E;border:0.5pt solid #C5D9F0;">${body.replace(/\n/g,'<br>')}</div>`;
+  });
+  return html;
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   const today=new Date(), iso=d=>d.toISOString().split('T')[0];
   document.getElementById('docDate').value=iso(today);
@@ -6279,9 +6318,12 @@ function cQ(){
     let qty,p;
     if(isSplit){
       qty=parseFloat(i[0]?.value)||0;
-      const allIn=parseFloat(i[5]?.value)||0,bare=parseFloat(i[1]?.value)||0;
-      p=allIn||bare;
+      const bare=parseFloat(i[1]?.value)||0;
+      const ram=parseFloat(i[2]?.value)||0;
+      const ssd=parseFloat(i[3]?.value)||0;
       const rowSh=parseFloat(i[4]?.value)||0;
+      // Subtotal = qty * (bb + ram + ssd), shipping tracked separately
+      p=bare+ram+ssd;
       tsh+=qty*rowSh;
     }else{
       qty=parseFloat(i[0]?.value)||0;
@@ -6645,6 +6687,7 @@ function buildQ(){
   <div class="sec-h">NOTES</div>
   <div style="background:#F2F7FB;padding:4pt 6pt;font-size:7.5pt;color:#1A1A2E;border:0.5pt solid #E0E8F0;">
     1. All prices are quoted in ${c} unless otherwise stated.<br>2. Please quote the Quotation No. on your purchase order.<br>3. Prices are subject to change if order is placed after the validity period.</div>
+  ${buildCustomSectionsPDF()}
   ${sigs(true)}`;
 }
 
