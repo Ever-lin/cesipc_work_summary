@@ -109,7 +109,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   #panel-cesipc .cesipc-root header {
     background: var(--c-surface); border-bottom: 1px solid var(--c-border);
     padding: 16px 28px; display: flex; align-items: center; gap: 12px;
-    position: sticky; top: 0; z-index: 100;
+    position: sticky; top: 0; z-index: 50;
   }
   .logo { width: 34px; height: 34px; background: #1A3C5E; border-radius: 7px;
     display: flex; align-items: center; justify-content: center;
@@ -6582,7 +6582,7 @@ function addR(t, prefill){
     if(isSplit){
       tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc[t]}</td>
         <td><textarea placeholder="EPC-S1092A&#10;料号" style="width:90px;min-height:28px;resize:vertical;font-size:11px;padding:4px 5px;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--c-text);font-family:inherit;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.pn||''}</textarea></td>
-        <td style="padding:0;position:relative;min-width:420px;width:420px;"><div contenteditable="true" style="min-width:420px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds!=null&&p.ds!==''?p.ds:DEFAULT_DESC}</div><button onmousedown="event.preventDefault();openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
+        <td style="padding:0;position:relative;min-width:420px;width:420px;"><div contenteditable="true" style="min-width:420px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds!=null&&p.ds!==''?p.ds:DEFAULT_DESC}</div><button onclick="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
         <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
         <td><input type="number" value="${p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:70px;text-align:right;" oninput="calcAI(this);${cf}()"/></td>
         <td><input type="number" value="${p.ram||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;" oninput="calcAI(this);${cf}()"/></td>
@@ -6595,7 +6595,7 @@ function addR(t, prefill){
       // simple mode: # | PartNo | Desc | Qty | UnitPrice | Shipping | All-Incl | GrandTotal | ✕
       tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc[t]}</td>
         <td><textarea placeholder="EPC-S1092A&#10;料号" style="width:90px;min-height:28px;resize:vertical;font-size:11px;padding:4px 5px;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--c-text);font-family:inherit;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.pn||''}</textarea></td>
-        <td style="padding:0;position:relative;min-width:420px;width:420px;"><div contenteditable="true" style="min-width:420px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds!=null&&p.ds!==''?p.ds:DEFAULT_DESC}</div><button onmousedown="event.preventDefault();openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
+        <td style="padding:0;position:relative;min-width:420px;width:420px;"><div contenteditable="true" style="min-width:420px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds!=null&&p.ds!==''?p.ds:DEFAULT_DESC}</div><button onclick="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
         <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
         <td><input type="number" value="${p.cfg||p.ai||p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:95px;text-align:right;" oninput="calcSimpleAI(this);${cf}()" title="Unit Price (Configured System)"/></td>
         <td><input type="number" value="${p.simpleSh||p.sh||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;" oninput="calcSimpleAI(this);${cf}()" title="Shipping per unit"/></td>
@@ -8190,7 +8190,10 @@ function openDescTpl(btn) {
     }
   }
 
-  document.getElementById('desc-tpl-bg').style.display = 'flex';
+  // Re-append to body so it's always the last painted element (beats sticky headers)
+  const modal = document.getElementById('desc-tpl-bg');
+  document.body.appendChild(modal);
+  modal.style.display = 'flex';
   setTimeout(() => document.getElementById('dtpl-title').focus(), 50);
 }
 
@@ -8241,8 +8244,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOv();});
 
 
 <!-- ===== Description 模板填写弹窗 ===== -->
-<div id="desc-tpl-bg" style="position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:9000;display:none;align-items:center;justify-content:center;">
-  <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:10px;padding:22px 24px;width:94%;max-width:560px;max-height:90vh;overflow-y:auto;font-family:'Sora',sans-serif;">
+<div id="desc-tpl-bg" style="position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9000;display:none;align-items:center;justify-content:center;">
+  <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:12px;padding:20px 22px;width:94%;max-width:540px;max-height:85vh;overflow-y:auto;font-family:'Sora',sans-serif;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
       <span style="font-size:14px;font-weight:600;">📋 Description 模板填写</span>
       <button onclick="closeDescTpl()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--c-muted);">✕</button>
