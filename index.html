@@ -166,7 +166,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   .btn-d { background: rgba(255,92,110,.1); color: var(--c-danger); border: 1px solid rgba(255,92,110,.22); }
   .btn-d:hover { background: rgba(255,92,110,.2); }
 
-  #panel-cesipc .cesipc-root table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  #panel-cesipc .cesipc-root table { border-collapse: collapse; font-size: 12px; min-width: 100%; }
   #panel-cesipc .cesipc-root thead tr { background: #1A3C5E; }
   #panel-cesipc .cesipc-root th { padding: 8px 9px; text-align: left; font-size: 10px; font-weight: 600;
     color: #fff; letter-spacing: .4px; white-space: nowrap; }
@@ -5707,29 +5707,57 @@ function qtSeed(){
   <div class="divider"></div>
   <div>
     <div class="stitle">🖼 公司图片 Logo / 公章</div>
-    <div style="font-size:11px;color:var(--c-muted);margin-bottom:8px;line-height:1.6;">上传后自动替换所有单据左上角的 Logo，公章图片会叠加在签名区。支持 PNG / JPG / SVG。</div>
+    <div style="font-size:11px;color:var(--c-muted);margin-bottom:8px;line-height:1.6;">支持 PNG / JPG / SVG。预览时可拖动 Logo 调整位置。</div>
+
+    <!-- Logo -->
     <div class="fg">
-      <label>公司 Logo（左上角）</label>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+      <label style="font-weight:600;color:var(--c-text);">Logo（PDF 左上角）</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
         <label style="background:#1A3C5E;color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;">
           📁 选择图片<input type="file" accept="image/*" style="display:none;" onchange="uploadCompanyImage('logo',this)">
         </label>
         <button onclick="clearCompanyImage('logo')" style="background:none;border:1px solid var(--c-border);border-radius:5px;padding:4px 8px;font-size:11px;color:var(--c-muted);cursor:pointer;">✕ 清除</button>
       </div>
-      <div id="logo-preview" style="margin-top:6px;display:none;background:#1A3C5E;padding:4px 8px;border-radius:5px;max-width:140px;">
-        <img id="logo-preview-img" style="height:28px;display:block;filter:brightness(0) invert(1);max-width:130px;" alt="logo preview">
+      <div id="logo-preview" style="display:none;background:#1A3C5E;padding:4px 8px;border-radius:5px;max-width:140px;margin-bottom:6px;">
+        <img id="logo-preview-img" style="height:28px;display:block;max-width:130px;" alt="logo preview">
+      </div>
+      <!-- Logo settings -->
+      <div id="logo-settings" style="display:none;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:6px;padding:8px;font-size:11px;">
+        <div style="margin-bottom:5px;display:flex;align-items:center;gap:8px;">
+          <label style="color:var(--c-muted);min-width:50px;">高度</label>
+          <input type="range" id="logo-height" min="16" max="60" value="28" oninput="updateLogoSettings()" style="flex:1;height:4px;">
+          <span id="logo-height-val" style="color:var(--c-text);min-width:28px;">28pt</span>
+        </div>
+        <div style="margin-bottom:5px;display:flex;align-items:center;gap:8px;">
+          <label style="color:var(--c-muted);min-width:50px;">颜色</label>
+          <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;">
+            <input type="checkbox" id="logo-invert" onchange="updateLogoSettings()" style="width:auto;">
+            反白（白色logo用）
+          </label>
+        </div>
+        <div style="font-size:10px;color:var(--c-muted);margin-top:4px;">💡 在「预览/打印」界面可拖动 Logo 调整位置</div>
       </div>
     </div>
+
+    <!-- Stamp -->
     <div class="fg" style="margin-top:6px;">
-      <label>公章 / 签名图片（签名区右侧）</label>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+      <label style="font-weight:600;color:var(--c-text);">公章 / 授权签名</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
         <label style="background:#1A3C5E;color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;">
           📁 选择图片<input type="file" accept="image/*" style="display:none;" onchange="uploadCompanyImage('stamp',this)">
         </label>
         <button onclick="clearCompanyImage('stamp')" style="background:none;border:1px solid var(--c-border);border-radius:5px;padding:4px 8px;font-size:11px;color:var(--c-muted);cursor:pointer;">✕ 清除</button>
       </div>
-      <div id="stamp-preview" style="margin-top:6px;display:none;">
+      <div id="stamp-preview" style="display:none;">
         <img id="stamp-preview-img" style="height:50px;display:block;max-width:130px;border-radius:4px;border:1px solid var(--c-border);padding:3px;" alt="stamp preview">
+      </div>
+      <div id="stamp-settings" style="display:none;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:6px;padding:8px;font-size:11px;margin-top:6px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="color:var(--c-muted);min-width:50px;">大小</label>
+          <input type="range" id="stamp-size" min="40" max="120" value="70" oninput="updateStampSettings()" style="flex:1;height:4px;">
+          <span id="stamp-size-val" style="color:var(--c-text);min-width:28px;">70pt</span>
+        </div>
+        <div style="font-size:10px;color:var(--c-muted);margin-top:4px;">💡 在「预览/打印」界面可拖动公章调整位置</div>
       </div>
     </div>
   </div>
@@ -6053,18 +6081,34 @@ function updDisp(){}  // kept for compatibility
 
 // ── Company Images: Logo & Stamp ──
 let _companyImages = { logo: null, stamp: null };
+let _logoSettings = { height: 28, invert: true, offsetX: 0, offsetY: 0 };
+let _stampSettings = { size: 70, offsetX: 0, offsetY: 0 };
+
 (function loadCompanyImages(){
   try {
     const saved = JSON.parse(localStorage.getItem('cesipc_images') || '{}');
-    if(saved.logo) { _companyImages.logo = saved.logo; _showImagePreview('logo', saved.logo); }
+    if(saved.logo)  { _companyImages.logo  = saved.logo;  _showImagePreview('logo',  saved.logo); }
     if(saved.stamp) { _companyImages.stamp = saved.stamp; _showImagePreview('stamp', saved.stamp); }
+    if(saved.logoSettings)  _logoSettings  = {..._logoSettings,  ...saved.logoSettings};
+    if(saved.stampSettings) _stampSettings = {..._stampSettings, ...saved.stampSettings};
+    setTimeout(()=>{
+      const lh = document.getElementById('logo-height');  if(lh) { lh.value = _logoSettings.height; const lhv=document.getElementById('logo-height-val'); if(lhv)lhv.textContent = _logoSettings.height+'pt'; }
+      const li = document.getElementById('logo-invert');  if(li) li.checked = _logoSettings.invert;
+      const ss = document.getElementById('stamp-size');   if(ss) { ss.value = _stampSettings.size;  const ssv=document.getElementById('stamp-size-val'); if(ssv)ssv.textContent  = _stampSettings.size+'pt'; }
+    }, 300);
   } catch(e) {}
 })();
 
 function _showImagePreview(type, dataUrl){
   const wrap = document.getElementById(type + '-preview');
-  const img = document.getElementById(type + '-preview-img');
-  if(wrap && img){ img.src = dataUrl; wrap.style.display = ''; }
+  const img  = document.getElementById(type + '-preview-img');
+  const settings = document.getElementById(type + '-settings');
+  if(wrap && img){
+    img.src = dataUrl;
+    if(type === 'logo') img.style.filter = _logoSettings.invert ? 'brightness(0) invert(1)' : 'none';
+    wrap.style.display = '';
+    if(settings) settings.style.display = '';
+  }
 }
 
 function uploadCompanyImage(type, input){
@@ -6074,11 +6118,7 @@ function uploadCompanyImage(type, input){
   reader.onload = e => {
     _companyImages[type] = e.target.result;
     _showImagePreview(type, e.target.result);
-    try {
-      const saved = JSON.parse(localStorage.getItem('cesipc_images') || '{}');
-      saved[type] = e.target.result;
-      localStorage.setItem('cesipc_images', JSON.stringify(saved));
-    } catch(ex) {}
+    _saveImageSettings();
     toast('✅ 已上传' + (type === 'logo' ? ' Logo' : ' 公章'));
   };
   reader.readAsDataURL(file);
@@ -6088,26 +6128,75 @@ function uploadCompanyImage(type, input){
 function clearCompanyImage(type){
   _companyImages[type] = null;
   const wrap = document.getElementById(type + '-preview');
+  const settings = document.getElementById(type + '-settings');
   if(wrap) wrap.style.display = 'none';
-  try {
-    const saved = JSON.parse(localStorage.getItem('cesipc_images') || '{}');
-    delete saved[type];
-    localStorage.setItem('cesipc_images', JSON.stringify(saved));
-  } catch(e) {}
+  if(settings) settings.style.display = 'none';
+  _saveImageSettings();
   toast('🗑 已清除' + (type === 'logo' ? ' Logo' : ' 公章'));
 }
 
+function updateLogoSettings(){
+  const h = parseInt(document.getElementById('logo-height')?.value || 28);
+  const inv = document.getElementById('logo-invert')?.checked ?? true;
+  _logoSettings.height = h; _logoSettings.invert = inv;
+  const lhv = document.getElementById('logo-height-val'); if(lhv) lhv.textContent = h + 'pt';
+  const img = document.getElementById('logo-preview-img');
+  if(img) img.style.filter = inv ? 'brightness(0) invert(1)' : 'none';
+  _saveImageSettings();
+}
+
+function updateStampSettings(){
+  const s = parseInt(document.getElementById('stamp-size')?.value || 70);
+  _stampSettings.size = s;
+  const ssv = document.getElementById('stamp-size-val'); if(ssv) ssv.textContent = s + 'pt';
+  _saveImageSettings();
+}
+
+function _saveImageSettings(){
+  try {
+    const saved = JSON.parse(localStorage.getItem('cesipc_images') || '{}');
+    if(_companyImages.logo)  saved.logo  = _companyImages.logo;  else delete saved.logo;
+    if(_companyImages.stamp) saved.stamp = _companyImages.stamp; else delete saved.stamp;
+    saved.logoSettings = _logoSettings; saved.stampSettings = _stampSettings;
+    localStorage.setItem('cesipc_images', JSON.stringify(saved));
+  } catch(e) {}
+}
+
 function getLogoHtml(){
+  const h = _logoSettings.height || 28;
+  const filter = _logoSettings.invert ? 'filter:brightness(0) invert(1);' : '';
+  const ox = _logoSettings.offsetX || 0; const oy = _logoSettings.offsetY || 0;
+  const transform = (ox||oy) ? `transform:translate(${ox}px,${oy}px);` : '';
   if(_companyImages.logo){
-    return `<img src="${_companyImages.logo}" style="height:28pt;display:block;max-width:90pt;object-fit:contain;" alt="logo">`;
+    return `<img id="pdf-logo-img" src="${_companyImages.logo}" style="height:${h}pt;display:block;max-width:110pt;object-fit:contain;${filter}${transform}cursor:move;" alt="logo" onmousedown="startDragImage(event,'logo')">`;
   }
-  // Default built-in logo
-  return `<img src="data:image/jpeg;base64,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" style="height:28pt;display:block;filter:brightness(0) invert(1)" alt="CESIPC">`;
+  // Default built-in CESIPC logo (short version for brevity)
+  return `<img id="pdf-logo-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAsCAYAAADGiDuVAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABZ0RVh0Q3JlYXRpb24gVGltZQAwNS8wNS8yNOhIDJIAAAAcdEVYdFNvZnR3YXJlAEFkb2JlIEZpcmV3b3JrcyBDUzQGstOgAAAAoElEQVRoge3BMQEAAADCoPVP7WsIoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeAMBuAABHgBk4QAAAABJRU5ErkJggg==" style="height:${h}pt;display:block;max-width:110pt;object-fit:contain;${filter}${transform}cursor:move;opacity:0.9;" alt="CESIPC" onmousedown="startDragImage(event,'logo')">`;
 }
 
 function getStampHtml(){
   if(!_companyImages.stamp) return '';
-  return `<img src="${_companyImages.stamp}" style="height:60pt;max-width:80pt;object-fit:contain;opacity:0.9;position:absolute;bottom:5pt;right:5pt;" alt="stamp">`;
+  const s = _stampSettings.size || 70;
+  const ox = _stampSettings.offsetX || 0;
+  const oy = _stampSettings.offsetY || 0;
+  return `<img id="pdf-stamp-img" src="${_companyImages.stamp}" style="height:${s}pt;max-width:${s}pt;object-fit:contain;opacity:0.88;position:absolute;bottom:5pt;right:5pt;transform:translate(${ox}px,${oy}px);cursor:move;" alt="stamp" onmousedown="startDragImage(event,'stamp')">`;
+}
+
+// ── Drag logo/stamp in PDF preview overlay ──
+function startDragImage(e, type){
+  e.preventDefault();
+  const img = e.currentTarget;
+  const startX = e.clientX, startY = e.clientY;
+  const settings = type === 'logo' ? _logoSettings : _stampSettings;
+  const startOX = settings.offsetX || 0, startOY = settings.offsetY || 0;
+  function onMove(ev){
+    settings.offsetX = startOX + (ev.clientX - startX);
+    settings.offsetY = startOY + (ev.clientY - startY);
+    img.style.transform = `translate(${settings.offsetX}px,${settings.offsetY}px)`;
+  }
+  function onUp(){ document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); _saveImageSettings(); }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
 }
 
 // ── memory dropdowns ──
