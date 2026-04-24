@@ -283,7 +283,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   .items th { color: #fff; font-weight: 700; padding: 3.5pt 4pt; text-align: center;
     border: 0.5pt solid #2E75B6; font-size: 7pt; white-space: normal; }
   .items th.la { text-align: left; }
-  .items td { padding: 3pt 4pt; border: 0.5pt solid #E0E8F0; vertical-align: middle; color: #1A1A2E; text-align: center; }
+  .items td { padding: 3pt 4pt; border: 0.5pt solid #E0E8F0; vertical-align: middle; text-align: center; }
   .items tr.od td { background: #F2F7FB; }
   .items tr.ev td { background: #FFFFFF; }
   .items td.rn { color: #8899AA; text-align: center; }
@@ -6102,6 +6102,22 @@ function fmtExec(cmd){_restoreAndExec(()=>document.execCommand(cmd,false,null));
 function fmtColor(c){_restoreAndExec(()=>document.execCommand('foreColor',false,c));}
 function fmtBg(c){_restoreAndExec(()=>document.execCommand('hiliteColor',false,c));}
 
+// Auto-calculate All-Incl = Barebone + RAM + SSD + Shipping
+function calcAI(el){
+  const tr=el.closest('tr');
+  if(!tr)return;
+  const inp=tr.querySelectorAll('input[type="number"]');
+  // inp[0]=qty, [1]=bb, [2]=ram, [3]=ssd, [4]=sh, [5]=ai
+  const bb=parseFloat(inp[1]?.value)||0;
+  const ram=parseFloat(inp[2]?.value)||0;
+  const ssd=parseFloat(inp[3]?.value)||0;
+  const sh=parseFloat(inp[4]?.value)||0;
+  const ai=inp[5];
+  if(ai&&(bb||ram||ssd||sh)){
+    ai.value=(bb+ram+ssd+sh).toFixed(2);
+  }
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   const today=new Date(), iso=d=>d.toISOString().split('T')[0];
   document.getElementById('docDate').value=iso(today);
@@ -6188,12 +6204,12 @@ function addR(t, prefill){
     if(isSplit){
       tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc[t]}</td>
         <td><textarea placeholder="EPC-S1092A&#10;料号" style="width:90px;min-height:28px;resize:vertical;font-size:11px;padding:4px 5px;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--c-text);font-family:inherit;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.pn||''}</textarea></td>
-        <td style="padding:0;position:relative;min-width:160px;"><div contenteditable="true" style="min-width:160px;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds||''}</div><button onmousedown="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
+        <td style="padding:0;position:relative;min-width:300px;width:300px;"><div contenteditable="true" style="min-width:300px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds||''}</div><button onmousedown="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
         <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
-        <td><input type="number" value="${p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:70px;text-align:right;" oninput="${cf}()"/></td>
-        <td><input type="number" value="${p.ram||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;"/></td>
-        <td><input type="number" value="${p.ssd||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;"/></td>
-        <td><input type="number" value="${p.sh||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;" oninput="${cf}()"/></td>
+        <td><input type="number" value="${p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:70px;text-align:right;" oninput="calcAI(this);${cf}()"/></td>
+        <td><input type="number" value="${p.ram||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;" oninput="calcAI(this);${cf}()"/></td>
+        <td><input type="number" value="${p.ssd||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;" oninput="calcAI(this);${cf}()"/></td>
+        <td><input type="number" value="${p.sh||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;" oninput="calcAI(this);${cf}()"/></td>
         <td><input type="number" value="${p.ai||''}" min="0" step="0.01" placeholder="0.00" style="width:70px;text-align:right;" oninput="${cf}()"/></td>
         <td class="amt" id="${t}-a-${id}">0.00</td>
         <td><button class="btn btn-d btn-sm" onclick="delR('${t}',${id})">✕</button></td>`;
@@ -6201,7 +6217,7 @@ function addR(t, prefill){
       // simple mode: Part No. | Description | Qty | Unit Price (Configured) | Grand Total
       tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc[t]}</td>
         <td><textarea placeholder="EPC-S1092A&#10;料号" style="width:90px;min-height:28px;resize:vertical;font-size:11px;padding:4px 5px;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--c-text);font-family:inherit;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.pn||''}</textarea></td>
-        <td style="padding:0;position:relative;min-width:160px;"><div contenteditable="true" style="min-width:160px;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds||''}</div><button onmousedown="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
+        <td style="padding:0;position:relative;min-width:300px;width:300px;"><div contenteditable="true" style="min-width:300px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds||''}</div><button onmousedown="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
         <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
         <td><input type="number" value="${p.cfg||p.ai||p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:100px;text-align:right;" oninput="${cf}()"/></td>
         <td class="amt" id="${t}-a-${id}">0.00</td>
@@ -7654,9 +7670,10 @@ function applyDescTpl() {
   closeDescTpl();
 }
 
-document.getElementById('desc-tpl-bg')?.addEventListener('click', function(e) {
-  if (e.target === this) closeDescTpl();
-});
+// Backdrop click disabled — prevent accidental close while typing
+// document.getElementById('desc-tpl-bg')?.addEventListener('click', function(e) {
+//   if (e.target === this) closeDescTpl();
+// });
 
 function closeOv(){document.getElementById('ov').classList.remove('open');}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOv();});
