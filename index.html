@@ -1208,21 +1208,22 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <div id="qf-pp-tiers" style="display:none"></div>
         </div>
       </div>
-      <!-- 批量阶梯报价区（直接嵌入，与报价方式联动） -->
-      <div style="margin-top:12px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <span style="font-size:12px;font-weight:600;color:var(--text)">📊 批量价格（数量阶梯）</span>
-          <button onclick="qtSingleAddTier()" style="background:var(--blue);color:#fff;border:none;border-radius:4px;font-size:11px;padding:3px 10px;cursor:pointer;font-weight:500">＋ 加档位</button>
-        </div>
-        <div style="font-size:11px;color:var(--text2);margin-bottom:8px">每档填写数量和该数量对应的单价 (P)，P3参考价共用上方填写的值。</div>
-        <div id="qf-single-tiers" style="display:flex;flex-direction:column;gap:6px"></div>
-        <div id="qf-single-tiers-hint" style="font-size:10px;color:var(--text3);margin-top:6px;display:none">💡 有批量价格时，导入 Quotation 会为每档生成独立行；建议隐藏总价列只展示单价参考</div>
-      </div>
       <!-- 历史价格记录 -->
       <div id="qf-history-wrap" style="display:none;margin-top:8px">
         <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;padding-top:4px;border-top:1px solid var(--border2)">📋 价格变更历史</div>
         <div id="qf-history-list" style="font-size:12px"></div>
       </div>
+    </div>
+
+    <!-- 批量阶梯报价区（新增/编辑均显示） -->
+    <div id="qf-tier-section" style="margin-top:12px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:12px;font-weight:600;color:var(--text)">📊 批量价格（数量阶梯）</span>
+        <button onclick="qtSingleAddTier()" style="background:var(--blue);color:#fff;border:none;border-radius:4px;font-size:11px;padding:3px 10px;cursor:pointer;font-weight:500">＋ 加档位</button>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:8px">每档填写数量和该数量对应的单价 (P)，P3参考价共用上方填写的值。</div>
+      <div id="qf-single-tiers" style="display:flex;flex-direction:column;gap:6px"></div>
+      <div id="qf-single-tiers-hint" style="font-size:10px;color:var(--text3);margin-top:6px;display:none">💡 有批量价格时，导入 Quotation 会为每档生成独立行；建议隐藏总价列只展示单价参考</div>
     </div>
 
     <!-- ── 多产品输入区（新增时显示） ── -->
