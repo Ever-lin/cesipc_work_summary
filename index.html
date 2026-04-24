@@ -1708,26 +1708,35 @@ function qtDealToStatus(deal){
   return{open:'跟进中',confirmed:'确认订单',won:'成交',pause:'暂无进展',lost:'丢单'}[deal]||'跟进中';
 }
 // Convert one price-history snapshot to plain text — mirrors exactly what 📋 价格变更历史 shows.
-// NOTE: tiers are NOT backfilled from parent; each snapshot only has what was saved at that time.
-function qtSnapToLine(h){
+// Fields in same order: date+price, project, model·cpu, detail, custom, notes, stage+deal
+function qtSnapToLine(h, parentProject){
   const fc=s=>s==='CNY'?'¥':'$';
   const hasTiers=h.tiers&&h.tiers.length>0;
-  const dateStr=(h.savedAt||'').slice(0,10)||'';
   const lines=[];
 
-  // ── Line 1: date + price summary (tier or single) ──
+  // ── Line 1: date + price (or tier summary) + P-P3 diff ──
+  const dateStr=(h.savedAt||'').slice(0,10)||'';
+  let line1=dateStr+' ';
   if(hasTiers){
-    lines.push('💰 '+(dateStr?dateStr+' ':'')+'📊 '+h.tiers.map(t=>`${t.qty}台×${fc(t.cur||'USD')}${t.price}`).join(' / '));
+    line1+='📊 '+h.tiers.map(t=>`${t.qty}台×${fc(t.cur||'USD')}${t.price}`).join(' / ');
   } else {
-    lines.push('💰'+(dateStr?' '+dateStr+' ':' ')+fc(h.priceCur||'USD')+(h.price||'—'));
+    line1+=fc(h.priceCur||'USD')+(h.price||'—');
+    if(h.price!=null&&h.p3!=null){
+      const d=h.price-h.p3;
+      line1+=' P−P3:'+(d>=0?'+':'')+fc(h.priceCur||'USD')+d+'（P3: '+fc(h.p3Cur||'USD')+h.p3+'）';
+    }
   }
+  lines.push(line1.trim());
 
-  // ── Line 2: model · cpu · partno ──
+  // ── Line 2: project name ──
+  if(parentProject)lines.push(parentProject);
+
+  // ── Line 3: model · cpu · partno ──
   if(h.model||h.cpu||h.partno){
     lines.push((h.model||'')+(h.cpu?' · '+h.cpu:'')+(h.partno?' · 料号:'+h.partno:''));
   }
 
-  // ── Line 3: cost breakdown or 整机 · qty (only when no tiers) ──
+  // ── Line 4: price detail (no tiers) or tier detail ──
   if(!hasTiers){
     const parts=[];
     if(h.barbone!=null)parts.push('准系统 '+fc(h.barboneCur||'USD')+h.barbone);
@@ -1735,34 +1744,31 @@ function qtSnapToLine(h){
     if(h.ssdp!=null)parts.push('SSD('+(h.ssd||'—')+') '+fc(h.ssdpCur||'USD')+h.ssdp);
     if(h.totalPrice!=null)parts.push('整机 '+fc(h.totalCur||'USD')+h.totalPrice);
     if(h.qty)parts.push('数量:'+h.qty+'台');
-    const detail=parts.join(' · ')+(h.shipping?' · 🚢 '+h.shipping:'');
-    if(detail.trim())lines.push(detail);
-  } else {
-    // With tiers: only show cost breakdown if present (as reference), no qty or 整机
-    const costParts=[];
-    if(h.barbone!=null)costParts.push('准系统 '+fc(h.barboneCur||'USD')+h.barbone);
-    if(h.ramp!=null)costParts.push('RAM('+(h.ram||'—')+') '+fc(h.rampCur||'USD')+h.ramp);
-    if(h.ssdp!=null)costParts.push('SSD('+(h.ssd||'—')+') '+fc(h.ssdpCur||'USD')+h.ssdp);
-    const costDetail=costParts.join(' · ')+(h.shipping?' · 🚢 '+h.shipping:'');
-    if(costDetail.trim())lines.push(costDetail);
-    // ── Tier detail line ──
-    lines.push('📊 批量价格：'+h.tiers.map(t=>`${t.qty}台 × ${fc(t.cur||'USD')}${t.price}`).join('  /  '));
+    if(h.shipping)parts.push('🚢 '+h.shipping);
+    if(parts.length)lines.push(parts.join(' · '));
   }
 
-  // ── Custom / notes ──
+  // ── Line 5: custom ──
   if(h.custom&&h.custom.trim())lines.push('🔧 [Custom / 附加功能] '+h.custom);
+
+  // ── Line 6: notes ──
   if(h.notes&&h.notes.trim())lines.push('📝 '+h.notes);
+
+  // ── Line 7: stage + deal ──
+  const dealMap={won:'✅ 已成交',open:'⭕ 跟进中',confirmed:'🔶 已确认订单',lost:'❌ 丢单',pause:'⏸️ 暂无进展'};
+  const stageDealParts=[];
+  if(h.stage)stageDealParts.push('📍 '+h.stage);
+  if(h.deal&&dealMap[h.deal])stageDealParts.push(dealMap[h.deal]);
+  if(stageDealParts.length)lines.push(stageDealParts.join('  '));
+
   return lines.join('\n');
 }
 
 function qtBuildQuoteText(q){
-  // Build import text by mirroring the 📋 价格变更历史 display exactly.
-  // Each snapshot is converted independently — NO tiers/custom backfill from parent,
-  // so old snapshots without tiers won't incorrectly show tier data.
+  // Mirror 📋 价格变更历史 exactly: newest first, each snap independent (no tiers backfill).
   const hist=q.priceHistory||[];
   const backfill=snap=>{
-    // Only backfill model/cpu/partno/custom/shipping (identity fields, not price fields)
-    // Do NOT backfill tiers — each snap only has tiers if they were saved at that time
+    // Only backfill identity fields (model/cpu/partno/custom/shipping/notes), NOT tiers/price
     let h=snap;
     if(!h.model&&q.model)h=Object.assign({},h,{model:q.model});
     if(!h.cpu&&q.cpu)h=Object.assign({},h,{cpu:q.cpu});
@@ -1770,11 +1776,10 @@ function qtBuildQuoteText(q){
     if(!h.custom&&q.custom)h=Object.assign({},h,{custom:q.custom});
     if(!h.shipping&&q.shipping)h=Object.assign({},h,{shipping:q.shipping});
     if(!h.notes&&q.notes)h=Object.assign({},h,{notes:q.notes});
-    // tiers: only use what was actually in this snapshot (never backfill)
     return h;
   };
+  const proj=q.project||'';
   if(!hist.length){
-    // Fallback: no history — use current record fields directly
     const snap={
       savedAt:q.date||'',priceCur:q.priceCur||'USD',price:q.price,
       model:q.model,cpu:q.cpu,partno:q.partno,
@@ -1783,11 +1788,13 @@ function qtBuildQuoteText(q){
       ssd:q.ssd,ssdp:q.ssdp,ssdpCur:q.ssdpCur||'USD',
       totalPrice:q.totalPrice,totalCur:q.totalCur||'USD',
       qty:q.qty,shipping:q.shipping,custom:q.custom,notes:q.notes,
-      tiers:q.tiers||[]
+      tiers:q.tiers||[],p3:q.p3,p3Cur:q.p3Cur||'USD',
+      stage:q.stage,deal:q.deal
     };
-    return qtSnapToLine(snap);
+    return qtSnapToLine(snap, proj);
   }
-  return hist.map(h=>qtSnapToLine(backfill(h))).join('\n\n');
+  // Newest first (same as history display), separated by blank line
+  return hist.slice().reverse().map(h=>qtSnapToLine(backfill(h), proj)).join('\n\n');
 }
 
 // Group quotes by project name, return array of {project, company, quotes[]}
