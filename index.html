@@ -5724,26 +5724,19 @@ function qtSeed(){
       <div style="font-size:10px;color:var(--c-muted);margin-top:2px;">💡 可上传多张 Logo，PDF 中横向排列。预览时可拖动各 Logo 调整位置。</div>
     </div>
 
-    <!-- Stamp -->
+    <!-- Stamp (multi-image) -->
     <div class="fg" style="margin-top:6px;">
-      <label style="font-weight:600;color:var(--c-text);">公章 / 授权签名</label>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+      <label style="font-weight:600;color:var(--c-text);">公章 / 授权签名（支持多张）</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
         <label style="background:#1A3C5E;color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;">
-          📁 选择图片<input type="file" accept="image/*" style="display:none;" onchange="uploadCompanyImage('stamp',this)">
+          📁 添加图片<input type="file" accept="image/*" multiple style="display:none;" onchange="uploadCompanyImage('stamp',this)">
         </label>
-        <button onclick="clearCompanyImage('stamp')" style="background:none;border:1px solid var(--c-border);border-radius:5px;padding:4px 8px;font-size:11px;color:var(--c-muted);cursor:pointer;">✕ 清除</button>
+        <button onclick="clearCompanyImage('stamp')" style="background:none;border:1px solid var(--c-border);border-radius:5px;padding:4px 8px;font-size:11px;color:var(--c-muted);cursor:pointer;">✕ 清除全部</button>
       </div>
-      <div id="stamp-preview" style="display:none;">
-        <img id="stamp-preview-img" style="height:50px;display:block;max-width:130px;border-radius:4px;border:1px solid var(--c-border);padding:3px;" alt="stamp preview">
+      <div id="stamp-list" style="margin-bottom:4px;">
+        <div style="font-size:11px;color:var(--c-muted);padding:6px 0;">暂无公章</div>
       </div>
-      <div id="stamp-settings" style="display:none;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:6px;padding:8px;font-size:11px;margin-top:6px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <label style="color:var(--c-muted);min-width:50px;">大小</label>
-          <input type="range" id="stamp-size" min="40" max="120" value="70" oninput="updateStampSettings()" style="flex:1;height:4px;">
-          <span id="stamp-size-val" style="color:var(--c-text);min-width:28px;">70pt</span>
-        </div>
-        <div style="font-size:10px;color:var(--c-muted);margin-top:4px;">💡 在「预览/打印」界面可拖动公章调整位置</div>
-      </div>
+      <div style="font-size:10px;color:var(--c-muted);margin-top:2px;">💡 可上传多张公章，PDF 中并排显示在右下角。预览时可拖动各公章调整位置。</div>
     </div>
   </div>
   <div class="divider"></div>
@@ -6065,10 +6058,10 @@ function autoValidUntil(){
 function updDisp(){}  // kept for compatibility
 
 // ── Company Images: Logo & Stamp ──
-let _companyImages = { logos: [], stamp: null };
+let _companyImages = { logos: [], stamps: [] };
 // _companyImages.logos is an array of { dataUrl, height, invert, offsetX, offsetY }
 let _logoSettings = { height: 28, invert: true, offsetX: 0, offsetY: 0 }; // kept for legacy compat
-let _stampSettings = { size: 70, offsetX: 0, offsetY: 0 };
+let _stampSettings = { size: 70, offsetX: 0, offsetY: 0 }; // legacy compat, used for single stamp fallback
 
 (function loadCompanyImages(){
   try {
@@ -6080,11 +6073,16 @@ let _stampSettings = { size: 70, offsetX: 0, offsetY: 0 };
       const ls = saved.logoSettings || _logoSettings;
       _companyImages.logos = [{ dataUrl: saved.logo, height: ls.height||28, invert: ls.invert!==false, offsetX: ls.offsetX||0, offsetY: ls.offsetY||0 }];
     }
-    if(saved.stamp) { _companyImages.stamp = saved.stamp; _showImagePreview('stamp', saved.stamp); }
-    if(saved.stampSettings) _stampSettings = {..._stampSettings, ...saved.stampSettings};
+    // Load stamps (new array format or legacy single)
+    if(saved.stamps && Array.isArray(saved.stamps)){
+      _companyImages.stamps = saved.stamps;
+    } else if(saved.stamp) {
+      const ss2 = saved.stampSettings || _stampSettings;
+      _companyImages.stamps = [{ dataUrl: saved.stamp, size: ss2.size||70, offsetX: ss2.offsetX||0, offsetY: ss2.offsetY||0 }];
+    }
     setTimeout(()=>{
-      const ss = document.getElementById('stamp-size');   if(ss) { ss.value = _stampSettings.size;  const ssv=document.getElementById('stamp-size-val'); if(ssv)ssv.textContent  = _stampSettings.size+'pt'; }
       _renderLogoList();
+      _renderStampList();
     }, 300);
   } catch(e) {}
 })();
@@ -6148,6 +6146,41 @@ function removeOneLogo(idx){
   toast('🗑 已删除 Logo ' + (idx+1));
 }
 
+function _renderStampList(){
+  const container = document.getElementById('stamp-list');
+  if(!container) return;
+  const stamps = _companyImages.stamps;
+  if(!stamps || stamps.length === 0){
+    container.innerHTML = '<div style="font-size:11px;color:var(--c-muted);padding:6px 0;">暂无公章</div>';
+    return;
+  }
+  container.innerHTML = stamps.map((st, idx) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:5px;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:6px;margin-bottom:6px;">
+      <img src="${st.dataUrl}" style="height:${st.size||70}px;max-width:${st.size||70}px;object-fit:contain;opacity:0.88;flex-shrink:0;border-radius:4px;" alt="stamp ${idx+1}">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:11px;color:var(--c-muted);margin-bottom:3px;">公章 ${idx+1}</div>
+        <div style="display:flex;align-items:center;gap:5px;">
+          <span style="font-size:10px;color:var(--c-muted);min-width:28px;">大小</span>
+          <input type="range" min="40" max="120" value="${st.size||70}" oninput="updateOneStampSize(${idx},this.value)" style="flex:1;height:3px;">
+          <span style="font-size:10px;color:var(--c-text);min-width:24px;">${st.size||70}pt</span>
+        </div>
+      </div>
+      <button onclick="removeOneStamp(${idx})" style="background:rgba(255,92,110,.1);border:1px solid rgba(255,92,110,.22);border-radius:4px;cursor:pointer;color:#c0392b;font-size:11px;padding:3px 7px;flex-shrink:0;">✕</button>
+    </div>`).join('');
+}
+function updateOneStampSize(idx, val){
+  if(!_companyImages.stamps[idx]) return;
+  _companyImages.stamps[idx].size = parseInt(val);
+  _saveImageSettings();
+  _renderStampList();
+}
+function removeOneStamp(idx){
+  _companyImages.stamps.splice(idx, 1);
+  _saveImageSettings();
+  _renderStampList();
+  toast('🗑 已删除公章 ' + (idx+1));
+}
+
 function uploadCompanyImage(type, input){
   const files = Array.from(input.files);
   if(!files.length) return;
@@ -6167,15 +6200,21 @@ function uploadCompanyImage(type, input){
       reader.readAsDataURL(file);
     });
   } else {
-    const file = files[0];
-    const reader = new FileReader();
-    reader.onload = e => {
-      _companyImages[type] = e.target.result;
-      _showImagePreview(type, e.target.result);
-      _saveImageSettings();
-      toast('✅ 已上传公章');
-    };
-    reader.readAsDataURL(file);
+    // stamps — support multiple
+    let loaded2 = 0;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        _companyImages.stamps.push({ dataUrl: e.target.result, size: 70, offsetX: 0, offsetY: 0 });
+        loaded2++;
+        if(loaded2 === files.length){
+          _saveImageSettings();
+          _renderStampList();
+          toast('✅ 已上传 ' + files.length + ' 张公章');
+        }
+      };
+      reader.readAsDataURL(file);
+    });
   }
   input.value = '';
 }
@@ -6187,13 +6226,10 @@ function clearCompanyImage(type){
     _renderLogoList();
     toast('🗑 已清除所有 Logo');
   } else {
-    _companyImages[type] = null;
-    const wrap = document.getElementById(type + '-preview');
-    const settings = document.getElementById(type + '-settings');
-    if(wrap) wrap.style.display = 'none';
-    if(settings) settings.style.display = 'none';
+    _companyImages.stamps = [];
     _saveImageSettings();
-    toast('🗑 已清除公章');
+    _renderStampList();
+    toast('🗑 已清除所有公章');
   }
 }
 
@@ -6211,8 +6247,8 @@ function _saveImageSettings(){
     const saved = JSON.parse(localStorage.getItem('cesipc_images') || '{}');
     saved.logos = _companyImages.logos || [];
     delete saved.logo; delete saved.logoSettings;
-    if(_companyImages.stamp) saved.stamp = _companyImages.stamp; else delete saved.stamp;
-    saved.stampSettings = _stampSettings;
+    saved.stamps = _companyImages.stamps || [];
+    delete saved.stamp; delete saved.stampSettings;
     localStorage.setItem('cesipc_images', JSON.stringify(saved));
   } catch(e) {}
 }
@@ -6235,11 +6271,15 @@ function getLogoHtml(){
 }
 
 function getStampHtml(){
-  if(!_companyImages.stamp) return '';
-  const s = _stampSettings.size || 70;
-  const ox = _stampSettings.offsetX || 0;
-  const oy = _stampSettings.offsetY || 0;
-  return `<img id="pdf-stamp-img" src="${_companyImages.stamp}" style="height:${s}pt;max-width:${s}pt;object-fit:contain;opacity:0.88;position:absolute;bottom:5pt;right:5pt;transform:translate(${ox}px,${oy}px);cursor:move;" alt="stamp" onmousedown="startDragImage(event,'stamp')">`;
+  const stamps = _companyImages.stamps;
+  if(!stamps || stamps.length === 0) return '';
+  // Render stamps stacked bottom-right; offset each slightly if multiple
+  return stamps.map((st, idx) => {
+    const s = st.size || 70;
+    const ox = (st.offsetX || 0) + (idx * 4);
+    const oy = st.offsetY || 0;
+    return `<img id="pdf-stamp-img-${idx}" src="${st.dataUrl}" style="height:${s}pt;max-width:${s}pt;object-fit:contain;opacity:0.88;position:absolute;bottom:${5 + idx * 2}pt;right:${5 + idx * (s + 4)}pt;transform:translate(${ox}px,${oy}px);cursor:move;" alt="stamp${idx+1}" onmousedown="startDragImage(event,'stamp',${idx})">`;
+  }).join('');
 }
 
 // ── Drag logo/stamp in PDF preview overlay ──
@@ -6252,7 +6292,8 @@ function startDragImage(e, type, idx){
     const lg = (_companyImages.logos && _companyImages.logos[idx||0]);
     settings = lg || { offsetX: 0, offsetY: 0 };
   } else {
-    settings = _stampSettings;
+    const st2 = (_companyImages.stamps && _companyImages.stamps[idx||0]);
+    settings = st2 || { offsetX: 0, offsetY: 0 };
   }
   const startOX = settings.offsetX || 0, startOY = settings.offsetY || 0;
   function onMove(ev){
@@ -6448,7 +6489,16 @@ function setMode(t,m){
 
   // Update ffoot colspan
   document.getElementById(t+'-mid-spacer').colSpan = isSplit ? 5 : 1;
-  document.getElementById(t+'-sh-lbl').colSpan    = isSplit ? 8 : 4;
+  const shLbl = document.getElementById(t+'-sh-lbl');
+  if(shLbl){
+    shLbl.colSpan = isSplit ? 8 : 4;
+    shLbl.innerHTML = isSplit
+      ? 'Shipping <span style="font-size:9px;opacity:.6">(auto: Qty &times; Shipping/unit)</span>'
+      : 'Shipping';
+  }
+  // Always keep shipping row visible when switching modes
+  const shRowEl = document.getElementById(t+'-sh')?.closest('tr');
+  if(shRowEl) shRowEl.style.display = '';
   document.getElementById(t+'-total-lbl').colSpan = isSplit ? 9 : 5;
 
   // Rebuild all existing rows in new mode
@@ -8062,7 +8112,13 @@ function applyDescTpl() {
     i === 0 ? `<strong>${l}</strong>` : l
   ).join('<br>');
 
+  // Restore _fmtTarget so toolbar formatting still works on this element
+  _fmtTarget = _descTplTarget;
+  _savedRange = null;
+
   closeDescTpl();
+  // Re-focus the element so next selection is tracked correctly
+  setTimeout(()=>{ if(_fmtTarget){ _fmtTarget.focus(); } }, 50);
 }
 
 // Backdrop click disabled — prevent accidental close while typing
