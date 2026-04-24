@@ -7092,13 +7092,15 @@ function saveDocState() {
     fieldVals[id] = el ? el.value : '';
   });
 
-  // Collect row data raw (input values)
+  // Collect row data with named fields for reliable restore
   function rawRows(tbodyId) {
     const rows = [];
+    const t = tbodyId.split('-')[0];
+    const isSplitMode = (t === 'q' || t === 'pi') ? _mode[t] === 'split' : false;
     document.querySelectorAll('#' + tbodyId + ' tr').forEach(tr => {
-      const inputs = [...tr.querySelectorAll('input,select,textarea')].map(el => el.value);
+      const allInputs = [...tr.querySelectorAll('input,select,textarea')].map(el => el.value);
       const ce = tr.querySelector('div[contenteditable],td[contenteditable]');
-      rows.push({ inputs, ds: ce ? ce.innerHTML : '' });
+      rows.push({ inputs: allInputs, ds: ce ? ce.innerHTML : '', isSplit: isSplitMode });
     });
     return rows;
   }
@@ -7156,22 +7158,75 @@ function loadDocState(id) {
     if (_mode.pi !== doc.modes.pi) setMode('pi', doc.modes.pi);
   }
 
-  // Restore rows helper
+  // Restore rows helper - pass data directly to addR via prefill
   function restoreRows(tbodyId, rawRowsData, cfFn) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
     tbody.innerHTML = '';
     const t = tbodyId.split('-')[0];
     rc[t] = 0;
+    const isSplit = (t === 'q' || t === 'pi') ? _mode[t] === 'split' : false;
     (rawRowsData || []).forEach(r => {
-      const rowId = ++rc[t];
-      addR(t);
-      const tr = document.getElementById(t + '-r-' + rowId);
-      if (!tr) return;
-      const inputs = tr.querySelectorAll('input,select,textarea');
-      (r.inputs || []).forEach((val, i) => { if (inputs[i]) inputs[i].value = val; });
-      const ce = tr.querySelector('div[contenteditable],td[contenteditable]');
-      if (ce && r.ds) ce.innerHTML = r.ds;
+      const inp = r.inputs || [];
+      if (t === 'q' || t === 'pi') {
+        // Use isSplit from saved row if available, otherwise use current mode
+        const rowIsSplit = r.isSplit !== undefined ? r.isSplit : isSplit;
+        if (rowIsSplit) {
+          // inputs: [0]=textarea(pn), [1]=qty, [2]=bb, [3]=ram, [4]=ssd, [5]=sh, [6]=ai
+          addR(t, {
+            pn:  inp[0] || '',
+            ds:  r.ds   || '',
+            qty: inp[1] || '0',
+            bb:  inp[2] || '',
+            ram: inp[3] || '',
+            ssd: inp[4] || '',
+            sh:  inp[5] || '',
+            ai:  inp[6] || '',
+          });
+        } else {
+          // simple: [0]=textarea(pn), [1]=qty, [2]=cfg
+          addR(t, {
+            pn:  inp[0] || '',
+            ds:  r.ds   || '',
+            qty: inp[1] || '0',
+            cfg: inp[2] || '',
+          });
+        }
+      } else if (t === 'ci') {
+        // ci inputs: [0]=model, [1]=hscode, [2]=description, [3]=qty, [4]=unitprice
+        const rowId = ++rc.ci;
+        const tr2 = document.createElement('tr');
+        tr2.id = 'ci-r-' + rowId;
+        tr2.innerHTML = `<td style="color:#8899AA;text-align:center;">${rowId}</td>
+          <td><input type="text" value="${(inp[0]||'').replace(/"/g,'&quot;')}" style="width:86px;"/></td>
+          <td><input type="text" value="${(inp[1]||'').replace(/"/g,'&quot;')}" style="width:78px;"/></td>
+          <td><input type="text" value="${(inp[2]||'').replace(/"/g,'&quot;')}" style="min-width:110px;width:100%;"/></td>
+          <td><input type="number" value="${inp[3]||0}" min="0" style="width:52px;" oninput="cCI()"/></td>
+          <td><input type="number" value="${inp[4]||''}" min="0" step="0.01" placeholder="0.00" style="width:82px;text-align:right;" oninput="cCI()"/></td>
+          <td class="amt" id="ci-a-${rowId}">0.00</td>
+          <td><button class="btn btn-d btn-sm" onclick="delR('ci',${rowId})">✕</button></td>`;
+        tbody.appendChild(tr2);
+      } else if (t === 'pk') {
+        // pk inputs: [0]=model, [1]=desc, [2]=pcs, [3]=packing, [4]=cartons, [5]=qty/ctn, [6]=nw, [7]=gw, [8]=L, [9]=W, [10]=H
+        const rowId = ++rc.pk;
+        const tr2 = document.createElement('tr');
+        tr2.id = 'pk-r-' + rowId;
+        tr2.innerHTML = `<td style="color:#8899AA;text-align:center;">${rowId}</td>
+          <td><input type="text" value="${(inp[0]||'').replace(/"/g,'&quot;')}" style="width:80px;"/></td>
+          <td><input type="text" value="${(inp[1]||'').replace(/"/g,'&quot;')}" style="min-width:90px;width:100%;"/></td>
+          <td><input type="number" value="${inp[2]||0}" min="0" style="width:46px;" oninput="cPK()"/></td>
+          <td><input type="text" value="${inp[3]||'Carton'}" style="width:58px;"/></td>
+          <td><input type="number" value="${inp[4]||1}" min="0" style="width:46px;" oninput="cPK()"/></td>
+          <td><input type="number" value="${inp[5]||0}" min="0" style="width:46px;"/></td>
+          <td><input type="number" value="${inp[6]||0}" min="0" step="0.01" style="width:50px;" oninput="cPK()"/></td>
+          <td><input type="number" value="${inp[7]||0}" min="0" step="0.01" style="width:50px;" oninput="cPK()"/></td>
+          <td><input type="number" value="${inp[8]||0}" min="0" step="0.1" style="width:40px;" oninput="cCBM(${rowId})"/></td>
+          <td><input type="number" value="${inp[9]||0}" min="0" step="0.1" style="width:40px;" oninput="cCBM(${rowId})"/></td>
+          <td><input type="number" value="${inp[10]||0}" min="0" step="0.1" style="width:40px;" oninput="cCBM(${rowId})"/></td>
+          <td class="amt" id="pk-c-${rowId}">0.00000</td>
+          <td><button class="btn btn-d btn-sm" onclick="delR('pk',${rowId})">✕</button></td>`;
+        tbody.appendChild(tr2);
+      }
     });
     if (cfFn) cfFn();
   }
