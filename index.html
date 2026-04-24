@@ -6760,7 +6760,7 @@ function cCI(){
   let tq=0,ta=0;
   document.querySelectorAll('#ci-b tr').forEach(tr=>{
     const i=tr.querySelectorAll('input');
-    const qty=parseFloat(i[1]?.value)||0,u=parseFloat(i[2]?.value)||0,a=qty*u;
+    const qty=parseFloat(i[3]?.value)||0,u=parseFloat(i[4]?.value)||0,a=qty*u;
     tq+=qty;ta+=a;
     const id=tr.id.split('-').pop();
     const el=document.getElementById('ci-a-'+id);if(el)el.textContent=fa(a);
@@ -6786,7 +6786,7 @@ function cPK(){
     const nw=parseFloat(i[6]?.value)||0,gw=parseFloat(i[7]?.value)||0;
     const id=tr.id.split('-').pop();
     const cbm=parseFloat(document.getElementById('pk-c-'+id)?.textContent)||0;
-    tp+=pcs;tc+=ctns;tnw+=nw*pcs;tgw+=gw*pcs;tcbm+=cbm;
+    tp+=pcs;tc+=ctns;tnw+=nw*ctns;tgw+=gw*ctns;tcbm+=cbm;
   });
   document.getElementById('pk-tp').textContent=tp;
   document.getElementById('pk-tc').textContent=tc;
