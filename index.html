@@ -6188,7 +6188,7 @@ function addR(t, prefill){
     if(isSplit){
       tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc[t]}</td>
         <td><textarea placeholder="EPC-S1092A&#10;料号" style="width:90px;min-height:28px;resize:vertical;font-size:11px;padding:4px 5px;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--c-text);font-family:inherit;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.pn||''}</textarea></td>
-        <td style="padding:0;position:relative;min-width:160px;"><div contenteditable="true" style="min-width:160px;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;color:var(--c-text);min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds||''}</div><button onmousedown="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
+        <td style="padding:0;position:relative;min-width:160px;"><div contenteditable="true" style="min-width:160px;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds||''}</div><button onmousedown="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
         <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
         <td><input type="number" value="${p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:70px;text-align:right;" oninput="${cf}()"/></td>
         <td><input type="number" value="${p.ram||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;"/></td>
@@ -6201,7 +6201,7 @@ function addR(t, prefill){
       // simple mode: Part No. | Description | Qty | Unit Price (Configured) | Grand Total
       tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc[t]}</td>
         <td><textarea placeholder="EPC-S1092A&#10;料号" style="width:90px;min-height:28px;resize:vertical;font-size:11px;padding:4px 5px;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--c-text);font-family:inherit;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.pn||''}</textarea></td>
-        <td style="padding:0;position:relative;min-width:160px;"><div contenteditable="true" style="min-width:160px;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;color:var(--c-text);min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds||''}</div><button onmousedown="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
+        <td style="padding:0;position:relative;min-width:160px;"><div contenteditable="true" style="min-width:160px;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds||''}</div><button onmousedown="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
         <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
         <td><input type="number" value="${p.cfg||p.ai||p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:100px;text-align:right;" oninput="${cf}()"/></td>
         <td class="amt" id="${t}-a-${id}">0.00</td>
@@ -7565,6 +7565,23 @@ function syncFromQ(target) {
 // ─── Description Template Modal ───
 let _descTplTarget = null;
 
+function _descTplSaveMemory() {
+  const g = id => (document.getElementById(id)?.value || '').trim();
+  const mem = {
+    title: g('dtpl-title'),
+    f1: g('dtpl-1'), f2: g('dtpl-2'), f3: g('dtpl-3'), f4: g('dtpl-4'),
+    f5: g('dtpl-5'), f6: g('dtpl-6'), f7: g('dtpl-7')
+  };
+  try { localStorage.setItem('descTplMemory', JSON.stringify(mem)); } catch(e) {}
+}
+
+function _descTplLoadMemory() {
+  try {
+    const raw = localStorage.getItem('descTplMemory');
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
 function openDescTpl(btn) {
   // Find the contenteditable div in the same td
   const td = btn.closest('td');
@@ -7585,11 +7602,23 @@ function openDescTpl(btn) {
       g('dtpl-' + i).value = match ? match[1] : line;
     }
   } else {
-    // Clear fields
-    ['dtpl-title','dtpl-1','dtpl-2','dtpl-3','dtpl-4','dtpl-5','dtpl-6'].forEach(id => {
-      document.getElementById(id).value = '';
-    });
-    document.getElementById('dtpl-7').value = 'Available';
+    // Load from memory if available, otherwise clear
+    const mem = _descTplLoadMemory();
+    if (mem) {
+      document.getElementById('dtpl-title').value = mem.title || '';
+      document.getElementById('dtpl-1').value = mem.f1 || '';
+      document.getElementById('dtpl-2').value = mem.f2 || '';
+      document.getElementById('dtpl-3').value = mem.f3 || '';
+      document.getElementById('dtpl-4').value = mem.f4 || '';
+      document.getElementById('dtpl-5').value = mem.f5 || '';
+      document.getElementById('dtpl-6').value = mem.f6 || '';
+      document.getElementById('dtpl-7').value = mem.f7 || 'Available';
+    } else {
+      ['dtpl-title','dtpl-1','dtpl-2','dtpl-3','dtpl-4','dtpl-5','dtpl-6'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('dtpl-7').value = 'Available';
+    }
   }
 
   document.getElementById('desc-tpl-bg').style.display = 'flex';
@@ -7608,10 +7637,14 @@ function applyDescTpl() {
   const lines = [];
   const title = g('dtpl-title');
   if (title) lines.push(title);
+  let num = 1;
   labels.forEach((lbl, i) => {
     const val = g('dtpl-' + (i + 1));
-    if (val) lines.push((i + 1) + '. ' + lbl + ': ' + val);
+    if (val) lines.push((num++) + '. ' + lbl + ': ' + val);
   });
+
+  // Save to memory before applying
+  _descTplSaveMemory();
 
   // Write as plain text with line breaks
   _descTplTarget.innerHTML = lines.map((l, i) =>
