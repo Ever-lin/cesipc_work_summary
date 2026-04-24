@@ -1199,6 +1199,15 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           </div>
         </div>
       </div>
+      <!-- 阶梯报价区（单品编辑模式） -->
+      <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border2)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:600;color:var(--text2)">📊 数量阶梯报价（选填）</span>
+          <button onclick="qtSingleAddTier()" style="background:var(--blue-bg);color:var(--blue-text);border:1px solid var(--blue);border-radius:3px;font-size:11px;padding:2px 8px;cursor:pointer">＋ 加阶梯</button>
+        </div>
+        <div id="qf-single-tiers" style="display:flex;flex-direction:column;gap:4px"></div>
+        <div id="qf-single-tiers-hint" style="font-size:10px;color:var(--text3);margin-top:3px;display:none">💡 有阶梯时，Quotation 将为每档数量生成独立行；总价列可按需隐藏</div>
+      </div>
       <!-- 历史价格记录 -->
       <div id="qf-history-wrap" style="display:none;margin-top:8px">
         <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;padding-top:4px;border-top:1px solid var(--border2)">📋 价格变更历史</div>
@@ -3456,46 +3465,6 @@ function genWeekly(){
   toast('✅ 周报已生成！');
   }catch(e){console.error('genWeekly error:',e);toast('❌ 生成周报时出错：'+e.message);}
 }
-// 周报月份颜色映射（12个月循环配色，方便区分）
-const _weeklyMonthColors=[
-  {border:'#185FA5',bg:'#E6F1FB',text:'#0C447C'},  // 4月 蓝
-  {border:'#1D9E75',bg:'#EAF3DE',text:'#27500A'},  // 5月 绿
-  {border:'#EF9F27',bg:'#FAEEDA',text:'#633806'},  // 6月 琥珀
-  {border:'#9B59B6',bg:'#F3EBF9',text:'#5B2C6F'},  // 7月 紫
-  {border:'#E74C3C',bg:'#FDEDEC',text:'#922B21'},  // 8月 红
-  {border:'#16A085',bg:'#E1F5EE',text:'#085041'},  // 9月 青绿
-  {border:'#2980B9',bg:'#EAF4FB',text:'#1A5276'},  // 10月 深蓝
-  {border:'#27AE60',bg:'#EAFAF1',text:'#145A32'},  // 11月 深绿
-  {border:'#F39C12',bg:'#FEF9E7',text:'#7D6608'},  // 12月 金
-  {border:'#8E44AD',bg:'#F5EEF8',text:'#6C3483'},  // 1月 深紫
-  {border:'#C0392B',bg:'#FDEDEC',text:'#7B241C'},  // 2月 深红
-  {border:'#17A589',bg:'#E8F8F5',text:'#0E6655'},  // 3月 青
-];
-function _wColor(month){const m=parseInt(month)||4;const fyMonths=[4,5,6,7,8,9,10,11,12,1,2,3];const idx=fyMonths.indexOf(m);return _weeklyMonthColors[idx>=0?idx:0];}
-
-function _splitWeeklyTxt(txt){
-  // Split txt into named sections by heading patterns
-  const lines=txt.split('\n');
-  const sections={header:[],perf:[],projects:[],longline:[],target:[],plan:[],nextlong:[]};
-  let cur='header';
-  lines.forEach(l=>{
-    const t=l.trim();
-    if(/^1[．.]\s*(本周总业绩|业绩)/.test(t)||/^─{5,}/.test(t)&&cur==='header'){if(cur==='header'){sections.header.push(l);cur='perf';return;}}
-    if(/^─{5,}/.test(t)&&cur==='perf'){cur='projects';return;}
-    if(/^─{5,}/.test(t)&&cur==='projects'){cur='longline';return;}
-    if(/^─{5,}/.test(t)&&cur==='longline'){cur='target';return;}
-    if(/^─{5,}/.test(t)&&cur==='target'){cur='plan';return;}
-    if(/^─{5,}/.test(t)&&cur==='plan'){cur='nextlong';return;}
-    if(/^下周目标|^下周工作目标/.test(t))cur='target';
-    else if(/^下周工作计划/.test(t))cur='plan';
-    else if(/^下周长线工作/.test(t))cur='nextlong';
-    else if(/^重点项目/.test(t))cur='projects';
-    else if(/^长线工作\s*&/.test(t)||/^长线工作&/.test(t))cur='longline';
-    sections[cur].push(l);
-  });
-  return sections;
-}
-
 function renderGeneratedWeeklies(expandKey){
   if(!state.genWeeklies)state.genWeeklies=[];
   const list=state.genWeeklies.slice().reverse();
@@ -3504,55 +3473,20 @@ function renderGeneratedWeeklies(expandKey){
   el.innerHTML=list.map(w=>{
     const hid='gw_'+w.id;
     const isNew=w.key===expandKey;
-    const c=_wColor(w.month);
-    const sec=_splitWeeklyTxt(w.txt||'');
-    const blk=(label,lines,secKey)=>{
-      const txt=(lines||[]).join('\n').trim();
-      if(!txt)return'';
-      return`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <span style="font-size:12px;font-weight:500;color:var(--text2)">${label}</span>
-        <button class="btn btn-xs" onclick="event.stopPropagation();_copyWeeklySection(${w.id},'${secKey}')">复制</button>
-      </div>
-      <div style="font-size:12px;white-space:pre-wrap;line-height:1.7;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:10px">${txt}</div>`;
-    };
-    const weekLabel=w.week||'';
-    const monthInt=parseInt(w.month)||4;
-    const weekNum=['第一周','第二周','第三周','第四周','第五周'].indexOf(weekLabel);
-    const weekBadgeColors=['#185FA5','#1D9E75','#EF9F27','#9B59B6','#16A085'];
-    const weekBadgeBgs=['#E6F1FB','#EAF3DE','#FAEEDA','#F3EBF9','#E1F5EE'];
-    const wbc=weekNum>=0?weekBadgeColors[weekNum]:c.border;
-    const wbg=weekNum>=0?weekBadgeBgs[weekNum]:c.bg;
-    return`<div class="card" style="margin-top:8px;border-left:4px solid ${c.border};background:${c.bg}08">
-      <div class="card-header" style="margin-bottom:0;cursor:pointer;background:${c.bg};border-radius:6px 6px 0 0;padding:10px 12px" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-size:13px;font-weight:600;color:${c.text}"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> 📋 ${w.fy} ${w.month}月 ${w.week} 周报</span>
-          <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:${c.border};color:#fff">${w.month}月</span>
-          <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:${wbc};color:#fff">${weekLabel}</span>
-        </div>
+    return`<div class="card" style="margin-top:8px;border-left:4px solid #1D9E75">
+      <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
+        <span style="font-size:13px;font-weight:500;color:#27500A"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> 📋 ${w.fy} ${w.month}月 ${w.week} 周报</span>
         <div class="inline-flex">
-          <button class="btn btn-xs" onclick="event.stopPropagation();copyGenTxt('genWeeklies',${w.id})">复制全部</button>
+          <button class="btn btn-xs" onclick="event.stopPropagation();copyGenTxt('genWeeklies',${w.id})">复制</button>
           <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delGenWeekly(${w.id})">删除</button>
         </div>
       </div>
-      <div id="${hid}" style="display:${isNew?'block':'none'};margin-top:10px;padding:0 4px">
-        ${blk('📊 业绩 & 回款',sec.perf,'perf')}
-        ${blk('🗂 重点项目（按项目节点划分）',sec.projects,'projects')}
-        ${blk('🔗 长线工作 & 日常事务',sec.longline,'longline')}
-        ${blk('🎯 下周目标',sec.target,'target')}
-        ${blk('📅 下周工作计划',sec.plan,'plan')}
-        ${blk('🔄 下周长线工作',sec.nextlong,'nextlong')}
-        <div style="font-size:11px;color:var(--text2);margin-top:6px;padding-bottom:4px">${w.savedAt}</div>
+      <div id="${hid}" style="display:${isNew?'block':'none'};margin-top:8px">
+        <div class="export-area" style="margin-top:0;max-height:420px">${w.txt}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:6px">${w.savedAt}</div>
       </div>
     </div>`;
   }).join('');
-}
-function _copyWeeklySection(id,secKey){
-  const w=(state.genWeeklies||[]).find(x=>x.id===id);
-  if(!w||!w.txt){alert('暂无内容');return;}
-  const sec=_splitWeeklyTxt(w.txt);
-  const txt=(sec[secKey]||[]).join('\n').trim();
-  if(!txt){alert('该区块内容为空');return;}
-  navigator.clipboard.writeText(txt).then(()=>alert('已复制！'));
 }
 function delGenWeekly(id){if(!confirm('确认删除？'))return;state.genWeeklies=(state.genWeeklies||[]).filter(x=>x.id!==id);save();renderGeneratedWeeklies();}
 
@@ -3687,24 +3621,6 @@ function genMonthly(){
   }catch(e){console.error('genMonthly error:',e);toast('❌ 生成月报时出错：'+e.message);}
 }
 
-function _splitMonthlyTxt(txt){
-  const lines=txt.split('\n');
-  const sections={header:[],perf:[],projects:[],longline:[],target:[],plan:[],nextlong:[]};
-  let cur='header';
-  lines.forEach(l=>{
-    const t=l.trim();
-    if(/^1[．.]\s*(本月总业绩|业绩)/.test(t)){cur='perf';}
-    else if(/^重点项目/.test(t)){cur='projects';}
-    else if(/^长线工作\s*&/.test(t)||/^长线工作&/.test(t)){cur='longline';}
-    else if(/^下月目标/.test(t)){cur='target';}
-    else if(/^下月工作计划/.test(t)){cur='plan';}
-    else if(/^下月长线工作/.test(t)){cur='nextlong';}
-    else if(/^─{5,}/.test(t)){return;}
-    sections[cur].push(l);
-  });
-  return sections;
-}
-
 function renderGeneratedMonthlies(expandKey){
   if(!state.genMonthlies)state.genMonthlies=[];
   const list=state.genMonthlies.slice().reverse();
@@ -3713,47 +3629,20 @@ function renderGeneratedMonthlies(expandKey){
   el.innerHTML=list.map(m=>{
     const hid='gm_'+m.id;
     const isNew=m.key===expandKey;
-    const c=_wColor(m.month);
-    const sec=_splitMonthlyTxt(m.txt||'');
-    const blk=(label,lines,secKey)=>{
-      const txt=(lines||[]).join('\n').trim();
-      if(!txt)return'';
-      return`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <span style="font-size:12px;font-weight:500;color:var(--text2)">${label}</span>
-        <button class="btn btn-xs" onclick="event.stopPropagation();_copyMonthlySection(${m.id},'${secKey}')">复制</button>
-      </div>
-      <div style="font-size:12px;white-space:pre-wrap;line-height:1.7;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:10px">${txt}</div>`;
-    };
-    return`<div class="card" style="margin-top:8px;border-left:4px solid ${c.border}">
-      <div class="card-header" style="margin-bottom:0;cursor:pointer;background:${c.bg};border-radius:6px 6px 0 0;padding:10px 12px" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-size:13px;font-weight:600;color:${c.text}"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> 🗓 ${m.fy} ${m.month}月 月报</span>
-          <span style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:10px;font-weight:700;background:${c.border};color:#fff">${m.month}月</span>
-        </div>
+    return`<div class="card" style="margin-top:8px;border-left:4px solid #EF9F27">
+      <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
+        <span style="font-size:13px;font-weight:500;color:#633806"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> 🗓 ${m.fy} ${m.month}月 月报</span>
         <div class="inline-flex">
-          <button class="btn btn-xs" onclick="event.stopPropagation();copyGenTxt('genMonthlies',${m.id})">复制全部</button>
+          <button class="btn btn-xs" onclick="event.stopPropagation();copyGenTxt('genMonthlies',${m.id})">复制</button>
           <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delGenMonthly(${m.id})">删除</button>
         </div>
       </div>
-      <div id="${hid}" style="display:${isNew?'block':'none'};margin-top:10px;padding:0 4px">
-        ${blk('📊 业绩 & 回款',sec.perf,'perf')}
-        ${blk('🗂 重点项目（按项目节点划分）',sec.projects,'projects')}
-        ${blk('🔗 长线工作 & 日常事务',sec.longline,'longline')}
-        ${blk('🎯 下月目标',sec.target,'target')}
-        ${blk('📅 下月工作计划',sec.plan,'plan')}
-        ${blk('🔄 下月长线工作',sec.nextlong,'nextlong')}
-        <div style="font-size:11px;color:var(--text2);margin-top:6px;padding-bottom:4px">${m.savedAt}</div>
+      <div id="${hid}" style="display:${isNew?'block':'none'};margin-top:8px">
+        <div class="export-area" style="margin-top:0;max-height:420px">${m.txt}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:6px">${m.savedAt}</div>
       </div>
     </div>`;
   }).join('');
-}
-function _copyMonthlySection(id,secKey){
-  const m=(state.genMonthlies||[]).find(x=>x.id===id);
-  if(!m||!m.txt){alert('暂无内容');return;}
-  const sec=_splitMonthlyTxt(m.txt);
-  const txt=(sec[secKey]||[]).join('\n').trim();
-  if(!txt){alert('该区块内容为空');return;}
-  navigator.clipboard.writeText(txt).then(()=>alert('已复制！'));
 }
 function delGenMonthly(id){if(!confirm('确认删除？'))return;state.genMonthlies=(state.genMonthlies||[]).filter(x=>x.id!==id);save();renderGeneratedMonthlies();}
 
@@ -4244,6 +4133,8 @@ function qtOpenAdd(){
   // 新增模式：显示多产品区，隐藏单品区
   document.getElementById('qf-single-wrap').style.display='none';
   document.getElementById('qf-multi-wrap').style.display='block';
+  _qtSingleTiers=[];
+  qtRenderSingleTiers();
   qtInitProductRows();
   document.getElementById('qt-modal-bg').classList.add('open');
 }
@@ -4320,6 +4211,9 @@ function qtOpenEdit(id){
   document.getElementById('qf-p3-cur').value=r.p3Cur||'USD';
   qtTogglePriceMode();
   qtRenderHistoryInModal(r.priceHistory||[]);
+  // Load tiers into single-edit tier UI
+  _qtSingleTiers = (r.tiers||[]).map(t=>({qty:t.qty||'',cur:t.cur||'USD',price:t.price||''}));
+  qtRenderSingleTiers();
   document.getElementById('qt-modal-bg').classList.add('open');
 }
 function qtCloseModal(){document.getElementById('qt-modal-bg').classList.remove('open');}
@@ -4710,7 +4604,47 @@ function qtCalc(){
   document.getElementById('qt-p3warn').classList.toggle('show',diff!==null&&diff<0);
 }
 
+// ── 单品编辑模式：阶梯报价管理 ──
+let _qtSingleTiers=[];
+function qtSingleAddTier(){
+  _qtSingleTiers.push({qty:'',cur:'USD',price:''});
+  qtRenderSingleTiers();
+}
+function qtSingleRemoveTier(ti){
+  _qtSingleTiers.splice(ti,1);
+  qtRenderSingleTiers();
+}
+function qtSyncSingleTiersFromDOM(){
+  const cont=document.getElementById('qf-single-tiers');
+  if(!cont)return;
+  _qtSingleTiers=[];
+  cont.querySelectorAll('.qt-single-tier-row').forEach(row=>{
+    const qty=row.querySelector('[data-stf="qty"]')?.value||'';
+    const cur=row.querySelector('[data-stf="cur"]')?.value||'USD';
+    const price=row.querySelector('[data-stf="price"]')?.value||'';
+    _qtSingleTiers.push({qty,cur,price});
+  });
+}
+function qtRenderSingleTiers(){
+  const cont=document.getElementById('qf-single-tiers');
+  const hint=document.getElementById('qf-single-tiers-hint');
+  if(!cont)return;
+  cont.innerHTML=_qtSingleTiers.map((t,ti)=>`<div class="qt-single-tier-row" style="display:flex;gap:6px;align-items:center;background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:5px 8px">
+    <span style="font-size:11px;color:var(--text2);white-space:nowrap">数量</span>
+    <input type="number" data-stf="qty" value="${t.qty||''}" placeholder="台数" min="1" style="width:60px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)">
+    <span style="font-size:11px;color:var(--text2);white-space:nowrap">单价</span>
+    <select data-stf="cur" style="width:auto;padding:2px 5px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--bg)">
+      <option value="USD" ${(t.cur||'USD')==='USD'?'selected':''}>$</option>
+      <option value="CNY" ${t.cur==='CNY'?'selected':''}>¥</option>
+    </select>
+    <input type="number" data-stf="price" value="${t.price||''}" placeholder="0.00" min="0" step="0.01" style="width:80px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)" oninput="qtSyncSingleTiersFromDOM()">
+    <button onclick="qtSingleRemoveTier(${ti})" style="background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:3px;font-size:11px;padding:1px 7px;cursor:pointer;line-height:1.4">✕</button>
+  </div>`).join('');
+  if(hint)hint.style.display=_qtSingleTiers.length?'block':'none';
+}
+
 function qtBuildSnap(mode){
+  qtSyncSingleTiersFromDOM();
   return{
     savedAt:new Date().toISOString().slice(0,16).replace('T',' '),
     pmode:mode,
@@ -4737,6 +4671,7 @@ function qtBuildSnap(mode){
     partno:document.getElementById('qf-partno').value.trim(),
     shipping:document.getElementById('qf-shipping').value.trim(),
     notes:document.getElementById('qf-notes').value.trim(),
+    tiers:_qtSingleTiers.filter(t=>t.price!=='').map(t=>({qty:t.qty,cur:t.cur||'USD',price:t.price})),
   };
 }
 function qtDelHistory(quoteId, histIdx){
@@ -4838,8 +4773,8 @@ function qtRenderHistoryInModal(hist){
       +((parts.length||h.shipping)?'<div style="font-size:11px;margin-top:3px">'+partsHtml+(shippingHtml?(parts.length?'<span style="color:var(--border)"> · </span>':'')+shippingHtml:'')+'</div>':'')
       // ── 自定义配置
       +(h.custom?'<div style="font-size:11px;margin-top:2px">'+hl(idx,'custom','🔧 [Custom / 附加功能] '+h.custom,'color:var(--text2)')+'</div>':'')
-      // ── 阶梯报价
-      +((parentQ&&parentQ.tiers&&parentQ.tiers.length)?'<div style="font-size:11px;margin-top:3px;color:var(--blue-text)">📊 '+parentQ.tiers.map(t=>`${t.qty}台 × ${t.cur==='CNY'?'¥':'$'}${t.price}`).join(' &nbsp;/&nbsp; ')+'</div>':'')
+      // ── 阶梯报价（优先用快照里的tiers，兼容旧数据用parentQ.tiers）
+      +((h.tiers&&h.tiers.length)||(parentQ&&parentQ.tiers&&parentQ.tiers.length)?'<div style="font-size:11px;margin-top:3px;color:var(--blue-text)">📊 '+(h.tiers&&h.tiers.length?h.tiers:parentQ.tiers).map(t=>`${t.qty}台 × ${t.cur==='CNY'?'¥':'$'}${t.price}`).join(' &nbsp;/&nbsp; ')+'</div>':'')
       // ── 备注
       +(h.notes?'<div style="font-size:11px;margin-top:2px;font-style:italic">'+hl(idx,'notes','📝 '+h.notes,'color:var(--text2)')+'</div>':'')
       // ── 阶段/成交状态
@@ -5011,6 +4946,7 @@ function qtSave(){
     deal:document.getElementById('qf-deal').value,
     stage:document.getElementById('qf-stage').value.trim(),
     notes:document.getElementById('qf-notes').value.trim(),
+    tiers:snap.tiers||[],
   };
   if(qtEditId){
     const i=qtQuotes.findIndex(q=>String(q.id)===String(qtEditId));
@@ -5052,6 +4988,7 @@ function qtSaveAndAddProduct(){
   document.getElementById('qt-modal-title').textContent='新增产品报价（同项目）';
   ['qf-model','qf-partno','qf-cpu','qf-custom','qf-ram','qf-ramp','qf-ssd','qf-ssdp','qf-barbone','qf-p3','qf-price','qf-shipping','qf-total-price','qf-total-ram','qf-total-ssd'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('qf-qty').value='';
+  _qtSingleTiers=[];qtRenderSingleTiers();
   var bd=document.querySelector('input[name="qf-pmode"][value="breakdown"]');
   if(bd){bd.checked=true;if(typeof qtTogglePriceMode==='function')qtTogglePriceMode();}
   document.getElementById('qf-project').value=proj;
@@ -5433,6 +5370,7 @@ function qtSeed(){
             <button id="q-mode-simple" onclick="setMode('q','simple')">整合报价</button>
           </div>
           <button class="btn btn-g btn-sm" onclick="addR('q')">＋ 添加行</button>
+          <button id="q-toggle-total-btn" class="btn btn-sm" onclick="qtToggleTotalCol()" style="display:none;font-size:11px;background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber)">💰 隐藏总价</button>
           <button class="btn btn-p" onclick="showDoc('q')">预览 / 打印</button>
         </div>
       </div>
@@ -5889,7 +5827,10 @@ function addR(t, prefill){
         <td><button class="btn btn-d btn-sm" onclick="delR('${t}',${id})">✕</button></td>`;
     }
     tbody.appendChild(tr);
-    if(t==='q')cQ();else cPI();
+    if(t==='q'){cQ();
+      // Apply hidden state to new row if total col is hidden
+      if(_qTotalColHidden){const tds=tr.querySelectorAll('td');const gtTd=tds[tds.length-2];if(gtTd)gtTd.style.display='none';}
+    }else cPI();
   }
   if(t==='ci'){
     const tbody=document.getElementById('ci-b');
@@ -5933,6 +5874,9 @@ function delR(t,id){
 function cQ(){
   const isSplit=_mode.q==='split';
   let tq=0,ta=0,tsh=0;
+  const rowCount=document.querySelectorAll('#q-b tr').length;
+  const toggleBtn=document.getElementById('q-toggle-total-btn');
+  if(toggleBtn)toggleBtn.style.display=rowCount>0?'':'none';
   document.querySelectorAll('#q-b tr').forEach(tr=>{
     const i=tr.querySelectorAll('input');
     let qty,p;
@@ -5955,6 +5899,35 @@ function cQ(){
   if(isSplit){const shEl=document.getElementById('q-sh');if(shEl)shEl.value=tsh.toFixed(2);}
   const sh=parseFloat(document.getElementById('q-sh')?.value)||0;
   document.getElementById('q-gt').textContent=fa(ta+sh);
+}
+
+let _qTotalColHidden=false;
+function qtToggleTotalCol(){
+  _qTotalColHidden=!_qTotalColHidden;
+  const btn=document.getElementById('q-toggle-total-btn');
+  // Toggle Grand Total column header
+  const thead=document.getElementById('q-thead');
+  if(thead){
+    const ths=thead.querySelectorAll('th');
+    // Grand Total is 2nd-to-last th (index = ths.length-2)
+    const gtTh=ths[ths.length-2];
+    if(gtTh)gtTh.style.display=_qTotalColHidden?'none':'';
+  }
+  // Toggle Grand Total cells in each row
+  document.querySelectorAll('#q-b tr').forEach(tr=>{
+    const tds=tr.querySelectorAll('td');
+    // Grand Total td is 2nd-to-last
+    const gtTd=tds[tds.length-2];
+    if(gtTd)gtTd.style.display=_qTotalColHidden?'none':'';
+  });
+  // Toggle tfoot Grand Total cell
+  const gtCell=document.getElementById('q-ta');
+  if(gtCell)gtCell.style.display=_qTotalColHidden?'none':'';
+  const gtRow=document.getElementById('q-gt');
+  if(gtRow)gtRow.closest('tr').style.display=_qTotalColHidden?'none':'';
+  const shRow=document.getElementById('q-sh')?.closest('tr');
+  if(shRow)shRow.style.display=_qTotalColHidden?'none':'';
+  if(btn){btn.textContent=_qTotalColHidden?'💰 显示总价':'💰 隐藏总价';btn.style.background=_qTotalColHidden?'var(--green-bg)':'var(--amber-bg)';btn.style.color=_qTotalColHidden?'var(--green-text)':'var(--amber-text)';}
 }
 function cPI(){
   const isSplit=_mode.pi==='split';
@@ -7006,11 +6979,31 @@ function doDocImportFromQuotes(proj, mode, target) {
       }
     };
 
-    // If tiers exist, generate a row per tier
+    // If tiers exist, generate a row per tier (Q only; PI uses main price)
     const tiers = it.tiers || [];
-    if (tiers.length > 0) {
+    if (tiers.length > 0 && docKey === 'q') {
       tiers.forEach(t => {
-        addOneRow(t.qty || it.qty || '1', t.price != null ? String(t.price) : (it.price != null ? String(it.price) : ''));
+        const tierQty = t.qty || it.qty || '1';
+        const tierPrice = t.price != null ? String(t.price) : (it.price != null ? String(it.price) : '');
+        if (mode === 'split') {
+          addR(docKey, {
+            pn:  it.model || '',
+            ds:  `[${tierQty}台] ${desc}`.trim(),
+            qty: tierQty,
+            bb:  it.barbone != null ? String(it.barbone) : '',
+            ram: it.ramp   != null ? String(it.ramp)    : '',
+            ssd: it.ssdp   != null ? String(it.ssdp)    : '',
+            sh:  '',
+            ai:  tierPrice,
+          });
+        } else {
+          addR(docKey, {
+            pn:  it.model || '',
+            ds:  `[${tierQty}台] ${desc}`.trim(),
+            qty: tierQty,
+            cfg: tierPrice,
+          });
+        }
       });
     } else {
       addOneRow(it.qty || '1', it.price != null ? String(it.price) : '');
