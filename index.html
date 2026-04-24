@@ -5926,7 +5926,7 @@ function qtSeed(){
           <td id="pk-tnw" class="amt" style="color:#D9E2EC;">0.00</td>
           <td id="pk-tgw" class="amt" style="color:#D9E2EC;">0.00</td>
           <td colspan="3"></td>
-          <td id="pk-tcbm" class="amt" style="color:#D9E2EC;">0.00000</td><td></td>
+          <td id="pk-tcbm" class="amt" style="color:#D9E2EC;">0.00</td><td></td>
         </tr>
       </tfoot></table>
     </div>
@@ -6637,7 +6637,7 @@ function addR(t, prefill){
       <td><input type="number" value="0" min="0" step="0.1" style="width:40px;" oninput="cCBM(${id})"/></td>
       <td><input type="number" value="0" min="0" step="0.1" style="width:40px;" oninput="cCBM(${id})"/></td>
       <td><input type="number" value="0" min="0" step="0.1" style="width:40px;" oninput="cCBM(${id})"/></td>
-      <td class="amt" id="pk-c-${id}">0.00000</td>
+      <td class="amt" id="pk-c-${id}">0.00</td>
       <td><button class="btn btn-d btn-sm" onclick="delR('pk',${id})">✕</button></td>`;
     tbody.appendChild(tr);cPK();
   }
@@ -6775,7 +6775,7 @@ function cCBM(id){
   const i=tr.querySelectorAll('input');
   const ctns=parseFloat(i[4]?.value)||0,l=parseFloat(i[8]?.value)||0,w=parseFloat(i[9]?.value)||0,h=parseFloat(i[10]?.value)||0;
   const cbm=ctns*(l/100)*(w/100)*(h/100);
-  const el=document.getElementById('pk-c-'+id);if(el)el.textContent=cbm.toFixed(5);
+  const el=document.getElementById('pk-c-'+id);if(el)el.textContent=cbm.toFixed(2);
   cPK();
 }
 function cPK(){
@@ -6792,7 +6792,7 @@ function cPK(){
   document.getElementById('pk-tc').textContent=tc;
   document.getElementById('pk-tnw').textContent=fa(tnw);
   document.getElementById('pk-tgw').textContent=fa(tgw);
-  document.getElementById('pk-tcbm').textContent=tcbm.toFixed(5);
+  document.getElementById('pk-tcbm').textContent=tcbm.toFixed(2);
 }
 
 // ─── data collectors ───
@@ -6859,7 +6859,7 @@ function getPKRows(){
       pk:inp[3]?.value||'',ct:inp[4]?.value||'0',qc:inp[5]?.value||'0',
       nw:inp[6]?.value||'0',gw:inp[7]?.value||'0',
       l:inp[8]?.value||'0',w:inp[9]?.value||'0',h:inp[10]?.value||'0',
-      cbm:document.getElementById('pk-c-'+id)?.textContent||'0.00000',od:i%2===0});
+      cbm:document.getElementById('pk-c-'+id)?.textContent||'0.00',od:i%2===0});
   });return rows;
 }
 
@@ -6924,7 +6924,7 @@ function pkItemRows(rows){
     <td class="ct">${r.pcs}</td><td class="ct">${r.pk}</td><td class="ct">${r.ct}</td>
     <td class="ct">${r.qc}</td><td class="ct">${r.nw}</td><td class="ct">${r.gw}</td>
     <td class="ct">${r.l}</td><td class="ct">${r.w}</td><td class="ct">${r.h}</td>
-    <td class="ct">${r.cbm}</td>
+    <td class="ct" style="white-space:nowrap">${r.cbm}</td>
   </tr>`).join('');
 }
 
@@ -7185,7 +7185,7 @@ function buildPK(){
       <th style="width:32pt">QTY Each<br>Carton</th><th style="width:28pt">N.W<br>(KG)</th>
       <th style="width:28pt">G.W<br>(KG)</th><th style="width:24pt">L<br>(CM)</th>
       <th style="width:24pt">W<br>(CM)</th><th style="width:24pt">H<br>(CM)</th>
-      <th style="width:42pt">CBM (M³)</th>
+      <th style="width:50pt;white-space:nowrap">CBM (M³)</th>
     </tr></thead>
     <tbody>${pkItemRows(rows)}</tbody>
     <tfoot>
@@ -7198,7 +7198,7 @@ function buildPK(){
         <td class="vl">${tnw}</td>
         <td class="vl">${tgw}</td>
         <td class="hd" colspan="3"></td>
-        <td class="vl">${tcbm}</td>
+        <td class="vl" style="white-space:nowrap">${tcbm}</td>
       </tr>
     </tfoot>
   </table></div>
@@ -7503,7 +7503,7 @@ function loadDocState(id) {
           <td><input type="number" value="${inp[8]||0}" min="0" step="0.1" style="width:40px;" oninput="cCBM(${rowId})"/></td>
           <td><input type="number" value="${inp[9]||0}" min="0" step="0.1" style="width:40px;" oninput="cCBM(${rowId})"/></td>
           <td><input type="number" value="${inp[10]||0}" min="0" step="0.1" style="width:40px;" oninput="cCBM(${rowId})"/></td>
-          <td class="amt" id="pk-c-${rowId}">0.00000</td>
+          <td class="amt" id="pk-c-${rowId}">0.00</td>
           <td><button class="btn btn-d btn-sm" onclick="delR('pk',${rowId})">✕</button></td>`;
         tbody.appendChild(tr2);
         cCBM(rowId);
@@ -8063,7 +8063,7 @@ function syncFromQ(target) {
         <td><input type="number" value="" min="0" step="0.01" style="width:40px;" oninput="cCBM(${id})"/></td>
         <td><input type="number" value="" min="0" step="0.01" style="width:40px;" oninput="cCBM(${id})"/></td>
         <td><input type="number" value="" min="0" step="0.01" style="width:40px;" oninput="cCBM(${id})"/></td>
-        <td id="pk-c-${id}">0.00000</td>
+        <td id="pk-c-${id}">0.00</td>
         <td><button class="btn btn-d btn-sm" onclick="delR('pk',${id})">✕</button></td>`;
       tbody.appendChild(tr);
     });
