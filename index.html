@@ -148,7 +148,9 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     border-radius: 7px; padding: 8px 11px; font-size: 11px; color: var(--c-muted); line-height: 1.6; }
   .info-box strong { color: #2E75B6; }
 
-  #panel-cesipc .cesipc-root main { flex: 1; padding: 22px 26px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+  #panel-cesipc .cesipc-root main { flex: 1; padding: 22px 26px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; align-items: stretch; }
+  .tab-content { display: none; align-self: flex-start; width: 100%; }
+  .tab-content.active { display: block; }
   .tw { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--c-radius); overflow: hidden; }
   .th { padding: 11px 16px; display: flex; align-items: center; justify-content: space-between;
     border-bottom: 1px solid var(--c-border); }
@@ -178,7 +180,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   .trow { background: #1A3C5E; }
   .trow td { font-weight: 700; color: #fff; font-family: 'DM Mono', monospace; }
 
-  #panel-cesipc .cesipc-root .tab-content { display: none; }
+  #panel-cesipc .cesipc-root .tab-content { display: none; width: 100%; }
   #panel-cesipc .cesipc-root .tab-content.active { display: block; }
 
   /* ═══ PREVIEW OVERLAY ═══ */
