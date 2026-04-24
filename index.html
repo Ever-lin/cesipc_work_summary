@@ -2313,7 +2313,7 @@ function cancelEditRecord(){
 }
 
 function delGroup(name){
-  if(!confirm(`确认删除"${name}"的所有记录？`))return;
+  
   state.projects=state.projects.filter(p=>(p.name||p.client)!==name);
   save();renderProjects();refreshProjDatalist();renderProjSync('w-proj-sync');renderProjSync('wm-proj-sync');
 }
@@ -2321,9 +2321,9 @@ function delGroup(name){
 function delProjectEntry(id,groupName){
   const group=state.projects.filter(p=>(p.name||p.client)===groupName);
   if(group.length<=1){
-    if(!confirm(`这是该项目唯一的记录，删除后整个项目将消失，确认？`))return;
+    
   } else {
-    if(!confirm('确认删除该条跟进记录？'))return;
+    
   }
   state.projects=state.projects.filter(p=>p.id!==id);
   save();renderProjects();refreshProjDatalist();
@@ -2571,7 +2571,7 @@ function loadWeekly(id){
   setV('w-p1',w.p1);setV('w-p2',w.p2);setV('w-p3',w.p3);setV('w-p4',w.p4);setV('w-p5',w.p5);setV('w-p6',w.p6);
   autoResizeAll();
 }
-function delWeekly(id){if(!confirm('确认删除？'))return;state.weeklies=state.weeklies.filter(x=>x.id!==id);save();renderSavedWeeklies();}
+function delWeekly(id){state.weeklies=state.weeklies.filter(x=>x.id!==id);save();renderSavedWeeklies();}
 function editWeekly(id){
   loadWeekly(id);
   // Switch to the write-weekly tab
@@ -2655,7 +2655,7 @@ function loadMonthly(id){
   setV('wm-p1',m.p1);setV('wm-p2',m.p2);setV('wm-p3',m.p3);setV('wm-p4',m.p4);setV('wm-p5',m.p5);setV('wm-p6',m.p6);
   autoResizeAll();
 }
-function delMonthly(id){if(!confirm('确认删除？'))return;state.monthlies=state.monthlies.filter(x=>x.id!==id);save();renderSavedMonthlies();}
+function delMonthly(id){state.monthlies=state.monthlies.filter(x=>x.id!==id);save();renderSavedMonthlies();}
 function editMonthly(id){
   loadMonthly(id);
   document.querySelectorAll('#panel-export > .sub-panel').forEach(p=>p.classList.remove('active'));
@@ -3179,7 +3179,7 @@ function copyDailyTxt(date){
   if(!d||!d.txt){alert('暂无报告内容');return;}
   navigator.clipboard.writeText(d.txt).then(()=>alert('已复制！'));
 }
-function delDaily(date){if(!confirm('确认删除该日报记录？'))return;state.dailies=(state.dailies||[]).filter(d=>d.date!==date);save();renderSavedDailies();}
+function delDaily(date){state.dailies=(state.dailies||[]).filter(d=>d.date!==date);save();renderSavedDailies();}
 
 function groupByClient(arr){
   const m={};arr.forEach(p=>{if(!m[p.client])m[p.client]={client:p.client,amount:0,noAmount:p.noAmount};m[p.client].amount+=p.amount;if(p.noAmount)m[p.client].noAmount=true;});
@@ -3489,7 +3489,7 @@ function renderGeneratedWeeklies(expandKey){
     </div>`;
   }).join('');
 }
-function delGenWeekly(id){if(!confirm('确认删除？'))return;state.genWeeklies=(state.genWeeklies||[]).filter(x=>x.id!==id);save();renderGeneratedWeeklies();}
+function delGenWeekly(id){state.genWeeklies=(state.genWeeklies||[]).filter(x=>x.id!==id);save();renderGeneratedWeeklies();}
 
 
 function genMonthly(){
@@ -3645,7 +3645,7 @@ function renderGeneratedMonthlies(expandKey){
     </div>`;
   }).join('');
 }
-function delGenMonthly(id){if(!confirm('确认删除？'))return;state.genMonthlies=(state.genMonthlies||[]).filter(x=>x.id!==id);save();renderGeneratedMonthlies();}
+function delGenMonthly(id){state.genMonthlies=(state.genMonthlies||[]).filter(x=>x.id!==id);save();renderGeneratedMonthlies();}
 
 function copyGenTxt(stateKey,id){
   const item=(state[stateKey]||[]).find(x=>x.id===id);
@@ -3799,7 +3799,7 @@ function importBackup(evt){
     try{
       const imported=JSON.parse(e.target.result);
       if(!imported.perf&&!imported.projects){alert('文件格式不正确，请选择正确的备份文件');return;}
-      if(!confirm('即将恢复备份数据（包含 '+(imported.perf||[]).length+' 条业绩记录、'+(imported.projects||[]).length+' 条项目记录）。\n\n当前数据将被覆盖，确认继续？'))return;
+      // 恢复备份数据
       state=imported;
       if(!state.monthlies)state.monthlies=[];
       if(!state.dailies)state.dailies=[];
@@ -4428,7 +4428,7 @@ function qtRenderProductRows(){
         <div style="grid-column:1/-1;margin-top:4px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
             <span style="font-size:11px;font-weight:600;color:var(--text2)">📊 数量阶梯报价（选填）</span>
-            <button onclick="qtAddTier(${i})" style="background:var(--blue-bg);color:var(--blue-text);border:1px solid var(--blue);border-radius:3px;font-size:11px;padding:2px 8px;cursor:pointer">＋ 加阶梯</button>
+            <button onmousedown="event.preventDefault();qtAddTier(${i})" style="background:var(--blue-bg);color:var(--blue-text);border:1px solid var(--blue);border-radius:3px;font-size:11px;padding:2px 8px;cursor:pointer">＋ 加阶梯</button>
           </div>
           <div id="qt-tiers-${i}" style="display:flex;flex-direction:column;gap:4px">
             ${(d.tiers||[]).map((t,ti)=>`<div style="display:flex;gap:6px;align-items:center;background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:5px 8px">
@@ -4440,10 +4440,10 @@ function qtRenderProductRows(){
                 <option value="CNY" ${t.cur==='CNY'?'selected':''}>¥</option>
               </select>
               <input type="number" data-tier="${ti}" data-tierf="price" value="${t.price||''}" placeholder="0.00" min="0" step="0.01" style="width:80px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)">
-              <button onclick="qtRemoveTier(${i},${ti})" style="background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:3px;font-size:11px;padding:1px 7px;cursor:pointer;line-height:1.4">✕</button>
+              <button onmousedown="event.preventDefault();qtRemoveTierDOM(this,${i})" style="background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:3px;font-size:11px;padding:1px 7px;cursor:pointer;line-height:1.4">✕</button>
             </div>`).join('')}
           </div>
-          ${(d.tiers&&d.tiers.length)?'<div style="font-size:10px;color:var(--text3);margin-top:3px">💡 Quotation 单据将为每个阶梯生成独立行</div>':''}
+          <div data-tierhint style="font-size:10px;color:var(--text3);margin-top:3px;display:${(d.tiers&&d.tiers.length)?'block':'none'}">💡 Quotation 单据将为每个阶梯生成独立行；有阶梯时可在 Quotation 顶部隐藏总价列</div>
         </div>
       </div>
     </div>`;
@@ -4491,11 +4491,52 @@ function qtSyncTiersFromDOM(i){
 }
 
 function qtAddTier(i){
+  // Sync existing data first without full re-render
   qtSyncTiersFromDOM(i);
   if(!_qtProdRows[i])return;
   if(!_qtProdRows[i].tiers)_qtProdRows[i].tiers=[];
+
+  const tiIdx = _qtProdRows[i].tiers.length;
   _qtProdRows[i].tiers.push({qty:'',cur:'USD',price:''});
-  qtRenderProductRows();
+
+  // Direct DOM insertion — no full re-render, no scroll jump
+  const container = document.getElementById('qt-tiers-'+i);
+  if(!container){qtRenderProductRows();return;}
+
+  const row = document.createElement('div');
+  row.style.cssText='display:flex;gap:6px;align-items:center;background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:5px 8px';
+  row.innerHTML=`<span style="font-size:11px;color:var(--text2);white-space:nowrap">数量</span>
+    <input type="number" data-tier="${tiIdx}" data-tierf="qty" value="" placeholder="台数" min="1" style="width:60px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)">
+    <span style="font-size:11px;color:var(--text2);white-space:nowrap">单价</span>
+    <select data-tier="${tiIdx}" data-tierf="cur" style="width:auto;padding:2px 5px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--bg)">
+      <option value="USD" selected>$</option><option value="CNY">¥</option>
+    </select>
+    <input type="number" data-tier="${tiIdx}" data-tierf="price" value="" placeholder="0.00" min="0" step="0.01" style="width:80px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)">
+    <button onmousedown="event.preventDefault();qtRemoveTierDOM(this,${i})" style="background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:3px;font-size:11px;padding:1px 7px;cursor:pointer;line-height:1.4">✕</button>`;
+  container.appendChild(row);
+
+  // Show hint
+  const hint = container.parentElement.querySelector('[data-tierhint]');
+  if(hint) hint.style.display='block';
+
+  // Scroll new row into view smoothly
+  row.scrollIntoView({behavior:'smooth', block:'nearest'});
+  // Focus the qty input
+  const qtyInput = row.querySelector('[data-tierf="qty"]');
+  if(qtyInput) setTimeout(()=>qtyInput.focus(), 50);
+}
+
+function qtRemoveTierDOM(btn, i){
+  // Remove a tier row directly from DOM, then re-sync
+  const row = btn.closest('div[style*="display:flex"]');
+  if(row) row.remove();
+  qtSyncTiersFromDOM(i);
+  // Hide hint if no tiers left
+  const container = document.getElementById('qt-tiers-'+i);
+  if(container){
+    const hint = container.parentElement.querySelector('[data-tierhint]');
+    if(hint) hint.style.display = container.children.length ? 'block' : 'none';
+  }
 }
 
 function qtRemoveTier(i,ti){
@@ -4678,7 +4719,7 @@ function qtBuildSnap(mode){
 function qtDelHistory(quoteId, histIdx){
   const q=qtQuotes.find(q=>String(q.id)===String(quoteId));
   if(!q||!q.priceHistory)return;
-  if(!confirm('确认删除这条价格记录？'))return;
+  
   q.priceHistory.splice(q.priceHistory.length-1-histIdx,1);
   qtPersist();qtRender();
   qtRenderHistoryInModal(q.priceHistory);
@@ -5008,7 +5049,7 @@ function qtSaveAndAddProduct(){
   if(typeof qtCalc==='function')qtCalc();
   document.querySelector('.qt-modal').scrollTop=0;
 }
-function qtDel(id){if(!confirm('确认删除？'))return;qtQuotes=qtQuotes.filter(q=>String(q.id)!==String(id));qtPersist();qtRender();qtUpdateCompanyFilter();}
+function qtDel(id){qtQuotes=qtQuotes.filter(q=>String(q.id)!==String(id));qtPersist();qtRender();qtUpdateCompanyFilter();}
 
 function qtRenderDash(){
   const won=qtQuotes.filter(q=>q.deal==='won');
@@ -5746,7 +5787,10 @@ document.addEventListener('DOMContentLoaded',()=>{
 function cesipcSwitchTab(name,btn){
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');btn.classList.add('active');
+  const tabEl=document.getElementById('tab-'+name);
+  if(tabEl)tabEl.classList.add('active');
+  if(btn)btn.classList.add('active');
+  else{const b=document.querySelector(`.tab-btn[onclick*="'${name}'"]`);if(b)b.classList.add('active');}
 }
 
 // ── price mode: 'split' = Barebone/RAM/SSD, 'simple' = Configured System ──
@@ -6674,7 +6718,7 @@ function deleteDoc(id, e) {
   const docs = getAllDocs();
   const doc = docs.find(d => d.id === id);
   if (!doc) return;
-  if (!confirm('删除「' + doc.proj + '」的保存记录？')) return;
+  
   persistDocs(docs.filter(d => d.id !== id));
   renderSavedDocsList();
   toast('🗑 已删除');
@@ -6952,15 +6996,6 @@ function doDocImportFromQuotes(proj, mode, target) {
 
   const company = items[0].company || '';
   const targetLabel = target === 'pi' ? 'PI 形式发票' : 'Quotation 报价单';
-  const modeLabel = mode === 'split' ? '分拆报价' : '整合报价';
-
-  const confirmed = confirm(
-    `将「${proj}」的 ${items.length} 个型号导入到 ${targetLabel}？\n\n` +
-    `· 客户公司名将设为：${company}\n` +
-    `· 报价模式将切换为：${modeLabel}\n` +
-    `· 将清空 ${targetLabel} 现有所有行，然后重新填入。`
-  );
-  if (!confirmed) return;
 
   // Set buyer company name
   const bCoEl = document.getElementById('bCo');
@@ -7046,21 +7081,19 @@ function doDocImportFromQuotes(proj, mode, target) {
 
   closeDocImportFromQuotes();
 
-  // Switch outer main tab to cesipc first
-  switchTab('cesipc');
+  // Step 1: Switch OUTER main tab to 单据生成
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const outerTabIdx = ['cesipc','quotes','projects','performance','targets','export'].indexOf('cesipc');
+  document.querySelectorAll('.tab')[outerTabIdx].classList.add('active');
+  document.getElementById('panel-cesipc').classList.add('active');
 
-  // Then switch inner doc tab
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  const tabId = docKey === 'pi' ? 'tab-pi' : 'tab-quotation';
-  const tabEl = document.getElementById(tabId);
-  if (tabEl) tabEl.classList.add('active');
-  const tabKeyword = docKey === 'pi' ? 'Proforma' : 'Quotation';
-  const tBtn = [...document.querySelectorAll('.tab-btn')].find(b => b.textContent.includes(tabKeyword));
-  if (tBtn) tBtn.classList.add('active');
+  // Step 2: Switch INNER cesipc doc tab (Quotation or PI)
+  const innerTabName = docKey === 'pi' ? 'pi' : 'quotation';
+  cesipcSwitchTab(innerTabName, null);
 
   const rowCount = items.reduce((sum, it) => sum + Math.max(1, (it.tiers||[]).length), 0);
-  toast(`✅ 已从报价管理导入「${proj}」共 ${rowCount} 行 → ${targetLabel}`);
+  toast(`✅ 已导入「${proj}」共 ${rowCount} 行 → ${targetLabel}`);
 }
 
 // Close modal on background click
@@ -7076,8 +7109,7 @@ function syncFromQ(target) {
     const hasQ = document.querySelectorAll('#q-b tr').length > 0;
     const hasPI = document.querySelectorAll('#pi-b tr').length > 0;
     if (hasPI && hasQ) {
-      const choice = confirm('选择同步来源：\n\n点击「确定」→ 从 PI (形式发票) 同步\n点击「取消」→ 从 Quotation (报价单) 同步');
-      sourceType = choice ? 'pi' : 'q';
+      sourceType = 'pi'; // default to PI when both exist
     } else if (hasPI && !hasQ) {
       sourceType = 'pi';
     }
@@ -7115,11 +7147,6 @@ function syncFromQ(target) {
   }
 
   const targetNames = { pi: 'Proforma Invoice', ci: 'Commercial Invoice', pk: 'Packing List' };
-  const confirmed = confirm(
-    `将${sourceLabel}的 ${qRows.length} 行数据同步到 ${targetNames[target]}？\n\n` +
-    `⚠️ 这将清空 ${targetNames[target]} 现有所有行，然后重新填入。`
-  );
-  if (!confirmed) return;
 
   // Clear existing rows
   const tbody = document.getElementById(
