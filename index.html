@@ -80,7 +80,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .term-item{padding:2px 4px;cursor:pointer;border-radius:3px}.term-item:hover{background:var(--blue-bg);color:var(--blue-text)}
 
   /* ── saved docs panel ── */
-  #saved-docs-panel { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 7px; overflow: hidden; }
+  #saved-docs-panel { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 7px; overflow: visible; }
   #doc-proj-drop { font-family: 'Sora', sans-serif; }
   #doc-proj-drop > div { font-size: 11px; }
 </style>
@@ -5699,8 +5699,8 @@ function qtSeed(){
     <button class="btn btn-p" style="flex:1;" onclick="saveDocState()">💾 保存单据</button>
     <button class="btn btn-g" style="flex:1;" onclick="toggleSavedDocs()">📂 已保存</button>
   </div>
-  <div id="saved-docs-panel" style="display:none;">
-    <div id="saved-docs-list" style="max-height:220px;overflow-y:auto;margin-top:4px;"></div>
+  <div id="saved-docs-panel" style="display:none;border-radius:7px;border:1px solid var(--c-border);background:var(--c-surface);overflow:visible;">
+    <div id="saved-docs-list" style="max-height:260px;overflow-y:auto;margin-top:4px;border-radius:7px;"></div>
   </div>
   <div class="divider"></div>
   <div>
@@ -7135,8 +7135,8 @@ function saveDocState() {
 
 function loadDocState(id) {
   const docs = getAllDocs();
-  const doc = docs.find(d => d.id === id);
-  if (!doc) return;
+  const doc = docs.find(d => String(d.id) === String(id));
+  if (!doc) { alert('未找到该记录，id=' + id); return; }
 
   // Restore fields
   Object.entries(doc.fields || {}).forEach(([fid, val]) => {
@@ -7155,17 +7155,16 @@ function loadDocState(id) {
   }
 
   // Restore rows helper
-  function restoreRows(tbodyId, rawRows, cfFn) {
+  function restoreRows(tbodyId, rawRowsData, cfFn) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
     tbody.innerHTML = '';
-    const t = tbodyId.split('-')[0]; // 'q','pi','ci','pk'
+    const t = tbodyId.split('-')[0];
     rc[t] = 0;
-    (rawRows || []).forEach(r => {
-      const id = ++rc[t];
-      // Build a dummy row via addR with empty prefill, then overwrite values
+    (rawRowsData || []).forEach(r => {
+      const rowId = ++rc[t];
       addR(t);
-      const tr = document.getElementById(t + '-r-' + id);
+      const tr = document.getElementById(t + '-r-' + rowId);
       if (!tr) return;
       const inputs = tr.querySelectorAll('input,select,textarea');
       (r.inputs || []).forEach((val, i) => { if (inputs[i]) inputs[i].value = val; });
@@ -7189,14 +7188,20 @@ function loadDocState(id) {
     cQ(); cPI(); cCI();
   }
 
-  // Switch to 单据生成 outer tab
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  const outerTabIdx = ['cesipc','quotes','projects','performance','targets','export'].indexOf('cesipc');
-  document.querySelectorAll('.tab')[outerTabIdx]?.classList.add('active');
-  document.getElementById('panel-cesipc')?.classList.add('active');
-  // Switch to Quotation inner tab
-  cesipcSwitchTab('quotation', null);
+  // Close the saved docs panel
+  const savedPanel = document.getElementById('saved-docs-panel');
+  if (savedPanel) savedPanel.style.display = 'none';
+
+  // Make sure panel-cesipc is active (outer tab)
+  switchTab('cesipc');
+
+  // Switch to Quotation inner tab after a short delay to let DOM settle
+  setTimeout(() => {
+    cesipcSwitchTab('quotation', null);
+    // Scroll to top of the main content
+    const mainEl = document.querySelector('#panel-cesipc .cesipc-root main');
+    if (mainEl) mainEl.scrollTop = 0;
+  }, 50);
 
   toast('📂 已加载：' + doc.proj);
 }
@@ -7228,20 +7233,20 @@ function renderSavedDocsList() {
     return;
   }
   list.innerHTML = docs.map(d => {
-    const buyer = d.fields?.bCo ? `<span style="color:#2E75B6;font-size:10px;">买方: ${d.fields.bCo}</span> · ` : '';
-    const currency = d.fields?.currency ? `<span style="font-size:10px;color:var(--c-muted)">${d.fields.currency}</span> · ` : '';
-    return `
-    <div style="padding:9px 10px;border-bottom:1px solid var(--c-border);display:flex;align-items:flex-start;gap:6px;font-size:11px;">
-      <div style="flex:1;overflow:hidden;">
-        <div style="font-weight:600;color:var(--c-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.proj}</div>
-        <div style="color:var(--c-muted);font-size:10px;margin-top:2px;">${buyer}${currency}单号: ${d.fields?.docNo || '—'}</div>
-        <div style="color:var(--c-muted);font-size:10px;margin-top:1px;">保存于 ${d.savedAt || ''}</div>
-        <div style="margin-top:5px;display:flex;gap:5px;">
-          <button onclick="loadDocState(${d.id})" style="background:#1A3C5E;color:#fff;border:none;border-radius:5px;padding:3px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif;">📂 使用</button>
+    const buyer = d.fields?.bCo ? `<span style="color:#2E75B6;">买方: ${d.fields.bCo.substring(0,30)}</span><br>` : '';
+    const docNo = d.fields?.docNo ? `单号: ${d.fields.docNo} · ` : '';
+    const rowCount = (d.rows?.q?.length||0) + (d.rows?.ci?.length||0);
+    return `<div style="padding:9px 10px;border-bottom:1px solid var(--c-border);font-size:11px;">
+      <div style="display:flex;align-items:flex-start;gap:6px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;color:var(--c-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;">${d.proj}</div>
+          <div style="color:var(--c-muted);font-size:10px;line-height:1.6;">${buyer}${docNo}${d.savedAt || ''}</div>
         </div>
+        <button onclick="deleteDoc(${d.id},event)" style="background:none;border:none;cursor:pointer;color:var(--c-muted);font-size:14px;padding:2px;flex-shrink:0;" title="删除">🗑</button>
       </div>
-      <button onclick="deleteDoc(${d.id},event)" style="background:none;border:none;cursor:pointer;color:var(--c-muted);font-size:14px;padding:2px;flex-shrink:0;" title="删除">🗑</button>
-    </div>`}).join('');
+      <button style="margin-top:6px;width:100%;background:#1A3C5E;color:#fff;border:none;border-radius:5px;padding:5px 0;font-size:12px;cursor:pointer;font-family:'Sora',sans-serif;font-weight:500;" onclick="loadDocState(${d.id})">📂 使用这份单据</button>
+    </div>`;
+  }).join('');
 }
 
 // ─── Project name autocomplete (from qtQuotes projects) ───
