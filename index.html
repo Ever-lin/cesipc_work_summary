@@ -5709,34 +5709,19 @@ function qtSeed(){
     <div class="stitle">🖼 公司图片 Logo / 公章</div>
     <div style="font-size:11px;color:var(--c-muted);margin-bottom:8px;line-height:1.6;">支持 PNG / JPG / SVG。预览时可拖动 Logo 调整位置。</div>
 
-    <!-- Logo -->
+    <!-- Logo (multi-image) -->
     <div class="fg">
-      <label style="font-weight:600;color:var(--c-text);">Logo（PDF 左上角）</label>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+      <label style="font-weight:600;color:var(--c-text);">Logo（PDF 左上角，支持多张）</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
         <label style="background:#1A3C5E;color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;">
-          📁 选择图片<input type="file" accept="image/*" style="display:none;" onchange="uploadCompanyImage('logo',this)">
+          📁 添加图片<input type="file" accept="image/*" multiple style="display:none;" onchange="uploadCompanyImage('logo',this)">
         </label>
-        <button onclick="clearCompanyImage('logo')" style="background:none;border:1px solid var(--c-border);border-radius:5px;padding:4px 8px;font-size:11px;color:var(--c-muted);cursor:pointer;">✕ 清除</button>
+        <button onclick="clearCompanyImage('logo')" style="background:none;border:1px solid var(--c-border);border-radius:5px;padding:4px 8px;font-size:11px;color:var(--c-muted);cursor:pointer;">✕ 清除全部</button>
       </div>
-      <div id="logo-preview" style="display:none;background:#1A3C5E;padding:4px 8px;border-radius:5px;max-width:140px;margin-bottom:6px;">
-        <img id="logo-preview-img" style="height:28px;display:block;max-width:130px;" alt="logo preview">
+      <div id="logo-list" style="margin-bottom:4px;">
+        <div style="font-size:11px;color:var(--c-muted);padding:6px 0;">暂无 Logo</div>
       </div>
-      <!-- Logo settings -->
-      <div id="logo-settings" style="display:none;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:6px;padding:8px;font-size:11px;">
-        <div style="margin-bottom:5px;display:flex;align-items:center;gap:8px;">
-          <label style="color:var(--c-muted);min-width:50px;">高度</label>
-          <input type="range" id="logo-height" min="16" max="60" value="28" oninput="updateLogoSettings()" style="flex:1;height:4px;">
-          <span id="logo-height-val" style="color:var(--c-text);min-width:28px;">28pt</span>
-        </div>
-        <div style="margin-bottom:5px;display:flex;align-items:center;gap:8px;">
-          <label style="color:var(--c-muted);min-width:50px;">颜色</label>
-          <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;">
-            <input type="checkbox" id="logo-invert" onchange="updateLogoSettings()" style="width:auto;">
-            反白（白色logo用）
-          </label>
-        </div>
-        <div style="font-size:10px;color:var(--c-muted);margin-top:4px;">💡 在「预览/打印」界面可拖动 Logo 调整位置</div>
-      </div>
+      <div style="font-size:10px;color:var(--c-muted);margin-top:2px;">💡 可上传多张 Logo，PDF 中横向排列。预览时可拖动各 Logo 调整位置。</div>
     </div>
 
     <!-- Stamp -->
@@ -6080,70 +6065,139 @@ function autoValidUntil(){
 function updDisp(){}  // kept for compatibility
 
 // ── Company Images: Logo & Stamp ──
-let _companyImages = { logo: null, stamp: null };
-let _logoSettings = { height: 28, invert: true, offsetX: 0, offsetY: 0 };
+let _companyImages = { logos: [], stamp: null };
+// _companyImages.logos is an array of { dataUrl, height, invert, offsetX, offsetY }
+let _logoSettings = { height: 28, invert: true, offsetX: 0, offsetY: 0 }; // kept for legacy compat
 let _stampSettings = { size: 70, offsetX: 0, offsetY: 0 };
 
 (function loadCompanyImages(){
   try {
     const saved = JSON.parse(localStorage.getItem('cesipc_images') || '{}');
-    if(saved.logo)  { _companyImages.logo  = saved.logo;  _showImagePreview('logo',  saved.logo); }
+    // Migrate old single logo to array
+    if(saved.logos && Array.isArray(saved.logos)){
+      _companyImages.logos = saved.logos;
+    } else if(saved.logo) {
+      const ls = saved.logoSettings || _logoSettings;
+      _companyImages.logos = [{ dataUrl: saved.logo, height: ls.height||28, invert: ls.invert!==false, offsetX: ls.offsetX||0, offsetY: ls.offsetY||0 }];
+    }
     if(saved.stamp) { _companyImages.stamp = saved.stamp; _showImagePreview('stamp', saved.stamp); }
-    if(saved.logoSettings)  _logoSettings  = {..._logoSettings,  ...saved.logoSettings};
     if(saved.stampSettings) _stampSettings = {..._stampSettings, ...saved.stampSettings};
     setTimeout(()=>{
-      const lh = document.getElementById('logo-height');  if(lh) { lh.value = _logoSettings.height; const lhv=document.getElementById('logo-height-val'); if(lhv)lhv.textContent = _logoSettings.height+'pt'; }
-      const li = document.getElementById('logo-invert');  if(li) li.checked = _logoSettings.invert;
       const ss = document.getElementById('stamp-size');   if(ss) { ss.value = _stampSettings.size;  const ssv=document.getElementById('stamp-size-val'); if(ssv)ssv.textContent  = _stampSettings.size+'pt'; }
+      _renderLogoList();
     }, 300);
   } catch(e) {}
 })();
 
 function _showImagePreview(type, dataUrl){
+  if(type === 'logo') { _renderLogoList(); return; }
   const wrap = document.getElementById(type + '-preview');
   const img  = document.getElementById(type + '-preview-img');
   const settings = document.getElementById(type + '-settings');
   if(wrap && img){
     img.src = dataUrl;
-    if(type === 'logo') img.style.filter = _logoSettings.invert ? 'brightness(0) invert(1)' : 'none';
     wrap.style.display = '';
     if(settings) settings.style.display = '';
   }
 }
 
+function _renderLogoList(){
+  const container = document.getElementById('logo-list');
+  if(!container) return;
+  const logos = _companyImages.logos;
+  if(!logos || logos.length === 0){
+    container.innerHTML = '<div style="font-size:11px;color:var(--c-muted);padding:6px 0;">暂无 Logo</div>';
+    return;
+  }
+  container.innerHTML = logos.map((lg, idx) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:5px;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:6px;margin-bottom:6px;">
+      <div style="background:#1A3C5E;border-radius:4px;padding:3px 6px;flex-shrink:0;">
+        <img src="${lg.dataUrl}" style="height:${lg.height||28}px;display:block;max-width:80px;object-fit:contain;${(lg.invert!==false)?'filter:brightness(0) invert(1);':''}" alt="logo ${idx+1}">
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:11px;color:var(--c-muted);margin-bottom:3px;">Logo ${idx+1}</div>
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+          <span style="font-size:10px;color:var(--c-muted);min-width:28px;">高度</span>
+          <input type="range" min="16" max="60" value="${lg.height||28}" oninput="updateOneLogoH(${idx},this.value)" style="flex:1;height:3px;">
+          <span style="font-size:10px;color:var(--c-text);min-width:24px;">${lg.height||28}pt</span>
+        </div>
+        <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:10px;color:var(--c-muted);">
+          <input type="checkbox" ${(lg.invert!==false)?'checked':''} onchange="updateOneLogoInv(${idx},this.checked)" style="width:auto;">反白
+        </label>
+      </div>
+      <button onclick="removeOneLogo(${idx})" style="background:rgba(255,92,110,.1);border:1px solid rgba(255,92,110,.22);border-radius:4px;cursor:pointer;color:#c0392b;font-size:11px;padding:3px 7px;flex-shrink:0;">✕</button>
+    </div>`).join('');
+}
+
+function updateOneLogoH(idx, val){
+  if(!_companyImages.logos[idx]) return;
+  _companyImages.logos[idx].height = parseInt(val);
+  _saveImageSettings();
+  _renderLogoList();
+}
+function updateOneLogoInv(idx, val){
+  if(!_companyImages.logos[idx]) return;
+  _companyImages.logos[idx].invert = val;
+  _saveImageSettings();
+  _renderLogoList();
+}
+function removeOneLogo(idx){
+  _companyImages.logos.splice(idx, 1);
+  _saveImageSettings();
+  _renderLogoList();
+  toast('🗑 已删除 Logo ' + (idx+1));
+}
+
 function uploadCompanyImage(type, input){
-  const file = input.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    _companyImages[type] = e.target.result;
-    _showImagePreview(type, e.target.result);
-    _saveImageSettings();
-    toast('✅ 已上传' + (type === 'logo' ? ' Logo' : ' 公章'));
-  };
-  reader.readAsDataURL(file);
+  const files = Array.from(input.files);
+  if(!files.length) return;
+  if(type === 'logo'){
+    let loaded = 0;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        _companyImages.logos.push({ dataUrl: e.target.result, height: 28, invert: true, offsetX: 0, offsetY: 0 });
+        loaded++;
+        if(loaded === files.length){
+          _saveImageSettings();
+          _renderLogoList();
+          toast('✅ 已上传 ' + files.length + ' 张 Logo');
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  } else {
+    const file = files[0];
+    const reader = new FileReader();
+    reader.onload = e => {
+      _companyImages[type] = e.target.result;
+      _showImagePreview(type, e.target.result);
+      _saveImageSettings();
+      toast('✅ 已上传公章');
+    };
+    reader.readAsDataURL(file);
+  }
   input.value = '';
 }
 
 function clearCompanyImage(type){
-  _companyImages[type] = null;
-  const wrap = document.getElementById(type + '-preview');
-  const settings = document.getElementById(type + '-settings');
-  if(wrap) wrap.style.display = 'none';
-  if(settings) settings.style.display = 'none';
-  _saveImageSettings();
-  toast('🗑 已清除' + (type === 'logo' ? ' Logo' : ' 公章'));
+  if(type === 'logo'){
+    _companyImages.logos = [];
+    _saveImageSettings();
+    _renderLogoList();
+    toast('🗑 已清除所有 Logo');
+  } else {
+    _companyImages[type] = null;
+    const wrap = document.getElementById(type + '-preview');
+    const settings = document.getElementById(type + '-settings');
+    if(wrap) wrap.style.display = 'none';
+    if(settings) settings.style.display = 'none';
+    _saveImageSettings();
+    toast('🗑 已清除公章');
+  }
 }
 
-function updateLogoSettings(){
-  const h = parseInt(document.getElementById('logo-height')?.value || 28);
-  const inv = document.getElementById('logo-invert')?.checked ?? true;
-  _logoSettings.height = h; _logoSettings.invert = inv;
-  const lhv = document.getElementById('logo-height-val'); if(lhv) lhv.textContent = h + 'pt';
-  const img = document.getElementById('logo-preview-img');
-  if(img) img.style.filter = inv ? 'brightness(0) invert(1)' : 'none';
-  _saveImageSettings();
-}
+function updateLogoSettings(){ /* no-op: per-logo settings now handled by updateOneLogoH/updateOneLogoInv */ }
 
 function updateStampSettings(){
   const s = parseInt(document.getElementById('stamp-size')?.value || 70);
@@ -6155,23 +6209,29 @@ function updateStampSettings(){
 function _saveImageSettings(){
   try {
     const saved = JSON.parse(localStorage.getItem('cesipc_images') || '{}');
-    if(_companyImages.logo)  saved.logo  = _companyImages.logo;  else delete saved.logo;
+    saved.logos = _companyImages.logos || [];
+    delete saved.logo; delete saved.logoSettings;
     if(_companyImages.stamp) saved.stamp = _companyImages.stamp; else delete saved.stamp;
-    saved.logoSettings = _logoSettings; saved.stampSettings = _stampSettings;
+    saved.stampSettings = _stampSettings;
     localStorage.setItem('cesipc_images', JSON.stringify(saved));
   } catch(e) {}
 }
 
 function getLogoHtml(){
-  const h = _logoSettings.height || 28;
-  const filter = _logoSettings.invert ? 'filter:brightness(0) invert(1);' : '';
-  const ox = _logoSettings.offsetX || 0; const oy = _logoSettings.offsetY || 0;
-  const transform = (ox||oy) ? `transform:translate(${ox}px,${oy}px);` : '';
-  if(_companyImages.logo){
-    return `<img id="pdf-logo-img" src="${_companyImages.logo}" style="height:${h}pt;display:block;max-width:110pt;object-fit:contain;${filter}${transform}cursor:move;" alt="logo" onmousedown="startDragImage(event,'logo')">`;
+  const logos = _companyImages.logos;
+  if(logos && logos.length > 0){
+    const imgs = logos.map((lg, idx) => {
+      const h = lg.height || 28;
+      const filter = (lg.invert !== false) ? 'filter:brightness(0) invert(1);' : '';
+      const ox = lg.offsetX || 0, oy = lg.offsetY || 0;
+      const transform = (ox||oy) ? `transform:translate(${ox}px,${oy}px);` : '';
+      return `<img id="pdf-logo-img-${idx}" src="${lg.dataUrl}" style="height:${h}pt;display:block;max-width:90pt;object-fit:contain;${filter}${transform}cursor:move;" alt="logo${idx+1}" onmousedown="startDragImage(event,'logo',${idx})">`;
+    }).join('');
+    return `<div style="display:flex;align-items:center;gap:6pt;">${imgs}</div>`;
   }
-  // Default built-in CESIPC logo (short version for brevity)
-  return `<img id="pdf-logo-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAsCAYAAADGiDuVAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABZ0RVh0Q3JlYXRpb24gVGltZQAwNS8wNS8yNOhIDJIAAAAcdEVYdFNvZnR3YXJlAEFkb2JlIEZpcmV3b3JrcyBDUzQGstOgAAAAoElEQVRoge3BMQEAAADCoPVP7WsIoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeAMBuAABHgBk4QAAAABJRU5ErkJggg==" style="height:${h}pt;display:block;max-width:110pt;object-fit:contain;${filter}${transform}cursor:move;opacity:0.9;" alt="CESIPC" onmousedown="startDragImage(event,'logo')">`;
+  // Default built-in CESIPC logo
+  const h = 28; const filter = 'filter:brightness(0) invert(1);';
+  return `<img id="pdf-logo-img-0" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAsCAYAAADGiDuVAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABZ0RVh0Q3JlYXRpb24gVGltZQAwNS8wNS8yNOhIDJIAAAAcdEVYdFNvZnR3YXJlAEFkb2JlIEZpcmV3b3JrcyBDUzQGstOgAAAAoElEQVRoge3BMQEAAADCoPVP7WsIoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeAMBuAABHgBk4QAAAABJRU5ErkJggg==" style="height:${h}pt;display:block;max-width:110pt;object-fit:contain;${filter}cursor:move;opacity:0.9;" alt="CESIPC" onmousedown="startDragImage(event,'logo',0)">`;
 }
 
 function getStampHtml(){
@@ -6183,11 +6243,17 @@ function getStampHtml(){
 }
 
 // ── Drag logo/stamp in PDF preview overlay ──
-function startDragImage(e, type){
+function startDragImage(e, type, idx){
   e.preventDefault();
   const img = e.currentTarget;
   const startX = e.clientX, startY = e.clientY;
-  const settings = type === 'logo' ? _logoSettings : _stampSettings;
+  let settings;
+  if(type === 'logo'){
+    const lg = (_companyImages.logos && _companyImages.logos[idx||0]);
+    settings = lg || { offsetX: 0, offsetY: 0 };
+  } else {
+    settings = _stampSettings;
+  }
   const startOX = settings.offsetX || 0, startOY = settings.offsetY || 0;
   function onMove(ev){
     settings.offsetX = startOX + (ev.clientX - startX);
@@ -6409,7 +6475,30 @@ function setMode(t,m){
   saved.forEach(s=>{
     addR(t, s);
   });
-  if(t==='q') cQ(); else cPI();
+  if(t==='q') {
+    cQ();
+    // Re-apply Grand Total hidden state after mode switch
+    if(_qTotalColHidden){
+      // Hide Grand Total th in new thead
+      const newThs = thead.querySelectorAll('th');
+      const gtTh = newThs[newThs.length-2];
+      if(gtTh) gtTh.style.display='none';
+      // Hide Grand Total td in each rebuilt row
+      document.querySelectorAll('#q-b tr').forEach(tr=>{
+        const tds=tr.querySelectorAll('td');
+        const gtTd=tds[tds.length-2];
+        if(gtTd) gtTd.style.display='none';
+      });
+      // Hide subtotal amount cell and total row
+      const gtCell=document.getElementById('q-ta');
+      if(gtCell) gtCell.style.display='none';
+      const gtRow=document.getElementById('q-gt');
+      if(gtRow) gtRow.closest('tr').style.display='none';
+      // Always keep shipping row visible
+      const shRow=document.getElementById('q-sh')?.closest('tr');
+      if(shRow) shRow.style.display='';
+    }
+  } else cPI();
 }
 
 function addR(t, prefill){
@@ -6908,15 +6997,15 @@ function buildPI(){
            <th style="width:40pt">Unit Price<br>(SSD)</th>
            <th style="width:40pt">Unit Price<br>(Shipping)</th>
            <th style="width:50pt">Unit Price<br>(All Included)</th>
-           <th style="width:50pt">Grand Total</th>`
+           ${_qTotalColHidden?'':'<th style="width:50pt">Grand Total</th>'}`
         : `<th style="width:20pt">#</th><th style="width:54pt">Part No.</th>
            <th class="la">Description</th><th style="width:26pt">Qty</th>
            <th style="width:80pt">Unit Price<br>(Configured System)</th>
-           <th style="width:50pt">Grand Total</th>`}
+           ${_qTotalColHidden?'':'<th style="width:50pt">Grand Total</th>'}`}
     </tr></thead>
     <tbody>${qItemRows(rows)}</tbody>
   </table></div>
-  ${subBlock(tq,ta,sh,gt,_mode.pi==='split'?10:6)}
+  ${subBlock(tq,ta,sh,gt,_mode.pi==='split'?10:6,_qTotalColHidden)}
   <div class="sec-h">TERMS &amp; CONDITIONS</div>
   <table class="kv-t">${kvRows([['Trade Terms',g('tradeTerm'),true],['Payment Terms',g('payTerm'),false],['Lead Time',g('leadTime'),true],['Warranty',g('warranty'),false]])}</table>
   <div class="sec-h">BANK / REMITTANCE DETAILS</div>
