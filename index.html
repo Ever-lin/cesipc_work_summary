@@ -1314,9 +1314,9 @@ function save(){try{localStorage.setItem('ws6',JSON.stringify(state))}catch(e){}
 function load(){
   try{
     const d=localStorage.getItem('ws6');
-    if(d){state=JSON.parse(d);if(!state.monthlies)state.monthlies=[];if(!state.dailies)state.dailies=[];if(!state.genWeeklies)state.genWeeklies=[];if(!state.genMonthlies)state.genMonthlies=[];if(!state.fyTargets)state.fyTargets={};SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});save();}
-    else{state.perf=SEED.slice();state.monthlies=[];state.dailies=[];state.genWeeklies=[];state.genMonthlies=[];state.fyTargets={};save();}
-  }catch(e){state.perf=SEED.slice();state.monthlies=[];state.dailies=[];state.genWeeklies=[];state.genMonthlies=[];save();}
+    if(d){state=JSON.parse(d);if(!state.weeklies)state.weeklies=[];if(!state.monthlies)state.monthlies=[];if(!state.dailies)state.dailies=[];if(!state.genWeeklies)state.genWeeklies=[];if(!state.genMonthlies)state.genMonthlies=[];if(!state.fyTargets)state.fyTargets={};SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});save();}
+    else{state.perf=SEED.slice();state.weeklies=[];state.monthlies=[];state.dailies=[];state.genWeeklies=[];state.genMonthlies=[];state.fyTargets={};save();}
+  }catch(e){state.perf=SEED.slice();state.weeklies=[];state.monthlies=[];state.dailies=[];state.genWeeklies=[];state.genMonthlies=[];save();}
 }
 load();
 // Migrate old status values to new 5-status system
