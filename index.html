@@ -5387,7 +5387,9 @@ function qtRenderDash(){
   const withP3=qtQuotes.filter(q=>q.p3!=null);
   const belowP3=withP3.filter(q=>q.price<q.p3);
   const companies=[...new Set(qtQuotes.map(q=>q.company).filter(Boolean))];
+  const totalProjects=new Set(qtQuotes.map(q=>q.project).filter(Boolean)).size;
   document.getElementById('qt-kpis').innerHTML=[
+    {v:totalProjects,l:'总项目数',c:'var(--blue-text)'},
     {v:qtQuotes.length,l:'总报价数',c:'var(--blue-text)'},
     {v:won.length,l:'已成交',c:'var(--green-text)'},
     {v:confirmed.length,l:'已确认订单',c:'var(--amber-text)'},
@@ -5411,7 +5413,7 @@ function qtRenderDash(){
         ?'border:2px solid var(--blue);background:var(--blue-bg);box-shadow:0 0 0 2px var(--blue-bg)'
         :'border:1px solid var(--border2);'}">
       <div class="qt-cc-name" style="${isSel?'color:var(--blue-text)':''}">${isSel?'🔵 ':''}${c}</div>
-      <div class="qt-cc-row"><span style="color:var(--text2)">总报价</span><span>${cqs.length}</span></div>
+      <div class="qt-cc-row"><span style="color:var(--text2)">总项目</span><span>${new Set(cqs.map(q=>q.project).filter(Boolean)).size}</span></div>
       <div class="qt-cc-row"><span style="color:var(--green-text)">成单</span><span style="color:var(--green-text)">${cw}</span></div>
       <div class="qt-cc-row"><span style="color:var(--blue-text)">跟进</span><span style="color:var(--blue-text)">${co}</span></div>
       <div class="qt-cc-row"><span style="color:var(--red-text)">丢单</span><span style="color:var(--red-text)">${cl}</span></div>
@@ -7922,7 +7924,7 @@ function doDocImportFromQuotes(proj, mode, target) {
   // Step 1: Switch OUTER main tab to 单据生成
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  const outerTabIdx = ['cesipc','quotes','projects','performance','targets','export'].indexOf('cesipc');
+  const outerTabIdx = ['quotes','projects','cesipc','performance','targets','export'].indexOf('cesipc');
   document.querySelectorAll('.tab')[outerTabIdx].classList.add('active');
   document.getElementById('panel-cesipc').classList.add('active');
 
