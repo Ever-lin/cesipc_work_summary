@@ -1710,6 +1710,10 @@ function qtSnapToLine(h){
     lines.push(detailLine);
   }
   if(h.custom&&h.custom.trim())lines.push('🔧 [Custom / 附加功能] '+h.custom);
+  if(h.tiers&&h.tiers.length){
+    const fc2=s=>s==='CNY'?'¥':'$';
+    lines.push('📊 阶梯报价：'+h.tiers.map(t=>`${t.qty}台×${fc2(t.cur||'USD')}${t.price}`).join(' / '));
+  }
   if(h.notes&&h.notes.trim())lines.push('📝 '+h.notes);
   return lines.join('\n');
 }
@@ -1725,7 +1729,7 @@ function qtBuildQuoteText(q){
       ram:q.ram,ramp:q.ramp,rampCur:q.rampCur||'USD',
       ssd:q.ssd,ssdp:q.ssdp,ssdpCur:q.ssdpCur||'USD',
       totalPrice:q.totalPrice,totalCur:q.totalCur||'USD',
-      qty:q.qty,shipping:q.shipping,custom:q.custom,notes:q.notes
+      qty:q.qty,shipping:q.shipping,custom:q.custom,notes:q.notes,tiers:q.tiers||[]
     };
     return qtSnapToLine(snap);
   }
@@ -1738,6 +1742,7 @@ function qtBuildQuoteText(q){
     if(!h.custom&&q.custom)h=Object.assign({},h,{custom:q.custom});
     if(!h.shipping&&q.shipping)h=Object.assign({},h,{shipping:q.shipping});
     if(!h.notes&&q.notes)h=Object.assign({},h,{notes:q.notes});
+    if(!h.tiers||!h.tiers.length)h=Object.assign({},h,{tiers:q.tiers||[]});
     return qtSnapToLine(h);
   }).join('\n\n');
 }
@@ -2425,6 +2430,7 @@ function stripEmojiForCRM(txt){
   return txt
     .replace(/💰/g,'[报价]')
     .replace(/🔧/g,'[Custom / 附加功能]')
+    .replace(/📊/g,'[阶梯报价]')
     .replace(/🚢/g,'[运费]')
     .replace(/📝/g,'[备注]')
     .replace(/✅/g,'[成交]')
@@ -4712,6 +4718,8 @@ function qtRenderHistoryInModal(hist){
       +((parts.length||h.shipping)?'<div style="font-size:11px;margin-top:3px">'+partsHtml+(shippingHtml?(parts.length?'<span style="color:var(--border)"> · </span>':'')+shippingHtml:'')+'</div>':'')
       // ── 自定义配置
       +(h.custom?'<div style="font-size:11px;margin-top:2px">'+hl(idx,'custom','🔧 [Custom / 附加功能] '+h.custom,'color:var(--text2)')+'</div>':'')
+      // ── 阶梯报价
+      +((parentQ&&parentQ.tiers&&parentQ.tiers.length)?'<div style="font-size:11px;margin-top:3px;color:var(--blue-text)">📊 '+parentQ.tiers.map(t=>`${t.qty}台 × ${t.cur==='CNY'?'¥':'$'}${t.price}`).join(' &nbsp;/&nbsp; ')+'</div>':'')
       // ── 备注
       +(h.notes?'<div style="font-size:11px;margin-top:2px;font-style:italic">'+hl(idx,'notes','📝 '+h.notes,'color:var(--text2)')+'</div>':'')
       // ── 阶段/成交状态
@@ -4813,6 +4821,7 @@ function qtSave(){
         stage,deal:rowDeal,
         model:d.model||'',cpu:d.cpu||'',partno:d.partno||'',
         custom:d.custom||'',shipping:rowShipping,notes,
+        tiers:d.tiers||[],
       };
       const obj={
         id:Date.now()+Math.random(),
