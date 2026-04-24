@@ -1899,8 +1899,16 @@ function importFromQuoteGroup(gi){
       document.getElementById('proj-decision-maker').value=latest.decisionMaker||latest.decisionMaker||'';
       document.getElementById('proj-priority').value=latest.priority||'中';
       document.getElementById('proj-date').value=todayStr();
-      // 跟进详情：留空让用户填写新进展
-      document.getElementById('proj-progress').value='';
+      // 跟进详情：显示所有历史进展记录，用户可在此基础上追加新内容
+      const allProgress=linkedEntries
+        .slice().sort((a,b)=>a.id-b.id) // 按时间正序
+        .filter(e=>e.progress&&e.progress.trim())
+        .map(e=>{
+          const d=e.recordDate?`· ${e.recordDate} `:'· ';
+          return d+e.progress.trim();
+        })
+        .join('\n');
+      document.getElementById('proj-progress').value=allProgress;
     }
   } else {
     // 首次导入：正常填入
@@ -2225,7 +2233,13 @@ function fillEdit(name){
   document.getElementById('proj-requirement').value=l.requirement||'';
   document.getElementById('proj-quantity').value=l.quantity||'';
   document.getElementById('proj-quote').value=l.quote||'';
-  document.getElementById('proj-progress').value='';
+  // 跟进详情：显示所有历史进展记录（正序），用户在此基础上追加
+  const allEntries=state.projects.filter(p=>(p.name||p.client)===name).sort((a,b)=>a.id-b.id);
+  const allProgress=allEntries
+    .filter(e=>e.progress&&e.progress.trim())
+    .map(e=>{const d=e.recordDate?`· ${e.recordDate} `:'· ';return d+e.progress.trim();})
+    .join('\n');
+  document.getElementById('proj-progress').value=allProgress;
   // 自动填入上次的推进计划（供参考，有变更可直接修改）
   document.getElementById('proj-action-content').value=l.actionContent||'';
   document.getElementById('proj-action-time').value=l.actionTime||'';
