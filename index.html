@@ -5737,6 +5737,7 @@ function qtSeed(){
         <div style="font-size:11px;color:var(--c-muted);padding:6px 0;">暂无公章</div>
       </div>
       <div style="font-size:10px;color:var(--c-muted);margin-top:2px;">💡 可上传多张公章，PDF 中并排显示在右下角。预览时可拖动各公章调整位置。</div>
+      <button id="stamp-toggle-btn" onclick="toggleStamps()" style="margin-top:6px;background:var(--amber-bg,#FEF3C7);color:var(--amber-text,#92400E);border:1px solid var(--amber,#F59E0B);border-radius:5px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif;">🔒 隐藏公章（内部用）</button>
     </div>
   </div>
   <div class="divider"></div>
@@ -6270,7 +6271,29 @@ function getLogoHtml(){
   return `<img id="pdf-logo-img-0" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAsCAYAAADGiDuVAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABZ0RVh0Q3JlYXRpb24gVGltZQAwNS8wNS8yNOhIDJIAAAAcdEVYdFNvZnR3YXJlAEFkb2JlIEZpcmV3b3JrcyBDUzQGstOgAAAAoElEQVRoge3BMQEAAADCoPVP7WsIoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeAMBuAABHgBk4QAAAABJRU5ErkJggg==" style="height:${h}pt;display:block;max-width:110pt;object-fit:contain;${filter}cursor:move;opacity:0.9;" alt="CESIPC" onmousedown="startDragImage(event,'logo',0)">`;
 }
 
+let _stampsHidden = false;
+function toggleStamps(){
+  _stampsHidden = !_stampsHidden;
+  const btn = document.getElementById('stamp-toggle-btn');
+  if(btn){
+    btn.textContent = _stampsHidden ? '🔓 显示公章（客户用）' : '🔒 隐藏公章（内部用）';
+    btn.style.background = _stampsHidden ? 'var(--green-bg,#DCFCE7)' : 'var(--amber-bg,#FEF3C7)';
+    btn.style.color = _stampsHidden ? 'var(--green-text,#166534)' : 'var(--amber-text,#92400E)';
+    btn.style.borderColor = _stampsHidden ? 'var(--green,#22C55E)' : 'var(--amber,#F59E0B)';
+  }
+  // Refresh current preview if open
+  const paper = document.getElementById('paper');
+  if(paper && paper.innerHTML){
+    const t = _curDocType;
+    if(t==='q') paper.innerHTML = buildQ();
+    else if(t==='pi') paper.innerHTML = buildPI();
+    else if(t==='ci') paper.innerHTML = buildCI();
+    else paper.innerHTML = buildPK();
+  }
+}
+
 function getStampHtml(){
+  if(_stampsHidden) return '';
   const stamps = _companyImages.stamps;
   if(!stamps || stamps.length === 0) return '';
   // Render stamps stacked bottom-right; offset each slightly if multiple
@@ -6397,6 +6420,17 @@ function fmtExec(cmd){_restoreAndExec(()=>document.execCommand(cmd,false,null));
 function fmtColor(c){_restoreAndExec(()=>document.execCommand('foreColor',false,c));}
 function fmtBg(c){_restoreAndExec(()=>document.execCommand('hiliteColor',false,c));}
 
+// Auto-calculate All-Incl (simple mode) = Unit Price + Shipping per unit
+function calcSimpleAI(el){
+  const tr=el.closest('tr');
+  if(!tr)return;
+  const inp=tr.querySelectorAll('input[type="number"]');
+  // inp[0]=qty, [1]=cfg, [2]=sh, [3]=ai(readonly)
+  const cfg=parseFloat(inp[1]?.value)||0;
+  const sh=parseFloat(inp[2]?.value)||0;
+  if(inp[3]){ inp[3].value = cfg||sh ? (cfg+sh).toFixed(2) : ''; }
+}
+
 // Auto-calculate All-Incl = Barebone + RAM + SSD + Shipping
 function calcAI(el){
   const tr=el.closest('tr');
@@ -6483,23 +6517,26 @@ function setMode(t,m){
         <th style="width:30px"></th></tr>`
     : `<tr><th style="width:26px">#</th><th style="width:96px">Part No.</th>
         <th style="min-width:420px">Description</th><th style="width:48px">Qty</th>
-        <th style="width:110px">Unit Price<br>(Configured System)</th>
+        <th style="width:100px">Unit Price<br>(Configured System)</th>
+        <th style="width:68px">Shipping $</th>
+        <th style="width:78px">All-Incl. $</th>
         <th style="width:78px">Grand Total</th>
         <th style="width:30px"></th></tr>`;
 
   // Update ffoot colspan
-  document.getElementById(t+'-mid-spacer').colSpan = isSplit ? 5 : 1;
+  // Simple mode now has same # of cols as split (9 data cols + ✕ = 9+1=10, tfoot covers 9)
+  document.getElementById(t+'-mid-spacer').colSpan = isSplit ? 5 : 5;
   const shLbl = document.getElementById(t+'-sh-lbl');
   if(shLbl){
-    shLbl.colSpan = isSplit ? 8 : 4;
+    shLbl.colSpan = 8; // same for both modes now
     shLbl.innerHTML = isSplit
       ? 'Shipping <span style="font-size:9px;opacity:.6">(auto: Qty &times; Shipping/unit)</span>'
-      : 'Shipping';
+      : 'Shipping <span style="font-size:9px;opacity:.6">(per unit &times; Qty = total shipping)</span>';
   }
   // Always keep shipping row visible when switching modes
   const shRowEl = document.getElementById(t+'-sh')?.closest('tr');
   if(shRowEl) shRowEl.style.display = '';
-  document.getElementById(t+'-total-lbl').colSpan = isSplit ? 9 : 5;
+  document.getElementById(t+'-total-lbl').colSpan = 9; // same for both modes
 
   // Rebuild all existing rows in new mode
   const tbody = document.getElementById(t+'-b');
@@ -6516,7 +6553,9 @@ function setMode(t,m){
       bb:  inp[1]?.value||'', ram: inp[2]?.value||'',
       ssd: inp[3]?.value||'', sh:  inp[4]?.value||'',
       ai:  inp[5]?.value||'',
-      cfg: isSplit ? (inp[5]?.value||inp[1]?.value||'') : (inp[1]?.value||'')
+      // simple mode fields: cfg=inp[1], sh=inp[2]
+      cfg: isSplit ? (inp[5]?.value||inp[1]?.value||'') : (inp[1]?.value||''),
+      simpleSh: isSplit ? '' : (inp[2]?.value||'')
     };
   });
 
@@ -6573,12 +6612,14 @@ function addR(t, prefill){
         <td class="amt" id="${t}-a-${id}">0.00</td>
         <td><button class="btn btn-d btn-sm" onclick="delR('${t}',${id})">✕</button></td>`;
     } else {
-      // simple mode: Part No. | Description | Qty | Unit Price (Configured) | Grand Total
+      // simple mode: # | PartNo | Desc | Qty | UnitPrice | Shipping | All-Incl | GrandTotal | ✕
       tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc[t]}</td>
         <td><textarea placeholder="EPC-S1092A&#10;料号" style="width:90px;min-height:28px;resize:vertical;font-size:11px;padding:4px 5px;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--c-text);font-family:inherit;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.pn||''}</textarea></td>
         <td style="padding:0;position:relative;min-width:420px;width:420px;"><div contenteditable="true" style="min-width:420px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds!=null&&p.ds!==''?p.ds:DEFAULT_DESC}</div><button onmousedown="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
         <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
-        <td><input type="number" value="${p.cfg||p.ai||p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:100px;text-align:right;" oninput="${cf}()"/></td>
+        <td><input type="number" value="${p.cfg||p.ai||p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:95px;text-align:right;" oninput="calcSimpleAI(this);${cf}()" title="Unit Price (Configured System)"/></td>
+        <td><input type="number" value="${p.simpleSh||p.sh||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;" oninput="calcSimpleAI(this);${cf}()" title="Shipping per unit"/></td>
+        <td><input type="number" value="${p.ai||''}" min="0" step="0.01" placeholder="0.00" style="width:70px;text-align:right;background:var(--c-surface2);color:var(--c-muted);" readonly title="All-Incl = Unit Price + Shipping"/></td>
         <td class="amt" id="${t}-a-${id}">0.00</td>
         <td><button class="btn btn-d btn-sm" onclick="delR('${t}',${id})">✕</button></td>`;
     }
@@ -6647,7 +6688,12 @@ function cQ(){
       tsh+=qty*rowSh;
     }else{
       qty=parseFloat(i[0]?.value)||0;
-      p=parseFloat(i[1]?.value)||0;
+      const cfg=parseFloat(i[1]?.value)||0;
+      const rowSh=parseFloat(i[2]?.value)||0;
+      p=cfg; // subtotal uses unit price only (shipping summed separately)
+      tsh+=qty*rowSh;
+      // Auto-update All-Incl readonly field
+      if(i[3]){ i[3].value = cfg||rowSh ? (cfg+rowSh).toFixed(2) : ''; }
     }
     const a=qty*p;tq+=qty;ta+=a;
     const id=tr.id.split('-').pop();
@@ -6655,7 +6701,8 @@ function cQ(){
   });
   document.getElementById('q-tq').textContent=tq;
   document.getElementById('q-ta').textContent=fa(ta);
-  if(isSplit){const shEl=document.getElementById('q-sh');if(shEl)shEl.value=tsh.toFixed(2);}
+  // Shipping: auto in both modes now
+  const shEl=document.getElementById('q-sh');if(shEl)shEl.value=tsh.toFixed(2);
   const sh=parseFloat(document.getElementById('q-sh')?.value)||0;
   document.getElementById('q-gt').textContent=fa(ta+sh);
 }
@@ -6704,7 +6751,11 @@ function cPI(){
       tsh+=qty*rowSh;
     }else{
       qty=parseFloat(i[0]?.value)||0;
-      p=parseFloat(i[1]?.value)||0;
+      const cfg=parseFloat(i[1]?.value)||0;
+      const rowSh=parseFloat(i[2]?.value)||0;
+      p=cfg;
+      tsh+=qty*rowSh;
+      if(i[3]){ i[3].value = cfg||rowSh ? (cfg+rowSh).toFixed(2) : ''; }
     }
     const a=qty*p;tq+=qty;ta+=a;
     const id=tr.id.split('-').pop();
@@ -6712,7 +6763,7 @@ function cPI(){
   });
   document.getElementById('pi-tq').textContent=tq;
   document.getElementById('pi-ta').textContent=fa(ta);
-  if(isSplit){const shEl=document.getElementById('pi-sh');if(shEl)shEl.value=tsh.toFixed(2);}
+  const shEl2=document.getElementById('pi-sh');if(shEl2)shEl2.value=tsh.toFixed(2);
   const sh=parseFloat(document.getElementById('pi-sh')?.value)||0;
   document.getElementById('pi-gt').textContent=fa(ta+sh);
 }
@@ -6773,6 +6824,7 @@ function getQRows(){
     }else{
       rows.push({n:i+1,pn,ds:ce?.innerHTML||'',
         qty:inp[0]?.value||'0',cfg:inp[1]?.value,
+        sh:inp[2]?.value,ai:inp[3]?.value,
         tot:document.getElementById('q-a-'+id)?.textContent||'0.00',od:i%2===0,simple:true});
     }
   });return rows;
@@ -6794,6 +6846,7 @@ function getPIRows(){
     }else{
       rows.push({n:i+1,pn,ds:ce?.innerHTML||'',
         qty:inp[0]?.value||'0',cfg:inp[1]?.value,
+        sh:inp[2]?.value,ai:inp[3]?.value,
         tot:document.getElementById('pi-a-'+id)?.textContent||'0.00',od:i%2===0,simple:true});
     }
   });return rows;
@@ -6854,6 +6907,8 @@ function qItemRows(rows){
         <td class="la" style="text-align:left;">${r.ds}</td>
         <td class="ct">${r.qty}</td>
         <td class="nr">${r.cfg?'$'+parseFloat(r.cfg).toFixed(2):''}</td>
+        <td class="nr">${r.sh?'$'+parseFloat(r.sh).toFixed(2):''}</td>
+        <td class="nr">${r.ai?'$'+parseFloat(r.ai).toFixed(2):''}</td>
         ${hideTotal?'':'<td class="nr">$'+r.tot+'</td>'}
       </tr>`;
     }
@@ -7000,12 +7055,14 @@ function buildQ(){
            ${_qTotalColHidden?'':'<th style="width:50pt">Grand Total</th>'}`
         : `<th style="width:20pt">#</th><th style="width:54pt">Part No.</th>
            <th class="la">Description</th><th style="width:26pt">Qty</th>
-           <th style="width:80pt">Unit Price<br>(Configured System)</th>
-           ${_qTotalColHidden?'':'<th style="width:50pt">Grand Total</th>'}`}
+           <th style="width:68pt">Unit Price<br>(Configured)</th>
+           <th style="width:38pt">Shipping $</th>
+           <th style="width:44pt">All-Incl. $</th>
+           ${_qTotalColHidden?'':'<th style="width:44pt">Grand Total</th>'}`}
     </tr></thead>
     <tbody>${qItemRows(rows)}</tbody>
   </table></div>
-  ${subBlock(tq,ta,sh,gt,_mode.q==='split'?10:6,_qTotalColHidden)}
+  ${subBlock(tq,ta,sh,gt,10,_qTotalColHidden)}
   <div class="sec-h">TERMS &amp; CONDITIONS</div>
   <table class="kv-t">${kvRows([['Trade Terms',g('tradeTerm'),true],['Payment Terms',g('payTerm'),false],['Lead Time',g('leadTime'),true],['Warranty',g('warranty'),false],['Validity','Barebone pricing valid 3 months; RAM &amp; SSD pricing valid 7 days',false]])}</table>
   <div class="sec-h">BANK / REMITTANCE DETAILS</div>
@@ -7052,12 +7109,14 @@ function buildPI(){
            ${_qTotalColHidden?'':'<th style="width:50pt">Grand Total</th>'}`
         : `<th style="width:20pt">#</th><th style="width:54pt">Part No.</th>
            <th class="la">Description</th><th style="width:26pt">Qty</th>
-           <th style="width:80pt">Unit Price<br>(Configured System)</th>
-           ${_qTotalColHidden?'':'<th style="width:50pt">Grand Total</th>'}`}
+           <th style="width:68pt">Unit Price<br>(Configured)</th>
+           <th style="width:38pt">Shipping $</th>
+           <th style="width:44pt">All-Incl. $</th>
+           ${_qTotalColHidden?'':'<th style="width:44pt">Grand Total</th>'}`}
     </tr></thead>
     <tbody>${qItemRows(rows)}</tbody>
   </table></div>
-  ${subBlock(tq,ta,sh,gt,_mode.pi==='split'?10:6,_qTotalColHidden)}
+  ${subBlock(tq,ta,sh,gt,10,_qTotalColHidden)}
   <div class="sec-h">TERMS &amp; CONDITIONS</div>
   <table class="kv-t">${kvRows([['Trade Terms',g('tradeTerm'),true],['Payment Terms',g('payTerm'),false],['Lead Time',g('leadTime'),true],['Warranty',g('warranty'),false]])}</table>
   <div class="sec-h">BANK / REMITTANCE DETAILS</div>
@@ -7269,6 +7328,8 @@ function exportPDF(){
   // 等待字体加载完成再打印，避免字体未就绪导致排版错乱
   const doprint=()=>{
     const origTitle=document.title;
+    // Change MAIN page title — Chrome/Edge use this as the PDF filename
+    document.title=prefix;
     iframe.contentDocument.title=prefix;
     iframe.style.visibility='visible';
     iframe.contentWindow.focus();
