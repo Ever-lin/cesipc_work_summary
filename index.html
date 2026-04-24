@@ -1008,6 +1008,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <select class="ym-s" id="qt-f-contact" onchange="qtRender()"><option value="">全部业务</option></select>
     <select class="ym-s" id="qt-f-status" onchange="qtRender()"><option value="">全部状态</option><option value="open">⭕ 跟进中</option><option value="confirmed">🔶 已确认订单</option><option value="won">✅ 已成交</option><option value="pause">⏸️ 暂无进展</option><option value="lost">❌ 丢单</option></select>
     <select class="ym-s" id="qt-f-p3" onchange="qtRender()"><option value="">全部价格</option><option value="below">⚠️ 低于P3</option><option value="ok">✅ 高于P3</option></select>
+    <select class="ym-s" id="qt-f-model" onchange="qtRender()" title="按型号筛选"><option value="">全部型号</option></select>
+    <select class="ym-s" id="qt-f-cpu" onchange="qtRender()" title="按CPU筛选"><option value="">全部CPU</option></select>
+    <select class="ym-s" id="qt-f-ram" onchange="qtRender()" title="按RAM筛选"><option value="">全部RAM</option></select>
+    <select class="ym-s" id="qt-f-ssd" onchange="qtRender()" title="按SSD筛选"><option value="">全部SSD</option></select>
     <button class="btn btn-primary btn-sm" onclick="qtOpenAdd()">＋ 新增报价</button>
     <button class="btn btn-sm" onclick="qtExportCSV()" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97;white-space:nowrap">📥 导出Excel</button>
   </div>
@@ -1873,8 +1877,18 @@ function importFromQuoteGroup(gi){
       const qtyParts=g.quotes.filter(x=>x.qty).map(x=>`${x.qty}台${x.model||''}`.trim());
       const uniqueQtyParts=[...new Set(qtyParts)];
       document.getElementById('proj-quantity').value=uniqueQtyParts.length?uniqueQtyParts.join(' / '):(latest.quantity||'');
-      // 项目报价：保留已有记录（不覆盖），追加模式下由用户手动更新
-      document.getElementById('proj-quote').value=latest.quote||'';
+      // 项目报价：用报价管理最新数据重建（与首次导入逻辑一致）
+      // 保留旧报价备用，如果报价管理里没有数据则 fallback 到旧的
+      const newBlocks=[];
+      g.quotes.forEach((q,qi)=>{
+        const text=qtBuildQuoteText(q);
+        if(text.trim()){
+          const header=g.quotes.length>1?`【产品${qi+1}】${q.model||''}${q.cpu?' · '+q.cpu:''}\n`:'';
+          newBlocks.push(header+text.trim());
+        }
+      });
+      const newQuoteTxt=newBlocks.join('\n\n─────\n\n');
+      document.getElementById('proj-quote').value=newQuoteTxt||latest.quote||'';
       // 其他字段：来自最新记录
       document.getElementById('proj-requirement').value=latest.requirement||'';
       // 自动填入上次的推进计划（有变更直接修改）
@@ -4003,12 +4017,20 @@ function qtFiltered(){
   const ct=document.getElementById('qt-f-contact').value;
   const st=document.getElementById('qt-f-status').value;
   const p3f=document.getElementById('qt-f-p3').value;
+  const fModel=document.getElementById('qt-f-model')?.value||'';
+  const fCpu=document.getElementById('qt-f-cpu')?.value||'';
+  const fRam=document.getElementById('qt-f-ram')?.value||'';
+  const fSsd=document.getElementById('qt-f-ssd')?.value||'';
   return qtQuotes.filter(r=>{
     if(q&&!`${r.project} ${r.model} ${r.cpu} ${r.ram} ${r.ssd} ${r.stage||''} ${r.contact||''}`.toLowerCase().includes(q))return false;
     if(co&&r.company!==co)return false;
     if(ct&&r.contact!==ct)return false;
     if(st&&r.deal!==st)return false;
     if(p3f){const d=r.p3?r.price-r.p3:null;if(p3f==='below'&&(d===null||d>=0))return false;if(p3f==='ok'&&(d===null||d<0))return false;}
+    if(fModel&&r.model!==fModel)return false;
+    if(fCpu&&r.cpu!==fCpu)return false;
+    if(fRam&&r.ram!==fRam)return false;
+    if(fSsd&&r.ssd!==fSsd)return false;
     return true;
   });
 }
@@ -4128,6 +4150,17 @@ function qtUpdateCompanyFilter(){
   const contacts=[...new Set(qtQuotes.map(q=>q.contact).filter(Boolean))].sort();
   const csel=document.getElementById('qt-f-contact');const ccur=csel.value;
   csel.innerHTML='<option value="">全部业务</option>'+contacts.map(c=>`<option value="${c}"${c===ccur?' selected':''}>${c}</option>`).join('');
+
+  // 更新型号/CPU/RAM/SSD 筛选下拉
+  const setFilter=(id,vals,label)=>{
+    const sel=document.getElementById(id);if(!sel)return;
+    const cur=sel.value;
+    sel.innerHTML=`<option value="">${label}</option>`+[...new Set(vals.filter(Boolean))].sort().map(v=>`<option value="${v}"${v===cur?' selected':''}>${v}</option>`).join('');
+  };
+  setFilter('qt-f-model', qtQuotes.map(q=>q.model), '全部型号');
+  setFilter('qt-f-cpu',   qtQuotes.map(q=>q.cpu),   '全部CPU');
+  setFilter('qt-f-ram',   qtQuotes.map(q=>q.ram),   '全部RAM');
+  setFilter('qt-f-ssd',   qtQuotes.map(q=>q.ssd),   '全部SSD');
 
   // 更新各字段的 datalist（全局去重，频次排序）
   const uniq=(arr)=>{
@@ -4433,10 +4466,10 @@ function qtRenderProductRows(){
         <!-- 整机区 -->
         <div id="${dlid}-tt-specs" style="grid-template-columns:1fr 1fr;gap:8px;${pmode==='total'?'display:grid':'display:none'}">
           <div class="field"><label style="font-size:11px">RAM 规格</label>
-            <input data-f="tt-ram" value="${d.ram||''}" placeholder="8GB DDR4" style="font-size:12px;padding:5px 8px">
+            <input data-f="tt-ram" value="${d.ram||''}" placeholder="8GB DDR4" list="${dlid}-ram" style="font-size:12px;padding:5px 8px">
           </div>
           <div class="field"><label style="font-size:11px">SSD 规格</label>
-            <input data-f="tt-ssd" value="${d.ssd||''}" placeholder="256GB M.2 SSD" style="font-size:12px;padding:5px 8px">
+            <input data-f="tt-ssd" value="${d.ssd||''}" placeholder="256GB M.2 SSD" list="${dlid}-ssd" style="font-size:12px;padding:5px 8px">
           </div>
         </div>
         <div class="field" id="${dlid}-tt" style="${ttShow}"><label style="font-size:11px">整机总价 / 报价 P</label>
