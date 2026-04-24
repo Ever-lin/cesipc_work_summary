@@ -3998,7 +3998,10 @@ function qtRender(){
       <td>${r.barbone!=null?'$'+r.barbone:'—'}</td>
       <td>${r.ram||'—'}</td>
       <td>${r.ssd||'—'}</td>
-      <td class="qt-price ${r.p3&&r.price<r.p3?'qt-below':''}">${r.priceCur==='CNY'?'¥':'$'}${r.price}${(r.tiers&&r.tiers.length)?` <span style="font-size:10px;background:var(--blue-bg);color:var(--blue-text);border-radius:8px;padding:1px 5px">${r.tiers.length}阶梯</span>`:''}</td>
+      <td class="qt-price ${r.p3&&r.price<r.p3?'qt-below':''}">${(r.tiers&&r.tiers.length)
+        ? `<span style="font-size:11px;font-weight:600;color:var(--blue-text)">📊 ${r.tiers.map(t=>`${t.qty}台×${t.cur==='CNY'?'¥':'$'}${t.price}`).join(' / ')}</span>`
+        : `${r.priceCur==='CNY'?'¥':'$'}${r.price}`
+      }</td>
       <td>${r.p3!=null?(r.p3Cur==='CNY'?'¥':'$')+r.p3:'—'}</td>
       <td class="${diff!==null?(diff<0?'qt-diff-neg':'qt-diff-pos'):''}">
         ${diff!==null?(diff>=0?'+':'')+(r.priceCur==='CNY'?'¥':'$')+diff:'—'}
@@ -4425,28 +4428,56 @@ function qtRenderProductRows(){
         <div class="field" style="grid-column:1/-1"><label style="font-size:11px">运费备注（选填）</label>
           <input data-f="shipping" value="${d.shipping||''}" placeholder="如：10台 每台运费$70" style="font-size:12px;padding:5px 8px">
         </div>
-        <!-- 价差提示 -->
+        <!-- 价差提示（无阶梯时显示） -->
         <div data-diffid style="grid-column:1/-1;font-size:11px;min-height:16px"></div>
-        <!-- 阶梯报价区 -->
-        <div style="grid-column:1/-1;margin-top:4px">
+        <!-- 批量价格区 -->
+        <div style="grid-column:1/-1;margin-top:4px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm)">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-            <span style="font-size:11px;font-weight:600;color:var(--text2)">📊 数量阶梯报价（选填）</span>
-            <button onmousedown="event.preventDefault();qtAddTier(${i})" style="background:var(--blue-bg);color:var(--blue-text);border:1px solid var(--blue);border-radius:3px;font-size:11px;padding:2px 8px;cursor:pointer">＋ 加阶梯</button>
+            <span style="font-size:11px;font-weight:600;color:var(--text)">📊 批量价格（数量阶梯）</span>
+            <button onmousedown="event.preventDefault();qtAddTier(${i})" style="background:var(--blue);color:#fff;border:none;border-radius:4px;font-size:11px;padding:3px 10px;cursor:pointer;font-weight:500">＋ 加档位</button>
           </div>
-          <div id="qt-tiers-${i}" style="display:flex;flex-direction:column;gap:4px">
-            ${(d.tiers||[]).map((t,ti)=>`<div style="display:flex;gap:6px;align-items:center;background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:5px 8px">
-              <span style="font-size:11px;color:var(--text2);white-space:nowrap">数量</span>
-              <input type="number" data-tier="${ti}" data-tierf="qty" value="${t.qty||''}" placeholder="台数" min="1" style="width:60px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)">
-              <span style="font-size:11px;color:var(--text2);white-space:nowrap">单价</span>
-              <select data-tier="${ti}" data-tierf="cur" style="width:auto;padding:2px 5px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--bg)">
-                <option value="USD" ${(t.cur||'USD')==='USD'?'selected':''}>$</option>
-                <option value="CNY" ${t.cur==='CNY'?'selected':''}>¥</option>
-              </select>
-              <input type="number" data-tier="${ti}" data-tierf="price" value="${t.price||''}" placeholder="0.00" min="0" step="0.01" style="width:80px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)">
-              <button onmousedown="event.preventDefault();qtRemoveTierDOM(this,${i})" style="background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:3px;font-size:11px;padding:1px 7px;cursor:pointer;line-height:1.4">✕</button>
-            </div>`).join('')}
+          <div style="font-size:10px;color:var(--text2);margin-bottom:6px">每档填写数量和单价 P，P3 参考价用上方的值自动计算差价。无阶梯时直接填上方报价P。</div>
+          <div id="qt-tiers-${i}" style="display:flex;flex-direction:column;gap:6px">
+            ${(d.tiers||[]).map((t,ti)=>{
+              const price=parseFloat(t.price)||0;
+              const p3v=parseFloat(d.p3)||0;
+              const p3cur=d['p3-cur']||'USD';
+              const tcur=t.cur||'USD';
+              const sym=c=>c==='CNY'?'¥':'$';
+              const diff=p3v>0&&price>0?price-p3v:null;
+              const diffStr=diff!==null?(diff>=0?'+':'')+sym(tcur)+diff:'—';
+              const diffColor=diff===null?'var(--text2)':diff<0?'var(--red-text)':'#1D9E75';
+              return `<div style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px 10px">
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+                  <div style="display:flex;align-items:center;gap:4px">
+                    <span style="font-size:11px;color:var(--text2);font-weight:500">数量</span>
+                    <input type="number" data-tier="${ti}" data-tierf="qty" value="${t.qty||''}" placeholder="台数" min="1"
+                      style="width:64px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)"
+                      oninput="qtSyncTiersFromDOM(${i});qtRowCalc(${i})">
+                    <span style="font-size:11px;color:var(--text2)">台</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:140px">
+                    <span style="font-size:11px;color:var(--text2);font-weight:500">价格 P</span>
+                    <select data-tier="${ti}" data-tierf="cur" style="width:auto;padding:2px 5px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--bg)"
+                      onchange="qtSyncTiersFromDOM(${i});qtRowCalc(${i})">
+                      <option value="USD" ${(t.cur||'USD')==='USD'?'selected':''}>$</option>
+                      <option value="CNY" ${t.cur==='CNY'?'selected':''}>¥</option>
+                    </select>
+                    <input type="number" data-tier="${ti}" data-tierf="price" value="${t.price||''}" placeholder="0.00" min="0" step="0.01"
+                      style="flex:1;min-width:80px;font-size:13px;font-weight:600;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)"
+                      oninput="qtSyncTiersFromDOM(${i});qtRowCalc(${i})">
+                  </div>
+                  <button onmousedown="event.preventDefault();qtRemoveTierDOM(this,${i})" style="background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:3px;font-size:11px;padding:2px 8px;cursor:pointer">✕</button>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:5px 8px;background:var(--bg2);border-radius:4px">
+                  <div style="text-align:center"><div style="font-size:12px;font-weight:600;color:var(--text2)">${p3v>0?sym(p3cur)+p3v:'—'}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">P3 参考</div></div>
+                  <div style="text-align:center"><div style="font-size:12px;font-weight:600;color:var(--blue-text)">${price>0?sym(tcur)+price:'—'}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">报价 P</div></div>
+                  <div style="text-align:center"><div style="font-size:12px;font-weight:600;color:${diffColor}">${diffStr}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">差价</div></div>
+                </div>
+              </div>`;
+            }).join('')}
           </div>
-          <div data-tierhint style="font-size:10px;color:var(--text3);margin-top:3px;display:${(d.tiers&&d.tiers.length)?'block':'none'}">💡 Quotation 单据将为每个阶梯生成独立行；有阶梯时可在 Quotation 顶部隐藏总价列</div>
+          <div data-tierhint style="font-size:10px;color:var(--text3);margin-top:5px;display:${(d.tiers&&d.tiers.length)?'block':'none'}">💡 导入 Quotation 时每档生成独立行；建议隐藏总价列只展示单价参考</div>
         </div>
       </div>
     </div>`;
@@ -4498,35 +4529,20 @@ function qtAddTier(i){
   qtSyncTiersFromDOM(i);
   if(!_qtProdRows[i])return;
   if(!_qtProdRows[i].tiers)_qtProdRows[i].tiers=[];
-
-  const tiIdx = _qtProdRows[i].tiers.length;
   _qtProdRows[i].tiers.push({qty:'',cur:'USD',price:''});
 
-  // Direct DOM insertion — no full re-render, no scroll jump
-  const container = document.getElementById('qt-tiers-'+i);
-  if(!container){qtRenderProductRows();return;}
+  // Re-render the whole product rows to get the new P3 comparison panel layout
+  qtRenderProductRows();
 
-  const row = document.createElement('div');
-  row.style.cssText='display:flex;gap:6px;align-items:center;background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:5px 8px';
-  row.innerHTML=`<span style="font-size:11px;color:var(--text2);white-space:nowrap">数量</span>
-    <input type="number" data-tier="${tiIdx}" data-tierf="qty" value="" placeholder="台数" min="1" style="width:60px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)">
-    <span style="font-size:11px;color:var(--text2);white-space:nowrap">单价</span>
-    <select data-tier="${tiIdx}" data-tierf="cur" style="width:auto;padding:2px 5px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--bg)">
-      <option value="USD" selected>$</option><option value="CNY">¥</option>
-    </select>
-    <input type="number" data-tier="${tiIdx}" data-tierf="price" value="" placeholder="0.00" min="0" step="0.01" style="width:80px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)">
-    <button onmousedown="event.preventDefault();qtRemoveTierDOM(this,${i})" style="background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:3px;font-size:11px;padding:1px 7px;cursor:pointer;line-height:1.4">✕</button>`;
-  container.appendChild(row);
-
-  // Show hint
-  const hint = container.parentElement.querySelector('[data-tierhint]');
-  if(hint) hint.style.display='block';
-
-  // Scroll new row into view smoothly
-  row.scrollIntoView({behavior:'smooth', block:'nearest'});
-  // Focus the qty input
-  const qtyInput = row.querySelector('[data-tierf="qty"]');
-  if(qtyInput) setTimeout(()=>qtyInput.focus(), 50);
+  // Scroll new tier into view
+  setTimeout(()=>{
+    const container=document.getElementById('qt-tiers-'+i);
+    if(container&&container.lastElementChild){
+      container.lastElementChild.scrollIntoView({behavior:'smooth',block:'nearest'});
+      const inp=container.lastElementChild.querySelector('input[type="number"]');
+      if(inp)inp.focus();
+    }
+  },80);
 }
 
 function qtRemoveTierDOM(btn, i){
@@ -4576,6 +4592,11 @@ function qtRowCalc(i){
     const sym=(g('price-cur')||'USD')==='CNY'?'¥':'$';
     diffEl.innerHTML=`<span style="color:${d<0?'var(--red-text)':'#1D9E75'};font-weight:600">${d>=0?'▲ +':'▼ '}${sym}${Math.abs(d).toFixed(2)} vs P3</span>${d<0?' ⚠️ 低于P3':''} `;
   } else if(diffEl){diffEl.innerHTML='';}
+  // If this row has tiers, re-render the row so P3 diffs stay current
+  if(_qtProdRows[i]&&(_qtProdRows[i].tiers||[]).length>0){
+    qtSyncTiersFromDOM(i);
+    qtRenderProductRows();
+  }
 }
 
 function qtTogglePriceMode(){
@@ -4863,6 +4884,8 @@ function qtRenderHistoryInModal(hist){
 
   // 价格变动方向（相对上一条）
   const priceDelta=(idx)=>{
+    // suppress delta arrow when snapshot has tiers (no single price to compare)
+    if(snapshots[idx]&&snapshots[idx].tiers&&snapshots[idx].tiers.length)return'';
     if(idx>=snapshots.length-1)return'';
     const cur=parseFloat(snapshots[idx].price);
     const prev=parseFloat(snapshots[idx+1].price);
@@ -4884,7 +4907,8 @@ function qtRenderHistoryInModal(hist){
     if(h.totalPrice!=null)parts.push({field:'totalPrice',text:'整机 '+fc(h.totalCur||'USD')+h.totalPrice});
     if(h.qty)parts.push({field:'qty',text:'数量:'+h.qty+'台'});
 
-    const diffStr=(h.price!=null&&h.p3!=null)?(()=>{
+    // suppress single-price P-P3 diff when tiers exist (each tier has its own diff)
+    const diffStr=(!h.tiers||!h.tiers.length)&&(h.price!=null&&h.p3!=null)?(()=>{
       const d=h.price-h.p3;const sym=fc(h.priceCur||'USD');const p3sym=fc(h.p3Cur||'USD');
       return'P−P3:'+(d>=0?'+':'')+sym+d+'（P3: '+p3sym+h.p3+'）';
     })():'';
@@ -4899,7 +4923,10 @@ function qtRenderHistoryInModal(hist){
       // ── 第一行：时间 + 价格 + 变动箭头 + 差价 + 最新标签
       +'<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">'
       +'<span style="color:var(--text3);white-space:nowrap;font-size:11px">'+(h.savedAt||'—')+'</span>'
-      +hl(idx,'price',fc(h.priceCur||'USD')+(h.price||'—'),'color:var(--blue-text);font-weight:600;white-space:nowrap')
+      // 有批量价格时显示批量汇总，否则显示单价
+      +((h.tiers&&h.tiers.length)
+        ? hl(idx,'price','<span style="font-size:11px;font-weight:600;color:var(--blue-text)">📊 '+h.tiers.map(t=>`${t.qty}台×${fc(t.cur||'USD')}${t.price}`).join(' / ')+'</span>','')
+        : hl(idx,'price',fc(h.priceCur||'USD')+(h.price||'—'),'color:var(--blue-text);font-weight:600;white-space:nowrap'))
       +priceDelta(idx)
       +(diffStr?'<span style="font-size:11px;color:'+(h.price!=null&&h.p3!=null&&h.price-h.p3<0?'var(--red-text)':'#1D9E75')+'">'+diffStr+'</span>':'')
       +(isLatest?'<span style="font-size:10px;color:var(--blue-text);background:#C9DFF7;padding:1px 6px;border-radius:8px;font-weight:600">最新</span>':'')
