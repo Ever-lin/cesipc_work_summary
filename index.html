@@ -1314,9 +1314,9 @@ function save(){try{localStorage.setItem('ws6',JSON.stringify(state))}catch(e){}
 function load(){
   try{
     const d=localStorage.getItem('ws6');
-    if(d){state=JSON.parse(d);if(!state.weeklies)state.weeklies=[];if(!state.monthlies)state.monthlies=[];if(!state.dailies)state.dailies=[];if(!state.genWeeklies)state.genWeeklies=[];if(!state.genMonthlies)state.genMonthlies=[];if(!state.fyTargets)state.fyTargets={};SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});save();}
-    else{state.perf=SEED.slice();state.weeklies=[];state.monthlies=[];state.dailies=[];state.genWeeklies=[];state.genMonthlies=[];state.fyTargets={};save();}
-  }catch(e){state.perf=SEED.slice();state.weeklies=[];state.monthlies=[];state.dailies=[];state.genWeeklies=[];state.genMonthlies=[];save();}
+    if(d){state=JSON.parse(d);if(!state.monthlies)state.monthlies=[];if(!state.dailies)state.dailies=[];if(!state.genWeeklies)state.genWeeklies=[];if(!state.genMonthlies)state.genMonthlies=[];if(!state.fyTargets)state.fyTargets={};SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});save();}
+    else{state.perf=SEED.slice();state.monthlies=[];state.dailies=[];state.genWeeklies=[];state.genMonthlies=[];state.fyTargets={};save();}
+  }catch(e){state.perf=SEED.slice();state.monthlies=[];state.dailies=[];state.genWeeklies=[];state.genMonthlies=[];save();}
 }
 load();
 // Migrate old status values to new 5-status system
@@ -1709,7 +1709,7 @@ function qtSnapToLine(h){
     let detailLine=parts.join(' · ')+(h.shipping?' · 🚢 '+h.shipping:'');
     lines.push(detailLine);
   }
-  if(h.custom&&h.custom.trim())lines.push('🔧 '+h.custom);
+  if(h.custom&&h.custom.trim())lines.push('🔧 [Custom / 附加功能] '+h.custom);
   if(h.notes&&h.notes.trim())lines.push('📝 '+h.notes);
   return lines.join('\n');
 }
@@ -2424,7 +2424,7 @@ function stripEmojiForCRM(txt){
   if(!txt)return txt;
   return txt
     .replace(/💰/g,'[报价]')
-    .replace(/🔧/g,'[配置]')
+    .replace(/🔧/g,'[Custom / 附加功能]')
     .replace(/🚢/g,'[运费]')
     .replace(/📝/g,'[备注]')
     .replace(/✅/g,'[成交]')
@@ -4711,7 +4711,7 @@ function qtRenderHistoryInModal(hist){
       // ── 价格明细
       +((parts.length||h.shipping)?'<div style="font-size:11px;margin-top:3px">'+partsHtml+(shippingHtml?(parts.length?'<span style="color:var(--border)"> · </span>':'')+shippingHtml:'')+'</div>':'')
       // ── 自定义配置
-      +(h.custom?'<div style="font-size:11px;margin-top:2px">'+hl(idx,'custom','🔧 '+h.custom,'color:var(--text2)')+'</div>':'')
+      +(h.custom?'<div style="font-size:11px;margin-top:2px">'+hl(idx,'custom','🔧 [Custom / 附加功能] '+h.custom,'color:var(--text2)')+'</div>':'')
       // ── 备注
       +(h.notes?'<div style="font-size:11px;margin-top:2px;font-style:italic">'+hl(idx,'notes','📝 '+h.notes,'color:var(--text2)')+'</div>':'')
       // ── 阶段/成交状态
