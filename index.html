@@ -5972,64 +5972,9 @@ function qtSeed(){
 
 
 
-<!-- ===== Description 模板填写弹窗 ===== -->
-<div id="desc-tpl-bg" style="position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:600;display:none;align-items:center;justify-content:center;">
-  <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:10px;padding:22px 24px;width:94%;max-width:560px;max-height:90vh;overflow-y:auto;font-family:'Sora',sans-serif;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <span style="font-size:14px;font-weight:600;">📋 Description 模板填写</span>
-      <button onclick="closeDescTpl()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--c-muted);">✕</button>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">产品类型（第一行标题）</label>
-        <input id="dtpl-title" type="text" placeholder="e.g. Industrial Panel PC" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">1. PC System</label>
-        <input id="dtpl-1" type="text" placeholder="e.g. i5-10210U, 16GB RAM (Hynix), 512GB SSD (Kingston)" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">2. Panel</label>
-        <input id="dtpl-2" type="text" placeholder="e.g. 10-inch, 1024×768, P-Cap touch" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">3. I/O</label>
-        <input id="dtpl-3" type="text" placeholder="e.g. 6×USB, 2×LAN, 4×RS232, 2×RS485, VGA, HDMI" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">4. OS</label>
-        <input id="dtpl-4" type="text" placeholder="e.g. Windows 10 LTSC" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">5. Other</label>
-        <input id="dtpl-5" type="text" placeholder="e.g. WiFi, 9–36V DC input" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">6. Accessory</label>
-        <input id="dtpl-6" type="text" placeholder="e.g. 1 x Power adaptor, 1 x AC Cable, 2 x WiFi Antenna, 4 x Buckles" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">7. Customization Services</label>
-        <input id="dtpl-7" type="text" placeholder="e.g. Available" value="Available" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
-      </div>
-    </div>
-    <!-- Preset dropdown -->
-    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--c-border);">
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-        <span style="font-size:11px;color:var(--c-muted);white-space:nowrap;">已保存模板：</span>
-        <div style="position:relative;flex:1;min-width:120px;">
-          <button onclick="const d=document.getElementById('dtpl-preset-drop');d.style.display=d.style.display==='none'?'block':'none';if(d.style.display==='block')_renderDescPresetDropdown();" style="width:100%;text-align:left;padding:5px 10px;font-size:11px;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:5px;cursor:pointer;color:var(--c-text);">▾ 选择模板</button>
-          <div id="dtpl-preset-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--c-surface);border:1px solid var(--c-border);border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.18);z-index:10;max-height:200px;overflow-y:auto;margin-top:2px;"></div>
-        </div>
-        <button onclick="saveDescPreset()" style="padding:5px 12px;border:none;border-radius:5px;background:#2E75B6;color:#fff;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;">💾 保存当前</button>
-      </div>
-    </div>
-    <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end;">
-      <button onclick="closeDescTpl()" style="padding:7px 16px;border:1px solid var(--c-border);border-radius:7px;background:transparent;color:var(--c-muted);font-size:12px;cursor:pointer;font-family:'Sora',sans-serif;">取消</button>
-      <button onclick="applyDescTpl()" style="padding:7px 18px;border:none;border-radius:7px;background:#1A3C5E;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;">✓ 填入 Description</button>
-    </div>
-  </div>
-</div>
+
+
+
 
 <!-- OVERLAY -->
 <div class="overlay" id="ov">
@@ -6637,7 +6582,7 @@ function addR(t, prefill){
     if(isSplit){
       tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc[t]}</td>
         <td><textarea placeholder="EPC-S1092A&#10;料号" style="width:90px;min-height:28px;resize:vertical;font-size:11px;padding:4px 5px;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--c-text);font-family:inherit;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.pn||''}</textarea></td>
-        <td style="padding:0;position:relative;min-width:420px;width:420px;"><div contenteditable="true" style="min-width:420px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds!=null&&p.ds!==''?p.ds:DEFAULT_DESC}</div><button onmousedown="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
+        <td style="padding:0;position:relative;min-width:420px;width:420px;"><div contenteditable="true" style="min-width:420px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds!=null&&p.ds!==''?p.ds:DEFAULT_DESC}</div><button onmousedown="event.preventDefault();openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
         <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
         <td><input type="number" value="${p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:70px;text-align:right;" oninput="calcAI(this);${cf}()"/></td>
         <td><input type="number" value="${p.ram||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;" oninput="calcAI(this);${cf}()"/></td>
@@ -6650,7 +6595,7 @@ function addR(t, prefill){
       // simple mode: # | PartNo | Desc | Qty | UnitPrice | Shipping | All-Incl | GrandTotal | ✕
       tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc[t]}</td>
         <td><textarea placeholder="EPC-S1092A&#10;料号" style="width:90px;min-height:28px;resize:vertical;font-size:11px;padding:4px 5px;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--c-text);font-family:inherit;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.pn||''}</textarea></td>
-        <td style="padding:0;position:relative;min-width:420px;width:420px;"><div contenteditable="true" style="min-width:420px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds!=null&&p.ds!==''?p.ds:DEFAULT_DESC}</div><button onmousedown="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
+        <td style="padding:0;position:relative;min-width:420px;width:420px;"><div contenteditable="true" style="min-width:420px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds!=null&&p.ds!==''?p.ds:DEFAULT_DESC}</div><button onmousedown="event.preventDefault();openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
         <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
         <td><input type="number" value="${p.cfg||p.ai||p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:95px;text-align:right;" oninput="calcSimpleAI(this);${cf}()" title="Unit Price (Configured System)"/></td>
         <td><input type="number" value="${p.simpleSh||p.sh||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;" oninput="calcSimpleAI(this);${cf}()" title="Shipping per unit"/></td>
@@ -8161,14 +8106,16 @@ function saveDescPreset(){
   toast('✅ 已保存「' + title + '」');
 }
 
-function deleteDescPreset(title){
-  const presets = _descTplGetPresets().filter(p => p.title !== title);
+function deleteDescPreset(idx){
+  const presets = _descTplGetPresets();
+  if(typeof idx === 'number') presets.splice(idx, 1);
   _descTplSetPresets(presets);
   _renderDescPresetDropdown();
 }
 
-function loadDescPreset(title){
-  const preset = _descTplGetPresets().find(p => p.title === title);
+function loadDescPreset(idx){
+  const presets = _descTplGetPresets();
+  const preset = typeof idx === 'number' ? presets[idx] : presets.find(p => p.title === idx);
   if(!preset) return;
   document.getElementById('dtpl-title').value = preset.title || '';
   for(let i=1;i<=7;i++) document.getElementById('dtpl-'+i).value = preset['f'+i] || '';
@@ -8183,10 +8130,10 @@ function _renderDescPresetDropdown(){
     drop.innerHTML = '<div style="padding:8px 12px;font-size:11px;color:var(--c-muted);">暂无保存的模板</div>';
     return;
   }
-  drop.innerHTML = presets.map(p => `
+  drop.innerHTML = presets.map((p, idx) => `
     <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;cursor:pointer;border-radius:5px;" onmouseover="this.style.background='var(--c-surface2)'" onmouseout="this.style.background=''">
-      <span style="flex:1;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" onclick="loadDescPreset('${p.title.replace(/'/g,"\'")}');_renderDescPresetDropdown();">${p.title}</span>
-      <button onclick="event.stopPropagation();deleteDescPreset('${p.title.replace(/'/g,"\'")}');_renderDescPresetDropdown();" style="background:none;border:none;color:var(--c-muted);cursor:pointer;font-size:11px;padding:1px 4px;border-radius:3px;" title="删除">✕</button>
+      <span style="flex:1;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" onclick="loadDescPreset(${idx});">${p.title}</span>
+      <button onclick="event.stopPropagation();deleteDescPreset(${idx});" style="background:none;border:none;color:var(--c-muted);cursor:pointer;font-size:11px;padding:1px 4px;border-radius:3px;" title="删除">✕</button>
     </div>`).join('');
 }
 
@@ -8292,6 +8239,65 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOv();});
 
 </script>
 
+
+<!-- ===== Description 模板填写弹窗 ===== -->
+<div id="desc-tpl-bg" style="position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:9000;display:none;align-items:center;justify-content:center;">
+  <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:10px;padding:22px 24px;width:94%;max-width:560px;max-height:90vh;overflow-y:auto;font-family:'Sora',sans-serif;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <span style="font-size:14px;font-weight:600;">📋 Description 模板填写</span>
+      <button onclick="closeDescTpl()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--c-muted);">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">产品类型（第一行标题）</label>
+        <input id="dtpl-title" type="text" placeholder="e.g. Industrial Panel PC" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">1. PC System</label>
+        <input id="dtpl-1" type="text" placeholder="e.g. i5-10210U, 16GB RAM (Hynix), 512GB SSD (Kingston)" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">2. Panel</label>
+        <input id="dtpl-2" type="text" placeholder="e.g. 10-inch, 1024×768, P-Cap touch" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">3. I/O</label>
+        <input id="dtpl-3" type="text" placeholder="e.g. 6×USB, 2×LAN, 4×RS232, 2×RS485, VGA, HDMI" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">4. OS</label>
+        <input id="dtpl-4" type="text" placeholder="e.g. Windows 10 LTSC" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">5. Other</label>
+        <input id="dtpl-5" type="text" placeholder="e.g. WiFi, 9–36V DC input" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">6. Accessory</label>
+        <input id="dtpl-6" type="text" placeholder="e.g. 1 x Power adaptor, 1 x AC Cable, 2 x WiFi Antenna, 4 x Buckles" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">7. Customization Services</label>
+        <input id="dtpl-7" type="text" placeholder="e.g. Available" value="Available" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
+      </div>
+    </div>
+    <!-- Preset dropdown -->
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--c-border);">
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:11px;color:var(--c-muted);white-space:nowrap;">已保存模板：</span>
+        <div style="position:relative;flex:1;min-width:120px;">
+          <button onclick="const d=document.getElementById('dtpl-preset-drop');d.style.display=d.style.display==='none'?'block':'none';if(d.style.display==='block')_renderDescPresetDropdown();" style="width:100%;text-align:left;padding:5px 10px;font-size:11px;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:5px;cursor:pointer;color:var(--c-text);">▾ 选择模板</button>
+          <div id="dtpl-preset-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--c-surface);border:1px solid var(--c-border);border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.18);z-index:10;max-height:200px;overflow-y:auto;margin-top:2px;"></div>
+        </div>
+        <button onclick="saveDescPreset()" style="padding:5px 12px;border:none;border-radius:5px;background:#2E75B6;color:#fff;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;">💾 保存当前</button>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end;">
+      <button onclick="closeDescTpl()" style="padding:7px 16px;border:1px solid var(--c-border);border-radius:7px;background:transparent;color:var(--c-muted);font-size:12px;cursor:pointer;font-family:'Sora',sans-serif;">取消</button>
+      <button onclick="applyDescTpl()" style="padding:7px 18px;border:none;border-radius:7px;background:#1A3C5E;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;">✓ 填入 Description</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
