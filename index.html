@@ -1208,6 +1208,16 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <div id="qf-pp-tiers" style="display:none"></div>
         </div>
       </div>
+      <!-- 批量阶梯报价区 -->
+      <div style="margin-top:12px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:12px;font-weight:600;color:var(--text)">📊 批量价格（数量阶梯）</span>
+          <button onclick="qtSingleAddTier()" style="background:var(--blue);color:#fff;border:none;border-radius:4px;font-size:11px;padding:3px 10px;cursor:pointer;font-weight:500">＋ 加档位</button>
+        </div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:8px">每档填写数量和该数量对应的单价 (P)，P3参考价共用上方填写的值。</div>
+        <div id="qf-single-tiers" style="display:flex;flex-direction:column;gap:6px"></div>
+        <div id="qf-single-tiers-hint" style="font-size:10px;color:var(--text3);margin-top:6px;display:none">💡 有批量价格时，导入 Quotation 会为每档生成独立行；建议隐藏总价列只展示单价参考</div>
+      </div>
       <!-- 历史价格记录 -->
       <div id="qf-history-wrap" style="display:none;margin-top:8px">
         <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;padding-top:4px;border-top:1px solid var(--border2)">📋 价格变更历史</div>
@@ -1215,18 +1225,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       </div>
     </div>
 
-    <!-- 批量阶梯报价区（新增/编辑均显示） -->
-    <div id="qf-tier-section" style="margin-top:12px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm)">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <span style="font-size:12px;font-weight:600;color:var(--text)">📊 批量价格（数量阶梯）</span>
-        <button onclick="qtSingleAddTier()" style="background:var(--blue);color:#fff;border:none;border-radius:4px;font-size:11px;padding:3px 10px;cursor:pointer;font-weight:500">＋ 加档位</button>
-      </div>
-      <div style="font-size:11px;color:var(--text2);margin-bottom:8px">每档填写数量和该数量对应的单价 (P)，P3参考价共用上方填写的值。</div>
-      <div id="qf-single-tiers" style="display:flex;flex-direction:column;gap:6px"></div>
-      <div id="qf-single-tiers-hint" style="font-size:10px;color:var(--text3);margin-top:6px;display:none">💡 有批量价格时，导入 Quotation 会为每档生成独立行；建议隐藏总价列只展示单价参考</div>
-    </div>
-
-    <!-- ── 多产品输入区（新增时显示） ── -->
+    <!-- ── 多产品输入区（已停用，保留结构兼容性） ── -->
     <div id="qf-multi-wrap" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 6px;padding-top:8px;border-top:1px solid var(--border2)">
         <span style="font-size:12px;font-weight:600;color:var(--text2)">产品列表</span>
@@ -4251,20 +4250,55 @@ function qtUpdateContactDl(){
 
 // Modal
 function qtOpenAdd(){
+  // 复用编辑模式表单，传入空白模板
   qtEditId=null;
   document.getElementById('qt-modal-title').textContent='新增报价';
   document.getElementById('qt-add-product-btn').style.display='none';
-  ['qf-project','qf-contact','qf-notes'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('qf-stage').value='';
-  document.getElementById('qf-date').value=todayStr();
+  // 使用单品编辑区，隐藏多产品区
+  document.getElementById('qf-single-wrap').style.display='block';
+  document.getElementById('qf-multi-wrap').style.display='none';
+  // 隐藏同项目提示
+  var sibWrap=document.getElementById('qf-siblings-info');
+  if(sibWrap)sibWrap.style.display='none';
+  // 清空所有字段
+  document.getElementById('qf-project').value='';
   document.getElementById('qf-company').value='ENT Group Company Limited';
+  document.getElementById('qf-contact').value='';
+  document.getElementById('qf-date').value=todayStr();
+  document.getElementById('qf-model').value='';
+  document.getElementById('qf-partno').value='';
+  document.getElementById('qf-qty').value='';
+  document.getElementById('qf-cpu').value='';
+  document.getElementById('qf-custom').value='';
+  var shipEl=document.getElementById('qf-shipping');if(shipEl)shipEl.value='';
   document.getElementById('qf-deal').value='';
-  // 新增模式：显示多产品区，隐藏单品区
-  document.getElementById('qf-single-wrap').style.display='none';
-  document.getElementById('qf-multi-wrap').style.display='block';
+  document.getElementById('qf-stage').value='';
+  document.getElementById('qf-notes').value='';
+  document.getElementById('qf-barbone').value='';
+  document.getElementById('qf-barbone-cur').value='USD';
+  document.getElementById('qf-ram').value='';
+  document.getElementById('qf-ramp').value='';
+  document.getElementById('qf-ramp-cur').value='USD';
+  document.getElementById('qf-ssd').value='';
+  document.getElementById('qf-ssdp').value='';
+  document.getElementById('qf-ssdp-cur').value='USD';
+  document.getElementById('qf-total-price').value='';
+  document.getElementById('qf-total-cur').value='USD';
+  var totRamEl=document.getElementById('qf-total-ram');if(totRamEl)totRamEl.value='';
+  var totSsdEl=document.getElementById('qf-total-ssd');if(totSsdEl)totSsdEl.value='';
+  var priceEl=document.getElementById('qf-price');
+  priceEl.value='';delete priceEl.dataset.manualEdit;
+  document.getElementById('qf-price-cur').value='USD';
+  document.getElementById('qf-p3').value='';
+  document.getElementById('qf-p3-cur').value='USD';
+  // 默认分项模式
+  var bd=document.querySelector('input[name="qf-pmode"][value="breakdown"]');
+  if(bd){bd.checked=true;}
+  qtTogglePriceMode();
+  qtRenderHistoryInModal([]);
   _qtSingleTiers=[];
   qtRenderSingleTiers();
-  qtInitProductRows();
+  if(typeof qtCalc==='function')qtCalc();
   document.getElementById('qt-modal-bg').classList.add('open');
 }
 function qtOpenEdit(id){
