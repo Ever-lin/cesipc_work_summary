@@ -5810,8 +5810,10 @@ function qtSeed(){
         <th style="width:26px">#</th><th style="width:96px">Part No.</th>
         <th style="min-width:420px">Description</th><th style="width:48px">Qty</th>
         <th style="width:78px">Barebone $</th><th style="width:68px">RAM $</th>
-        <th style="width:68px">SSD $</th><th style="width:68px">Shipping $</th>
-        <th style="width:78px">All-Incl. $</th><th style="width:78px">Grand Total</th>
+        <th style="width:68px">SSD $</th>
+        <th style="width:68px" title="Shipping per unit">Shipping $<br><span style="font-size:9px;font-weight:400;opacity:.7">(per unit)</span></th>
+        <th style="width:78px" title="All-Incl = BB+RAM+SSD+Sh per unit">All-Incl. $<br><span style="font-size:9px;font-weight:400;opacity:.7">(BB+RAM+SSD+Sh)</span></th>
+        <th style="width:78px" title="Grand Total = Qty × All-Incl">Grand Total<br><span style="font-size:9px;font-weight:400;opacity:.7">(Qty × AI)</span></th>
         <th style="width:30px"></th>
       </tr></thead>
       <tbody id="q-b"></tbody>
@@ -5847,8 +5849,10 @@ function qtSeed(){
         <th style="width:26px">#</th><th style="width:96px">Part No.</th>
         <th style="min-width:420px">Description</th><th style="width:48px">Qty</th>
         <th style="width:78px">Barebone $</th><th style="width:68px">RAM $</th>
-        <th style="width:68px">SSD $</th><th style="width:68px">Shipping $</th>
-        <th style="width:78px">All-Incl. $</th><th style="width:78px">Grand Total</th>
+        <th style="width:68px">SSD $</th>
+        <th style="width:68px" title="Shipping per unit">Shipping $<br><span style="font-size:9px;font-weight:400;opacity:.7">(per unit)</span></th>
+        <th style="width:78px" title="All-Incl = BB+RAM+SSD+Sh per unit">All-Incl. $<br><span style="font-size:9px;font-weight:400;opacity:.7">(BB+RAM+SSD+Sh)</span></th>
+        <th style="width:78px" title="Grand Total = Qty × All-Incl">Grand Total<br><span style="font-size:9px;font-weight:400;opacity:.7">(Qty × AI)</span></th>
         <th style="width:30px"></th>
       </tr></thead>
       <tbody id="pi-b"></tbody>
@@ -6541,8 +6545,10 @@ function setMode(t,m){
     ? `<tr><th style="width:26px">#</th><th style="width:96px">Part No.</th>
         <th style="min-width:420px">Description</th><th style="width:48px">Qty</th>
         <th style="width:78px">Barebone $</th><th style="width:68px">RAM $</th>
-        <th style="width:68px">SSD $</th><th style="width:68px">Shipping $</th>
-        <th style="width:78px">All-Incl. $</th><th style="width:78px">Grand Total</th>
+        <th style="width:68px">SSD $</th>
+        <th style="width:68px" title="Shipping per unit">Shipping $<br><span style="font-size:9px;font-weight:400;opacity:.7">(per unit)</span></th>
+        <th style="width:78px" title="All-Incl = BB + RAM + SSD + Shipping per unit">All-Incl. $<br><span style="font-size:9px;font-weight:400;opacity:.7">(BB+RAM+SSD+Sh)</span></th>
+        <th style="width:78px" title="Grand Total = Qty × All-Incl">Grand Total<br><span style="font-size:9px;font-weight:400;opacity:.7">(Qty × AI)</span></th>
         <th style="width:30px"></th></tr>`
     : `<tr><th style="width:26px">#</th><th style="width:96px">Part No.</th>
         <th style="min-width:420px">Description</th><th style="width:48px">Qty</th>
@@ -6712,23 +6718,23 @@ function cQ(){
       const ram=parseFloat(i[2]?.value)||0;
       const ssd=parseFloat(i[3]?.value)||0;
       const rowSh=parseFloat(i[4]?.value)||0;
-      // Subtotal = qty * (bb + ram + ssd), shipping tracked separately
-      p=bare+ram+ssd;
+      const allInclSplit = bare+ram+ssd+rowSh;
+      // Subtotal = Σ(qty × products), shipping tracked separately
+      ta+=qty*(bare+ram+ssd);
       tsh+=qty*rowSh;
+      p=allInclSplit; // Grand Total per row = qty × (BB+RAM+SSD+Sh) = qty × All-Incl
     }else{
       qty=parseFloat(i[0]?.value)||0;
       const cfg=parseFloat(i[1]?.value)||0;
       const rowSh=parseFloat(i[2]?.value)||0;
       const allIncl = cfg + rowSh;
       tsh+=qty*rowSh;
+      ta+=qty*cfg; // Subtotal = Σ(qty × unit price, no shipping)
       // Auto-update All-Incl readonly field
       if(i[3]){ i[3].value = cfg||rowSh ? allIncl.toFixed(2) : ''; }
       p=allIncl; // Grand Total = qty × All-Incl = qty × (cfg + sh)
     }
     const a=qty*p;tq+=qty;
-    // For subtotal display: only count unit-price portion (shipping tracked via tsh)
-    if(!isSplit) ta+=qty*(parseFloat(tr.querySelectorAll('input')[1]?.value)||0);
-    else ta+=a;
     const id=tr.id.split('-').pop();
     const el=document.getElementById('q-a-'+id);if(el)el.textContent=fa(a);
   });
@@ -6779,22 +6785,23 @@ function cPI(){
     let qty,p;
     if(isSplit){
       qty=parseFloat(i[0]?.value)||0;
-      const allIn=parseFloat(i[5]?.value)||0,bare=parseFloat(i[1]?.value)||0;
-      p=allIn||bare;
-      const rowSh=parseFloat(i[4]?.value)||0;
+      const bare=parseFloat(i[1]?.value)||0,ram=parseFloat(i[2]?.value)||0;
+      const ssd=parseFloat(i[3]?.value)||0,rowSh=parseFloat(i[4]?.value)||0;
+      const allInclPI = bare+ram+ssd+rowSh;
+      ta+=qty*(bare+ram+ssd); // Subtotal = products only (no shipping)
       tsh+=qty*rowSh;
+      p=allInclPI; // Grand Total = qty × AllIncl
     }else{
       qty=parseFloat(i[0]?.value)||0;
       const cfg=parseFloat(i[1]?.value)||0;
       const rowSh=parseFloat(i[2]?.value)||0;
       const allIncl2 = cfg + rowSh;
       tsh+=qty*rowSh;
+      ta+=qty*cfg; // Subtotal = products only
       if(i[3]){ i[3].value = cfg||rowSh ? allIncl2.toFixed(2) : ''; }
       p=allIncl2; // Grand Total = qty × (cfg + sh)
     }
     const a=qty*p;tq+=qty;
-    if(!isSplit2) ta+=qty*(parseFloat(tr.querySelectorAll('input')[1]?.value)||0);
-    else ta+=a;
     const id=tr.id.split('-').pop();
     const el=document.getElementById('pi-a-'+id);if(el)el.textContent=fa(a);
   });
