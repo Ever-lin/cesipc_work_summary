@@ -1707,62 +1707,74 @@ function refreshProjDatalist(){
 function qtDealToStatus(deal){
   return{open:'跟进中',confirmed:'确认订单',won:'成交',pause:'暂无进展',lost:'丢单'}[deal]||'跟进中';
 }
+// Convert one price-history snapshot to plain text — mirrors exactly what 📋 价格变更历史 shows.
+// NOTE: tiers are NOT backfilled from parent; each snapshot only has what was saved at that time.
 function qtSnapToLine(h){
-  // Format one history snapshot into rich multi-line format
   const fc=s=>s==='CNY'?'¥':'$';
   const hasTiers=h.tiers&&h.tiers.length>0;
-  // Date: use first 10 chars of savedAt (YYYY-MM-DD) or full savedAt
   const dateStr=(h.savedAt||'').slice(0,10)||'';
-  let lines=[];
+  const lines=[];
 
+  // ── Line 1: date + price summary (tier or single) ──
   if(hasTiers){
-    // 有批量价格：第一行显示日期+阶梯汇总，不再显示单价
     lines.push('💰 '+(dateStr?dateStr+' ':'')+'📊 '+h.tiers.map(t=>`${t.qty}台×${fc(t.cur||'USD')}${t.price}`).join(' / '));
-    // 型号/CPU
-    if(h.model||h.cpu||h.partno){
-      let modelLine=(h.model||'')+(h.cpu?' · '+h.cpu:'')+(h.partno?' · 料号:'+h.partno:'');
-      lines.push(modelLine);
-    }
-    // 准系统/RAM/SSD 分项成本（如有，作参考）
-    const costParts=[];
-    if(h.barbone!=null)costParts.push('准系统 '+fc(h.barboneCur||'USD')+h.barbone);
-    if(h.ramp!=null)costParts.push('RAM('+(h.ram||'—')+') '+fc(h.rampCur||'USD')+h.ramp);
-    if(h.ssdp!=null)costParts.push('SSD('+(h.ssd||'—')+') '+fc(h.ssdpCur||'USD')+h.ssdp);
-    if(costParts.length||(h.shipping&&h.shipping.trim())){
-      let detailLine=costParts.join(' · ')+(h.shipping?' · 🚢 '+h.shipping:'');
-      lines.push(detailLine);
-    }
-    if(h.custom&&h.custom.trim())lines.push('🔧 [Custom / 附加功能] '+h.custom);
-    // 完整阶梯明细
-    lines.push('📊 批量价格：'+h.tiers.map(t=>`${t.qty}台 × ${fc(t.cur||'USD')}${t.price}`).join('  /  '));
   } else {
-    // 无批量：原有格式
+    lines.push('💰'+(dateStr?' '+dateStr+' ':' ')+fc(h.priceCur||'USD')+(h.price||'—'));
+  }
+
+  // ── Line 2: model · cpu · partno ──
+  if(h.model||h.cpu||h.partno){
+    lines.push((h.model||'')+(h.cpu?' · '+h.cpu:'')+(h.partno?' · 料号:'+h.partno:''));
+  }
+
+  // ── Line 3: cost breakdown or 整机 · qty (only when no tiers) ──
+  if(!hasTiers){
     const parts=[];
     if(h.barbone!=null)parts.push('准系统 '+fc(h.barboneCur||'USD')+h.barbone);
     if(h.ramp!=null)parts.push('RAM('+(h.ram||'—')+') '+fc(h.rampCur||'USD')+h.ramp);
     if(h.ssdp!=null)parts.push('SSD('+(h.ssd||'—')+') '+fc(h.ssdpCur||'USD')+h.ssdp);
     if(h.totalPrice!=null)parts.push('整机 '+fc(h.totalCur||'USD')+h.totalPrice);
     if(h.qty)parts.push('数量:'+h.qty+'台');
-    const priceStr=fc(h.priceCur||'USD')+(h.price||'—');
-    lines.push('💰'+(dateStr?dateStr+' ':'')+priceStr);
-    if(h.model||h.cpu||h.partno){
-      let modelLine=(h.model||'')+(h.cpu?' · '+h.cpu:'')+(h.partno?' · 料号:'+h.partno:'');
-      lines.push(modelLine);
-    }
-    if(parts.length||(h.shipping&&h.shipping.trim())){
-      let detailLine=parts.join(' · ')+(h.shipping?' · 🚢 '+h.shipping:'');
-      lines.push(detailLine);
-    }
-    if(h.custom&&h.custom.trim())lines.push('🔧 [Custom / 附加功能] '+h.custom);
+    const detail=parts.join(' · ')+(h.shipping?' · 🚢 '+h.shipping:'');
+    if(detail.trim())lines.push(detail);
+  } else {
+    // With tiers: only show cost breakdown if present (as reference), no qty or 整机
+    const costParts=[];
+    if(h.barbone!=null)costParts.push('准系统 '+fc(h.barboneCur||'USD')+h.barbone);
+    if(h.ramp!=null)costParts.push('RAM('+(h.ram||'—')+') '+fc(h.rampCur||'USD')+h.ramp);
+    if(h.ssdp!=null)costParts.push('SSD('+(h.ssd||'—')+') '+fc(h.ssdpCur||'USD')+h.ssdp);
+    const costDetail=costParts.join(' · ')+(h.shipping?' · 🚢 '+h.shipping:'');
+    if(costDetail.trim())lines.push(costDetail);
+    // ── Tier detail line ──
+    lines.push('📊 批量价格：'+h.tiers.map(t=>`${t.qty}台 × ${fc(t.cur||'USD')}${t.price}`).join('  /  '));
   }
+
+  // ── Custom / notes ──
+  if(h.custom&&h.custom.trim())lines.push('🔧 [Custom / 附加功能] '+h.custom);
   if(h.notes&&h.notes.trim())lines.push('📝 '+h.notes);
   return lines.join('\n');
 }
+
 function qtBuildQuoteText(q){
-  // Build the full quote text from all history snapshots (rich multi-line blocks)
+  // Build import text by mirroring the 📋 价格变更历史 display exactly.
+  // Each snapshot is converted independently — NO tiers/custom backfill from parent,
+  // so old snapshots without tiers won't incorrectly show tier data.
   const hist=q.priceHistory||[];
+  const backfill=snap=>{
+    // Only backfill model/cpu/partno/custom/shipping (identity fields, not price fields)
+    // Do NOT backfill tiers — each snap only has tiers if they were saved at that time
+    let h=snap;
+    if(!h.model&&q.model)h=Object.assign({},h,{model:q.model});
+    if(!h.cpu&&q.cpu)h=Object.assign({},h,{cpu:q.cpu});
+    if(!h.partno&&q.partno)h=Object.assign({},h,{partno:q.partno});
+    if(!h.custom&&q.custom)h=Object.assign({},h,{custom:q.custom});
+    if(!h.shipping&&q.shipping)h=Object.assign({},h,{shipping:q.shipping});
+    if(!h.notes&&q.notes)h=Object.assign({},h,{notes:q.notes});
+    // tiers: only use what was actually in this snapshot (never backfill)
+    return h;
+  };
   if(!hist.length){
-    // fallback: build a snap-like object from current record fields
+    // Fallback: no history — use current record fields directly
     const snap={
       savedAt:q.date||'',priceCur:q.priceCur||'USD',price:q.price,
       model:q.model,cpu:q.cpu,partno:q.partno,
@@ -1770,22 +1782,12 @@ function qtBuildQuoteText(q){
       ram:q.ram,ramp:q.ramp,rampCur:q.rampCur||'USD',
       ssd:q.ssd,ssdp:q.ssdp,ssdpCur:q.ssdpCur||'USD',
       totalPrice:q.totalPrice,totalCur:q.totalCur||'USD',
-      qty:q.qty,shipping:q.shipping,custom:q.custom,notes:q.notes,tiers:q.tiers||[]
+      qty:q.qty,shipping:q.shipping,custom:q.custom,notes:q.notes,
+      tiers:q.tiers||[]
     };
     return qtSnapToLine(snap);
   }
-  // Each snapshot as a rich block, separated by blank line
-  return hist.map(h=>{
-    // Backfill model/cpu/partno from parent if missing in snap
-    if(!h.model&&q.model)h=Object.assign({},h,{model:q.model});
-    if(!h.cpu&&q.cpu)h=Object.assign({},h,{cpu:q.cpu});
-    if(!h.partno&&q.partno)h=Object.assign({},h,{partno:q.partno});
-    if(!h.custom&&q.custom)h=Object.assign({},h,{custom:q.custom});
-    if(!h.shipping&&q.shipping)h=Object.assign({},h,{shipping:q.shipping});
-    if(!h.notes&&q.notes)h=Object.assign({},h,{notes:q.notes});
-    if(!h.tiers||!h.tiers.length)h=Object.assign({},h,{tiers:q.tiers||[]});
-    return qtSnapToLine(h);
-  }).join('\n\n');
+  return hist.map(h=>qtSnapToLine(backfill(h))).join('\n\n');
 }
 
 // Group quotes by project name, return array of {project, company, quotes[]}
