@@ -422,6 +422,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <select class="ym-s" id="view-month" onchange="renderPerf()">
       <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
     </select>
+    <button class="btn btn-sm" onclick="exportPerfExcel()" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97;white-space:nowrap">📥 导出Excel</button>
   </div>
   <div class="metric-grid" id="metrics"></div>
   <div class="card" id="perf-form-card">
@@ -1005,7 +1006,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <select class="ym-s" id="qt-f-status" onchange="qtRender()"><option value="">全部状态</option><option value="open">⭕ 跟进中</option><option value="confirmed">🔶 已确认订单</option><option value="won">✅ 已成交</option><option value="pause">⏸️ 暂无进展</option><option value="lost">❌ 丢单</option></select>
     <select class="ym-s" id="qt-f-p3" onchange="qtRender()"><option value="">全部价格</option><option value="below">⚠️ 低于P3</option><option value="ok">✅ 高于P3</option></select>
     <button class="btn btn-primary btn-sm" onclick="qtOpenAdd()">＋ 新增报价</button>
-    <button class="btn btn-sm" onclick="qtExportCSV()">⬇ 导出CSV</button>
+    <button class="btn btn-sm" onclick="qtExportCSV()" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97;white-space:nowrap">📥 导出Excel</button>
   </div>
   <div class="qt-tbl-wrap">
     <table class="qt-tbl">
@@ -2500,6 +2501,7 @@ function saveWeekly(){
   if(ex>=0)state.weeklies[ex]=data;else state.weeklies.push(data);
   save();const a=document.createElement('div');a.className='alert-s';a.textContent='已保存！';
   document.getElementById('write-weekly').prepend(a);setTimeout(()=>a.remove(),1800);renderSavedWeeklies();
+  toast('✅ 周报内容已保存');
 }
 
 function renderSavedWeeklies(){
@@ -2590,6 +2592,7 @@ function saveMonthly(){
   if(ex>=0)state.monthlies[ex]=data;else(state.monthlies=state.monthlies||[]).push(data);
   save();const a=document.createElement('div');a.className='alert-s';a.textContent='已保存！';
   document.getElementById('write-monthly').prepend(a);setTimeout(()=>a.remove(),1800);renderSavedMonthlies();
+  toast('✅ 月报内容已保存');
 }
 
 function renderSavedMonthlies(){
@@ -3316,6 +3319,7 @@ function pctStr(actual,target){
 function isNewDeal(type){return type==='新成交'||type==='销售成交'||type==='借测成交';}
 
 function genWeekly(){
+  try{
   const fy=document.getElementById('ew-fy').value,month=document.getElementById('ew-month').value,week=document.getElementById('ew-week').value;
   const mIdx=fyMonthIdx(month);
 
@@ -3435,8 +3439,17 @@ function genWeekly(){
   if(ex>=0){entry.id=state.genWeeklies[ex].id;state.genWeeklies[ex]=entry;}else state.genWeeklies.push(entry);
   save();
   renderGeneratedWeeklies(key);
+  // Auto-switch to 导出周报 tab so user can see the result
+  const weeklyTabBtn = document.querySelector('[onclick="switchSub(\'sw-weekly\',this)"]');
+  if(weeklyTabBtn) {
+    document.querySelectorAll('#panel-export > .sub-tabs .sub-tab').forEach(b=>b.classList.remove('active'));
+    weeklyTabBtn.classList.add('active');
+    document.querySelectorAll('#panel-export > .sub-panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('sw-weekly').classList.add('active');
+  }
+  toast('✅ 周报已生成！');
+  }catch(e){console.error('genWeekly error:',e);toast('❌ 生成周报时出错：'+e.message);}
 }
-
 function renderGeneratedWeeklies(expandKey){
   if(!state.genWeeklies)state.genWeeklies=[];
   const list=state.genWeeklies.slice().reverse();
@@ -3464,6 +3477,7 @@ function delGenWeekly(id){if(!confirm('确认删除？'))return;state.genWeeklie
 
 
 function genMonthly(){
+  try{
   const fy=document.getElementById('em-fy').value,month=document.getElementById('em-month').value;
   const mIdx=fyMonthIdx(month);
 
@@ -3580,6 +3594,16 @@ function genMonthly(){
   if(ex>=0){entry.id=state.genMonthlies[ex].id;state.genMonthlies[ex]=entry;}else state.genMonthlies.push(entry);
   save();
   renderGeneratedMonthlies(key);
+  // Auto-switch to 导出月报 tab so user can see the result
+  const monthlyTabBtn = document.querySelector('[onclick="switchSub(\'sw-monthly\',this)"]');
+  if(monthlyTabBtn) {
+    document.querySelectorAll('#panel-export > .sub-tabs .sub-tab').forEach(b=>b.classList.remove('active'));
+    monthlyTabBtn.classList.add('active');
+    document.querySelectorAll('#panel-export > .sub-panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('sw-monthly').classList.add('active');
+  }
+  toast('✅ 月报已生成！');
+  }catch(e){console.error('genMonthly error:',e);toast('❌ 生成月报时出错：'+e.message);}
 }
 
 function renderGeneratedMonthlies(expandKey){
@@ -3670,6 +3694,39 @@ function exportProjectsExcel(){
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
 }
 
+
+function exportPerfExcel(){
+  const fy=document.getElementById('view-fy')?.value||'';
+  const month=document.getElementById('view-month')?.value||'';
+  const typeMap={'业绩':'业绩','回款':'回款','销售成交':'新成交-销售成交','借测成交':'新成交-借测成交'};
+  // Filter by current FY and month
+  const filtered=state.perf.filter(p=>{
+    if(fy&&p.fy!==fy)return false;
+    if(month&&String(p.month)!==String(month))return false;
+    return true;
+  }).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+
+  if(!filtered.length){alert('当前筛选条件下无业绩/回款数据');return;}
+
+  const headers=['日期','财年','月份','周次','类型','客户名称','金额（¥）','备注'];
+  const rows=filtered.map(p=>[
+    p.date||'',
+    p.fy||'',
+    p.month?p.month+'月':'',
+    p.week||'',
+    typeMap[p.type]||p.type||'',
+    p.client||'',
+    p.amount!=null?p.amount:'',
+    p.note||p.noteDeal||''
+  ].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(','));
+
+  const csv='\uFEFF'+headers.join(',')+'\n'+rows.join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`业绩回款_${fy}_${month?month+'月':'全年'}_${todayStr()}.csv`;
+  a.click();
+  toast('✅ 业绩&回款已导出 Excel');
+}
 
 function startTitleEdit(){
   const disp=document.getElementById('app-title-display');
@@ -3922,7 +3979,7 @@ function qtRender(){
       <td>${r.barbone!=null?'$'+r.barbone:'—'}</td>
       <td>${r.ram||'—'}</td>
       <td>${r.ssd||'—'}</td>
-      <td class="qt-price ${r.p3&&r.price<r.p3?'qt-below':''}">${r.priceCur==='CNY'?'¥':'$'}${r.price}</td>
+      <td class="qt-price ${r.p3&&r.price<r.p3?'qt-below':''}">${r.priceCur==='CNY'?'¥':'$'}${r.price}${(r.tiers&&r.tiers.length)?` <span style="font-size:10px;background:var(--blue-bg);color:var(--blue-text);border-radius:8px;padding:1px 5px">${r.tiers.length}阶梯</span>`:''}</td>
       <td>${r.p3!=null?(r.p3Cur==='CNY'?'¥':'$')+r.p3:'—'}</td>
       <td class="${diff!==null?(diff<0?'qt-diff-neg':'qt-diff-pos'):''}">
         ${diff!==null?(diff>=0?'+':'')+(r.priceCur==='CNY'?'¥':'$')+diff:'—'}
@@ -4179,6 +4236,21 @@ function qtRenderProductRows(){
       const inp=el.querySelector(`[data-f="${f}"]`);
       if(inp)_qtProdRows[i][f]=inp.value;
     });
+    // sync tiers
+    const tierContainer=el.querySelector(`#qt-tiers-${i}`);
+    if(tierContainer){
+      const tierRows=tierContainer.querySelectorAll('div[style*="display:flex"]');
+      const tiers=[];
+      tierRows.forEach(tr=>{
+        const qtyI=tr.querySelector('[data-tierf="qty"]');
+        const curI=tr.querySelector('[data-tierf="cur"]');
+        const priceI=tr.querySelector('[data-tierf="price"]');
+        if(qtyI&&priceI&&(parseFloat(priceI.value)>0||parseFloat(qtyI.value)>0)){
+          tiers.push({qty:qtyI.value,cur:curI?.value||'USD',price:priceI.value});
+        }
+      });
+      _qtProdRows[i].tiers=tiers;
+    }
     ['ramp-cur','ssdp-cur','barbone-cur','price-cur','p3-cur'].forEach(f=>{
       const sel=el.querySelector(`[data-f="${f}"]`);
       if(sel)_qtProdRows[i][f]=sel.value;
@@ -4331,6 +4403,27 @@ function qtRenderProductRows(){
         </div>
         <!-- 价差提示 -->
         <div data-diffid style="grid-column:1/-1;font-size:11px;min-height:16px"></div>
+        <!-- 阶梯报价区 -->
+        <div style="grid-column:1/-1;margin-top:4px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:11px;font-weight:600;color:var(--text2)">📊 数量阶梯报价（选填）</span>
+            <button onclick="qtAddTier(${i})" style="background:var(--blue-bg);color:var(--blue-text);border:1px solid var(--blue);border-radius:3px;font-size:11px;padding:2px 8px;cursor:pointer">＋ 加阶梯</button>
+          </div>
+          <div id="qt-tiers-${i}" style="display:flex;flex-direction:column;gap:4px">
+            ${(d.tiers||[]).map((t,ti)=>`<div style="display:flex;gap:6px;align-items:center;background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:5px 8px">
+              <span style="font-size:11px;color:var(--text2);white-space:nowrap">数量</span>
+              <input type="number" data-tier="${ti}" data-tierf="qty" value="${t.qty||''}" placeholder="台数" min="1" style="width:60px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)">
+              <span style="font-size:11px;color:var(--text2);white-space:nowrap">单价</span>
+              <select data-tier="${ti}" data-tierf="cur" style="width:auto;padding:2px 5px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--bg)">
+                <option value="USD" ${(t.cur||'USD')==='USD'?'selected':''}>$</option>
+                <option value="CNY" ${t.cur==='CNY'?'selected':''}>¥</option>
+              </select>
+              <input type="number" data-tier="${ti}" data-tierf="price" value="${t.price||''}" placeholder="0.00" min="0" step="0.01" style="width:80px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)">
+              <button onclick="qtRemoveTier(${i},${ti})" style="background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:3px;font-size:11px;padding:1px 7px;cursor:pointer;line-height:1.4">✕</button>
+            </div>`).join('')}
+          </div>
+          ${(d.tiers&&d.tiers.length)?'<div style="font-size:10px;color:var(--text3);margin-top:3px">💡 Quotation 单据将为每个阶梯生成独立行</div>':''}
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -4339,6 +4432,55 @@ function qtRenderProductRows(){
 function qtRowModeChange(i, radio){
   if(!_qtProdRows[i])return;
   _qtProdRows[i].pmode=radio.value;
+  qtRenderProductRows();
+}
+
+function qtSyncTiersFromDOM(i){
+  const wrap=document.getElementById('qf-product-rows');
+  if(!wrap)return;
+  const row=wrap.querySelectorAll('.qf-prod-row')[i];
+  if(!row)return;
+  // sync all normal fields first
+  ['model','partno','qty','cpu','custom','ram','ramp','ssd','ssdp','barbone','p3','shipping'].forEach(f=>{
+    const inp=row.querySelector(`[data-f="${f}"]`);
+    if(inp&&_qtProdRows[i])_qtProdRows[i][f]=inp.value;
+  });
+  ['ramp-cur','ssdp-cur','barbone-cur','price-cur','p3-cur'].forEach(f=>{
+    const sel=row.querySelector(`[data-f="${f}"]`);
+    if(sel&&_qtProdRows[i])_qtProdRows[i][f]=sel.value;
+  });
+  const modeEl=row.querySelector('[data-f="pmode"]:checked');
+  if(modeEl&&_qtProdRows[i])_qtProdRows[i].pmode=modeEl.value;
+  const pm=_qtProdRows[i]?.pmode||'breakdown';
+  const pi=row.querySelector(pm==='breakdown'?'[data-priceinput]':'[data-ttinput]');
+  if(pi&&_qtProdRows[i])_qtProdRows[i].price=pi.value;
+  // sync tiers
+  const tierContainer=row.querySelector(`#qt-tiers-${i}`);
+  if(tierContainer){
+    const tierRows=tierContainer.querySelectorAll('div[style*="display:flex"]');
+    const tiers=[];
+    tierRows.forEach(tr=>{
+      const qtyI=tr.querySelector('[data-tierf="qty"]');
+      const curI=tr.querySelector('[data-tierf="cur"]');
+      const priceI=tr.querySelector('[data-tierf="price"]');
+      if(qtyI&&priceI){tiers.push({qty:qtyI.value,cur:curI?.value||'USD',price:priceI.value});}
+    });
+    if(_qtProdRows[i])_qtProdRows[i].tiers=tiers;
+  }
+}
+
+function qtAddTier(i){
+  qtSyncTiersFromDOM(i);
+  if(!_qtProdRows[i])return;
+  if(!_qtProdRows[i].tiers)_qtProdRows[i].tiers=[];
+  _qtProdRows[i].tiers.push({qty:'',cur:'USD',price:''});
+  qtRenderProductRows();
+}
+
+function qtRemoveTier(i,ti){
+  qtSyncTiersFromDOM(i);
+  if(!_qtProdRows[i]||!_qtProdRows[i].tiers)return;
+  _qtProdRows[i].tiers.splice(ti,1);
   qtRenderProductRows();
 }
 
@@ -4600,6 +4742,20 @@ function qtSave(){
         const inp=el.querySelector(`[data-f="${f}"]`);
         if(inp)_qtProdRows[i][f]=inp.value;
       });
+      // sync tiers
+      const tierContainer=el.querySelector(`#qt-tiers-${i}`);
+      if(tierContainer){
+        const tierRows=tierContainer.querySelectorAll('div[style*="display:flex"]');
+        _qtProdRows[i].tiers=[];
+        tierRows.forEach(tr=>{
+          const qtyI=tr.querySelector('[data-tierf="qty"]');
+          const curI=tr.querySelector('[data-tierf="cur"]');
+          const priceI=tr.querySelector('[data-tierf="price"]');
+          if(qtyI&&priceI&&(parseFloat(priceI.value)>0||parseFloat(qtyI.value)>0)){
+            _qtProdRows[i].tiers.push({qty:qtyI.value,cur:curI?.value||'USD',price:priceI.value});
+          }
+        });
+      }
       // total mode RAM/SSD spec (no price)
       const ttRamInp=el.querySelector('[data-f="tt-ram"]');
       if(ttRamInp&&_qtProdRows[i].pmode==='total')_qtProdRows[i].ram=ttRamInp.value;
@@ -4671,6 +4827,7 @@ function qtSave(){
         p3:snap.p3,p3Cur:snap.p3Cur,
         shipping:rowShipping,deal:rowDeal,stage,notes,
         priceHistory:[snap],
+        tiers:d.tiers||[],
       };
       qtQuotes.unshift(obj);
     });
@@ -4941,11 +5098,28 @@ function qtRenderDash(){
 }
 
 function qtExportCSV(){
-  const headers=['项目','公司','日期','型号','料号','数量','CPU','报价方式','准系统价','准系统币种','RAM','RAM价','RAM币种','SSD','SSD价','SSD币种','整机价','整机币种','报价P','报价币种','P3','P3币种','价差','运费','Custom','状态','备注'];
-  const rows=qtQuotes.map(r=>[r.project,r.company,r.date,r.model,r.partno,r.qty,r.cpu,r.pmode||'breakdown',r.barbone,r.barboneCur||'USD',r.ram,r.ramp,r.rampCur||'USD',r.ssd,r.ssdp,r.ssdpCur||'USD',r.totalPrice,r.totalCur||'USD',r.price,r.priceCur||'USD',r.p3,r.p3Cur||'USD',r.p3?r.price-r.p3:'',r.shipping,r.custom,r.deal,r.notes].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(','));
+  const dealMap={won:'已成交',lost:'丢单',open:'跟进中',confirmed:'已确认订单',pause:'暂无进展'};
+  const headers=['项目','公司','对接业务','日期','型号','料号','数量','CPU','Custom/附加功能','报价方式',
+    '准系统价','准系统币种','RAM规格','RAM价','RAM币种','SSD规格','SSD价','SSD币种',
+    '整机价','整机币种','报价P','报价币种','P3','P3币种','价差','运费备注','状态','项目进度','备注',
+    '阶梯报价（数量:单价，多组用|分隔）'];
+  const rows=qtQuotes.map(r=>{
+    const diff=r.p3!=null?r.price-r.p3:'';
+    const tiersStr=(r.tiers&&r.tiers.length)?r.tiers.map(t=>`${t.qty}台:${t.cur==='CNY'?'¥':'$'}${t.price}`).join('|'):'';
+    return[r.project,r.company,r.contact||'',r.date,r.model,r.partno||'',r.qty,r.cpu,r.custom||'',
+      r.pmode||'breakdown',r.barbone!=null?r.barbone:'',r.barboneCur||'USD',
+      r.ram||'',r.ramp!=null?r.ramp:'',r.rampCur||'USD',
+      r.ssd||'',r.ssdp!=null?r.ssdp:'',r.ssdpCur||'USD',
+      r.totalPrice!=null?r.totalPrice:'',r.totalCur||'USD',
+      r.price,r.priceCur||'USD',r.p3!=null?r.p3:'',r.p3Cur||'USD',diff,
+      r.shipping||'',dealMap[r.deal]||r.deal||'',r.stage||'',r.notes||'',tiersStr
+    ].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',');
+  });
   const csv='\uFEFF'+headers.join(',')+'\n'+rows.join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download=`报价记录_${todayStr()}.csv`;a.click();
+  const fy=document.getElementById('qt-f-company')?.value?`_${document.getElementById('qt-f-company').value}`:'';
+  a.download=`报价管理${fy}_${todayStr()}.csv`;a.click();
+  toast('✅ 报价管理已导出 Excel');
 }
 
 function qtSeed(){
@@ -5266,8 +5440,20 @@ function qtSeed(){
       <button onclick="closeDocImportFromQuotes()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#666;line-height:1;">✕</button>
     </div>
     <div style="font-size:12px;color:#666;background:#f0f7ff;border:1px solid #b8d4f0;border-radius:6px;padding:8px 12px;margin-bottom:12px;line-height:1.7;">
-      选择一个报价项目，系统将自动填入<b>客户公司名</b>并导入所有型号行到 Quotation 报价单。<br>
-      分拆报价模式会带入 Barebone / RAM / SSD 价格；整合报价模式会带入总价。
+      选择一个报价项目，系统将自动填入<b>客户公司名</b>并导入所有型号行到目标单据。<br>
+      分拆报价模式会带入 Barebone / RAM / SSD 价格；整合报价模式会带入总价。CI / PL 通常从 PI 同步，建议直接导入到 PI。
+    </div>
+    <!-- 导入目标选择 -->
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
+      <span style="font-size:12px;font-weight:600;color:#444;white-space:nowrap;">导入到：</span>
+      <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid #d8d6ce;border-radius:6px;cursor:pointer;font-size:12px;font-family:'Sora',sans-serif;background:#f5f4f0;" id="diq-target-q-btn">
+        <input type="radio" name="diq-target" id="diq-target-q" value="q" checked onchange="renderDocIqList()" style="margin:0;">
+        📋 Quotation 报价单
+      </label>
+      <label style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid #d8d6ce;border-radius:6px;cursor:pointer;font-size:12px;font-family:'Sora',sans-serif;background:#f5f4f0;" id="diq-target-pi-btn">
+        <input type="radio" name="diq-target" id="diq-target-pi" value="pi" onchange="renderDocIqList()" style="margin:0;">
+        📄 PI 形式发票
+      </label>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
       <input id="diq-search" placeholder="🔍 搜索项目名称、型号、公司…" oninput="renderDocIqList()"
@@ -5290,11 +5476,11 @@ function qtSeed(){
   <div style="width:1px;height:20px;background:#ddd;margin:0 2px;"></div>
   <div style="display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;">
     <span style="font-size:9px;color:#666;line-height:1;white-space:nowrap;">字色</span>
-    <input type="color" value="#E8732A" title="字体颜色" style="width:26px;height:18px;border:1px solid #ccc;border-radius:3px;cursor:pointer;padding:1px;" onmousedown="event.stopPropagation()" oninput="fmtColor(this.value)"/>
+    <input type="color" value="#E8732A" title="字体颜色" style="width:26px;height:18px;border:1px solid #ccc;border-radius:3px;cursor:pointer;padding:1px;" onmousedown="event.stopPropagation()" onchange="fmtColor(this.value)"/>
   </div>
   <div style="display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;">
     <span style="font-size:9px;color:#666;line-height:1;white-space:nowrap;">🖍高亮</span>
-    <input type="color" value="#FFFF00" title="背景高亮色" style="width:26px;height:18px;border:1px solid #ccc;border-radius:3px;cursor:pointer;padding:1px;" onmousedown="event.stopPropagation()" oninput="fmtBg(this.value)"/>
+    <input type="color" value="#FFFF00" title="背景高亮色" style="width:26px;height:18px;border:1px solid #ccc;border-radius:3px;cursor:pointer;padding:1px;" onmousedown="event.stopPropagation()" onchange="fmtBg(this.value)"/>
   </div>
   <div style="width:1px;height:20px;background:#ddd;margin:0 2px;"></div>
   <button title="清除格式" onmousedown="event.preventDefault();fmtExec('removeFormat')" style="background:#f0f0f0;border:1px solid #ccc;border-radius:4px;color:#666;font-size:11px;padding:3px 8px;cursor:pointer;white-space:nowrap;">✕ 清除</button>
@@ -5439,7 +5625,10 @@ document.addEventListener('selectionchange',()=>{
   // position above selection, or below if near top
   const topPos=r.top+window.scrollY-46;
   fBar.style.top=Math.max(4, topPos)+'px';
-  fBar.style.left=Math.max(4,r.left+window.scrollX-10)+'px';
+  // prevent overflow off right edge
+  const barW=fBar.offsetWidth||220;
+  const leftPos=Math.min(r.left+window.scrollX-10, window.innerWidth-barW-8);
+  fBar.style.left=Math.max(4, leftPos)+'px';
 });
 
 document.addEventListener('mousedown',e=>{
@@ -6591,15 +6780,18 @@ function renderDocIqList() {
 
     const safeProjJson = JSON.stringify(proj);
     const safeModeJson = JSON.stringify(mode);
+    const target = document.querySelector('input[name="diq-target"]:checked')?.value || 'q';
+    const safeTargetJson = JSON.stringify(target);
+    const targetLabel = target === 'pi' ? 'PI 形式发票' : 'Quotation 报价单';
     return `<div style="border:1px solid #e8e6de;border-radius:8px;margin-bottom:10px;overflow:hidden;">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#1A3C5E;flex-wrap:wrap;gap:6px;">
         <div>
           <div style="font-weight:600;color:#fff;font-size:12px;">${proj}</div>
           <div style="color:#9db8d4;font-size:10px;margin-top:1px;">${pg.company} · ${pg.items.length} 个型号 · ${pg.date || ''}</div>
         </div>
-        <button onclick="doDocImportFromQuotes(${safeProjJson},${safeModeJson})"
+        <button onclick="doDocImportFromQuotes(${safeProjJson},${safeModeJson},${safeTargetJson})"
           style="background:#E8732A;color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;">
-          ✓ 导入此项目
+          ✓ 导入到 ${targetLabel}
         </button>
       </div>
       <div style="padding:4px 0;">${itemsHtml}</div>
@@ -6611,25 +6803,29 @@ function renderDocIqList() {
 function qtImportToDoc(id) {
   const r = qtQuotes.find(q => String(q.id) === String(id));
   if (!r || !r.project) return;
-  // Determine mode: if any quote in the project has barbone, use split
-  const projectQuotes = qtQuotes.filter(q => q.project === r.project);
-  const hasSplit = projectQuotes.some(q => q.barbone != null);
-  const mode = hasSplit ? 'split' : 'combined';
-  doDocImportFromQuotes(r.project, mode);
+  // Open the import modal pre-filtered to this project
+  openDocImportFromQuotes();
+  setTimeout(() => {
+    const searchEl = document.getElementById('diq-search');
+    if (searchEl) { searchEl.value = r.project; renderDocIqList(); }
+  }, 50);
 }
 
-function doDocImportFromQuotes(proj, mode) {
+function doDocImportFromQuotes(proj, mode, target) {
+  target = target || 'q';
   const allQuotes = qtQuotes || [];
   const items = allQuotes.filter(q => (q.project || '（无项目名）') === proj);
   if (!items.length) { alert('未找到该项目的报价记录'); return; }
 
   const company = items[0].company || '';
+  const targetLabel = target === 'pi' ? 'PI 形式发票' : 'Quotation 报价单';
+  const modeLabel = mode === 'split' ? '分拆报价' : '整合报价';
 
   const confirmed = confirm(
-    `将「${proj}」的 ${items.length} 个型号导入到 Quotation？\n\n` +
+    `将「${proj}」的 ${items.length} 个型号导入到 ${targetLabel}？\n\n` +
     `· 客户公司名将设为：${company}\n` +
-    `· 报价模式将切换为：${mode === 'split' ? '分拆报价' : '整合报价'}\n` +
-    `· 将清空 Quotation 现有所有行，然后重新填入。`
+    `· 报价模式将切换为：${modeLabel}\n` +
+    `· 将清空 ${targetLabel} 现有所有行，然后重新填入。`
   );
   if (!confirmed) return;
 
@@ -6641,13 +6837,16 @@ function doDocImportFromQuotes(proj, mode) {
   const projEl = document.getElementById('docProject');
   if (projEl && proj !== '（无项目名）') projEl.value = proj;
 
-  // Switch mode if needed
-  if (_mode.q !== mode) setMode('q', mode);
+  // Determine doc type key: 'q' or 'pi'
+  const docKey = target === 'pi' ? 'pi' : 'q';
 
-  // Clear existing Q rows
-  const tbody = document.getElementById('q-b');
-  tbody.innerHTML = '';
-  rc.q = 0;
+  // Switch mode if needed
+  if (_mode[docKey] !== mode) setMode(docKey, mode);
+
+  // Clear existing rows
+  const tbodyId = docKey === 'pi' ? 'pi-b' : 'q-b';
+  const tbody = document.getElementById(tbodyId);
+  if (tbody) { tbody.innerHTML = ''; rc[docKey] = 0; }
 
   // Add rows
   items.forEach(it => {
@@ -6656,38 +6855,56 @@ function doDocImportFromQuotes(proj, mode) {
     const descParts = [it.cpu, ramSpec, ssdSpec, it.custom].filter(Boolean);
     const desc = descParts.join(' / ');
 
-    if (mode === 'split') {
-      addR('q', {
-        pn:  it.model  || '',
-        ds:  desc,
-        qty: it.qty    || '1',
-        bb:  it.barbone != null ? String(it.barbone) : '',
-        ram: it.ramp   != null ? String(it.ramp)    : '',
-        ssd: it.ssdp   != null ? String(it.ssdp)    : '',
-        sh:  '',
-        ai:  it.price  != null ? String(it.price)   : '',
+    const addOneRow = (qty, unitPrice) => {
+      if (mode === 'split') {
+        addR(docKey, {
+          pn:  it.model  || '',
+          ds:  desc,
+          qty: qty,
+          bb:  it.barbone != null ? String(it.barbone) : '',
+          ram: it.ramp   != null ? String(it.ramp)    : '',
+          ssd: it.ssdp   != null ? String(it.ssdp)    : '',
+          sh:  '',
+          ai:  unitPrice,
+        });
+      } else {
+        addR(docKey, {
+          pn:  it.model  || '',
+          ds:  desc,
+          qty: qty,
+          cfg: unitPrice,
+        });
+      }
+    };
+
+    // If tiers exist, generate a row per tier
+    const tiers = it.tiers || [];
+    if (tiers.length > 0) {
+      tiers.forEach(t => {
+        addOneRow(t.qty || it.qty || '1', t.price != null ? String(t.price) : (it.price != null ? String(it.price) : ''));
       });
     } else {
-      addR('q', {
-        pn:  it.model  || '',
-        ds:  desc,
-        qty: it.qty    || '1',
-        cfg: it.price  != null ? String(it.price)   : '',
-      });
+      addOneRow(it.qty || '1', it.price != null ? String(it.price) : '');
     }
   });
 
-  cQ();
+  // Recalculate totals
+  if (docKey === 'pi') cPI(); else cQ();
+
   closeDocImportFromQuotes();
 
-  // Switch to quotation tab
+  // Switch to target tab
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-quotation').classList.add('active');
-  const qBtn = [...document.querySelectorAll('.tab-btn')].find(b => b.textContent.includes('Quotation'));
-  if (qBtn) qBtn.classList.add('active');
+  const tabId = docKey === 'pi' ? 'tab-pi' : 'tab-quotation';
+  const tabEl = document.getElementById(tabId);
+  if (tabEl) tabEl.classList.add('active');
+  const tabKeyword = docKey === 'pi' ? 'Proforma' : 'Quotation';
+  const tBtn = [...document.querySelectorAll('.tab-btn')].find(b => b.textContent.includes(tabKeyword));
+  if (tBtn) tBtn.classList.add('active');
 
-  toast(`✅ 已从报价管理导入「${proj}」共 ${items.length} 行`);
+  const rowCount = items.reduce((sum, it) => sum + Math.max(1, (it.tiers||[]).length), 0);
+  toast(`✅ 已从报价管理导入「${proj}」共 ${rowCount} 行 → ${targetLabel}`);
 }
 
 // Close modal on background click
