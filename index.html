@@ -6662,7 +6662,7 @@ function cQ(){
 
 let _qTotalColHidden=false;
 // Default description pre-filled into new Q/PI rows
-const DEFAULT_DESC='Industrial Panel PC<br>1. PC System: i5&#8209;10210U, 16GB RAM (Hynix), 512GB SSD (Kingston)<br>2. Panel: 10-inch, 1024&times;768, P-Cap touch<br>3. I/O: 6&times;USB, 2&times;LAN, 4&times;RS232, 2&times;RS485, VGA, HDMI<br>4. OS: Windows 10 LTSC<br>5. Other: WiFi, 9&ndash;36V DC input<br>6. Accessory: 1 x Power adaptor, 1 x AC Cable, 2 x WiFi Antenna, 4 x Buckles<br>7. Customization Services: Available';
+const DEFAULT_DESC='<strong>Industrial Panel PC</strong><br>1. PC System: i5&#8209;10210U, 16GB RAM (Hynix), 512GB SSD (Kingston)<br>2. Panel: 10-inch, 1024&times;768, P-Cap touch<br>3. I/O: 6&times;USB, 2&times;LAN, 4&times;RS232, 2&times;RS485, VGA, HDMI<br>4. OS: Windows 10 LTSC<br>5. Other: WiFi, 9&ndash;36V DC input<br>6. Accessory: 1 x Power adaptor, 1 x AC Cable, 2 x WiFi Antenna, 4 x Buckles<br>7. Customization Services: Available';
 function qtToggleTotalCol(){
   _qTotalColHidden=!_qTotalColHidden;
   const btn=document.getElementById('q-toggle-total-btn');
@@ -8075,9 +8075,14 @@ function openDescTpl(btn) {
       document.getElementById('dtpl-6').value = mem.f6 || '';
       document.getElementById('dtpl-7').value = mem.f7 || 'Available';
     } else {
-      ['dtpl-title','dtpl-1','dtpl-2','dtpl-3','dtpl-4','dtpl-5','dtpl-6'].forEach(id => {
-        document.getElementById(id).value = '';
-      });
+      // Pre-fill with default product data
+      document.getElementById('dtpl-title').value = 'Industrial Panel PC';
+      document.getElementById('dtpl-1').value = 'i5‑10210U, 16GB RAM (Hynix), 512GB SSD (Kingston)';
+      document.getElementById('dtpl-2').value = '10-inch, 1024×768, P-Cap touch';
+      document.getElementById('dtpl-3').value = '6×USB, 2×LAN, 4×RS232, 2×RS485, VGA, HDMI';
+      document.getElementById('dtpl-4').value = 'Windows 10 LTSC';
+      document.getElementById('dtpl-5').value = 'WiFi, 9–36V DC input';
+      document.getElementById('dtpl-6').value = '1 x Power adaptor, 1 x AC Cable, 2 x WiFi Antenna, 4 x Buckles';
       document.getElementById('dtpl-7').value = 'Available';
     }
   }
