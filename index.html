@@ -1388,6 +1388,7 @@ function switchTab(name){
   const idx=['cesipc','quotes','projects','performance','targets','export'].indexOf(name);
   document.querySelectorAll('.tab')[idx].classList.add('active');
   document.getElementById('panel-'+name).classList.add('active');
+  if(name==='quotes'){qtRender();qtUpdateCompanyFilter();}
   if(name==='performance'){renderPerf();renderPivot();}
   if(name==='projects'){renderProjects();refreshProjDatalist();}
   if(name==='targets'){loadTargetForm();}
@@ -5292,6 +5293,25 @@ function qtSeed(){
     <button class="tab-btn" onclick="cesipcSwitchTab('ci',this)">CI 商业发票</button>
     <button class="tab-btn" onclick="cesipcSwitchTab('packing',this)">Packing 装箱单</button>
   </nav>
+  <!-- 常驻格式工具栏：作用于所有 Description contenteditable 框 -->
+  <div id="fmt-toolbar-fixed" style="display:flex;align-items:center;gap:5px;margin-left:10px;padding:4px 10px;background:#f0f3f7;border:1px solid #c8d4e3;border-radius:7px;">
+    <span style="font-size:10px;color:#6688aa;white-space:nowrap;font-weight:500;">Description 格式</span>
+    <div style="width:1px;height:18px;background:#c8d4e3;margin:0 2px;"></div>
+    <button title="加粗 Bold" onmousedown="event.preventDefault();fmtExec('bold')" style="background:#1A3C5E;border:none;border-radius:4px;color:#fff;font-weight:700;font-size:13px;width:26px;height:24px;cursor:pointer;line-height:1;">B</button>
+    <button title="斜体 Italic" onmousedown="event.preventDefault();fmtExec('italic')" style="background:#fff;border:1px solid #c8d4e3;border-radius:4px;color:#333;font-style:italic;font-size:13px;width:26px;height:24px;cursor:pointer;line-height:1;">I</button>
+    <button title="下划线 Underline" onmousedown="event.preventDefault();fmtExec('underline')" style="background:#fff;border:1px solid #c8d4e3;border-radius:4px;color:#333;text-decoration:underline;font-size:13px;width:26px;height:24px;cursor:pointer;line-height:1;">U</button>
+    <div style="width:1px;height:18px;background:#c8d4e3;margin:0 2px;"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+      <span style="font-size:9px;color:#6688aa;line-height:1;">字色</span>
+      <input type="color" value="#E8732A" title="字体颜色" style="width:24px;height:16px;border:1px solid #c8d4e3;border-radius:3px;cursor:pointer;padding:1px;" onmousedown="event.stopPropagation()" onchange="fmtColor(this.value)"/>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+      <span style="font-size:9px;color:#6688aa;line-height:1;">🖍高亮</span>
+      <input type="color" value="#FFFF00" title="背景高亮色" style="width:24px;height:16px;border:1px solid #c8d4e3;border-radius:3px;cursor:pointer;padding:1px;" onmousedown="event.stopPropagation()" onchange="fmtBg(this.value)"/>
+    </div>
+    <div style="width:1px;height:18px;background:#c8d4e3;margin:0 2px;"></div>
+    <button title="清除格式" onmousedown="event.preventDefault();fmtExec('removeFormat')" style="background:#fff;border:1px solid #c8d4e3;border-radius:4px;color:#666;font-size:11px;padding:2px 7px;cursor:pointer;white-space:nowrap;">✕清除</button>
+  </div>
 </header>
 
 <div class="app">
@@ -5606,6 +5626,12 @@ function qtSeed(){
 let rc={q:0,pi:0,ci:0,pk:0};
 let _curDocType='q';
 let _fmtTarget=null;
+
+// Track last focused contenteditable so fixed toolbar always has a target
+document.addEventListener('focusin', e => {
+  const ce = e.target.closest('[contenteditable="true"]');
+  if (ce) _fmtTarget = ce;
+});
 const g=id=>(document.getElementById(id)?.value||'').trim();
 const fa=n=>isNaN(parseFloat(n))?'0.00':parseFloat(n).toFixed(2);
 function fd(v){if(!v)return'';const d=new Date(v+'T00:00:00');return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
@@ -7020,7 +7046,10 @@ function doDocImportFromQuotes(proj, mode, target) {
 
   closeDocImportFromQuotes();
 
-  // Switch to target tab
+  // Switch outer main tab to cesipc first
+  switchTab('cesipc');
+
+  // Then switch inner doc tab
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   const tabId = docKey === 'pi' ? 'tab-pi' : 'tab-quotation';
