@@ -2145,7 +2145,7 @@ function renderProjects(){
         <div><b>2. 项目进度：</b>${latest.progressStage||''}</div>
         <div><b>3. 项目需求：</b>${(latest.requirement||'').replace(/\n/g,'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')}</div>
         <div><b>4. 项目数量：</b>${latest.quantity||''}</div>
-        <div><b>5. 项目报价：</b>${latest.quote||''}</div>
+        <div><b>5. 项目报价：</b>${(latest.quote||'').replace(/\n/g,'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')}</div>
         <div style="margin-top:4px"><b>6. 跟进详情：</b>${historyBullets||'<span style="color:var(--text3);font-style:italic">暂无</span>'}</div>
       </div>
 
