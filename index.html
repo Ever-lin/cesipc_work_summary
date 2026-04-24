@@ -1710,29 +1710,50 @@ function qtDealToStatus(deal){
 function qtSnapToLine(h){
   // Format one history snapshot into rich multi-line format
   const fc=s=>s==='CNY'?'¥':'$';
-  const parts=[];
-  if(h.barbone!=null)parts.push('准系统 '+fc(h.barboneCur||'USD')+h.barbone);
-  if(h.ramp!=null)parts.push('RAM('+(h.ram||'—')+') '+fc(h.rampCur||'USD')+h.ramp);
-  if(h.ssdp!=null)parts.push('SSD('+(h.ssd||'—')+') '+fc(h.ssdpCur||'USD')+h.ssdp);
-  if(h.totalPrice!=null)parts.push('整机 '+fc(h.totalCur||'USD')+h.totalPrice);
-  if(h.qty)parts.push('数量:'+h.qty+'台');
-  const priceStr=fc(h.priceCur||'USD')+(h.price||'—');
+  const hasTiers=h.tiers&&h.tiers.length>0;
   // Date: use first 10 chars of savedAt (YYYY-MM-DD) or full savedAt
   const dateStr=(h.savedAt||'').slice(0,10)||'';
   let lines=[];
-  lines.push('💰'+(dateStr?dateStr+' ':'')+priceStr);
-  if(h.model||h.cpu||h.partno){
-    let modelLine=(h.model||'')+(h.cpu?' · '+h.cpu:'')+(h.partno?' · 料号:'+h.partno:'');
-    lines.push(modelLine);
-  }
-  if(parts.length||(h.shipping&&h.shipping.trim())){
-    let detailLine=parts.join(' · ')+(h.shipping?' · 🚢 '+h.shipping:'');
-    lines.push(detailLine);
-  }
-  if(h.custom&&h.custom.trim())lines.push('🔧 [Custom / 附加功能] '+h.custom);
-  if(h.tiers&&h.tiers.length){
-    const fc2=s=>s==='CNY'?'¥':'$';
-    lines.push('📊 批量价格：'+h.tiers.map(t=>`${t.qty}台 × ${fc2(t.cur||'USD')}${t.price}`).join('  /  '));
+
+  if(hasTiers){
+    // 有批量价格：第一行显示日期+阶梯汇总，不再显示单价
+    lines.push('💰 '+(dateStr?dateStr+' ':'')+'📊 '+h.tiers.map(t=>`${t.qty}台×${fc(t.cur||'USD')}${t.price}`).join(' / '));
+    // 型号/CPU
+    if(h.model||h.cpu||h.partno){
+      let modelLine=(h.model||'')+(h.cpu?' · '+h.cpu:'')+(h.partno?' · 料号:'+h.partno:'');
+      lines.push(modelLine);
+    }
+    // 准系统/RAM/SSD 分项成本（如有，作参考）
+    const costParts=[];
+    if(h.barbone!=null)costParts.push('准系统 '+fc(h.barboneCur||'USD')+h.barbone);
+    if(h.ramp!=null)costParts.push('RAM('+(h.ram||'—')+') '+fc(h.rampCur||'USD')+h.ramp);
+    if(h.ssdp!=null)costParts.push('SSD('+(h.ssd||'—')+') '+fc(h.ssdpCur||'USD')+h.ssdp);
+    if(costParts.length||(h.shipping&&h.shipping.trim())){
+      let detailLine=costParts.join(' · ')+(h.shipping?' · 🚢 '+h.shipping:'');
+      lines.push(detailLine);
+    }
+    if(h.custom&&h.custom.trim())lines.push('🔧 [Custom / 附加功能] '+h.custom);
+    // 完整阶梯明细
+    lines.push('📊 批量价格：'+h.tiers.map(t=>`${t.qty}台 × ${fc(t.cur||'USD')}${t.price}`).join('  /  '));
+  } else {
+    // 无批量：原有格式
+    const parts=[];
+    if(h.barbone!=null)parts.push('准系统 '+fc(h.barboneCur||'USD')+h.barbone);
+    if(h.ramp!=null)parts.push('RAM('+(h.ram||'—')+') '+fc(h.rampCur||'USD')+h.ramp);
+    if(h.ssdp!=null)parts.push('SSD('+(h.ssd||'—')+') '+fc(h.ssdpCur||'USD')+h.ssdp);
+    if(h.totalPrice!=null)parts.push('整机 '+fc(h.totalCur||'USD')+h.totalPrice);
+    if(h.qty)parts.push('数量:'+h.qty+'台');
+    const priceStr=fc(h.priceCur||'USD')+(h.price||'—');
+    lines.push('💰'+(dateStr?dateStr+' ':'')+priceStr);
+    if(h.model||h.cpu||h.partno){
+      let modelLine=(h.model||'')+(h.cpu?' · '+h.cpu:'')+(h.partno?' · 料号:'+h.partno:'');
+      lines.push(modelLine);
+    }
+    if(parts.length||(h.shipping&&h.shipping.trim())){
+      let detailLine=parts.join(' · ')+(h.shipping?' · 🚢 '+h.shipping:'');
+      lines.push(detailLine);
+    }
+    if(h.custom&&h.custom.trim())lines.push('🔧 [Custom / 附加功能] '+h.custom);
   }
   if(h.notes&&h.notes.trim())lines.push('📝 '+h.notes);
   return lines.join('\n');
@@ -4538,7 +4559,7 @@ function qtRenderProductRows(){
               const diff=p3v>0&&price>0?price-p3v:null;
               const diffStr=diff!==null?(diff>=0?'+':'')+sym(tcur)+diff:'—';
               const diffColor=diff===null?'var(--text2)':diff<0?'var(--red-text)':'#1D9E75';
-              return `<div style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px 10px">
+              return `<div class="qt-tier-row" style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px 10px">
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
                   <div style="display:flex;align-items:center;gap:4px">
                     <span style="font-size:11px;color:var(--text2);font-weight:500">数量</span>
@@ -4600,15 +4621,15 @@ function qtSyncTiersFromDOM(i){
   const pm=_qtProdRows[i]?.pmode||'breakdown';
   const pi=row.querySelector(pm==='breakdown'?'[data-priceinput]':'[data-ttinput]');
   if(pi&&_qtProdRows[i])_qtProdRows[i].price=pi.value;
-  // sync tiers
+  // sync tiers — look for elements that have data-tier inputs
   const tierContainer=row.querySelector(`#qt-tiers-${i}`);
   if(tierContainer){
-    const tierRows=tierContainer.querySelectorAll('div[style*="display:flex"]');
     const tiers=[];
-    tierRows.forEach(tr=>{
-      const qtyI=tr.querySelector('[data-tierf="qty"]');
-      const curI=tr.querySelector('[data-tierf="cur"]');
-      const priceI=tr.querySelector('[data-tierf="price"]');
+    // Each tier is a direct child div of the tier container
+    Array.from(tierContainer.children).forEach(tierDiv=>{
+      const qtyI=tierDiv.querySelector('[data-tierf="qty"]');
+      const curI=tierDiv.querySelector('[data-tierf="cur"]');
+      const priceI=tierDiv.querySelector('[data-tierf="price"]');
       if(qtyI&&priceI){tiers.push({qty:qtyI.value,cur:curI?.value||'USD',price:priceI.value});}
     });
     if(_qtProdRows[i])_qtProdRows[i].tiers=tiers;
@@ -4638,7 +4659,7 @@ function qtAddTier(i){
 
 function qtRemoveTierDOM(btn, i){
   // Remove a tier row directly from DOM, then re-sync
-  const row = btn.closest('div[style*="display:flex"]');
+  const row = btn.closest('.qt-tier-row');
   if(row) row.remove();
   qtSyncTiersFromDOM(i);
   // Hide hint if no tiers left
@@ -4797,17 +4818,20 @@ function qtRenderSingleTiers(){
   const priceRow=document.getElementById('qf-price-row');
   if(!cont)return;
 
+  const qtyRow=document.getElementById('qf-qty')?.closest('.field');
   if(_qtSingleTiers.length===0){
     // No tiers: show normal single price row and single summary panel
     if(priceRow)priceRow.style.display='';
     if(singlePanel)singlePanel.style.display='';
     if(tiersPanel)tiersPanel.style.display='none';
     if(hint)hint.style.display='none';
+    if(qtyRow)qtyRow.style.display='';
     cont.innerHTML='';
     return;
   }
 
-  // Has tiers: hide single price input, show tier comparison panel instead
+  // Has tiers: hide qty field (quantity defined per-tier), hide single price input
+  if(qtyRow)qtyRow.style.display='none';
   if(priceRow)priceRow.style.display='none';
   if(singlePanel)singlePanel.style.display='none';
   if(hint)hint.style.display='block';
@@ -4991,12 +5015,14 @@ function qtRenderHistoryInModal(hist){
 
   const curId=qtEditId;
   list.innerHTML=snapshots.map((h,idx)=>{
+    const hasTiers=h.tiers&&h.tiers.length>0;
     const parts=[];
     if(h.barbone!=null)parts.push({field:'barbone',text:'准系统 '+fc(h.barboneCur||'USD')+h.barbone});
     if(h.ramp!=null)parts.push({field:'ramp',text:'RAM('+(h.ram||'—')+') '+fc(h.rampCur||'USD')+h.ramp});
     if(h.ssdp!=null)parts.push({field:'ssdp',text:'SSD('+(h.ssd||'—')+') '+fc(h.ssdpCur||'USD')+h.ssdp});
-    if(h.totalPrice!=null)parts.push({field:'totalPrice',text:'整机 '+fc(h.totalCur||'USD')+h.totalPrice});
-    if(h.qty)parts.push({field:'qty',text:'数量:'+h.qty+'台'});
+    // 有批量时不显示整机单价和数量（已在标题阶梯里体现）
+    if(!hasTiers&&h.totalPrice!=null)parts.push({field:'totalPrice',text:'整机 '+fc(h.totalCur||'USD')+h.totalPrice});
+    if(!hasTiers&&h.qty)parts.push({field:'qty',text:'数量:'+h.qty+'台'});
 
     // suppress single-price P-P3 diff when tiers exist (each tier has its own diff)
     const diffStr=(!h.tiers||!h.tiers.length)&&(h.price!=null&&h.p3!=null)?(()=>{
@@ -5065,15 +5091,14 @@ function qtSave(){
         const inp=el.querySelector(`[data-f="${f}"]`);
         if(inp)_qtProdRows[i][f]=inp.value;
       });
-      // sync tiers
+      // sync tiers — look for direct children of tier container
       const tierContainer=el.querySelector(`#qt-tiers-${i}`);
       if(tierContainer){
-        const tierRows=tierContainer.querySelectorAll('div[style*="display:flex"]');
         _qtProdRows[i].tiers=[];
-        tierRows.forEach(tr=>{
-          const qtyI=tr.querySelector('[data-tierf="qty"]');
-          const curI=tr.querySelector('[data-tierf="cur"]');
-          const priceI=tr.querySelector('[data-tierf="price"]');
+        Array.from(tierContainer.children).forEach(tierDiv=>{
+          const qtyI=tierDiv.querySelector('[data-tierf="qty"]');
+          const curI=tierDiv.querySelector('[data-tierf="cur"]');
+          const priceI=tierDiv.querySelector('[data-tierf="price"]');
           if(qtyI&&priceI&&(parseFloat(priceI.value)>0||parseFloat(qtyI.value)>0)){
             _qtProdRows[i].tiers.push({qty:qtyI.value,cur:curI?.value||'USD',price:priceI.value});
           }
