@@ -5404,9 +5404,13 @@ function qtRenderDash(){
   if(!window.qtDashFilterCo)window.qtDashFilterCo='';
   document.getElementById('qt-ccs').innerHTML=companies.map(c=>{
     const cqs=qtQuotes.filter(q=>q.company===c);
-    const cw=cqs.filter(q=>q.deal==='won').length;
-    const co=cqs.filter(q=>q.deal==='open').length;
-    const cl=cqs.filter(q=>q.deal==='lost').length;
+    // 按项目去重后统计各状态（取每个项目最新一条的deal）
+    const projMap={};
+    cqs.forEach(q=>{const p=q.project||'';if(!p)return;if(!projMap[p]||q.date>projMap[p].date)projMap[p]=q;});
+    const projs=Object.values(projMap);
+    const cw=projs.filter(q=>q.deal==='won').length;
+    const co=projs.filter(q=>q.deal==='open').length;
+    const cl=projs.filter(q=>q.deal==='lost').length;
     const isSel=window.qtDashFilterCo===c;
     return`<div class="qt-cc" onclick="window.qtDashFilterCo=(window.qtDashFilterCo===\`${c.replace(/`/g,"'")}\`?'':String.raw\`${c.replace(/`/g,"'")}\`);qtRenderDash();"
       style="cursor:pointer;transition:all .15s;${isSel
@@ -6266,17 +6270,13 @@ function toggleStamps(){
 function getStampHtml(){
   const stamps = _companyImages.stamps;
   if(!stamps || stamps.length === 0) return '';
-  // Render stamps stacked bottom-right; offset each slightly if multiple
-  let visIdx = 0;
-  return stamps.map((st, idx) => {
+  const imgs = stamps.map((st, idx) => {
     if(st.hidden) return '';
     const s = st.size || 70;
-    const ox = (st.offsetX || 0) + (visIdx * 4);
-    const oy = st.offsetY || 0;
-    const out = `<img id="pdf-stamp-img-${idx}" src="${st.dataUrl}" style="height:${s}pt;max-width:${s}pt;object-fit:contain;opacity:0.88;position:absolute;bottom:${5 + visIdx * 2}pt;right:${5 + visIdx * (s + 4)}pt;transform:translate(${ox}px,${oy}px);cursor:move;" alt="stamp${idx+1}" onmousedown="startDragImage(event,'stamp',${idx})">`;
-    visIdx++;
-    return out;
-  }).join('');
+    return `<img id="pdf-stamp-img-${idx}" src="${st.dataUrl}" style="height:${s}pt;max-width:${s}pt;object-fit:contain;opacity:0.88;cursor:move;" alt="stamp${idx+1}" onmousedown="startDragImage(event,'stamp',${idx})">`;
+  }).filter(Boolean).join('');
+  if(!imgs) return '';
+  return `<div style="display:flex;justify-content:center;align-items:center;gap:6pt;margin-top:6pt;">${imgs}</div>`;
 }
 
 // ── Drag logo/stamp in PDF preview overlay ──
@@ -7005,7 +7005,7 @@ function sigs(navy=true){
   const cls=navy?'navy':'blue';
   const stamp=getStampHtml();
   return`<div class="sigs">
-    <div class="sig"><div class="sig-h ${cls}">AUTHORIZED SIGNATURE</div><div class="sig-b ${navy?'a':'b'}" style="position:relative;min-height:${stamp?'70pt':'auto'};">Company Stamp &amp; Authorized Signature${stamp}</div></div>
+    <div class="sig"><div class="sig-h ${cls}">AUTHORIZED SIGNATURE</div><div class="sig-b ${navy?'a':'b'}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">Company Stamp &amp; Authorized Signature${stamp}</div></div>
     <div class="sig"><div class="sig-h ${cls}">CUSTOMER ACCEPTANCE</div><div class="sig-b ${navy?'a':'b'}">Company Stamp &amp; Authorized Signature</div></div>
   </div>`;
 }
