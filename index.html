@@ -2585,7 +2585,7 @@ function buildCRMTextFull(latest,allEntries){
   r+=`2. 项目进度：${latest.progressStage||'暂无'}\n`;
   r+=`3. 项目需求：\n${latest.requirement||'暂无'}\n`;
   r+=`4. 项目数量：${latest.quantity||'暂无'}\n`;
-  r+=`5. 项目报价：${stripEmojiForCRM(latest.quote)||'暂无'}`;
+  r+=`5. 项目报价：\n${stripEmojiForCRM(latest.quote)||'暂无'}`;
   return r;
 }
 
