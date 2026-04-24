@@ -3456,6 +3456,46 @@ function genWeekly(){
   toast('✅ 周报已生成！');
   }catch(e){console.error('genWeekly error:',e);toast('❌ 生成周报时出错：'+e.message);}
 }
+// 周报月份颜色映射（12个月循环配色，方便区分）
+const _weeklyMonthColors=[
+  {border:'#185FA5',bg:'#E6F1FB',text:'#0C447C'},  // 4月 蓝
+  {border:'#1D9E75',bg:'#EAF3DE',text:'#27500A'},  // 5月 绿
+  {border:'#EF9F27',bg:'#FAEEDA',text:'#633806'},  // 6月 琥珀
+  {border:'#9B59B6',bg:'#F3EBF9',text:'#5B2C6F'},  // 7月 紫
+  {border:'#E74C3C',bg:'#FDEDEC',text:'#922B21'},  // 8月 红
+  {border:'#16A085',bg:'#E1F5EE',text:'#085041'},  // 9月 青绿
+  {border:'#2980B9',bg:'#EAF4FB',text:'#1A5276'},  // 10月 深蓝
+  {border:'#27AE60',bg:'#EAFAF1',text:'#145A32'},  // 11月 深绿
+  {border:'#F39C12',bg:'#FEF9E7',text:'#7D6608'},  // 12月 金
+  {border:'#8E44AD',bg:'#F5EEF8',text:'#6C3483'},  // 1月 深紫
+  {border:'#C0392B',bg:'#FDEDEC',text:'#7B241C'},  // 2月 深红
+  {border:'#17A589',bg:'#E8F8F5',text:'#0E6655'},  // 3月 青
+];
+function _wColor(month){const m=parseInt(month)||4;const fyMonths=[4,5,6,7,8,9,10,11,12,1,2,3];const idx=fyMonths.indexOf(m);return _weeklyMonthColors[idx>=0?idx:0];}
+
+function _splitWeeklyTxt(txt){
+  // Split txt into named sections by heading patterns
+  const lines=txt.split('\n');
+  const sections={header:[],perf:[],projects:[],longline:[],target:[],plan:[],nextlong:[]};
+  let cur='header';
+  lines.forEach(l=>{
+    const t=l.trim();
+    if(/^1[．.]\s*(本周总业绩|业绩)/.test(t)||/^─{5,}/.test(t)&&cur==='header'){if(cur==='header'){sections.header.push(l);cur='perf';return;}}
+    if(/^─{5,}/.test(t)&&cur==='perf'){cur='projects';return;}
+    if(/^─{5,}/.test(t)&&cur==='projects'){cur='longline';return;}
+    if(/^─{5,}/.test(t)&&cur==='longline'){cur='target';return;}
+    if(/^─{5,}/.test(t)&&cur==='target'){cur='plan';return;}
+    if(/^─{5,}/.test(t)&&cur==='plan'){cur='nextlong';return;}
+    if(/^下周目标|^下周工作目标/.test(t))cur='target';
+    else if(/^下周工作计划/.test(t))cur='plan';
+    else if(/^下周长线工作/.test(t))cur='nextlong';
+    else if(/^重点项目/.test(t))cur='projects';
+    else if(/^长线工作\s*&/.test(t)||/^长线工作&/.test(t))cur='longline';
+    sections[cur].push(l);
+  });
+  return sections;
+}
+
 function renderGeneratedWeeklies(expandKey){
   if(!state.genWeeklies)state.genWeeklies=[];
   const list=state.genWeeklies.slice().reverse();
@@ -3464,20 +3504,55 @@ function renderGeneratedWeeklies(expandKey){
   el.innerHTML=list.map(w=>{
     const hid='gw_'+w.id;
     const isNew=w.key===expandKey;
-    return`<div class="card" style="margin-top:8px;border-left:4px solid #1D9E75">
-      <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
-        <span style="font-size:13px;font-weight:500;color:#27500A"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> 📋 ${w.fy} ${w.month}月 ${w.week} 周报</span>
+    const c=_wColor(w.month);
+    const sec=_splitWeeklyTxt(w.txt||'');
+    const blk=(label,lines,secKey)=>{
+      const txt=(lines||[]).join('\n').trim();
+      if(!txt)return'';
+      return`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:12px;font-weight:500;color:var(--text2)">${label}</span>
+        <button class="btn btn-xs" onclick="event.stopPropagation();_copyWeeklySection(${w.id},'${secKey}')">复制</button>
+      </div>
+      <div style="font-size:12px;white-space:pre-wrap;line-height:1.7;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:10px">${txt}</div>`;
+    };
+    const weekLabel=w.week||'';
+    const monthInt=parseInt(w.month)||4;
+    const weekNum=['第一周','第二周','第三周','第四周','第五周'].indexOf(weekLabel);
+    const weekBadgeColors=['#185FA5','#1D9E75','#EF9F27','#9B59B6','#16A085'];
+    const weekBadgeBgs=['#E6F1FB','#EAF3DE','#FAEEDA','#F3EBF9','#E1F5EE'];
+    const wbc=weekNum>=0?weekBadgeColors[weekNum]:c.border;
+    const wbg=weekNum>=0?weekBadgeBgs[weekNum]:c.bg;
+    return`<div class="card" style="margin-top:8px;border-left:4px solid ${c.border};background:${c.bg}08">
+      <div class="card-header" style="margin-bottom:0;cursor:pointer;background:${c.bg};border-radius:6px 6px 0 0;padding:10px 12px" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:13px;font-weight:600;color:${c.text}"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> 📋 ${w.fy} ${w.month}月 ${w.week} 周报</span>
+          <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:${c.border};color:#fff">${w.month}月</span>
+          <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:${wbc};color:#fff">${weekLabel}</span>
+        </div>
         <div class="inline-flex">
-          <button class="btn btn-xs" onclick="event.stopPropagation();copyGenTxt('genWeeklies',${w.id})">复制</button>
+          <button class="btn btn-xs" onclick="event.stopPropagation();copyGenTxt('genWeeklies',${w.id})">复制全部</button>
           <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delGenWeekly(${w.id})">删除</button>
         </div>
       </div>
-      <div id="${hid}" style="display:${isNew?'block':'none'};margin-top:8px">
-        <div class="export-area" style="margin-top:0;max-height:420px">${w.txt}</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:6px">${w.savedAt}</div>
+      <div id="${hid}" style="display:${isNew?'block':'none'};margin-top:10px;padding:0 4px">
+        ${blk('📊 业绩 & 回款',sec.perf,'perf')}
+        ${blk('🗂 重点项目（按项目节点划分）',sec.projects,'projects')}
+        ${blk('🔗 长线工作 & 日常事务',sec.longline,'longline')}
+        ${blk('🎯 下周目标',sec.target,'target')}
+        ${blk('📅 下周工作计划',sec.plan,'plan')}
+        ${blk('🔄 下周长线工作',sec.nextlong,'nextlong')}
+        <div style="font-size:11px;color:var(--text2);margin-top:6px;padding-bottom:4px">${w.savedAt}</div>
       </div>
     </div>`;
   }).join('');
+}
+function _copyWeeklySection(id,secKey){
+  const w=(state.genWeeklies||[]).find(x=>x.id===id);
+  if(!w||!w.txt){alert('暂无内容');return;}
+  const sec=_splitWeeklyTxt(w.txt);
+  const txt=(sec[secKey]||[]).join('\n').trim();
+  if(!txt){alert('该区块内容为空');return;}
+  navigator.clipboard.writeText(txt).then(()=>alert('已复制！'));
 }
 function delGenWeekly(id){if(!confirm('确认删除？'))return;state.genWeeklies=(state.genWeeklies||[]).filter(x=>x.id!==id);save();renderGeneratedWeeklies();}
 
@@ -3612,6 +3687,24 @@ function genMonthly(){
   }catch(e){console.error('genMonthly error:',e);toast('❌ 生成月报时出错：'+e.message);}
 }
 
+function _splitMonthlyTxt(txt){
+  const lines=txt.split('\n');
+  const sections={header:[],perf:[],projects:[],longline:[],target:[],plan:[],nextlong:[]};
+  let cur='header';
+  lines.forEach(l=>{
+    const t=l.trim();
+    if(/^1[．.]\s*(本月总业绩|业绩)/.test(t)){cur='perf';}
+    else if(/^重点项目/.test(t)){cur='projects';}
+    else if(/^长线工作\s*&/.test(t)||/^长线工作&/.test(t)){cur='longline';}
+    else if(/^下月目标/.test(t)){cur='target';}
+    else if(/^下月工作计划/.test(t)){cur='plan';}
+    else if(/^下月长线工作/.test(t)){cur='nextlong';}
+    else if(/^─{5,}/.test(t)){return;}
+    sections[cur].push(l);
+  });
+  return sections;
+}
+
 function renderGeneratedMonthlies(expandKey){
   if(!state.genMonthlies)state.genMonthlies=[];
   const list=state.genMonthlies.slice().reverse();
@@ -3620,20 +3713,47 @@ function renderGeneratedMonthlies(expandKey){
   el.innerHTML=list.map(m=>{
     const hid='gm_'+m.id;
     const isNew=m.key===expandKey;
-    return`<div class="card" style="margin-top:8px;border-left:4px solid #EF9F27">
-      <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
-        <span style="font-size:13px;font-weight:500;color:#633806"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> 🗓 ${m.fy} ${m.month}月 月报</span>
+    const c=_wColor(m.month);
+    const sec=_splitMonthlyTxt(m.txt||'');
+    const blk=(label,lines,secKey)=>{
+      const txt=(lines||[]).join('\n').trim();
+      if(!txt)return'';
+      return`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:12px;font-weight:500;color:var(--text2)">${label}</span>
+        <button class="btn btn-xs" onclick="event.stopPropagation();_copyMonthlySection(${m.id},'${secKey}')">复制</button>
+      </div>
+      <div style="font-size:12px;white-space:pre-wrap;line-height:1.7;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:10px">${txt}</div>`;
+    };
+    return`<div class="card" style="margin-top:8px;border-left:4px solid ${c.border}">
+      <div class="card-header" style="margin-bottom:0;cursor:pointer;background:${c.bg};border-radius:6px 6px 0 0;padding:10px 12px" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:13px;font-weight:600;color:${c.text}"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> 🗓 ${m.fy} ${m.month}月 月报</span>
+          <span style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:10px;font-weight:700;background:${c.border};color:#fff">${m.month}月</span>
+        </div>
         <div class="inline-flex">
-          <button class="btn btn-xs" onclick="event.stopPropagation();copyGenTxt('genMonthlies',${m.id})">复制</button>
+          <button class="btn btn-xs" onclick="event.stopPropagation();copyGenTxt('genMonthlies',${m.id})">复制全部</button>
           <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delGenMonthly(${m.id})">删除</button>
         </div>
       </div>
-      <div id="${hid}" style="display:${isNew?'block':'none'};margin-top:8px">
-        <div class="export-area" style="margin-top:0;max-height:420px">${m.txt}</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:6px">${m.savedAt}</div>
+      <div id="${hid}" style="display:${isNew?'block':'none'};margin-top:10px;padding:0 4px">
+        ${blk('📊 业绩 & 回款',sec.perf,'perf')}
+        ${blk('🗂 重点项目（按项目节点划分）',sec.projects,'projects')}
+        ${blk('🔗 长线工作 & 日常事务',sec.longline,'longline')}
+        ${blk('🎯 下月目标',sec.target,'target')}
+        ${blk('📅 下月工作计划',sec.plan,'plan')}
+        ${blk('🔄 下月长线工作',sec.nextlong,'nextlong')}
+        <div style="font-size:11px;color:var(--text2);margin-top:6px;padding-bottom:4px">${m.savedAt}</div>
       </div>
     </div>`;
   }).join('');
+}
+function _copyMonthlySection(id,secKey){
+  const m=(state.genMonthlies||[]).find(x=>x.id===id);
+  if(!m||!m.txt){alert('暂无内容');return;}
+  const sec=_splitMonthlyTxt(m.txt);
+  const txt=(sec[secKey]||[]).join('\n').trim();
+  if(!txt){alert('该区块内容为空');return;}
+  navigator.clipboard.writeText(txt).then(()=>alert('已复制！'));
 }
 function delGenMonthly(id){if(!confirm('确认删除？'))return;state.genMonthlies=(state.genMonthlies||[]).filter(x=>x.id!==id);save();renderGeneratedMonthlies();}
 
