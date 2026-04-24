@@ -5534,24 +5534,7 @@ function qtSeed(){
   </div>
 </div>
 
-<!-- FLOATING FORMAT TOOLBAR -->
-<div id="fmt-bar" style="display:none;position:fixed;z-index:9999;background:#fff;border:1.5px solid #1A3C5E;border-radius:8px;padding:5px 10px;gap:6px;align-items:center;box-shadow:0 4px 18px rgba(0,0,0,.22);">
-  <span style="font-size:10px;color:#888;margin-right:2px;white-space:nowrap;">格式：</span>
-  <button title="加粗 Bold" onmousedown="event.preventDefault();fmtExec('bold')" style="background:#1A3C5E;border:none;border-radius:4px;color:#fff;font-weight:700;font-size:13px;width:28px;height:26px;cursor:pointer;line-height:1;">B</button>
-  <button title="斜体 Italic" onmousedown="event.preventDefault();fmtExec('italic')" style="background:#f0f0f0;border:1px solid #ccc;border-radius:4px;color:#333;font-style:italic;font-size:13px;width:28px;height:26px;cursor:pointer;line-height:1;">I</button>
-  <button title="下划线 Underline" onmousedown="event.preventDefault();fmtExec('underline')" style="background:#f0f0f0;border:1px solid #ccc;border-radius:4px;color:#333;text-decoration:underline;font-size:13px;width:28px;height:26px;cursor:pointer;line-height:1;">U</button>
-  <div style="width:1px;height:20px;background:#ddd;margin:0 2px;"></div>
-  <div style="display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;">
-    <span style="font-size:9px;color:#666;line-height:1;white-space:nowrap;">字色</span>
-    <input type="color" value="#E8732A" title="字体颜色" style="width:26px;height:18px;border:1px solid #ccc;border-radius:3px;cursor:pointer;padding:1px;" onmousedown="event.stopPropagation()" onchange="fmtColor(this.value)"/>
-  </div>
-  <div style="display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;">
-    <span style="font-size:9px;color:#666;line-height:1;white-space:nowrap;">🖍高亮</span>
-    <input type="color" value="#FFFF00" title="背景高亮色" style="width:26px;height:18px;border:1px solid #ccc;border-radius:3px;cursor:pointer;padding:1px;" onmousedown="event.stopPropagation()" onchange="fmtBg(this.value)"/>
-  </div>
-  <div style="width:1px;height:20px;background:#ddd;margin:0 2px;"></div>
-  <button title="清除格式" onmousedown="event.preventDefault();fmtExec('removeFormat')" style="background:#f0f0f0;border:1px solid #ccc;border-radius:4px;color:#666;font-size:11px;padding:3px 8px;cursor:pointer;white-space:nowrap;">✕ 清除</button>
-</div>
+
 
 
 <!-- ===== Description 模板填写弹窗 ===== -->
@@ -5672,35 +5655,37 @@ function closeMem(k){
 }
 
 // ── floating format toolbar ──
-const fBar=document.getElementById('fmt-bar');
+let _fBar=null;
+function getFBar(){return _fBar||(_fBar=document.getElementById('fmt-bar'));}
 let _savedRange=null;
 
 document.addEventListener('selectionchange',()=>{
   const sel=window.getSelection();
+  const bar=getFBar();
+  if(!bar)return;
   if(!sel||sel.isCollapsed||!sel.toString().trim()){
-    // don't hide if user is clicking inside fBar
+    if(!bar.matches(':hover'))bar.style.display='none';
     return;
   }
   const anc=sel.anchorNode?.parentElement;
   const ce=anc?.closest('[contenteditable="true"]');
-  if(!ce){return;}
+  if(!ce){bar.style.display='none';return;}
   _fmtTarget=ce;
-  // save the range so we can restore after toolbar click
   _savedRange=sel.getRangeAt(0).cloneRange();
   const r=sel.getRangeAt(0).getBoundingClientRect();
-  fBar.style.display='flex';
-  // position above selection, or below if near top
+  bar.style.display='flex';
   const topPos=r.top+window.scrollY-46;
-  fBar.style.top=Math.max(4, topPos)+'px';
-  // prevent overflow off right edge
-  const barW=fBar.offsetWidth||220;
+  bar.style.top=Math.max(4, topPos)+'px';
+  const barW=bar.offsetWidth||220;
   const leftPos=Math.min(r.left+window.scrollX-10, window.innerWidth-barW-8);
-  fBar.style.left=Math.max(4, leftPos)+'px';
+  bar.style.left=Math.max(4, leftPos)+'px';
 });
 
 document.addEventListener('mousedown',e=>{
+  const bar=getFBar();
+  if(!bar)return;
   if(!e.target.closest('#fmt-bar') && !e.target.closest('[contenteditable="true"]')){
-    fBar.style.display='none';
+    bar.style.display='none';
     _savedRange=null;
   }
 });
@@ -6477,7 +6462,27 @@ function exportPDF(){
         <div class="paper" id="paper">${paper.innerHTML}</div>
       </div>
     </div></div>
-  </body></html>`);
+  
+<!-- FLOATING FORMAT TOOLBAR -->
+<div id="fmt-bar" style="display:none;position:fixed;z-index:9999;background:#fff;border:1.5px solid #1A3C5E;border-radius:8px;padding:5px 10px;gap:6px;align-items:center;box-shadow:0 4px 18px rgba(0,0,0,.22);">
+  <span style="font-size:10px;color:#888;margin-right:2px;white-space:nowrap;">格式：</span>
+  <button title="加粗 Bold" onmousedown="event.preventDefault();fmtExec('bold')" style="background:#1A3C5E;border:none;border-radius:4px;color:#fff;font-weight:700;font-size:13px;width:28px;height:26px;cursor:pointer;line-height:1;">B</button>
+  <button title="斜体 Italic" onmousedown="event.preventDefault();fmtExec('italic')" style="background:#f0f0f0;border:1px solid #ccc;border-radius:4px;color:#333;font-style:italic;font-size:13px;width:28px;height:26px;cursor:pointer;line-height:1;">I</button>
+  <button title="下划线 Underline" onmousedown="event.preventDefault();fmtExec('underline')" style="background:#f0f0f0;border:1px solid #ccc;border-radius:4px;color:#333;text-decoration:underline;font-size:13px;width:28px;height:26px;cursor:pointer;line-height:1;">U</button>
+  <div style="width:1px;height:20px;background:#ddd;margin:0 2px;"></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;">
+    <span style="font-size:9px;color:#666;line-height:1;white-space:nowrap;">字色</span>
+    <input type="color" value="#E8732A" title="字体颜色" style="width:26px;height:18px;border:1px solid #ccc;border-radius:3px;cursor:pointer;padding:1px;" onmousedown="event.stopPropagation()" onchange="fmtColor(this.value)"/>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;">
+    <span style="font-size:9px;color:#666;line-height:1;white-space:nowrap;">🖍高亮</span>
+    <input type="color" value="#FFFF00" title="背景高亮色" style="width:26px;height:18px;border:1px solid #ccc;border-radius:3px;cursor:pointer;padding:1px;" onmousedown="event.stopPropagation()" onchange="fmtBg(this.value)"/>
+  </div>
+  <div style="width:1px;height:20px;background:#ddd;margin:0 2px;"></div>
+  <button title="清除格式" onmousedown="event.preventDefault();fmtExec('removeFormat')" style="background:#f0f0f0;border:1px solid #ccc;border-radius:4px;color:#666;font-size:11px;padding:3px 8px;cursor:pointer;white-space:nowrap;">✕ 清除</button>
+</div>
+
+</body></html>`);
   doc.close();
 
   // 等待字体加载完成再打印，避免字体未就绪导致排版错乱
@@ -7242,6 +7247,7 @@ function closeOv(){document.getElementById('ov').classList.remove('open');}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOv();});
 
 </script>
+
 
 </body>
 </html>
