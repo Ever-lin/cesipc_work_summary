@@ -7506,6 +7506,7 @@ function loadDocState(id) {
           <td class="amt" id="pk-c-${rowId}">0.00000</td>
           <td><button class="btn btn-d btn-sm" onclick="delR('pk',${rowId})">✕</button></td>`;
         tbody.appendChild(tr2);
+        cCBM(rowId);
       }
     });
     if (cfFn) cfFn();
