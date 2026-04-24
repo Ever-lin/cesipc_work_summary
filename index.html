@@ -5737,7 +5737,7 @@ function qtSeed(){
         <div style="font-size:11px;color:var(--c-muted);padding:6px 0;">暂无公章</div>
       </div>
       <div style="font-size:10px;color:var(--c-muted);margin-top:2px;">💡 可上传多张公章，PDF 中并排显示在右下角。预览时可拖动各公章调整位置。</div>
-      <button id="stamp-toggle-btn" onclick="toggleStamps()" style="margin-top:6px;background:var(--amber-bg,#FEF3C7);color:var(--amber-text,#92400E);border:1px solid var(--amber,#F59E0B);border-radius:5px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif;">🔒 隐藏公章（内部用）</button>
+
     </div>
   </div>
   <div class="divider"></div>
@@ -6009,7 +6009,18 @@ function qtSeed(){
         <input id="dtpl-7" type="text" placeholder="e.g. Available" value="Available" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
       </div>
     </div>
-    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;">
+    <!-- Preset dropdown -->
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--c-border);">
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:11px;color:var(--c-muted);white-space:nowrap;">已保存模板：</span>
+        <div style="position:relative;flex:1;min-width:120px;">
+          <button onclick="const d=document.getElementById('dtpl-preset-drop');d.style.display=d.style.display==='none'?'block':'none';if(d.style.display==='block')_renderDescPresetDropdown();" style="width:100%;text-align:left;padding:5px 10px;font-size:11px;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:5px;cursor:pointer;color:var(--c-text);">▾ 选择模板</button>
+          <div id="dtpl-preset-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--c-surface);border:1px solid var(--c-border);border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.18);z-index:10;max-height:200px;overflow-y:auto;margin-top:2px;"></div>
+        </div>
+        <button onclick="saveDescPreset()" style="padding:5px 12px;border:none;border-radius:5px;background:#2E75B6;color:#fff;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;">💾 保存当前</button>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end;">
       <button onclick="closeDescTpl()" style="padding:7px 16px;border:1px solid var(--c-border);border-radius:7px;background:transparent;color:var(--c-muted);font-size:12px;cursor:pointer;font-family:'Sora',sans-serif;">取消</button>
       <button onclick="applyDescTpl()" style="padding:7px 18px;border:none;border-radius:7px;background:#1A3C5E;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;">✓ 填入 Description</button>
     </div>
@@ -6155,23 +6166,32 @@ function _renderStampList(){
     container.innerHTML = '<div style="font-size:11px;color:var(--c-muted);padding:6px 0;">暂无公章</div>';
     return;
   }
-  container.innerHTML = stamps.map((st, idx) => `
-    <div style="display:flex;align-items:center;gap:8px;padding:5px;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:6px;margin-bottom:6px;">
+  container.innerHTML = stamps.map((st, idx) => {
+    const hidden = st.hidden === true;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:6px;margin-bottom:6px;${hidden?'opacity:0.5':''}">
       <img src="${st.dataUrl}" style="height:${st.size||70}px;max-width:${st.size||70}px;object-fit:contain;opacity:0.88;flex-shrink:0;border-radius:4px;" alt="stamp ${idx+1}">
       <div style="flex:1;min-width:0;">
-        <div style="font-size:11px;color:var(--c-muted);margin-bottom:3px;">公章 ${idx+1}</div>
-        <div style="display:flex;align-items:center;gap:5px;">
+        <div style="font-size:11px;color:var(--c-muted);margin-bottom:4px;">公章 ${idx+1}${hidden?' <span style=\"color:#F59E0B;font-size:10px;\">[已隐藏]</span>':''}</div>
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">
           <span style="font-size:10px;color:var(--c-muted);min-width:28px;">大小</span>
           <input type="range" min="40" max="120" value="${st.size||70}" oninput="updateOneStampSize(${idx},this.value)" style="flex:1;height:3px;">
           <span style="font-size:10px;color:var(--c-text);min-width:24px;">${st.size||70}pt</span>
         </div>
+        <button onclick="toggleOneStamp(${idx})" style="font-size:10px;padding:2px 8px;border-radius:4px;border:1px solid ${hidden?'var(--green,#22C55E)':'var(--amber,#F59E0B)'};background:${hidden?'var(--green-bg,#DCFCE7)':'var(--amber-bg,#FEF3C7)'};color:${hidden?'var(--green-text,#166534)':'var(--amber-text,#92400E)'};cursor:pointer;">${hidden?'🔓 在PDF中显示':'🔒 在PDF中隐藏'}</button>
       </div>
       <button onclick="removeOneStamp(${idx})" style="background:rgba(255,92,110,.1);border:1px solid rgba(255,92,110,.22);border-radius:4px;cursor:pointer;color:#c0392b;font-size:11px;padding:3px 7px;flex-shrink:0;">✕</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 function updateOneStampSize(idx, val){
   if(!_companyImages.stamps[idx]) return;
   _companyImages.stamps[idx].size = parseInt(val);
+  _saveImageSettings();
+  _renderStampList();
+}
+function toggleOneStamp(idx){
+  if(!_companyImages.stamps[idx]) return;
+  _companyImages.stamps[idx].hidden = !_companyImages.stamps[idx].hidden;
   _saveImageSettings();
   _renderStampList();
 }
@@ -6293,15 +6313,18 @@ function toggleStamps(){
 }
 
 function getStampHtml(){
-  if(_stampsHidden) return '';
   const stamps = _companyImages.stamps;
   if(!stamps || stamps.length === 0) return '';
   // Render stamps stacked bottom-right; offset each slightly if multiple
+  let visIdx = 0;
   return stamps.map((st, idx) => {
+    if(st.hidden) return '';
     const s = st.size || 70;
-    const ox = (st.offsetX || 0) + (idx * 4);
+    const ox = (st.offsetX || 0) + (visIdx * 4);
     const oy = st.offsetY || 0;
-    return `<img id="pdf-stamp-img-${idx}" src="${st.dataUrl}" style="height:${s}pt;max-width:${s}pt;object-fit:contain;opacity:0.88;position:absolute;bottom:${5 + idx * 2}pt;right:${5 + idx * (s + 4)}pt;transform:translate(${ox}px,${oy}px);cursor:move;" alt="stamp${idx+1}" onmousedown="startDragImage(event,'stamp',${idx})">`;
+    const out = `<img id="pdf-stamp-img-${idx}" src="${st.dataUrl}" style="height:${s}pt;max-width:${s}pt;object-fit:contain;opacity:0.88;position:absolute;bottom:${5 + visIdx * 2}pt;right:${5 + visIdx * (s + 4)}pt;transform:translate(${ox}px,${oy}px);cursor:move;" alt="stamp${idx+1}" onmousedown="startDragImage(event,'stamp',${idx})">`;
+    visIdx++;
+    return out;
   }).join('');
 }
 
@@ -6394,10 +6417,16 @@ document.addEventListener('selectionchange',()=>{
 
 document.addEventListener('mousedown',e=>{
   const bar=getFBar();
-  if(!bar)return;
-  if(!e.target.closest('#fmt-bar') && !e.target.closest('[contenteditable="true"]')){
-    bar.style.display='none';
-    _savedRange=null;
+  if(bar){
+    if(!e.target.closest('#fmt-bar') && !e.target.closest('[contenteditable="true"]')){
+      bar.style.display='none';
+      _savedRange=null;
+    }
+  }
+  // Close preset dropdown if clicking outside
+  const drop=document.getElementById('dtpl-preset-drop');
+  if(drop && !e.target.closest('#dtpl-preset-drop') && !e.target.closest('button[onclick*="dtpl-preset-drop"]')){
+    drop.style.display='none';
   }
 });
 
@@ -6517,10 +6546,10 @@ function setMode(t,m){
         <th style="width:30px"></th></tr>`
     : `<tr><th style="width:26px">#</th><th style="width:96px">Part No.</th>
         <th style="min-width:420px">Description</th><th style="width:48px">Qty</th>
-        <th style="width:100px">Unit Price<br>(Configured System)</th>
-        <th style="width:68px">Shipping $</th>
-        <th style="width:78px">All-Incl. $</th>
-        <th style="width:78px">Grand Total</th>
+        <th style="width:100px">Unit Price<br>(Configured)</th>
+        <th style="width:68px" title="Shipping per unit">Shipping $<br><span style="font-size:9px;font-weight:400;opacity:.7">(per unit)</span></th>
+        <th style="width:78px" title="All-Incl = Unit Price + Shipping per unit">All-Incl. $<br><span style="font-size:9px;font-weight:400;opacity:.7">(UP + Sh)</span></th>
+        <th style="width:78px" title="Grand Total = Qty × All-Incl">Grand Total<br><span style="font-size:9px;font-weight:400;opacity:.7">(Qty × AI)</span></th>
         <th style="width:30px"></th></tr>`;
 
   // Update ffoot colspan
@@ -6619,7 +6648,7 @@ function addR(t, prefill){
         <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
         <td><input type="number" value="${p.cfg||p.ai||p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:95px;text-align:right;" oninput="calcSimpleAI(this);${cf}()" title="Unit Price (Configured System)"/></td>
         <td><input type="number" value="${p.simpleSh||p.sh||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;" oninput="calcSimpleAI(this);${cf}()" title="Shipping per unit"/></td>
-        <td><input type="number" value="${p.ai||''}" min="0" step="0.01" placeholder="0.00" style="width:70px;text-align:right;background:var(--c-surface2);color:var(--c-muted);" readonly title="All-Incl = Unit Price + Shipping"/></td>
+        <td><input type="number" value="${p.ai||''}" min="0" step="0.01" placeholder="0.00" style="width:70px;text-align:right;background:var(--c-surface2);color:var(--c-muted);" readonly title="All-Incl = Unit Price + Shipping per unit"/></td>
         <td class="amt" id="${t}-a-${id}">0.00</td>
         <td><button class="btn btn-d btn-sm" onclick="delR('${t}',${id})">✕</button></td>`;
     }
@@ -6690,12 +6719,16 @@ function cQ(){
       qty=parseFloat(i[0]?.value)||0;
       const cfg=parseFloat(i[1]?.value)||0;
       const rowSh=parseFloat(i[2]?.value)||0;
-      p=cfg; // subtotal uses unit price only (shipping summed separately)
+      const allIncl = cfg + rowSh;
       tsh+=qty*rowSh;
       // Auto-update All-Incl readonly field
-      if(i[3]){ i[3].value = cfg||rowSh ? (cfg+rowSh).toFixed(2) : ''; }
+      if(i[3]){ i[3].value = cfg||rowSh ? allIncl.toFixed(2) : ''; }
+      p=allIncl; // Grand Total = qty × All-Incl = qty × (cfg + sh)
     }
-    const a=qty*p;tq+=qty;ta+=a;
+    const a=qty*p;tq+=qty;
+    // For subtotal display: only count unit-price portion (shipping tracked via tsh)
+    if(!isSplit) ta+=qty*(parseFloat(tr.querySelectorAll('input')[1]?.value)||0);
+    else ta+=a;
     const id=tr.id.split('-').pop();
     const el=document.getElementById('q-a-'+id);if(el)el.textContent=fa(a);
   });
@@ -6739,6 +6772,7 @@ function qtToggleTotalCol(){
 }
 function cPI(){
   const isSplit=_mode.pi==='split';
+  const isSplit2=isSplit; // alias for closure
   let tq=0,ta=0,tsh=0;
   document.querySelectorAll('#pi-b tr').forEach(tr=>{
     const i=tr.querySelectorAll('input');
@@ -6753,11 +6787,14 @@ function cPI(){
       qty=parseFloat(i[0]?.value)||0;
       const cfg=parseFloat(i[1]?.value)||0;
       const rowSh=parseFloat(i[2]?.value)||0;
-      p=cfg;
+      const allIncl2 = cfg + rowSh;
       tsh+=qty*rowSh;
-      if(i[3]){ i[3].value = cfg||rowSh ? (cfg+rowSh).toFixed(2) : ''; }
+      if(i[3]){ i[3].value = cfg||rowSh ? allIncl2.toFixed(2) : ''; }
+      p=allIncl2; // Grand Total = qty × (cfg + sh)
     }
-    const a=qty*p;tq+=qty;ta+=a;
+    const a=qty*p;tq+=qty;
+    if(!isSplit2) ta+=qty*(parseFloat(tr.querySelectorAll('input')[1]?.value)||0);
+    else ta+=a;
     const id=tr.id.split('-').pop();
     const el=document.getElementById('pi-a-'+id);if(el)el.textContent=fa(a);
   });
@@ -8087,14 +8124,63 @@ function syncFromQ(target) {
 // ─── Description Template Modal ───
 let _descTplTarget = null;
 
+function _descTplGetPresets(){
+  try { return JSON.parse(localStorage.getItem('descTplPresets') || '[]'); } catch(e){ return []; }
+}
+function _descTplSetPresets(arr){
+  try { localStorage.setItem('descTplPresets', JSON.stringify(arr)); } catch(e){}
+}
+
 function _descTplSaveMemory() {
+  // Called on apply — auto-save as last used (legacy compat)
   const g = id => (document.getElementById(id)?.value || '').trim();
-  const mem = {
-    title: g('dtpl-title'),
-    f1: g('dtpl-1'), f2: g('dtpl-2'), f3: g('dtpl-3'), f4: g('dtpl-4'),
-    f5: g('dtpl-5'), f6: g('dtpl-6'), f7: g('dtpl-7')
-  };
+  const mem = { title:g('dtpl-title'), f1:g('dtpl-1'), f2:g('dtpl-2'), f3:g('dtpl-3'),
+    f4:g('dtpl-4'), f5:g('dtpl-5'), f6:g('dtpl-6'), f7:g('dtpl-7') };
   try { localStorage.setItem('descTplMemory', JSON.stringify(mem)); } catch(e) {}
+}
+
+function saveDescPreset(){
+  const g = id => (document.getElementById(id)?.value || '').trim();
+  const title = g('dtpl-title');
+  if(!title){ alert('请先填写产品类型（第一行标题）'); return; }
+  const preset = { title, f1:g('dtpl-1'), f2:g('dtpl-2'), f3:g('dtpl-3'),
+    f4:g('dtpl-4'), f5:g('dtpl-5'), f6:g('dtpl-6'), f7:g('dtpl-7') };
+  const presets = _descTplGetPresets();
+  // Replace if same title exists
+  const idx = presets.findIndex(p => p.title === title);
+  if(idx >= 0) presets[idx] = preset; else presets.unshift(preset);
+  _descTplSetPresets(presets);
+  _renderDescPresetDropdown();
+  toast('✅ 已保存「' + title + '」');
+}
+
+function deleteDescPreset(title){
+  const presets = _descTplGetPresets().filter(p => p.title !== title);
+  _descTplSetPresets(presets);
+  _renderDescPresetDropdown();
+}
+
+function loadDescPreset(title){
+  const preset = _descTplGetPresets().find(p => p.title === title);
+  if(!preset) return;
+  document.getElementById('dtpl-title').value = preset.title || '';
+  for(let i=1;i<=7;i++) document.getElementById('dtpl-'+i).value = preset['f'+i] || '';
+  document.getElementById('dtpl-preset-drop').style.display = 'none';
+}
+
+function _renderDescPresetDropdown(){
+  const drop = document.getElementById('dtpl-preset-drop');
+  if(!drop) return;
+  const presets = _descTplGetPresets();
+  if(presets.length === 0){
+    drop.innerHTML = '<div style="padding:8px 12px;font-size:11px;color:var(--c-muted);">暂无保存的模板</div>';
+    return;
+  }
+  drop.innerHTML = presets.map(p => `
+    <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;cursor:pointer;border-radius:5px;" onmouseover="this.style.background='var(--c-surface2)'" onmouseout="this.style.background=''">
+      <span style="flex:1;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" onclick="loadDescPreset('${p.title.replace(/'/g,"\'")}');_renderDescPresetDropdown();">${p.title}</span>
+      <button onclick="event.stopPropagation();deleteDescPreset('${p.title.replace(/'/g,"\'")}');_renderDescPresetDropdown();" style="background:none;border:none;color:var(--c-muted);cursor:pointer;font-size:11px;padding:1px 4px;border-radius:3px;" title="删除">✕</button>
+    </div>`).join('');
 }
 
 function _descTplLoadMemory() {
@@ -8124,27 +8210,29 @@ function openDescTpl(btn) {
       g('dtpl-' + i).value = match ? match[1] : line;
     }
   } else {
-    // Load from memory if available, otherwise clear
+    // Load last-used memory; if none, seed with default preset
     const mem = _descTplLoadMemory();
-    if (mem) {
+    if (mem && mem.title) {
       document.getElementById('dtpl-title').value = mem.title || '';
-      document.getElementById('dtpl-1').value = mem.f1 || '';
-      document.getElementById('dtpl-2').value = mem.f2 || '';
-      document.getElementById('dtpl-3').value = mem.f3 || '';
-      document.getElementById('dtpl-4').value = mem.f4 || '';
-      document.getElementById('dtpl-5').value = mem.f5 || '';
-      document.getElementById('dtpl-6').value = mem.f6 || '';
-      document.getElementById('dtpl-7').value = mem.f7 || 'Available';
+      for(let i=1;i<=7;i++) document.getElementById('dtpl-'+i).value = mem['f'+i] || '';
     } else {
-      // Pre-fill with default product data
-      document.getElementById('dtpl-title').value = 'Industrial Panel PC';
-      document.getElementById('dtpl-1').value = 'i5‑10210U, 16GB RAM (Hynix), 512GB SSD (Kingston)';
-      document.getElementById('dtpl-2').value = '10-inch, 1024×768, P-Cap touch';
-      document.getElementById('dtpl-3').value = '6×USB, 2×LAN, 4×RS232, 2×RS485, VGA, HDMI';
-      document.getElementById('dtpl-4').value = 'Windows 10 LTSC';
-      document.getElementById('dtpl-5').value = 'WiFi, 9–36V DC input';
-      document.getElementById('dtpl-6').value = '1 x Power adaptor, 1 x AC Cable, 2 x WiFi Antenna, 4 x Buckles';
-      document.getElementById('dtpl-7').value = 'Available';
+      // Seed default product spec — also save as a preset if none saved yet
+      const defaults = {
+        title: 'Industrial Panel PC',
+        f1: 'i5‑10210U, 16GB RAM (Hynix), 512GB SSD (Kingston)',
+        f2: '10-inch, 1024×768, P-Cap touch',
+        f3: '6×USB, 2×LAN, 4×RS232, 2×RS485, VGA, HDMI',
+        f4: 'Windows 10 LTSC',
+        f5: 'WiFi, 9–36V DC input',
+        f6: '1 x Power adaptor, 1 x AC Cable, 2 x WiFi Antenna, 4 x Buckles',
+        f7: 'Available'
+      };
+      document.getElementById('dtpl-title').value = defaults.title;
+      for(let i=1;i<=7;i++) document.getElementById('dtpl-'+i).value = defaults['f'+i] || '';
+      // Auto-save as preset if user has no presets yet
+      if(_descTplGetPresets().length === 0){
+        _descTplSetPresets([defaults]);
+      }
     }
   }
 
