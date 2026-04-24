@@ -488,7 +488,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div class="card" id="proj-form-card">
     <div class="card-header">
       <span class="card-title" id="proj-form-title">新增 / 追加进展</span>
-      <button id="proj-cancel-edit" class="btn btn-sm" style="display:none" onclick="cancelEditRecord()">✕ 取消编辑</button>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn btn-sm" onclick="clearProjForm()" style="background:var(--gray-bg);color:var(--gray-text);border-color:var(--border)" title="清空所有内容重新填写">🗑 清空</button>
+        <button id="proj-cancel-edit" class="btn btn-sm" style="display:none" onclick="cancelEditRecord()">✕ 取消编辑</button>
+      </div>
     </div>
     <input type="hidden" id="proj-edit-id" value="">
     <div class="grid2">
@@ -1874,14 +1877,15 @@ function importFromQuoteGroup(gi){
       document.getElementById('proj-quote').value=latest.quote||'';
       // 其他字段：来自最新记录
       document.getElementById('proj-requirement').value=latest.requirement||'';
-      document.getElementById('proj-action-content').value='';
-      document.getElementById('proj-action-time').value='';
-      document.getElementById('proj-confirm-points').value='';
-      document.getElementById('proj-risks').value='';
-      document.getElementById('proj-decision-maker').value=latest.decisionMaker||'';
+      // 自动填入上次的推进计划（有变更直接修改）
+      document.getElementById('proj-action-content').value=latest.actionContent||'';
+      document.getElementById('proj-action-time').value=latest.actionTime||'';
+      document.getElementById('proj-confirm-points').value=latest.confirmPoints||'';
+      document.getElementById('proj-risks').value=latest.risks||'';
+      document.getElementById('proj-decision-maker').value=latest.decisionMaker||latest.decisionMaker||'';
       document.getElementById('proj-priority').value=latest.priority||'中';
       document.getElementById('proj-date').value=todayStr();
-      // 跟进详情：预填上次最新的跟进（提示用户基础上再追加）
+      // 跟进详情：留空让用户填写新进展
       document.getElementById('proj-progress').value='';
     }
   } else {
@@ -2208,13 +2212,28 @@ function fillEdit(name){
   document.getElementById('proj-quantity').value=l.quantity||'';
   document.getElementById('proj-quote').value=l.quote||'';
   document.getElementById('proj-progress').value='';
-  document.getElementById('proj-action-content').value='';
-  document.getElementById('proj-action-time').value='';
-  document.getElementById('proj-confirm-points').value='';
-  document.getElementById('proj-risks').value='';
-  document.getElementById('proj-decision-maker').value='';
+  // 自动填入上次的推进计划（供参考，有变更可直接修改）
+  document.getElementById('proj-action-content').value=l.actionContent||'';
+  document.getElementById('proj-action-time').value=l.actionTime||'';
+  document.getElementById('proj-confirm-points').value=l.confirmPoints||'';
+  document.getElementById('proj-risks').value=l.risks||'';
+  document.getElementById('proj-decision-maker').value=l.decisionMaker||'';
   document.getElementById('proj-date').value=todayStr();
   document.getElementById('proj-priority').value=l.priority||'中';
+  // Visual hint that action fields are pre-filled from last record
+  const hint=document.getElementById('proj-form-card').querySelector('[data-action-hint]');
+  if(!hint){
+    const h=document.createElement('div');
+    h.setAttribute('data-action-hint','1');
+    h.style.cssText='font-size:11px;color:var(--blue-text);background:var(--blue-bg);padding:4px 8px;border-radius:4px;margin-bottom:6px';
+    h.textContent='💡 推进计划已从上次记录自动填入，请根据最新情况修改';
+    const actionLabel=document.querySelector('.slabel');
+    const allLabels=document.querySelectorAll('#proj-form-card .slabel');
+    let actionSection=null;
+    allLabels.forEach(lb=>{if(lb.textContent.includes('推进计划'))actionSection=lb;});
+    if(actionSection)actionSection.parentNode.insertBefore(h,actionSection.nextSibling);
+    setTimeout(()=>h.remove(),6000);
+  }
   switchTab('projects');window.scrollTo(0,0);
 }
 
@@ -2303,6 +2322,31 @@ function setStage(val){
   }
   document.getElementById('progress-terms-box').style.display='none';
   document.getElementById('progress-term-toggle').textContent='📋 查看术语参考 ▾';
+}
+
+function clearProjForm(){
+  // Clear all project form fields completely
+  ['proj-name','proj-client','proj-requirement','proj-quantity','proj-progress',
+   'proj-action-content','proj-action-time','proj-confirm-points','proj-risks',
+   'proj-decision-maker','proj-quote'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.value='';
+  });
+  document.getElementById('proj-status').value='跟进中';
+  document.getElementById('proj-progress-stage').value='';
+  document.getElementById('proj-priority').value='中';
+  document.getElementById('proj-date').value=todayStr();
+  document.getElementById('proj-edit-id').value='';
+  document.getElementById('proj-form-title').textContent='新增 / 追加进展';
+  document.getElementById('proj-form-card').style.borderColor='';
+  document.getElementById('proj-form-card').style.background='';
+  document.getElementById('proj-cancel-edit').style.display='none';
+  document.getElementById('proj-submit-btn').textContent='+ 保存（新增或追加进展）';
+  document.getElementById('proj-submit-btn').style.background='';
+  window._pendingLinkedQuoteProject='';
+  // Auto-resize textareas
+  document.querySelectorAll('#proj-form-card textarea').forEach(ta=>{ta.style.height='auto';});
+  toast('🗑 已清空表单');
 }
 
 function cancelEditRecord(){
@@ -4943,8 +4987,7 @@ function qtRenderHistoryInModal(hist){
       +((parts.length||h.shipping)?'<div style="font-size:11px;margin-top:3px">'+partsHtml+(shippingHtml?(parts.length?'<span style="color:var(--border)"> · </span>':'')+shippingHtml:'')+'</div>':'')
       // ── 自定义配置
       +(h.custom?'<div style="font-size:11px;margin-top:2px">'+hl(idx,'custom','🔧 [Custom / 附加功能] '+h.custom,'color:var(--text2)')+'</div>':'')
-      // ── 阶梯报价（优先用快照里的tiers，兼容旧数据用parentQ.tiers）
-      +((h.tiers&&h.tiers.length)||(parentQ&&parentQ.tiers&&parentQ.tiers.length)?'<div style="font-size:11px;margin-top:3px;color:var(--blue-text)">📊 '+(h.tiers&&h.tiers.length?h.tiers:parentQ.tiers).map(t=>`${t.qty}台 × ${t.cur==='CNY'?'¥':'$'}${t.price}`).join(' &nbsp;/&nbsp; ')+'</div>':'')
+      // ── 阶梯报价（已在第一行标题显示，此处不重复）
       // ── 备注
       +(h.notes?'<div style="font-size:11px;margin-top:2px;font-style:italic">'+hl(idx,'notes','📝 '+h.notes,'color:var(--text2)')+'</div>':'')
       // ── 阶段/成交状态
