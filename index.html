@@ -1180,8 +1180,8 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <label>运费备注（选填）</label>
           <input id="qf-shipping" placeholder="如：10台 每台运费$70">
         </div>
-        <!-- 最终报价 -->
-        <div class="field" style="grid-column:1/-1">
+        <!-- 最终报价 (单价，无阶梯时) -->
+        <div class="field" style="grid-column:1/-1" id="qf-price-row">
           <label style="display:flex;align-items:center;justify-content:space-between">
             <span>报价 (P) — 最终报给客户的价格（以此为准）</span>
             <select id="qf-price-cur" onchange="qtCalc()" style="width:auto;padding:2px 6px;font-size:11px">
@@ -1191,22 +1191,25 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <input type="number" id="qf-price" min="0" oninput="this.dataset.manualEdit='1';qtCalc();" onchange="this.dataset.manualEdit='1';qtCalc();" placeholder="0" style="font-size:15px;font-weight:600">
         </div>
         <!-- 价格汇总面板 -->
-        <div style="grid-column:1/-1">
-          <div class="qt-pp" style="grid-column:unset">
+        <div style="grid-column:1/-1" id="qf-pp-wrap">
+          <div class="qt-pp" style="grid-column:unset" id="qf-pp-single">
             <div><div class="qt-pp-val" id="qpp-cost" style="color:var(--text2)">—</div><div class="qt-pp-lbl">P3 参考价</div></div>
             <div><div class="qt-pp-val" id="qpp-price" style="color:var(--blue-text)">—</div><div class="qt-pp-lbl">报价 (P)</div></div>
             <div><div class="qt-pp-val" id="qpp-diff">—</div><div class="qt-pp-lbl">P − P3 价差</div></div>
           </div>
+          <!-- 阶梯汇总面板（有阶梯时替换上面） -->
+          <div id="qf-pp-tiers" style="display:none"></div>
         </div>
       </div>
-      <!-- 阶梯报价区（单品编辑模式） -->
-      <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border2)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <span style="font-size:12px;font-weight:600;color:var(--text2)">📊 数量阶梯报价（选填）</span>
-          <button onclick="qtSingleAddTier()" style="background:var(--blue-bg);color:var(--blue-text);border:1px solid var(--blue);border-radius:3px;font-size:11px;padding:2px 8px;cursor:pointer">＋ 加阶梯</button>
+      <!-- 批量阶梯报价区（直接嵌入，与报价方式联动） -->
+      <div style="margin-top:12px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:12px;font-weight:600;color:var(--text)">📊 批量价格（数量阶梯）</span>
+          <button onmousedown="event.preventDefault();qtSingleAddTier()" style="background:var(--blue);color:#fff;border:none;border-radius:4px;font-size:11px;padding:3px 10px;cursor:pointer;font-weight:500">＋ 加档位</button>
         </div>
-        <div id="qf-single-tiers" style="display:flex;flex-direction:column;gap:4px"></div>
-        <div id="qf-single-tiers-hint" style="font-size:10px;color:var(--text3);margin-top:3px;display:none">💡 有阶梯时，Quotation 将为每档数量生成独立行；总价列可按需隐藏</div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:8px">每档填写数量和该数量对应的单价 (P)，P3参考价共用上方填写的值。</div>
+        <div id="qf-single-tiers" style="display:flex;flex-direction:column;gap:6px"></div>
+        <div id="qf-single-tiers-hint" style="font-size:10px;color:var(--text3);margin-top:6px;display:none">💡 有批量价格时，导入 Quotation 会为每档生成独立行；建议隐藏总价列只展示单价参考</div>
       </div>
       <!-- 历史价格记录 -->
       <div id="qf-history-wrap" style="display:none;margin-top:8px">
@@ -1722,7 +1725,7 @@ function qtSnapToLine(h){
   if(h.custom&&h.custom.trim())lines.push('🔧 [Custom / 附加功能] '+h.custom);
   if(h.tiers&&h.tiers.length){
     const fc2=s=>s==='CNY'?'¥':'$';
-    lines.push('📊 阶梯报价：'+h.tiers.map(t=>`${t.qty}台×${fc2(t.cur||'USD')}${t.price}`).join(' / '));
+    lines.push('📊 批量价格：'+h.tiers.map(t=>`${t.qty}台 × ${fc2(t.cur||'USD')}${t.price}`).join('  /  '));
   }
   if(h.notes&&h.notes.trim())lines.push('📝 '+h.notes);
   return lines.join('\n');
@@ -4644,6 +4647,8 @@ function qtCalc(){
     de.style.color=diff<0?'var(--red-text)':'#1D9E75';
   } else{de.textContent='—';de.style.color='var(--text2)';}
   document.getElementById('qt-p3warn').classList.toggle('show',diff!==null&&diff<0);
+  // If tiers exist, refresh tier comparison rows so P3 diff stays current
+  if(typeof _qtSingleTiers!=='undefined'&&_qtSingleTiers.length>0)qtRenderSingleTiers();
 }
 
 // ── 单品编辑模式：阶梯报价管理 ──
@@ -4651,6 +4656,11 @@ let _qtSingleTiers=[];
 function qtSingleAddTier(){
   _qtSingleTiers.push({qty:'',cur:'USD',price:''});
   qtRenderSingleTiers();
+  // Scroll new tier into view
+  setTimeout(()=>{
+    const rows=document.querySelectorAll('#qf-single-tiers .qt-single-tier-row');
+    if(rows.length)rows[rows.length-1].scrollIntoView({behavior:'smooth',block:'nearest'});
+  },50);
 }
 function qtSingleRemoveTier(ti){
   _qtSingleTiers.splice(ti,1);
@@ -4670,19 +4680,110 @@ function qtSyncSingleTiersFromDOM(){
 function qtRenderSingleTiers(){
   const cont=document.getElementById('qf-single-tiers');
   const hint=document.getElementById('qf-single-tiers-hint');
+  const singlePanel=document.getElementById('qf-pp-single');
+  const tiersPanel=document.getElementById('qf-pp-tiers');
+  const priceRow=document.getElementById('qf-price-row');
   if(!cont)return;
-  cont.innerHTML=_qtSingleTiers.map((t,ti)=>`<div class="qt-single-tier-row" style="display:flex;gap:6px;align-items:center;background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:5px 8px">
-    <span style="font-size:11px;color:var(--text2);white-space:nowrap">数量</span>
-    <input type="number" data-stf="qty" value="${t.qty||''}" placeholder="台数" min="1" style="width:60px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)">
-    <span style="font-size:11px;color:var(--text2);white-space:nowrap">单价</span>
-    <select data-stf="cur" style="width:auto;padding:2px 5px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--bg)">
-      <option value="USD" ${(t.cur||'USD')==='USD'?'selected':''}>$</option>
-      <option value="CNY" ${t.cur==='CNY'?'selected':''}>¥</option>
-    </select>
-    <input type="number" data-stf="price" value="${t.price||''}" placeholder="0.00" min="0" step="0.01" style="width:80px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)" oninput="qtSyncSingleTiersFromDOM()">
-    <button onclick="qtSingleRemoveTier(${ti})" style="background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:3px;font-size:11px;padding:1px 7px;cursor:pointer;line-height:1.4">✕</button>
-  </div>`).join('');
-  if(hint)hint.style.display=_qtSingleTiers.length?'block':'none';
+
+  if(_qtSingleTiers.length===0){
+    // No tiers: show normal single price row and single summary panel
+    if(priceRow)priceRow.style.display='';
+    if(singlePanel)singlePanel.style.display='';
+    if(tiersPanel)tiersPanel.style.display='none';
+    if(hint)hint.style.display='none';
+    cont.innerHTML='';
+    return;
+  }
+
+  // Has tiers: hide single price input, show tier comparison panel instead
+  if(priceRow)priceRow.style.display='none';
+  if(singlePanel)singlePanel.style.display='none';
+  if(hint)hint.style.display='block';
+
+  const priceCur=document.getElementById('qf-price-cur')?.value||'USD';
+  const p3=parseFloat(document.getElementById('qf-p3')?.value)||0;
+  const p3Cur=document.getElementById('qf-p3-cur')?.value||'USD';
+  const sym=c=>c==='CNY'?'¥':'$';
+  const mode=document.querySelector('input[name="qf-pmode"]:checked')?.value||'breakdown';
+
+  // Render each tier row
+  cont.innerHTML=_qtSingleTiers.map((t,ti)=>{
+    const price=parseFloat(t.price)||0;
+    const diff=p3>0&&price>0?price-p3:null;
+    const diffStr=diff!==null?(diff>=0?'+':'')+sym(priceCur)+diff:'—';
+    const diffColor=diff===null?'var(--text2)':diff<0?'var(--red-text)':'#1D9E75';
+
+    // For breakdown mode: base price hint
+    let basePriceHint='';
+    if(mode==='breakdown'){
+      const b=parseFloat(document.getElementById('qf-barbone')?.value)||0;
+      const rp=parseFloat(document.getElementById('qf-ramp')?.value)||0;
+      const sp=parseFloat(document.getElementById('qf-ssdp')?.value)||0;
+      const base=b+rp+sp;
+      if(base>0)basePriceHint=`<span style="font-size:10px;color:var(--text2)">基础成本 ${sym(priceCur)}${base}</span>`;
+    }
+
+    return `<div class="qt-single-tier-row" style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px 10px;margin-bottom:2px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:4px">
+          <span style="font-size:11px;color:var(--text2);white-space:nowrap;font-weight:500">数量</span>
+          <input type="number" data-stf="qty" value="${t.qty||''}" placeholder="台数" min="1"
+            style="width:64px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)"
+            oninput="qtSyncSingleTiersFromDOM();qtRenderSingleTiers()">
+          <span style="font-size:11px;color:var(--text2);white-space:nowrap">台</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:160px">
+          <span style="font-size:11px;color:var(--text2);white-space:nowrap;font-weight:500">报价 P</span>
+          <select data-stf="cur" style="width:auto;padding:2px 5px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--bg)"
+            onchange="qtSyncSingleTiersFromDOM();qtRenderSingleTiers()">
+            <option value="USD" ${(t.cur||'USD')==='USD'?'selected':''}>$</option>
+            <option value="CNY" ${t.cur==='CNY'?'selected':''}>¥</option>
+          </select>
+          <input type="number" data-stf="price" value="${t.price||''}" placeholder="0.00" min="0" step="0.01"
+            style="flex:1;min-width:80px;font-size:13px;font-weight:600;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)"
+            oninput="qtSyncSingleTiersFromDOM();qtRenderSingleTiers()">
+        </div>
+        <button onmousedown="event.preventDefault();qtSingleRemoveTier(${ti})"
+          style="background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:3px;font-size:11px;padding:2px 8px;cursor:pointer">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:6px 8px;background:var(--bg2);border-radius:4px">
+        <div style="text-align:center">
+          <div style="font-size:13px;font-weight:600;color:var(--text2)">${p3>0?sym(p3Cur)+p3:'—'}</div>
+          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">P3 参考价</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:13px;font-weight:600;color:var(--blue-text)">${price>0?sym(t.cur||'USD')+price:'—'}</div>
+          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">报价 (P)</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:13px;font-weight:600;color:${diffColor}">${diffStr}</div>
+          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">P − P3 差价</div>
+        </div>
+      </div>
+      ${basePriceHint?`<div style="margin-top:4px;padding:0 2px">${basePriceHint}</div>`:''}
+    </div>`;
+  }).join('');
+
+  // Summary tier panel (compact overview)
+  if(tiersPanel){
+    tiersPanel.style.display='block';
+    tiersPanel.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);overflow:hidden">
+      <div style="display:grid;grid-template-columns:auto repeat(3,1fr);font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:5px 10px;border-bottom:1px solid var(--border2)">
+        <div style="padding-right:12px">数量</div><div style="text-align:center">P3 参考价</div><div style="text-align:center">报价 P</div><div style="text-align:center">差价</div>
+      </div>
+      ${_qtSingleTiers.map((t,i)=>{
+        const price=parseFloat(t.price)||0;
+        const diff=p3>0&&price>0?price-p3:null;
+        const diffColor=diff===null?'var(--text2)':diff<0?'var(--red-text)':'#1D9E75';
+        return `<div style="display:grid;grid-template-columns:auto repeat(3,1fr);padding:5px 10px;border-bottom:1px solid var(--border2);font-size:12px;${i===_qtSingleTiers.length-1?'border-bottom:none':''}">
+          <div style="font-weight:600;padding-right:12px">${t.qty||'?'}台</div>
+          <div style="text-align:center;color:var(--text2)">${p3>0?sym(p3Cur)+p3:'—'}</div>
+          <div style="text-align:center;font-weight:600;color:var(--blue-text)">${price>0?sym(t.cur||'USD')+price:'—'}</div>
+          <div style="text-align:center;font-weight:600;color:${diffColor}">${diff!==null?(diff>=0?'+':'')+sym(priceCur)+diff:'—'}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
 }
 
 function qtBuildSnap(mode){
@@ -5711,7 +5812,10 @@ function delMem(k,val){
 }
 function renderMemDrop(k,saved){
   const drop=document.getElementById('md-'+k);if(!drop)return;
-  drop.innerHTML=saved.map(v=>`<div class="mem-opt" onmousedown="pickMem('${k}',${JSON.stringify(v)})"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v}</span><span class="mem-del" onmousedown="event.stopPropagation();delMem('${k}',${JSON.stringify(v)})">✕</span></div>`).join('');
+  drop.innerHTML=saved.map(v=>{
+    const safe=v.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<div class="mem-opt" onmousedown="pickMem('${k}','${safe}')"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v}</span><span class="mem-del" onmousedown="event.stopPropagation();delMem('${k}','${safe}')">✕</span></div>`;
+  }).join('');
 }
 function pickMem(k,val){document.getElementById(k).value=val;closeMem(k);}
 function openMem(k){
@@ -6955,10 +7059,10 @@ function renderDocIqList() {
       }
     }).join('');
 
-    const safeProjJson = JSON.stringify(proj);
-    const safeModeJson = JSON.stringify(mode);
+    const safeProjJson = proj.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const safeModeJson = mode.replace(/'/g,"\\'");
     const target = document.querySelector('input[name="diq-target"]:checked')?.value || 'q';
-    const safeTargetJson = JSON.stringify(target);
+    const safeTargetJson = target.replace(/'/g,"\\'");
     const targetLabel = target === 'pi' ? 'PI 形式发票' : 'Quotation 报价单';
     return `<div style="border:1px solid #e8e6de;border-radius:8px;margin-bottom:10px;overflow:hidden;">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#1A3C5E;flex-wrap:wrap;gap:6px;">
@@ -6966,7 +7070,7 @@ function renderDocIqList() {
           <div style="font-weight:600;color:#fff;font-size:12px;">${proj}</div>
           <div style="color:#9db8d4;font-size:10px;margin-top:1px;">${pg.company} · ${pg.items.length} 个型号 · ${pg.date || ''}</div>
         </div>
-        <button onclick="doDocImportFromQuotes(${safeProjJson},${safeModeJson},${safeTargetJson})"
+        <button onclick="doDocImportFromQuotes('${safeProjJson}','${safeModeJson}','${safeTargetJson}')"
           style="background:#E8732A;color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;">
           ✓ 导入到 ${targetLabel}
         </button>
