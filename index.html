@@ -2552,9 +2552,23 @@ function buildFullProgress(entries){
 // Strip emoji for CRM upload
 function stripEmojiForCRM(txt){
   if(!txt)return txt;
+  // Remove stage/deal line containing 📍 or standalone deal-status lines
+  txt=txt.split('\n').filter(function(line){
+    var t=line.trim();
+    if(!t)return true;
+    // Drop if contains 📍 (U+1F4CD, surrogate pair \uD83D\uDCCD)
+    if(t.indexOf('\uD83D\uDCCD')!==-1||t.indexOf('📍')!==-1)return false;
+    return true;
+  }).join('\n');
+  // Replace 🔧 [Custom / 附加功能] (already labelled) → single label, then bare 🔧
+  txt=txt.replace(/\uD83D\uDD27\s*\[Custom \/ \u9644\u52A0\u529F\u80FD\]/g,'[Custom / 附加功能]');
+  txt=txt.replace(/🔧\s*\[Custom \/ 附加功能\]/g,'[Custom / 附加功能]');
+  txt=txt.replace(/\uD83D\uDD27/g,'[Custom / 附加功能]');
+  txt=txt.replace(/🔧/g,'[Custom / 附加功能]');
+  // Deduplicate consecutive [Custom / 附加功能] on same line
+  txt=txt.replace(/(\[Custom \/ 附加功能\]\s*)+/g,'[Custom / 附加功能] ');
   return txt
     .replace(/💰/g,'[报价]')
-    .replace(/🔧/g,'[Custom / 附加功能]')
     .replace(/📊/g,'[阶梯报价]')
     .replace(/🚢/g,'[运费]')
     .replace(/📝/g,'[备注]')
@@ -2569,7 +2583,7 @@ function buildCRMTextFull(latest,allEntries){
   let r=`${clientHeader}`;
   r+=`1. 项目名称：${icon} ${latest.name||''} ${sc.label?`[${sc.label}]`:''}\n`;
   r+=`2. 项目进度：${latest.progressStage||'暂无'}\n`;
-  r+=`3. 项目需求：${latest.requirement||'暂无'}\n`;
+  r+=`3. 项目需求：\n${latest.requirement||'暂无'}\n`;
   r+=`4. 项目数量：${latest.quantity||'暂无'}\n`;
   r+=`5. 项目报价：${stripEmojiForCRM(latest.quote)||'暂无'}`;
   return r;
