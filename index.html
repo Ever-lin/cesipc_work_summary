@@ -412,7 +412,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
 <div class="tabs">
   <div class="tab" onclick="switchTab('quotes')">💰 报价管理</div>
-  <div class="tab" onclick="switchTab('projects')">项目情况</div>
+  <div class="tab" onclick="switchTab('projects')">项目情况<span id="proj-urgent-badge" style="display:none;background:#DC2626;color:#fff;font-size:10px;font-weight:700;border-radius:8px;padding:1px 5px;margin-left:5px;vertical-align:middle;line-height:1.4"></span></div>
   <div class="tab active" onclick="switchTab('cesipc')">📄 单据生成</div>
   <div class="tab" onclick="switchTab('performance')">业绩&回款</div>
   <div class="tab" onclick="switchTab('targets')">目标设定</div>
@@ -1339,7 +1339,30 @@ const SEED=[
 ];
 
 let state={perf:[],projects:[],weeklies:[],monthlies:[],dailies:[],genWeeklies:[],genMonthlies:[],fyTargets:{}};
-function save(){try{localStorage.setItem('ws6',JSON.stringify(state))}catch(e){}}
+function save(){try{localStorage.setItem('ws6',JSON.stringify(state))}catch(e){}showSaveToast();updateUrgentBadge();}
+function showSaveToast(){const t=document.getElementById('save-toast');if(!t)return;t.style.transform='translateX(-50%) translateY(0)';t.style.opacity='1';clearTimeout(t._tid);t._tid=setTimeout(()=>{t.style.transform='translateX(-50%) translateY(-60px)';t.style.opacity='0';},1600);}
+function updateUrgentBadge(){
+  const today=todayStr();
+  const tom=(()=>{const d=new Date(today+'T12:00:00');d.setDate(d.getDate()+1);return d.toISOString().slice(0,10);})();
+  const urgent=state.projects.filter(p=>{
+    const at=p.actionTime||'';if(!at)return false;
+    const done=['项目完结','项目停止'].includes(p.progressStage);if(done)return false;
+    return at<=tom;
+  });
+  // 按 name 去重（只取每个项目最新条目）
+  const seen=new Set();
+  let count=0;
+  state.projects.slice().sort((a,b)=>b.id-a.id).forEach(p=>{
+    const k=p.name||p.client;if(seen.has(k))return;seen.add(k);
+    const at=p.actionTime||'';if(!at)return;
+    const done=['项目完结','项目停止'].includes(p.progressStage);if(done)return;
+    if(at<=tom)count++;
+  });
+  const badge=document.getElementById('proj-urgent-badge');
+  if(!badge)return;
+  if(count>0){badge.textContent=count;badge.style.display='';}
+  else{badge.style.display='none';}
+}
 function load(){
   try{
     const d=localStorage.getItem('ws6');
@@ -2113,6 +2136,22 @@ function renderProjects(){
     const isDone=['项目完结','项目停止'].includes(latest.progressStage);
     const doneStyle=isDone?'opacity:0.45;filter:grayscale(0.5);':'';
     const doneBorder=isDone?'border-color:#ccc;border-left:3px solid #bbb;':'';
+    // ── 行动时间紧急度 ──
+    const at=latest.actionTime||'';
+    const today=todayStr();
+    const tom=(()=>{const d=new Date(today+'T12:00:00');d.setDate(d.getDate()+1);return d.toISOString().slice(0,10);})();
+    const isOverdue=at&&at<today&&!isDone;
+    const isToday=at&&at===today&&!isDone;
+    const isTomorrow=at&&at===tom&&!isDone;
+    const overdueDays=isOverdue?(()=>{const ms=new Date(today+'T12:00:00')-new Date(at+'T12:00:00');return Math.round(ms/86400000);})():0;
+    const actionTimeBadge=isOverdue
+      ?`<span style="color:#DC2626;font-weight:600;background:#FEF2F2;border:1px solid #FECACA;border-radius:4px;padding:1px 6px;font-size:11px">⚠️ 已逾期${overdueDays}天</span>`
+      :isToday
+      ?`<span style="color:#D97706;font-weight:600;background:#FFFBEB;border:1px solid #FDE68A;border-radius:4px;padding:1px 6px;font-size:11px">🔔 今天</span>`
+      :isTomorrow
+      ?`<span style="color:#92400E;font-size:11px">明天</span>`
+      :at?`<span style="font-size:11px;color:var(--text2)">${at}</span>`:'';
+    const urgentBorder=isOverdue?'border-left:3px solid #DC2626;':isToday?'border-left:3px solid #F59E0B;':'';
     const allEntriesForCard=entries.slice().sort((a,b)=>b.id-a.id);
     const historyBullets=allEntriesForCard.filter(e=>e.progress&&e.progress.trim()).map(e=>{
       const date=e.recordDate||'';
@@ -2141,7 +2180,7 @@ function renderProjects(){
       </div>`;
     }).join(''):'';
 
-    html+=`<div class="project-item${isDone?' proj-done':''}" id="${cardId}" style="${doneStyle}${doneBorder}${isHighlighted?'border-color:#185FA5;box-shadow:0 0 0 3px #B8D4F0;':''}">
+    html+=`<div class="project-item${isDone?' proj-done':''}" id="${cardId}" style="${doneStyle}${doneBorder||urgentBorder}${isHighlighted?'border-color:#185FA5;box-shadow:0 0 0 3px #B8D4F0;':''}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
         <div>
           <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:2px">${latest.client}</div>
@@ -2171,7 +2210,7 @@ function renderProjects(){
       <div style="font-size:12px;background:#F0F7FF;border:1px solid #B8D4F0;padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:6px;line-height:1.8;color:#0C447C">
         <div style="font-weight:600;margin-bottom:2px;color:#185FA5">🎯 推进计划</div>
         <div><b>1. 行动内容：</b>${(latest.actionContent||'').replace(/\n/g,'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')}</div>
-        <div><b>2. 行动时间：</b>${latest.actionTime||''}</div>
+        <div><b>2. 行动时间：</b>${actionTimeBadge||'<span style="color:var(--text3)">未设定</span>'}</div>
         <div><b>3. 确认信息点：</b>${latest.confirmPoints||''}</div>
         <div><b>4. 可能的风险：</b>${(latest.risks||'').replace(/\n/g,'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')}</div>
         <div><b>5. 关键决策人：</b>${latest.decisionMaker||''}</div>
@@ -4074,7 +4113,7 @@ function qtLoad(){
   if(!qtQuotes.length){qtQuotes=qtSeed();qtPersist();}
   qtQuotes=qtQuotes.map(q=>({...q,company:qtNormalizeCompany(q.company||q.customer||'')}));
 }
-function qtPersist(){localStorage.setItem(QT_KEY,JSON.stringify(qtQuotes));}
+function qtPersist(){localStorage.setItem(QT_KEY,JSON.stringify(qtQuotes));showSaveToast();}
 
 function qSwitchView(v,btn){
   document.getElementById('qt-view-list').style.display=v==='list'?'':'none';
@@ -4174,6 +4213,7 @@ function qtRender(){
       <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>
       <td><span style="display:flex;gap:4px;flex-wrap:wrap">
         ${r.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="qtImportToDoc(\''+r.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
+        <button class="btn btn-xs" style="background:var(--bg2);color:var(--text2)" onclick="qtCopyRowSummary('${r.id}',this)" title="复制报价摘要到剪贴板">📋</button>
         <button class="btn btn-xs" onclick="qtOpenEdit('${r.id}')">编辑</button>
         ${(r.priceHistory&&r.priceHistory.length)?'<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="qtOpenEdit(\''+r.id+'\')" title="'+r.priceHistory.length+'次价格变更">📋'+r.priceHistory.length+'</button>':''}
         ${(()=>{
@@ -4207,6 +4247,17 @@ function qtRender(){
   setTimeout(qtInitResizableCols,0);
 }
 function qtGo(p){qtPage=p;qtRender();}
+function qtCopyRowSummary(id,btn){
+  const q=qtQuotes.find(r=>String(r.id)===String(id));if(!q)return;
+  const text=qtBuildQuoteText(q);
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig=btn.textContent;btn.textContent='✓ 已复制';btn.style.background='var(--green-bg)';btn.style.color='var(--green-text)';
+    setTimeout(()=>{btn.textContent=orig;btn.style.background='';btn.style.color='';},1500);
+  }).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    const orig=btn.textContent;btn.textContent='✓ 已复制';setTimeout(()=>{btn.textContent=orig;},1500);
+  });
+}
 function qtClearFilters(){
   document.getElementById('qt-search').value='';
   document.getElementById('qt-f-company').value='';
@@ -5771,6 +5822,7 @@ function qtSeed(){
   qtUpdateCompanyFilter();
   qtRender();
   setTimeout(qtInitResizableCols,100);
+  setTimeout(updateUrgentBadge,200);
   // Mark price as manually edited when user types directly
   const priceEl=document.getElementById('qf-price');
   if(priceEl){
@@ -8373,6 +8425,37 @@ document.addEventListener('keydown',e=>{
     const qtBg=document.getElementById('qt-modal-bg');
     if(qtBg&&qtBg.classList.contains('open'))qtCloseModal();
   }
+  // 快捷键：只在非输入状态下触发
+  const tag=(e.target.tagName||'').toLowerCase();
+  const inInput=tag==='input'||tag==='textarea'||tag==='select'||e.target.isContentEditable;
+  if(!inInput&&!e.metaKey&&!e.ctrlKey&&!e.altKey){
+    if(e.key==='n'||e.key==='N'){
+      // 切到报价管理 tab 并新增
+      const qTab=document.querySelector(".tab[onclick*=\"switchTab('quotes')\"]");
+      if(qTab)qTab.click();
+      setTimeout(()=>{
+        // 切到列表子tab
+        const listBtn=document.getElementById('qt-tab-list');
+        if(listBtn)listBtn.click();
+        setTimeout(qtOpenAdd,50);
+      },80);
+      e.preventDefault();
+    }
+    if(e.key==='/'){
+      const searchEl=document.getElementById('qt-search');
+      if(searchEl){
+        // 确保在报价管理列表视图
+        const qTab=document.querySelector(".tab[onclick*=\"switchTab('quotes')\"]");
+        if(qTab)qTab.click();
+        setTimeout(()=>{
+          const listBtn=document.getElementById('qt-tab-list');
+          if(listBtn)listBtn.click();
+          setTimeout(()=>{searchEl.focus();searchEl.select();},50);
+        },80);
+      }
+      e.preventDefault();
+    }
+  }
 });
 
 </script>
@@ -8436,6 +8519,9 @@ document.addEventListener('keydown',e=>{
     </div>
   </div>
 </div>
+
+<!-- ✓ 已保存 flash toast -->
+<div id="save-toast" style="position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-60px);background:#1D9E75;color:#fff;font-size:13px;font-weight:500;padding:7px 18px;border-radius:20px;box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:9999;transition:transform .22s cubic-bezier(.34,1.56,.64,1),opacity .22s;opacity:0;pointer-events:none;white-space:nowrap">✓ 已保存</div>
 
 </body>
 </html>
