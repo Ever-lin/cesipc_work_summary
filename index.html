@@ -1063,9 +1063,9 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 </div>
 
 <!-- MODAL -->
-<div class="qt-modal-bg" id="qt-modal-bg" onclick="if(event.target===this)qtCloseModal()">
+<div class="qt-modal-bg" id="qt-modal-bg" onclick="if(event.target===this)qtSafeCloseModal()">
   <div class="qt-modal">
-    <div class="qt-modal-hd"><span class="qt-modal-title" id="qt-modal-title">新增报价</span><button class="qt-mclose" onclick="qtCloseModal()">✕</button></div>
+    <div class="qt-modal-hd"><span class="qt-modal-title" id="qt-modal-title">新增报价</span><button class="qt-mclose" onclick="qtSafeCloseModal()">✕</button></div>
     <div class="qt-p3warn" id="qt-p3warn">⚠️ 当前报价低于P3价格，请确认！</div>
     <div class="grid2">
       <!-- 基本信息 -->
@@ -1244,7 +1244,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--border2)">
       <button class="btn" id="qt-add-product-btn" onclick="qtSaveAndAddProduct()" style="display:none;background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)">＋ 继续新增产品报价</button>
       <div style="display:flex;gap:8px;margin-left:auto">
-        <button class="btn" onclick="qtCloseModal()">取消</button>
+        <button class="btn" onclick="qtSafeCloseModal()">取消</button>
         <button class="btn btn-primary" onclick="qtSave()">保存</button>
       </div>
     </div>
@@ -4876,6 +4876,27 @@ function qtOpenEdit(id){
   document.getElementById('qt-modal-bg').classList.add('open');
 }
 function qtCloseModal(){document.getElementById('qt-modal-bg').classList.remove('open');}
+
+// 检测新增表单是否已有用户填写的内容（编辑模式不需要保护）
+function qtFormHasData(){
+  if(qtEditId!=null) return false; // 编辑模式直接关，不提示
+  var fields=['qf-project','qf-contact','qf-model','qf-partno','qf-cpu','qf-custom','qf-notes','qf-barbone','qf-ramp','qf-ssdp','qf-price','qf-p3','qf-total-price'];
+  for(var i=0;i<fields.length;i++){
+    var el=document.getElementById(fields[i]);
+    if(el&&el.value&&el.value.trim()!=='') return true;
+  }
+  var qty=document.getElementById('qf-qty');
+  if(qty&&qty.value&&qty.value.trim()!=='') return true;
+  return false;
+}
+
+// 安全关闭：新增模式下有数据时弹确认
+function qtSafeCloseModal(){
+  if(qtFormHasData()){
+    if(!confirm('表单中已填写了内容，确定要放弃并关闭吗？')) return;
+  }
+  qtCloseModal();
+}
 
 // ── 多产品行管理 ──
 let _qtProdRows=[];
@@ -9090,7 +9111,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     closeOv();
     const qtBg=document.getElementById('qt-modal-bg');
-    if(qtBg&&qtBg.classList.contains('open'))qtCloseModal();
+    if(qtBg&&qtBg.classList.contains('open'))qtSafeCloseModal();
   }
   // 快捷键：只在非输入状态下触发
   const tag=(e.target.tagName||'').toLowerCase();
