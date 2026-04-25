@@ -968,11 +968,13 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .qt-tbl td{padding:7px 10px;border-bottom:1px solid var(--border2);white-space:normal;word-break:break-word;font-size:12px;color:var(--text);vertical-align:top}
 .qt-tbl tr:last-child td{border-bottom:none}
 .qt-tbl tr:hover td{background:var(--bg2)}
+.qt-group-row:hover td:first-child{background-image:linear-gradient(to right,#3B82F6 0,#3B82F6 4px,var(--bg2) 4px,var(--bg2) 100%)!important}
 /* 首列sticky */
 .qt-tbl thead th:first-child{position:sticky;left:0;top:0;z-index:5;background:var(--bg2)}
 .qt-tbl tbody td:first-child{position:sticky;left:0;z-index:1;background:var(--bg);box-shadow:2px 0 4px rgba(0,0,0,.06)}
 .qt-tbl tbody tr:hover td:first-child{background:var(--bg2)}
-.qt-group-row{box-shadow:inset 4px 0 0 #3B82F6}
+.qt-group-row td{background-image:linear-gradient(to right,#3B82F6 0,#3B82F6 4px,transparent 4px,transparent 100%);background-repeat:no-repeat}
+.qt-group-row td:first-child{background-image:linear-gradient(to right,#3B82F6 0,#3B82F6 4px,var(--bg2) 4px,var(--bg2) 100%);position:sticky;left:0;z-index:3}
 .qt-price{font-weight:500}
 .qt-below{color:var(--red-text)!important;font-weight:600}
 .qt-ok{color:#1D9E75!important}
@@ -1449,7 +1451,17 @@ function switchTab(name){
   if(name==='projects'){renderProjects();refreshProjDatalist();}
   if(name==='targets'){loadTargetForm();}
   if(name==='export'){fillProjTextareas('w');fillProjTextareas('wm');fillDailyProjects();renderGeneratedWeeklies();renderGeneratedMonthlies();refreshExportTargetPreviews();}
-  if(name==='clients'){renderClients();}
+  if(name==='clients'){
+    renderClients();
+    if(_clientScrollName){
+      const cardId='client-card-'+_clientScrollName.replace(/[^a-zA-Z0-9]/g,'_').slice(0,40);
+      setTimeout(()=>{
+        const el=document.getElementById(cardId);
+        if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.outline='2px solid var(--blue)';setTimeout(()=>el.style.outline='',1800);}
+        _clientScrollName='';
+      },120);
+    }
+  }
 }
 
 function switchSub(id,btn){
@@ -6547,15 +6559,36 @@ function qtGetLinkedProjectStatus(projectName){
 // ═══════════════════════════════════════════════════
 // 功能 3：客户档案
 // ═══════════════════════════════════════════════════
-// 客户档案 — 报价记录项目名跳转到项目情况，支持返回
-function clientJumpToProject(projName){
-  // 记录当前位置（客户档案 tab + 滚动位置）
+// 记录当前正在查看的客户名，用于返回时滚动定位
+let _clientScrollName = '';
+
+function _clientSavePos(clientName){
+  _clientScrollName = clientName || '';
   _navStack.push('clients');
   _showBackBtn('clients');
-  // 跳转并高亮
-  _projHighlight=projName;
+}
+
+// 点击项目名 → 跳项目情况
+function clientJumpToProject(projName){
+  // 找到这个项目属于哪个客户，记录客户名
+  const entry = state.projects.find(p=>(p.name||p.client)===projName||p.linkedQuoteProject===projName);
+  _clientSavePos(entry ? (entry.client||entry.name) : '');
+  _projHighlight = projName;
   switchTab('projects');
-  setTimeout(()=>renderProjects(),50);
+  setTimeout(()=>renderProjects(), 50);
+}
+
+// 点击查看 → 跳报价管理，按项目名筛选
+function clientJumpToQuotes(projName){
+  // 找到这个项目属于哪个客户
+  const q = (qtQuotes||[]).find(r=>r.project===projName);
+  _clientSavePos(q ? (q.company||'') : '');
+  switchTab('quotes');
+  setTimeout(()=>{
+    document.getElementById('qt-search').value = projName;
+    qtPage = 1;
+    qtRender();
+  }, 80);
 }
 
 function renderClients(){
@@ -6649,9 +6682,9 @@ function renderClients(){
       const pname=(p.name||'').replace(/'/g,"\\'");
       return`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--border2);font-size:12px">
         <span>${icon}</span>
-        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.name||''}">${p.name||'（未命名）'}</span>
+        <span onclick="clientJumpToProject('${pname}')" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;color:var(--blue-text);text-decoration:underline;text-underline-offset:2px" title="点击跳转项目情况：${p.name||''}">${p.name||'（未命名）'}</span>
         <span style="color:var(--text2);font-size:11px;white-space:nowrap">${p.progressStage||''}</span>
-        <button onclick="switchTab('projects');setTimeout(()=>{document.getElementById('pj-search').value='${pname}';renderProjects();},80)" style="border:none;background:var(--blue-bg);color:var(--blue-text);border-radius:3px;font-size:10px;padding:1px 6px;cursor:pointer;flex-shrink:0">查看</button>
+        <button onclick="clientJumpToQuotes('${pname}')" style="border:none;background:var(--blue-bg);color:var(--blue-text);border-radius:3px;font-size:10px;padding:1px 6px;cursor:pointer;flex-shrink:0">查看</button>
       </div>`;
     }).join(''):'<span style="color:var(--text3);font-size:12px">暂无项目记录</span>';
 
@@ -6664,7 +6697,7 @@ function renderClients(){
         <span onclick="clientJumpToProject('${projSafe}')" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;color:var(--blue-text);text-decoration:underline;text-underline-offset:2px" title="点击跳转项目情况：${proj}">${proj}</span>
         ${badge}
         <span style="color:var(--text2);font-size:11px;white-space:nowrap">${qs.length}条报价</span>
-        <button onclick="switchTab('quotes');setTimeout(()=>{document.getElementById('qt-search').value='${projSafe}';qtPage=1;qtRender();},80)" style="border:none;background:var(--blue-bg);color:var(--blue-text);border-radius:3px;font-size:10px;padding:1px 6px;cursor:pointer;flex-shrink:0">查看</button>
+        <button onclick="clientJumpToQuotes('${projSafe}')" style="border:none;background:var(--blue-bg);color:var(--blue-text);border-radius:3px;font-size:10px;padding:1px 6px;cursor:pointer;flex-shrink:0">查看</button>
       </div>`;
     }).join(''):'<span style="color:var(--text3);font-size:12px">暂无报价记录</span>';
 
@@ -6677,7 +6710,8 @@ function renderClients(){
         </div>`).join('')
       :'<span style="color:var(--text3);font-size:12px">暂无业绩记录</span>';
 
-    return`<div class="card" style="margin-bottom:12px">
+    const clientCardId="client-card-"+cd.name.replace(/[^a-zA-Z0-9]/g,"_").slice(0,40);
+    return`<div class="card" id="${clientCardId}" style="margin-bottom:12px">
       <div class="card-header" style="margin-bottom:8px">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span class="card-title" style="font-size:15px">${cd.name}</span>
