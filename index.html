@@ -4720,7 +4720,7 @@ function qtRender(){
         // Group header tds
         const grpTdFor=id=>{
           switch(id){
-            case 'deal': return`<td>${dealBadge(repDeal)}</td>`;
+            case 'deal': return`<td style="border-left:3px solid #3B82F6">${dealBadge(repDeal)}</td>`;
             case 'company': return`<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${r0.company||''}">${r0.company||'—'}</td>`;
             case 'contact': return`<td style="color:var(--blue-text);font-weight:500">${r0.contact||'<span style="color:var(--text3)">—</span>'}</td>`;
             case 'project': return`<td class="qt-td-wrap" style="max-width:220px" title="${r0.project||''}"><span id="${gid}-ic" style="font-size:10px;color:var(--text3);margin-right:4px">▸</span><span onclick="event.stopPropagation();qtOpenEdit('${r0.id}')" style="font-weight:500;color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r0.project||'—'}</span></td>`;
@@ -4757,7 +4757,7 @@ function qtRender(){
             default: return`<td></td>`;
           }
         };
-        tbody+=`<tr onclick="(function(){var open=document.querySelector('tr[data-group=\\'${gid}\\']').style.display==='none';document.querySelectorAll('tr[data-group=\\'${gid}\\']').forEach(function(r){r.style.display=open?'':'none';});document.getElementById('${gid}-ic').textContent=open?'▾':'▸';})()" style="cursor:pointer;background:var(--bg2);border-top:2px solid var(--border2);border-left:3px solid #3B82F6" title="点击展开/折叠该项目的 ${rows.length} 个产品">${visCols.map(grpTdFor).join('')}</tr>`;
+        tbody+=`<tr onclick="(function(){var open=document.querySelector('tr[data-group=\\'${gid}\\']').style.display==='none';document.querySelectorAll('tr[data-group=\\'${gid}\\']').forEach(function(r){r.style.display=open?'':'none';});document.getElementById('${gid}-ic').textContent=open?'▾':'▸';})()" style="cursor:pointer;background:var(--bg2);border-top:2px solid var(--border2)" title="点击展开/折叠该项目的 ${rows.length} 个产品">${visCols.map(grpTdFor).join('')}</tr>`;
         // Child rows
         rows.forEach(r=>{
           const diff=r.p3?r.price-r.p3:null;
@@ -6565,7 +6565,7 @@ function renderClients(){
     sorted.forEach(y=>{
       if(!existing.has(y)){
         const opt=document.createElement('option');
-        opt.value=y;opt.textContent=y+'年';
+        opt.value=y;opt.textContent=y+'年业绩';
         sel.appendChild(opt);changed=true;
       }
     });
@@ -6588,7 +6588,7 @@ function renderClients(){
   const yearMatch=(calYear)=>yearFilter==='all'||String(calYear||'')===yearFilter;
 
   const clientData=clients.map(name=>{
-    const quotes=(qtQuotes||[]).filter(r=>r.company===name&&(yearFilter==='all'||String(r.date||'').startsWith(yearFilter)));
+    const quotes=(qtQuotes||[]).filter(r=>r.company===name);
     const projs=state.projects.filter(p=>p.client===name);
     // 业绩：按年份过滤
     const perfs=(state.perf||[]).filter(p=>p.client===name&&p.type==='业绩'&&!p.noAmount&&yearMatch(p.calYear));
@@ -9568,8 +9568,8 @@ document.addEventListener('keydown',e=>{
   <div class="hint">汇聚同一客户名下的所有报价、项目、业绩与回款记录，方便复盘完整客户历史。</div>
   <div class="filter-bar" style="margin-bottom:12px">
     <input id="client-search" placeholder="🔍 搜索客户名称…" oninput="renderClients()" style="flex:1;max-width:280px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--text)">
-    <select id="client-year" onchange="renderClients()" style="padding:5px 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text)">
-      <option value="all">全部年份</option>
+    <select id="client-year" onchange="renderClients()" title="按业绩/回款数据的年份筛选" style="padding:5px 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text)">
+      <option value="all">全部业绩年份</option>
     </select>
     <select id="client-sort" onchange="renderClients()" style="padding:5px 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text)">
       <option value="name">按名称排序</option>
