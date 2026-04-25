@@ -8308,12 +8308,14 @@ function loadDocState(id) {
             ai:  inp[6] || '',
           });
         } else {
-          // simple: [0]=textarea(pn), [1]=qty, [2]=cfg
+          // simple: [0]=textarea(pn), [1]=qty, [2]=cfg, [3]=simpleSh (shipping/unit), [4]=ai (all-incl readonly)
           addR(t, {
-            pn:  inp[0] || '',
-            ds:  r.ds   || '',
-            qty: inp[1] || '0',
-            cfg: inp[2] || '',
+            pn:      inp[0] || '',
+            ds:      r.ds   || '',
+            qty:     inp[1] || '0',
+            cfg:     inp[2] || '',
+            simpleSh:inp[3] || '',
+            ai:      inp[4] || '',
           });
         }
       } else if (t === 'ci') {
