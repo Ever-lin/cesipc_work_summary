@@ -1035,6 +1035,11 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <input type="date" id="qt-f-date-end" onchange="qtRender()" title="结束日期" style="padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text);font-family:inherit">
     <button id="qt-clear-filter" class="btn btn-sm" onclick="qtClearFilters()" style="display:none;background:var(--red-bg);color:var(--red-text);border-color:var(--red-border);white-space:nowrap">✕ 清除筛选</button>
     <span id="qt-result-count" style="font-size:12px;color:var(--text2);white-space:nowrap;display:none"></span>
+    <select id="qt-page-size" class="ym-s" title="每页显示数量" onchange="qtPageSizeChange()" style="width:auto">
+      <option value="20">20条/页</option>
+      <option value="50">50条/页</option>
+      <option value="100">100条/页</option>
+    </select>
     <button class="btn btn-primary btn-sm" onclick="qtOpenAdd()">＋ 新增报价</button>
     <button class="btn btn-sm" onclick="qtExportCSV()" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97;white-space:nowrap">📥 导出Excel</button>
     <button class="btn btn-sm" onclick="qtOpenColSettings()" title="自定义显示列和列宽" style="background:var(--bg2);color:var(--text2);border-color:var(--border)">⚙️ 列设置</button>
@@ -4380,7 +4385,11 @@ let qtEditId=null;
 let qtSortCol='date';
 let qtSortDir=-1;
 let qtPage=1;
-const QT_PAGE=20;
+let QT_PAGE=20;
+function qtPageSizeChange(){
+  QT_PAGE=parseInt(document.getElementById('qt-page-size').value)||20;
+  qtPage=1;qtRender();
+}
 
 // ENT Group 公司别名映射
 function qtNormalizeCompany(raw){
@@ -4659,10 +4668,10 @@ function qtRender(){
                 const syncedStage=qtQuotes.filter(q=>q.project===r.project&&q.lastSyncedStage!==undefined).map(q=>q.lastSyncedStage).pop()||'';
                 if(snapNewer||(lastSync&&curDeal!==syncedDeal)||(lastSync&&curStage!==syncedStage))
                   return`<button class="btn btn-xs" style="background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber)" onclick="syncQuoteToProject('${r.project}')" title="报价有更新，点击同步到项目情况">⚠️ 同步</button>`;
-                return`<span class="badge badge-green" style="font-size:10px">📋 已导入</span>`;
+                return`<span style="display:inline-flex;align-items:center;gap:3px;background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;white-space:nowrap">✔ 已入项目</span>`;
               })();
               return`<td><span style="display:flex;gap:4px;flex-wrap:wrap">
-                ${r.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="qtImportToDoc(\''+r.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
+                ${r.project?`<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="qtImportToDoc('${r.id}')" title="导入到单据生成">📄 单据</button>`:''}
                 <button class="btn btn-xs" style="background:var(--bg2);color:var(--text2)" onclick="qtCopyRowSummary('${r.id}',this)" title="复制报价摘要到剪贴板">📋</button>
                 <button class="btn btn-xs" onclick="qtOpenEdit('${r.id}')">编辑</button>
                 <button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="qtCopyAsNew('${r.id}')" title="复制此报价信息到新增表单（日期改为今天）">⧉ 复制新增</button>
@@ -4710,15 +4719,30 @@ function qtRender(){
             case 'model': return`<td style="font-size:11px;color:var(--text2)">${modelsStr}</td>`;
             case 'price': return`<td class="${hasBelow?'qt-below':''}" style="font-weight:500">${priceRange}</td>`;
             case 'notes': return`<td><span class="badge badge-blue" style="font-size:10px">${rows.length} 个产品</span></td>`;
-            case 'actions': return`<td><span style="display:flex;gap:4px;flex-wrap:wrap">
-              ${r0.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="event.stopPropagation();qtImportToDoc(\''+r0.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
+            case 'actions': {
+              const grpLinked=r0.project&&state.projects.some(p=>p.linkedQuoteProject===r0.project||(p.name||p.client)===r0.project);
+              const grpSyncBtn=(()=>{
+                if(!grpLinked)return'';
+                const lastSync=qtQuotes.filter(q=>q.project===r0.project&&q.lastSyncedAt).map(q=>q.lastSyncedAt).sort().pop()||'';
+                const latestSnap=qtQuotes.filter(q=>q.project===r0.project).flatMap(q=>(q.priceHistory||[])).map(h=>h.savedAt||'').sort().pop()||'';
+                const snapNewer=lastSync&&latestSnap>lastSync;
+                const curDeal=rows.map(q=>q.deal||'').pop()||'';
+                const syncedDeal=rows.find(q=>q.lastSyncedDeal!==undefined)?.lastSyncedDeal||'';
+                if(snapNewer||(lastSync&&curDeal!==syncedDeal))
+                  return`<button class="btn btn-xs" style="background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber)" onclick="event.stopPropagation();syncQuoteToProject('${r0.project}')" title="报价有更新，点击同步到项目情况">⚠️ 同步</button>`;
+                return`<span style="display:inline-flex;align-items:center;gap:3px;background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;white-space:nowrap">✔ 已入项目</span>`;
+              })();
+              return`<td><span style="display:flex;gap:4px;flex-wrap:wrap">
+              ${r0.project?`<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="event.stopPropagation();qtImportToDoc('${r0.id}')" title="导入到单据生成">📄 单据</button>`:''}
               <button class="btn btn-xs" onclick="event.stopPropagation();qtOpenEdit('${r0.id}')" title="编辑第一个产品">编辑</button>
               <button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="event.stopPropagation();qtCopyAsNew('${r0.id}')" title="复制第一个产品报价到新增表单">⧉ 复制新增</button>
+              ${grpSyncBtn}
             </span></td>`;
+            }
             default: return`<td></td>`;
           }
         };
-        tbody+=`<tr onclick="(function(){var open=document.querySelector('tr[data-group=\\'${gid}\\']').style.display==='none';document.querySelectorAll('tr[data-group=\\'${gid}\\']').forEach(function(r){r.style.display=open?'':'none';});document.getElementById('${gid}-ic').textContent=open?'▾':'▸';})()" style="cursor:pointer;background:var(--bg2);border-top:2px solid var(--border2)" title="点击展开/折叠该项目的 ${rows.length} 个产品">${visCols.map(grpTdFor).join('')}</tr>`;
+        tbody+=`<tr onclick="(function(){var open=document.querySelector('tr[data-group=\\'${gid}\\']').style.display==='none';document.querySelectorAll('tr[data-group=\\'${gid}\\']').forEach(function(r){r.style.display=open?'':'none';});document.getElementById('${gid}-ic').textContent=open?'▾':'▸';})()" onmouseenter="this.style.background='#BFDBFE'" onmouseleave="this.style.background='#DBEAFE'" style="cursor:pointer;background:#DBEAFE;border-top:2px solid #93C5FD;border-left:3px solid #3B82F6" title="点击展开/折叠该项目的 ${rows.length} 个产品">${visCols.map(grpTdFor).join('')}</tr>`;
         // Child rows
         rows.forEach(r=>{
           const diff=r.p3?r.price-r.p3:null;
@@ -4740,7 +4764,7 @@ function qtRender(){
               case 'stage': return`<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;color:var(--text2);font-size:11px">${r.stage||'—'}</td>`;
               case 'notes': return`<td title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>`;
               case 'actions': return`<td><span style="display:flex;gap:4px;flex-wrap:wrap">
-                ${r.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="event.stopPropagation();qtImportToDoc(\''+r.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
+                ${r.project?'<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="event.stopPropagation();qtImportToDoc(\''+r.id+'\')" title="导入到单据生成">📄 单据</button>':''}
                 <button class="btn btn-xs" style="background:var(--bg2);color:var(--text2)" onclick="event.stopPropagation();qtCopyRowSummary('${r.id}',this)">📋</button>
                 <button class="btn btn-xs" onclick="event.stopPropagation();qtOpenEdit('${r.id}')">编辑</button>
                 <button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="event.stopPropagation();qtCopyAsNew('${r.id}')" title="复制此报价信息到新增表单">⧉ 复制新增</button>
