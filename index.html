@@ -7492,9 +7492,10 @@ function cQ(){
   });
   document.getElementById('q-tq').textContent=tq;
   document.getElementById('q-ta').textContent=fa(ta);
-  // Shipping: auto in both modes now
-  const shEl=document.getElementById('q-sh');if(shEl)shEl.value=tsh.toFixed(2);
-  const sh=parseFloat(document.getElementById('q-sh')?.value)||0;
+  // Only auto-fill shipping total when rows have per-unit shipping; preserve user/restored value otherwise
+  const shEl=document.getElementById('q-sh');
+  if(shEl&&tsh>0)shEl.value=tsh.toFixed(2);
+  const sh=parseFloat(shEl?.value)||0;
   document.getElementById('q-gt').textContent=fa(ta+sh);
 }
 
@@ -7559,8 +7560,10 @@ function cPI(){
   });
   document.getElementById('pi-tq').textContent=tq;
   document.getElementById('pi-ta').textContent=fa(ta);
-  const shEl2=document.getElementById('pi-sh');if(shEl2)shEl2.value=tsh.toFixed(2);
-  const sh=parseFloat(document.getElementById('pi-sh')?.value)||0;
+  // Only auto-fill shipping total when rows have per-unit shipping; preserve user/restored value otherwise
+  const shEl2=document.getElementById('pi-sh');
+  if(shEl2&&tsh>0)shEl2.value=tsh.toFixed(2);
+  const sh=parseFloat(shEl2?.value)||0;
   document.getElementById('pi-gt').textContent=fa(ta+sh);
 }
 function cCI(){
@@ -8353,19 +8356,20 @@ function loadDocState(id) {
     if (cfFn) cfFn();
   }
 
-  restoreRows('q-b',  doc.rows?.q,  cQ);
-  restoreRows('pi-b', doc.rows?.pi, cPI);
+  restoreRows('q-b',  doc.rows?.q,  null);
+  restoreRows('pi-b', doc.rows?.pi, null);
   restoreRows('ci-b', doc.rows?.ci, cCI);
   restoreRows('pk-b', doc.rows?.pk, cPK);
 
-  // Restore shipping totals
+  // Restore shipping totals AFTER rows (so cQ/cPI don't overwrite them)
   if (doc.sh) {
     ['q','pi','ci'].forEach(t => {
       const el = document.getElementById(t + '-sh');
       if (el) el.value = doc.sh[t] || '0';
     });
-    cQ(); cPI(); cCI();
   }
+  // Recalc totals now that both rows AND shipping are restored
+  cQ(); cPI(); cCI();
 
   // Close the saved docs panel
   const savedPanel = document.getElementById('saved-docs-panel');
