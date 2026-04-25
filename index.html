@@ -2900,7 +2900,35 @@ function renderSavedWeeklies(){
         <div class="inline-flex" onclick="event.stopPropagation()">${badges.join('')}<button class="btn btn-primary btn-sm" onclick="editWeekly(${w.id})">编辑</button><button class="btn btn-sm" onclick="loadWeekly(${w.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delWeekly(${w.id})">删除</button></div>
       </div>
       <div id="${hid}" style="display:none;margin-top:8px;font-size:12px;color:var(--text2)">
-        <div>已填写字段：重点项目 / 长线工作 / 下周目标 / 下周工作计划 / 下周长线工作</div>
+        ${(function(){
+          const na='<span style="color:var(--text3)">暂无</span>';
+          const row=(label,val)=>`<div style="margin-bottom:6px;line-height:1.7"><span style="font-weight:600;color:var(--text)">${label}：</span><span style="white-space:pre-wrap">${val||na}</span></div>`;
+          const sep=`<div style="border-top:1px solid var(--border2);margin:8px 0"></div>`;
+          const sec=(title)=>`<div style="font-weight:600;color:var(--text);margin-bottom:4px;margin-top:2px">▌ ${title}</div>`;
+          return [
+            sec('重点项目'),
+            row('1）合同签订',w.p1), row('2）产品报价',w.p2), row('3）方案设计',w.p3),
+            row('4）需求确认',w.p4), row('5）项目延期',w.p5), row('6）丢单',w.p6),
+            sep,
+            sec('长线工作 & 日常事务'),
+            row('1）背调客户数',w.newClients), row('2）跟进客户',w.followup), row('2）拜访客户',w.visit),
+            row('3）重点订单',w.keyorders), row('4）售后情况',w.aftersales), row('5）日常事务',w.daily),
+            sep,
+            sec('下周目标'),
+            row('业绩目标',(w.targetPerfTotal||'')+(w.targetPerfDetail?'\n'+w.targetPerfDetail:'')||na),
+            row('回款目标',(w.targetCollectTotal||'')+(w.targetCollectDetail?'\n'+w.targetCollectDetail:'')||na),
+            row('新成交',(w.targetDealTotal||'')+(w.targetDealDetail?'\n'+w.targetDealDetail:'')||na),
+            sep,
+            sec('下周工作计划'),
+            row('1）合同签订',w.np1), row('2）产品报价',w.np2), row('3）方案设计',w.np3),
+            row('4）需求确认',w.np4), row('5）项目延期',w.np5), row('6）丢单',w.np6),
+            row('客户拜访/来访',w.npVisit), row('出差',w.npTrip),
+            sep,
+            sec('下周长线工作'),
+            row('1）背调客户数',w.nlongNew), row('2）跟进',w.nlongFollowup), row('2）拜访',w.nlongVisit),
+            row('3）重点订单',w.nlongKeyorders), row('4）售后情况',w.nlongAftersales)
+          ].join('');
+        })()}
         <div style="font-size:11px;color:var(--text2);margin-top:6px">${w.savedAt}</div>
       </div>
     </div>`;
@@ -2991,7 +3019,35 @@ function renderSavedMonthlies(){
         <div class="inline-flex" onclick="event.stopPropagation()">${badges.join('')}<button class="btn btn-primary btn-sm" onclick="editMonthly(${m.id})">编辑</button><button class="btn btn-sm" onclick="loadMonthly(${m.id})">加载</button><button class="btn btn-danger btn-sm" onclick="delMonthly(${m.id})">删除</button></div>
       </div>
       <div id="${hid}" style="display:none;margin-top:8px;font-size:12px;color:var(--text2)">
-        <div>已填写字段：重点项目 / 长线工作 / 下月目标 / 下月工作计划 / 下月长线工作</div>
+        ${(function(){
+          const na='<span style="color:var(--text3)">暂无</span>';
+          const row=(label,val)=>`<div style="margin-bottom:6px;line-height:1.7"><span style="font-weight:600;color:var(--text)">${label}：</span><span style="white-space:pre-wrap">${val||na}</span></div>`;
+          const sep=`<div style="border-top:1px solid var(--border2);margin:8px 0"></div>`;
+          const sec=(title)=>`<div style="font-weight:600;color:var(--text);margin-bottom:4px;margin-top:2px">▌ ${title}</div>`;
+          return [
+            sec('重点项目'),
+            row('1）合同签订',m.p1), row('2）产品报价',m.p2), row('3）方案设计',m.p3),
+            row('4）需求确认',m.p4), row('5）项目延期',m.p5), row('6）丢单',m.p6),
+            sep,
+            sec('长线工作 & 日常事务'),
+            row('1）背调客户数',m.newClients), row('2）跟进客户',m.followup), row('2）拜访客户',m.visit),
+            row('3）重点订单',m.keyorders), row('4）售后情况',m.aftersales), row('5）日常事务',m.daily),
+            sep,
+            sec('下月目标'),
+            row('业绩目标',(m.targetPerfTotal||'')+(m.targetPerfDetail?'\n'+m.targetPerfDetail:'')||na),
+            row('回款目标',(m.targetCollectTotal||'')+(m.targetCollectDetail?'\n'+m.targetCollectDetail:'')||na),
+            row('新成交',(m.targetDealTotal||'')+(m.targetDealDetail?'\n'+m.targetDealDetail:'')||na),
+            sep,
+            sec('下月工作计划'),
+            row('1）合同签订',m.np1), row('2）产品报价',m.np2), row('3）方案设计',m.np3),
+            row('4）需求确认',m.np4), row('5）项目延期',m.np5), row('6）丢单',m.np6),
+            row('客户拜访/来访',m.npVisit), row('出差',m.npTrip),
+            sep,
+            sec('下月长线工作'),
+            row('1）背调客户数',m.nlongNew), row('2）跟进',m.nlongFollowup), row('2）拜访',m.nlongVisit),
+            row('3）重点订单',m.nlongKeyorders), row('4）售后情况',m.nlongAftersales)
+          ].join('');
+        })()}
         <div style="font-size:11px;color:var(--text2);margin-top:6px">${m.savedAt}</div>
       </div>
     </div>`;
