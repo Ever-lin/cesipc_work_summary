@@ -406,8 +406,8 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <span class="page-title" id="app-title-display" onclick="startTitleEdit()" title="点击重命名" style="cursor:pointer;" title="点击可重命名">工作总结管理工具 v7</span>
   <input id="app-title-input" style="display:none;font-size:15px;font-weight:600;color:var(--text);background:var(--bg2);border:1px solid var(--blue);border-radius:var(--radius-xs);padding:2px 8px;max-width:320px;" onblur="saveTitleEdit()" onkeydown="if(event.key==='Enter')saveTitleEdit();if(event.key==='Escape')cancelTitleEdit();">
   <div class="inline-flex">
-    <button class="btn btn-sm" onclick="exportBackup()" title="导出全部数据为JSON备份">💾 备份数据</button>
-    <label class="btn btn-sm" style="cursor:pointer;margin:0" title="从JSON文件恢复数据">📂 恢复数据<input type="file" accept=".json" onchange="importBackup(event)" style="display:none"></label>
+    <button class="btn btn-sm" onclick="exportBackup()" title="导出全部数据（报价、项目、业绩、单据等所有模块）为JSON备份，换电脑时上传即可完整还原">💾 导出完整备份</button>
+    <label class="btn btn-sm" style="cursor:pointer;margin:0" title="从JSON备份文件恢复所有数据">📂 恢复数据<input type="file" accept=".json" onchange="importBackup(event)" style="display:none"></label>
   </div>
 </div>
 
@@ -4084,16 +4084,37 @@ const BACKUP_TIMESTAMP_KEY='ws6_last_backup_ts';
 const BACKUP_WARN_MINS=30;
 
 function exportBackup(){
-  const json=JSON.stringify(state,null,2);
+  // Collect ALL data across every localStorage key used by this app
+  const ds=toCST(new Date());
+  const allKeys=[
+    'ws6',
+    'quotetrack_v3',
+    'ws6_appTitle',
+    'cesipc_docs_v1',
+    'cesipc_images',
+    'descTplPresets',
+    'descTplMemory',
+  ];
+  // Also grab any mem_* keys
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&k.startsWith('mem_')&&!allKeys.includes(k))allKeys.push(k);
+  }
+  const bundle={_version:2,_exportedAt:ds,_keys:{}};
+  allKeys.forEach(k=>{
+    try{const v=localStorage.getItem(k);if(v!=null)bundle._keys[k]=JSON.parse(v);}catch(e){
+      try{bundle._keys[k]=localStorage.getItem(k);}catch(e2){}
+    }
+  });
+  const json=JSON.stringify(bundle,null,2);
   const blob=new Blob([json],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;
-  const ds=toCST(new Date());
-  a.download=`工作总结备份_${ds}.json`;
+  a.download=`工作总结完整备份_${ds}.json`;
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-  // 备份后更新时间戳，隐藏提醒条
   try{localStorage.setItem(BACKUP_TIMESTAMP_KEY,Date.now().toString());}catch(e){}
   const bar=document.getElementById('auto-backup-bar');if(bar)bar.style.display='none';
+  showSaveToast();
 }
 
 function importBackup(evt){
@@ -4102,18 +4123,48 @@ function importBackup(evt){
   reader.onload=e=>{
     try{
       const imported=JSON.parse(e.target.result);
-      if(!imported.perf&&!imported.projects){alert('文件格式不正确，请选择正确的备份文件');return;}
-      // 恢复备份数据
-      state=imported;
-      if(!state.monthlies)state.monthlies=[];
-      if(!state.dailies)state.dailies=[];
-      if(!state.weeklies)state.weeklies=[];
-      SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});
-      save();
-      renderPerf();renderPivot();renderProjects();refreshProjDatalist();
-      renderSavedWeeklies();renderSavedMonthlies();renderSavedDailies();
-      fillProjTextareas('w');fillProjTextareas('wm');
-      alert('数据恢复成功！');
+
+      // ── 新格式：bundle with _version & _keys ──
+      if(imported._version&&imported._keys){
+        if(!confirm('即将用备份文件覆盖当前所有数据（报价、项目、业绩、单据等），确认继续？'))return;
+        Object.entries(imported._keys).forEach(([k,v])=>{
+          try{localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));}catch(e){}
+        });
+        // Reload state from localStorage
+        const raw=localStorage.getItem('ws6');
+        if(raw){
+          state=JSON.parse(raw);
+          if(!state.monthlies)state.monthlies=[];
+          if(!state.dailies)state.dailies=[];
+          if(!state.weeklies)state.weeklies=[];
+          if(!state.fyTargets)state.fyTargets={};
+          SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});
+          save();
+        }
+        qtLoad();
+        renderPerf();renderPivot();renderProjects();refreshProjDatalist();
+        qtRender();qtUpdateCompanyFilter();
+        renderSavedWeeklies();renderSavedMonthlies();renderSavedDailies();
+        fillProjTextareas('w');fillProjTextareas('wm');
+        alert('✅ 完整数据恢复成功！所有模块（报价、项目、业绩、单据等）已还原。');
+
+      // ── 旧格式：仅包含 state（兼容旧备份）──
+      }else if(imported.perf||imported.projects){
+        if(!confirm('检测到旧版备份格式（仅含主数据），将恢复项目/业绩/周报数据，报价需单独处理。确认继续？'))return;
+        state=imported;
+        if(!state.monthlies)state.monthlies=[];
+        if(!state.dailies)state.dailies=[];
+        if(!state.weeklies)state.weeklies=[];
+        SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});
+        save();
+        renderPerf();renderPivot();renderProjects();refreshProjDatalist();
+        renderSavedWeeklies();renderSavedMonthlies();renderSavedDailies();
+        fillProjTextareas('w');fillProjTextareas('wm');
+        alert('✅ 数据恢复成功（旧版格式）。');
+
+      }else{
+        alert('文件格式不正确，请选择正确的备份文件。');return;
+      }
     }catch(err){alert('文件解析失败：'+err.message);}
     evt.target.value='';
   };
@@ -4359,7 +4410,7 @@ function qtRender(){
           <td>${dealBadge(r.deal)}</td>
           <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${r.company||''}">${r.company||'—'}</td>
           <td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;color:var(--blue-text);font-weight:500">${r.contact||'<span style="color:var(--text3)">—</span>'}</td>
-          <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${r.project||''}"><span style="color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onclick="qtOpenEdit('${r.id}')" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r.project||'—'}</span></td>
+          <td style="max-width:180px;word-break:break-all;white-space:normal" title="${r.project||''}"><span style="color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onclick="qtOpenEdit('${r.id}')" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r.project||'—'}</span></td>
           <td>${r.date||'—'}</td>
           <td><b>${r.model||'—'}</b></td>
           <td>${r.cpu||'—'}</td>
@@ -6096,38 +6147,67 @@ function qtGetLinkedProjectStatus(projectName){
 function renderClients(){
   const q=document.getElementById('client-search').value.trim().toLowerCase();
   const sortMode=document.getElementById('client-sort').value;
+  const yearFilter=document.getElementById('client-year').value; // 'all' | '2026' | '2027' | '2028'
+
+  // Collect all client names across modules
   const clientNames=new Set();
   (qtQuotes||[]).forEach(r=>{if(r.company)clientNames.add(r.company);});
   state.projects.forEach(p=>{if(p.client)clientNames.add(p.client);});
   (state.perf||[]).forEach(p=>{if(p.client)clientNames.add(p.client);});
+
   let clients=[...clientNames].filter(n=>!q||n.toLowerCase().includes(q));
+
+  // Helper: filter by calYear string ('2026'/'2027'/etc)
+  const yearMatch=(calYear)=>yearFilter==='all'||String(calYear||'')===yearFilter;
+
   const clientData=clients.map(name=>{
-    const quotes=(qtQuotes||[]).filter(r=>r.company===name);
+    const quotes=(qtQuotes||[]).filter(r=>r.company===name&&(yearFilter==='all'||String(r.date||'').startsWith(yearFilter)));
     const projs=state.projects.filter(p=>p.client===name);
-    const perfs=(state.perf||[]).filter(p=>p.client===name&&p.type==='业绩'&&!p.noAmount);
-    const collects=(state.perf||[]).filter(p=>p.client===name&&p.type==='回款'&&!p.noAmount);
-    const deals=(state.perf||[]).filter(p=>p.client===name&&(p.type==='销售成交'||p.type==='借测成交'||p.type==='新成交'));
+    // 业绩：按年份过滤
+    const perfs=(state.perf||[]).filter(p=>p.client===name&&p.type==='业绩'&&!p.noAmount&&yearMatch(p.calYear));
+    const collects=(state.perf||[]).filter(p=>p.client===name&&p.type==='回款'&&!p.noAmount&&yearMatch(p.calYear));
+    // 下单次数 = 业绩记录条数（每条业绩对应一次实际下单，按年份过滤后统计）
+    const orderCount=perfs.length;
     const totalPerf=perfs.reduce((s,p)=>s+(p.amount||0),0);
     const totalCollect=collects.reduce((s,p)=>s+(p.amount||0),0);
-    return{name,quotes,projs,perfs,collects,deals,totalPerf,totalCollect};
+    return{name,quotes,projs,perfs,collects,orderCount,totalPerf,totalCollect};
   });
-  if(sortMode==='perf')clientData.sort((a,b)=>b.totalPerf-a.totalPerf);
-  else if(sortMode==='quotes')clientData.sort((a,b)=>b.quotes.length-a.quotes.length);
-  else clientData.sort((a,b)=>a.name.localeCompare(b.name,'zh'));
+
+  // When year is filtered, hide clients with no data in that year
+  const filtered=yearFilter==='all'
+    ? clientData
+    : clientData.filter(cd=>cd.perfs.length||cd.collects.length||cd.quotes.length);
+
+  if(sortMode==='perf')filtered.sort((a,b)=>b.totalPerf-a.totalPerf);
+  else if(sortMode==='quotes')filtered.sort((a,b)=>b.quotes.length-a.quotes.length);
+  else filtered.sort((a,b)=>a.name.localeCompare(b.name,'zh'));
+
   const container=document.getElementById('client-list');
-  if(!clientData.length){container.innerHTML='<div style="color:var(--text2);padding:20px;text-align:center">暂无客户数据</div>';return;}
+  if(!filtered.length){
+    container.innerHTML=`<div style="color:var(--text2);padding:20px;text-align:center">${yearFilter!=='all'?yearFilter+'年':''}暂无客户数据</div>`;
+    return;
+  }
+
   const statusIcon={跟进中:'⭕',确认订单:'🔶',成交:'✅',暂无进展:'⏸️',丢单:'❌'};
   const dealBadge_={won:'✅ 已成交',confirmed:'🔶 已确认',open:'⭕ 跟进中',pause:'⏸️ 暂无进展',lost:'❌ 丢单'};
   const dealColor={won:'var(--green-text)',confirmed:'var(--amber-text)',open:'var(--blue-text)',pause:'var(--gray-text)',lost:'var(--red-text)'};
   const dealBg={won:'var(--green-bg)',confirmed:'var(--amber-bg)',open:'var(--blue-bg)',pause:'var(--gray-bg)',lost:'var(--red-bg)'};
-  container.innerHTML=clientData.map(cd=>{
+
+  // Year label for headings
+  const yearLabel=yearFilter==='all'?'':'（'+yearFilter+'年）';
+
+  container.innerHTML=filtered.map(cd=>{
+    // Unique projects (latest record per project name)
     const projMap={};
     cd.projs.forEach(p=>{const k=p.name||p.client;if(!projMap[k]||p.id>projMap[k].id)projMap[k]=p;});
     const uniqueProjs=Object.values(projMap);
+
+    // Quote projects (filtered by year)
     const quoteProjects=[...new Set(cd.quotes.map(q=>q.project).filter(Boolean))];
+
     const projsHtml=uniqueProjs.length?uniqueProjs.map(p=>{
       const icon=statusIcon[p.status]||'•';
-      const pname=(p.name||'').replace(/`/g,"'");
+      const pname=(p.name||'').replace(/'/g,"\\'");
       return`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--border2);font-size:12px">
         <span>${icon}</span>
         <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.name||''}">${p.name||'（未命名）'}</span>
@@ -6135,6 +6215,7 @@ function renderClients(){
         <button onclick="switchTab('projects');setTimeout(()=>{document.getElementById('pj-search').value='${pname}';renderProjects();},80)" style="border:none;background:var(--blue-bg);color:var(--blue-text);border-radius:3px;font-size:10px;padding:1px 6px;cursor:pointer;flex-shrink:0">查看</button>
       </div>`;
     }).join(''):'<span style="color:var(--text3);font-size:12px">暂无项目记录</span>';
+
     const quotesHtml=quoteProjects.length?quoteProjects.map(proj=>{
       const qs=cd.quotes.filter(q=>q.project===proj);
       const latest=qs.reduce((a,b)=>b.date>a.date?b:a,qs[0]);
@@ -6147,16 +6228,24 @@ function renderClients(){
         <button onclick="switchTab('quotes');setTimeout(()=>{document.getElementById('qt-search').value='${projSafe}';qtPage=1;qtRender();},80)" style="border:none;background:var(--blue-bg);color:var(--blue-text);border-radius:3px;font-size:10px;padding:1px 6px;cursor:pointer;flex-shrink:0">查看</button>
       </div>`;
     }).join(''):'<span style="color:var(--text3);font-size:12px">暂无报价记录</span>';
+
+    // Perf rows sorted newest first, show up to 5
     const perfHtml=cd.perfs.length
-      ?cd.perfs.slice().sort((a,b)=>(b.calYear||0)-(a.calYear||0)||(b.month||0)-(a.month||0)).slice(0,5).map(p=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--text2)">${p.calYear||''}年${p.month||''}月 ${p.week||''}</span><span style="font-weight:500;color:var(--blue-text)">¥${(p.amount||0).toLocaleString('zh-CN')}</span></div>`).join('')
+      ?cd.perfs.slice().sort((a,b)=>(b.calYear||0)-(a.calYear||0)||(b.month||0)-(a.month||0)).slice(0,5)
+        .map(p=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;border-bottom:1px solid var(--border2)">
+          <span style="color:var(--text2)">${p.calYear||''}年${p.month||''}月 ${p.week||''}</span>
+          <span style="font-weight:500;color:var(--blue-text)">¥${(p.amount||0).toLocaleString('zh-CN')}</span>
+        </div>`).join('')
       :'<span style="color:var(--text3);font-size:12px">暂无业绩记录</span>';
+
     return`<div class="card" style="margin-bottom:12px">
       <div class="card-header" style="margin-bottom:8px">
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span class="card-title" style="font-size:15px">${cd.name}</span>
+          ${yearLabel?`<span style="font-size:11px;color:var(--text2);background:var(--bg2);padding:1px 8px;border-radius:10px;border:1px solid var(--border2)">${yearLabel}</span>`:''}
           ${cd.totalPerf>0?`<span class="badge badge-blue">业绩 ¥${(cd.totalPerf/10000).toFixed(2).replace(/\.?0+$/,'')}W</span>`:''}
           ${cd.totalCollect>0?`<span class="badge badge-green">回款 ¥${(cd.totalCollect/10000).toFixed(2).replace(/\.?0+$/,'')}W</span>`:''}
-          ${cd.deals.length?`<span class="badge badge-amber">成交 ${cd.deals.length}次</span>`:''}
+          ${cd.orderCount>0?`<span class="badge badge-teal">✅ 下单 ${cd.orderCount}次</span>`:''}
         </div>
         <div style="display:flex;gap:8px;font-size:12px;color:var(--text2)">
           <span>项目 ${Object.keys(projMap).length} 个</span>
@@ -6169,12 +6258,12 @@ function renderClients(){
           ${projsHtml}
         </div>
         <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">💰 报价记录</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">💰 报价记录${yearLabel}</div>
           ${quotesHtml}
         </div>
       </div>
       ${cd.perfs.length?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border2)">
-        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">📊 业绩记录（最近5条）</div>
+        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">📊 业绩记录${yearLabel}（最近5条）</div>
         ${perfHtml}
       </div>`:''}
     </div>`;
@@ -8901,7 +8990,13 @@ document.addEventListener('keydown',e=>{
 <div id="panel-clients" class="panel">
   <div class="hint">汇聚同一客户名下的所有报价、项目、业绩与回款记录，方便复盘完整客户历史。</div>
   <div class="filter-bar" style="margin-bottom:12px">
-    <input id="client-search" placeholder="🔍 搜索客户名称…" oninput="renderClients()" style="flex:1;max-width:320px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--text)">
+    <input id="client-search" placeholder="🔍 搜索客户名称…" oninput="renderClients()" style="flex:1;max-width:280px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--text)">
+    <select id="client-year" onchange="renderClients()" style="padding:5px 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text)">
+      <option value="all">全部年份</option>
+      <option value="2026">2026年</option>
+      <option value="2027">2027年</option>
+      <option value="2028">2028年</option>
+    </select>
     <select id="client-sort" onchange="renderClients()" style="padding:5px 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text)">
       <option value="name">按名称排序</option>
       <option value="perf">按业绩排序</option>
