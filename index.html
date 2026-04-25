@@ -294,6 +294,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   .items td.rn { color: #8899AA; text-align: center; }
   .items td.nr { text-align: right; }
   .items td.ct { text-align: center; }
+  .items td.la { text-align: left; max-width: 200pt; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; }
   .items td.pn { text-align: center; white-space: pre-line; }
 
   /* subtotal block */
@@ -7381,7 +7382,7 @@ function addR(t, prefill){
     if(isSplit){
       tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc[t]}</td>
         <td><textarea placeholder="EPC-S1092A&#10;料号" style="width:90px;min-height:28px;resize:vertical;font-size:11px;padding:4px 5px;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--c-text);font-family:inherit;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.pn||''}</textarea></td>
-        <td style="padding:0;position:relative;min-width:420px;width:420px;"><div contenteditable="true" style="min-width:420px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds!=null&&p.ds!==''?p.ds:DEFAULT_DESC}</div><button onclick="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
+        <td style="padding:0;position:relative;min-width:420px;width:420px;"><div contenteditable="true" style="min-width:420px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;white-space:pre-wrap;word-break:break-word;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds!=null&&p.ds!==''?p.ds:DEFAULT_DESC}</div><button onclick="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
         <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
         <td><input type="number" value="${p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:70px;text-align:right;" oninput="calcAI(this);${cf}()"/></td>
         <td><input type="number" value="${p.ram||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;" oninput="calcAI(this);${cf}()"/></td>
@@ -7394,7 +7395,7 @@ function addR(t, prefill){
       // simple mode: # | PartNo | Desc | Qty | UnitPrice | Shipping | All-Incl | GrandTotal | ✕
       tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc[t]}</td>
         <td><textarea placeholder="EPC-S1092A&#10;料号" style="width:90px;min-height:28px;resize:vertical;font-size:11px;padding:4px 5px;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--c-text);font-family:inherit;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.pn||''}</textarea></td>
-        <td style="padding:0;position:relative;min-width:420px;width:420px;"><div contenteditable="true" style="min-width:420px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds!=null&&p.ds!==''?p.ds:DEFAULT_DESC}</div><button onclick="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
+        <td style="padding:0;position:relative;min-width:420px;width:420px;"><div contenteditable="true" style="min-width:420px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;white-space:pre-wrap;word-break:break-word;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds!=null&&p.ds!==''?p.ds:DEFAULT_DESC}</div><button onclick="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
         <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
         <td><input type="number" value="${p.cfg||p.ai||p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:95px;text-align:right;" oninput="calcSimpleAI(this);${cf}()" title="Unit Price (Configured System)"/></td>
         <td><input type="number" value="${p.simpleSh||p.sh||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;" oninput="calcSimpleAI(this);${cf}()" title="Shipping per unit"/></td>
@@ -7689,16 +7690,10 @@ function p$(v){return v?'$'+parseFloat(v).toFixed(2):'';}
 // PC System 行（第1行）和 Accessory 行（含"Accessory"关键字）允许自动换行，其他行 nowrap
 function _nowrapLines(html){
   if(!html)return'';
-  const parts=html.split(/<br\s*\/?>/i);
-  return parts.map((line,idx)=>{
-    const content=line||'&nbsp;';
-    // 第1行（PC System）或含 Accessory 的行允许自动换行
-    const allowWrap = idx===0 || /accessory/i.test(line);
-    if(allowWrap){
-      return`<span style="white-space:normal;word-break:break-word;overflow-wrap:break-word;display:block;">${content}</span>`;
-    }
-    return`<span style="white-space:nowrap;display:block;">${content}</span>`;
-  }).join('');
+  // 将 <br> 换行转成实际换行符，保留 <strong>/<b>/<em> 等格式标签
+  // pre-wrap 保留换行，word-break 让超长行在列宽内自动折叠
+  const processed = html.replace(/<br\s*\/?>/gi, '\n');
+  return `<span style="white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;display:block;">${processed}</span>`;
 }
 // Part No：型号第一行、料号第二行，各自 nowrap
 function _pnNowrap(pn){
