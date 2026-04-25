@@ -972,6 +972,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .qt-tbl thead th:first-child{position:sticky;left:0;top:0;z-index:5;background:var(--bg2)}
 .qt-tbl tbody td:first-child{position:sticky;left:0;z-index:1;background:var(--bg);box-shadow:2px 0 4px rgba(0,0,0,.06)}
 .qt-tbl tbody tr:hover td:first-child{background:var(--bg2)}
+.qt-group-row{box-shadow:inset 4px 0 0 #3B82F6}
 .qt-price{font-weight:500}
 .qt-below{color:var(--red-text)!important;font-weight:600}
 .qt-ok{color:#1D9E75!important}
@@ -4720,7 +4721,7 @@ function qtRender(){
         // Group header tds
         const grpTdFor=id=>{
           switch(id){
-            case 'deal': return`<td style="border-right:3px solid #3B82F6">${dealBadge(repDeal)}</td>`;
+            case 'deal': return`<td>${dealBadge(repDeal)}</td>`;
             case 'company': return`<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${r0.company||''}">${r0.company||'—'}</td>`;
             case 'contact': return`<td style="color:var(--blue-text);font-weight:500">${r0.contact||'<span style="color:var(--text3)">—</span>'}</td>`;
             case 'project': return`<td class="qt-td-wrap" style="max-width:220px" title="${r0.project||''}"><span id="${gid}-ic" style="font-size:10px;color:var(--text3);margin-right:4px">▸</span><span onclick="event.stopPropagation();qtOpenEdit('${r0.id}')" style="font-weight:500;color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r0.project||'—'}</span></td>`;
@@ -4757,7 +4758,7 @@ function qtRender(){
             default: return`<td></td>`;
           }
         };
-        tbody+=`<tr onclick="(function(){var open=document.querySelector('tr[data-group=\\'${gid}\\']').style.display==='none';document.querySelectorAll('tr[data-group=\\'${gid}\\']').forEach(function(r){r.style.display=open?'':'none';});document.getElementById('${gid}-ic').textContent=open?'▾':'▸';})()" style="cursor:pointer;background:var(--bg2);border-top:2px solid var(--border2)" title="点击展开/折叠该项目的 ${rows.length} 个产品">${visCols.map(grpTdFor).join('')}</tr>`;
+        tbody+=`<tr onclick="(function(){var open=document.querySelector('tr[data-group=\\'${gid}\\']').style.display==='none';document.querySelectorAll('tr[data-group=\\'${gid}\\']').forEach(function(r){r.style.display=open?'':'none';});document.getElementById('${gid}-ic').textContent=open?'▾':'▸';})()" class="qt-group-row" style="cursor:pointer;background:var(--bg2);border-top:2px solid var(--border2)" title="点击展开/折叠该项目的 ${rows.length} 个产品">${visCols.map(grpTdFor).join('')}</tr>`;
         // Child rows
         rows.forEach(r=>{
           const diff=r.p3?r.price-r.p3:null;
@@ -6546,6 +6547,17 @@ function qtGetLinkedProjectStatus(projectName){
 // ═══════════════════════════════════════════════════
 // 功能 3：客户档案
 // ═══════════════════════════════════════════════════
+// 客户档案 — 报价记录项目名跳转到项目情况，支持返回
+function clientJumpToProject(projName){
+  // 记录当前位置（客户档案 tab + 滚动位置）
+  _navStack.push('clients');
+  _showBackBtn('clients');
+  // 跳转并高亮
+  _projHighlight=projName;
+  switchTab('projects');
+  setTimeout(()=>renderProjects(),50);
+}
+
 function renderClients(){
   // ── 动态填充年份选项（从数据中提取，当前年±2）──
   (function populateClientYears(){
@@ -6649,7 +6661,7 @@ function renderClients(){
       const badge=latest.deal?`<span style="font-size:10px;background:${dealBg[latest.deal]};color:${dealColor[latest.deal]};border-radius:8px;padding:1px 6px">${dealBadge_[latest.deal]||latest.deal}</span>`:'';
       const projSafe=proj.replace(/'/g,"\\'");
       return`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--border2);font-size:12px">
-        <span onclick="(function(){_projHighlight=${JSON.stringify(proj)};switchTab('projects');setTimeout(()=>{renderProjects();},50);})()" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;color:var(--blue-text);text-decoration:underline;text-underline-offset:2px" title="点击跳转项目情况：${proj}">${proj}</span>
+        <span onclick="clientJumpToProject('${projSafe}')" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;color:var(--blue-text);text-decoration:underline;text-underline-offset:2px" title="点击跳转项目情况：${proj}">${proj}</span>
         ${badge}
         <span style="color:var(--text2);font-size:11px;white-space:nowrap">${qs.length}条报价</span>
         <button onclick="switchTab('quotes');setTimeout(()=>{document.getElementById('qt-search').value='${projSafe}';qtPage=1;qtRender();},80)" style="border:none;background:var(--blue-bg);color:var(--blue-text);border-radius:3px;font-size:10px;padding:1px 6px;cursor:pointer;flex-shrink:0">查看</button>
