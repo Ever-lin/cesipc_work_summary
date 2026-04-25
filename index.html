@@ -47,6 +47,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .metric{background:var(--bg2);border-radius:var(--radius-sm);padding:12px}
 .metric-label{font-size:12px;color:var(--text2);margin-bottom:4px}
 .metric-value{font-size:19px;font-weight:500}
+@media(max-width:600px){.metric-grid{grid-template-columns:repeat(2,1fr)}}
 .project-item{border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;background:var(--bg);margin-bottom:8px}
 .proj-done{transition:opacity .2s,filter .2s}
 .proj-done:hover{opacity:1!important;filter:none!important}
@@ -594,7 +595,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <select class="ym-s" id="pj-status" onchange="renderProjects()"><option value="all">全部状态</option><option value="跟进中">跟进中</option><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="暂无进展">暂无进展</option><option value="丢单">丢单</option></select>
     <button id="pj-sort-btn" class="btn btn-sm" onclick="cycleProjSort()" title="切换排序方式" style="white-space:nowrap;min-width:100px">🚨 紧急优先</button>
     <div style="position:relative;flex:1;min-width:140px;max-width:260px">
-      <input id="pj-search" placeholder="🔍 搜索项目名/客户名" oninput="renderProjects()" style="width:100%;padding:5px 28px 5px 10px;font-size:13px;background:#F5F4F0;border:0.5px solid var(--border);border-radius:var(--radius-xs)">
+      <input id="pj-search" placeholder="🔍 搜索项目/客户/跟进/行动/需求" oninput="renderProjects()" style="width:100%;padding:5px 28px 5px 10px;font-size:13px;background:#F5F4F0;border:0.5px solid var(--border);border-radius:var(--radius-xs)">
       <span id="pj-search-clear" onclick="document.getElementById('pj-search').value='';renderProjects()" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text2);font-size:14px;line-height:1">✕</span>
     </div>
     <button class="btn btn-sm" onclick="exportProjectsExcel()" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97;white-space:nowrap">📥 导出Excel</button>
@@ -998,6 +999,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .qt-cc{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px}
 .qt-cc-name{font-weight:600;font-size:13px;margin-bottom:8px}
 .qt-cc-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.qt-tbl th.qt-sort-active{background:var(--blue-bg);color:var(--blue-text)}
 .qt-mode-btn{display:inline-flex;align-items:center;padding:6px 12px;border:1px solid var(--border);border-radius:var(--radius-xs);cursor:pointer;font-size:12px;color:var(--text2);background:var(--bg2);transition:all .15s;user-select:none}
 .qt-mode-btn:has(input:checked){background:var(--blue-bg);border-color:var(--blue);color:var(--blue-text);font-weight:500}
 .qt-mode-btn:hover{border-color:var(--blue);color:var(--blue-text)}
@@ -1020,6 +1022,9 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <select class="ym-s" id="qt-f-cpu" onchange="qtRender()" title="按CPU筛选"><option value="">全部CPU</option></select>
     <select class="ym-s" id="qt-f-ram" onchange="qtRender()" title="按RAM筛选"><option value="">全部RAM</option></select>
     <select class="ym-s" id="qt-f-ssd" onchange="qtRender()" title="按SSD筛选"><option value="">全部SSD</option></select>
+    <input type="date" id="qt-f-date-start" onchange="qtRender()" title="开始日期" style="padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text);font-family:inherit">
+    <span style="font-size:12px;color:var(--text2)">～</span>
+    <input type="date" id="qt-f-date-end" onchange="qtRender()" title="结束日期" style="padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text);font-family:inherit">
     <button id="qt-clear-filter" class="btn btn-sm" onclick="qtClearFilters()" style="display:none;background:var(--red-bg);color:var(--red-text);border-color:var(--red-border);white-space:nowrap">✕ 清除筛选</button>
     <span id="qt-result-count" style="font-size:12px;color:var(--text2);white-space:nowrap;display:none"></span>
     <button class="btn btn-primary btn-sm" onclick="qtOpenAdd()">＋ 新增报价</button>
@@ -1028,19 +1033,19 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div class="qt-tbl-wrap">
     <table class="qt-tbl">
       <thead><tr>
-        <th onclick="qtSort('deal')">状态 ↕</th>
-        <th onclick="qtSort('company')">公司 ↕</th>
-        <th onclick="qtSort('contact')">对接业务 ↕</th>
-        <th onclick="qtSort('project')">项目 ↕</th>
-        <th onclick="qtSort('date')">日期 ↕</th>
-        <th onclick="qtSort('model')">型号 ↕</th>
+        <th id="qth-deal" onclick="qtSort('deal')">状态</th>
+        <th id="qth-company" onclick="qtSort('company')">公司</th>
+        <th id="qth-contact" onclick="qtSort('contact')">对接业务</th>
+        <th id="qth-project" onclick="qtSort('project')">项目</th>
+        <th id="qth-date" onclick="qtSort('date')">日期</th>
+        <th id="qth-model" onclick="qtSort('model')">型号</th>
         <th>CPU</th>
         <th>准系统</th>
         <th>RAM</th>
         <th>SSD</th>
-        <th onclick="qtSort('price')">报价(P) ↕</th>
-        <th onclick="qtSort('p3')">P3 ↕</th>
-        <th onclick="qtSort('diff')">价差 ↕</th>
+        <th id="qth-price" onclick="qtSort('price')">报价(P)</th>
+        <th id="qth-p3" onclick="qtSort('p3')">P3</th>
+        <th id="qth-diff" onclick="qtSort('diff')">价差</th>
         <th>项目进度</th>
         <th>备注/Custom</th>
         <th>操作</th>
@@ -1633,11 +1638,71 @@ function renderPerf(){
   const ts=md.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
   const tr=md.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
   const nd=md.filter(p=>p.type==='新成交'||p.type==='销售成交'||p.type==='借测成交');
+  // 获取月度目标
+  const tgt=getTargets(fy);
+  const perfMonthTarget=(tgt.perfMonth||0)*10000;
+  const collectMonthTarget=(tgt.collectMonth||0)*10000;
+  const dealMonthTarget=tgt.dealMonth||0;
+  // 获取财年累计
+  const fyData=state.perf.filter(p=>p.fy===fy);
+  const fyPerf=fyData.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
+  const fyCollect=fyData.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
+  const fyDeals=fyData.filter(p=>p.type==='新成交'||p.type==='销售成交'||p.type==='借测成交').length;
+  const fyPerfTarget=(tgt.perfYear||0)*10000;
+  const fyCollectTarget=(tgt.collectYear||0)*10000;
+  const fyDealTarget=tgt.dealYear||0;
+  function progressBar(val,target,color){
+    if(!target)return'';
+    const pct=Math.min(100,Math.round((val/target)*100));
+    const barColor=pct>=100?'#1D9E75':pct>=80?color:'var(--amber)';
+    return `<div style="margin-top:6px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:3px">
+        <span>${pct}%</span><span>目标 ${fmt(target)}</span>
+      </div>
+      <div style="background:var(--border2);border-radius:4px;height:5px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;transition:width .4s ease"></div>
+      </div>
+    </div>`;
+  }
+  function dealProgressBar(val,target){
+    if(!target)return'';
+    const pct=Math.min(100,Math.round((val/target)*100));
+    const barColor=pct>=100?'#1D9E75':pct>=80?'#BA7517':'var(--amber)';
+    return `<div style="margin-top:6px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:3px">
+        <span>${pct}%</span><span>目标 ${target}家</span>
+      </div>
+      <div style="background:var(--border2);border-radius:4px;height:5px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;transition:width .4s ease"></div>
+      </div>
+    </div>`;
+  }
+  // 月度指标卡 + 财年汇总卡
   document.getElementById('metrics').innerHTML=`
-    <div class="metric"><div class="metric-label">${month}月总业绩</div><div class="metric-value" style="color:#185FA5">${fmt(ts)}</div></div>
-    <div class="metric"><div class="metric-label">${month}月总回款</div><div class="metric-value" style="color:#1D9E75">${fmt(tr)}</div></div>
-    <div class="metric"><div class="metric-label">本月新成交</div><div class="metric-value" style="color:#BA7517">${nd.length}家</div></div>
-    <div class="metric"><div class="metric-label">记录条数</div><div class="metric-value">${md.length}</div></div>`;
+    <div class="metric"><div class="metric-label">${month}月总业绩</div><div class="metric-value" style="color:#185FA5">${fmt(ts)}</div>${progressBar(ts,perfMonthTarget,'#185FA5')}</div>
+    <div class="metric"><div class="metric-label">${month}月总回款</div><div class="metric-value" style="color:#1D9E75">${fmt(tr)}</div>${progressBar(tr,collectMonthTarget,'#1D9E75')}</div>
+    <div class="metric"><div class="metric-label">本月新成交</div><div class="metric-value" style="color:#BA7517">${nd.length}家</div>${dealProgressBar(nd.length,dealMonthTarget)}</div>
+    <div class="metric"><div class="metric-label">记录条数</div><div class="metric-value">${md.length}</div></div>
+    <div class="metric" style="background:linear-gradient(135deg,#E6F1FB 0%,#EAF3DE 100%);border:1px solid #B8D4F0;grid-column:1/-1">
+      <div class="metric-label" style="color:#0C447C;font-weight:600;margin-bottom:8px">📊 ${fy} 财年累计</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:2px">年度总业绩</div>
+          <div style="font-size:18px;font-weight:600;color:#185FA5">${fmt(fyPerf)}</div>
+          ${progressBar(fyPerf,fyPerfTarget,'#185FA5')}
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:2px">年度总回款</div>
+          <div style="font-size:18px;font-weight:600;color:#1D9E75">${fmt(fyCollect)}</div>
+          ${progressBar(fyCollect,fyCollectTarget,'#1D9E75')}
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:2px">年度新成交</div>
+          <div style="font-size:18px;font-weight:600;color:#BA7517">${fyDeals}家</div>
+          ${dealProgressBar(fyDeals,fyDealTarget)}
+        </div>
+      </div>
+    </div>`;
   const weeks=['第一周','第二周','第三周','第四周','第五周'];
   let html='';
   weeks.forEach(w=>{
@@ -2154,7 +2219,7 @@ function renderProjects(){
     if(!stOk)return;
     // search filter
     if(pjQ){
-      const haystack=(k+' '+(latest.client||'')+' '+(latest.progress||'')).toLowerCase();
+      const haystack=(k+' '+(latest.client||'')+' '+(latest.progress||'')+' '+(latest.actionContent||'')+' '+(latest.requirement||'')+' '+(latest.notes||'')).toLowerCase();
       if(!haystack.includes(pjQ))return;
     }
     // ── 紧急度分隔条（仅 urgent 排序模式）──
@@ -2272,6 +2337,10 @@ function renderProjects(){
           <button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="editLatestProgress('${k.replace(/'/g,"\\'")}',${latest.id})">编辑最新</button>
           <button class="btn btn-danger btn-xs" onclick="delGroup('${k.replace(/'/g,"\\'")}')">删除</button>
         </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border2)">
+        <span style="font-size:11px;color:var(--text2);align-self:center;margin-right:2px">快速切换：</span>
+        ${[['跟进中','badge-blue','⭕'],['确认订单','badge-amber','🔶'],['成交','badge-green','✅'],['暂无进展','badge-gray','⏸️'],['丢单','badge-red','❌']].map(([s,cls,icon])=>`<button class="btn btn-xs ${latest.status===s?'btn-primary':''}" style="${latest.status===s?'':'background:var(--bg2);color:var(--text2)'}" onclick="qtQuickStatus('${k.replace(/'/g,"\\'")}',${latest.id},'${s}')">${icon} ${s}</button>`).join('')}
       </div>
     </div>`;
   });
@@ -2520,6 +2589,13 @@ function delGroup(name){
   
   state.projects=state.projects.filter(p=>(p.name||p.client)!==name);
   save();renderProjects();refreshProjDatalist();renderProjSync('w-proj-sync');renderProjSync('wm-proj-sync');
+}
+
+function qtQuickStatus(name,latestId,newStatus){
+  const entry=state.projects.find(p=>p.id===latestId);
+  if(entry){entry.status=newStatus;entry.savedAt=new Date().toLocaleString('zh-CN');}
+  save();renderProjects();
+  toast('✅ 状态已更新为：'+newStatus);
 }
 
 function delProjectEntry(id,groupName){
@@ -3893,7 +3969,7 @@ function exportProjectsExcel(){
     if(pjMonth!=='all'){const rd=latest.recordDate||'';const info=rd?weekInfoOfDay(rd):null;const m=info?info.month:(rd?String(parseInt(rd.split('-')[1],10)):'');if(m!==pjMonth)return;}
     if(pjWeek!=='all'){const info=weekInfoOfDay(latest.recordDate);if(!info||info.week!==pjWeek)return;}
     if(pjS!=='all'&&latest.status!==pjS)return;
-    if(pjQ){const hay=(k+' '+(latest.client||'')+' '+(latest.progress||'')).toLowerCase();if(!hay.includes(pjQ))return;}
+    if(pjQ){const hay=(k+' '+(latest.client||'')+' '+(latest.progress||'')+' '+(latest.actionContent||'')+' '+(latest.requirement||'')).toLowerCase();if(!hay.includes(pjQ))return;}
     const sc=SC[latest.status]||{label:latest.status};
     rows.push({
       '项目名称':latest.name||k,
@@ -4178,8 +4254,10 @@ function qtFiltered(){
   const fCpu=document.getElementById('qt-f-cpu')?.value||'';
   const fRam=document.getElementById('qt-f-ram')?.value||'';
   const fSsd=document.getElementById('qt-f-ssd')?.value||'';
+  const fDateStart=document.getElementById('qt-f-date-start')?.value||'';
+  const fDateEnd=document.getElementById('qt-f-date-end')?.value||'';
   return qtQuotes.filter(r=>{
-    if(q&&!`${r.project} ${r.model} ${r.cpu} ${r.ram} ${r.ssd} ${r.stage||''} ${r.contact||''}`.toLowerCase().includes(q))return false;
+    if(q&&!`${r.project} ${r.model} ${r.cpu} ${r.ram} ${r.ssd} ${r.stage||''} ${r.contact||''} ${r.notes||''}`.toLowerCase().includes(q))return false;
     if(co&&r.company!==co)return false;
     if(ct&&r.contact!==ct)return false;
     if(st&&r.deal!==st)return false;
@@ -4188,6 +4266,8 @@ function qtFiltered(){
     if(fCpu&&r.cpu!==fCpu)return false;
     if(fRam&&r.ram!==fRam)return false;
     if(fSsd&&r.ssd!==fSsd)return false;
+    if(fDateStart&&r.date&&r.date<fDateStart)return false;
+    if(fDateEnd&&r.date&&r.date>fDateEnd)return false;
     return true;
   });
 }
@@ -4217,7 +4297,9 @@ function qtRender(){
     (document.getElementById('qt-f-model')?.value)||
     (document.getElementById('qt-f-cpu')?.value)||
     (document.getElementById('qt-f-ram')?.value)||
-    (document.getElementById('qt-f-ssd')?.value)
+    (document.getElementById('qt-f-ssd')?.value)||
+    (document.getElementById('qt-f-date-start')?.value)||
+    (document.getElementById('qt-f-date-end')?.value)
   );
   const clearBtn=document.getElementById('qt-clear-filter');
   const countEl=document.getElementById('qt-result-count');
@@ -4231,54 +4313,151 @@ function qtRender(){
       countEl.style.display='none';
     }
   }
+  // ── 排序列高亮 ──
+  const sortableCols=['deal','company','contact','project','date','model','price','p3','diff'];
+  sortableCols.forEach(col=>{
+    const th=document.getElementById('qth-'+col);
+    if(!th)return;
+    const isActive=qtSortCol===col;
+    th.classList.toggle('qt-sort-active',isActive);
+    const arrow=qtSortDir>0?'↑':'↓';
+    const base={deal:'状态',company:'公司',contact:'对接业务',project:'项目',date:'日期',model:'型号',price:'报价(P)',p3:'P3',diff:'价差'}[col]||col;
+    th.textContent=isActive?`${base} ${arrow}`:base;
+  });
   const dealBadge=d=>d==='won'?'<span class="badge qt-stat-won">✅ 已成交</span>':d==='lost'?'<span class="badge qt-stat-lost">❌ 丢单</span>':d==='open'?'<span class="badge qt-stat-open">⭕ 跟进中</span>':d==='confirmed'?'<span class="badge qt-stat-confirmed">🔶 已确认订单</span>':d==='pause'?'<span class="badge qt-stat-pause">⏸️ 暂无进展</span>':'<span class="badge badge-gray">—</span>';
-  document.getElementById('qt-tbody').innerHTML=data.length?data.map(r=>{
-    const diff=r.p3?r.price-r.p3:null;
-    return`<tr data-qid="${r.id}" style="transition:background .3s">
-      <td>${dealBadge(r.deal)}</td>
-      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis">${r.company||'—'}</td>
-      <td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;color:var(--blue-text);font-weight:500">${r.contact||'<span style="color:var(--text3)">—</span>'}</td>
-      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${r.project||''}"><span style="color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onclick="qtOpenEdit('${r.id}')" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r.project||'—'}</span></td>
-      <td>${r.date||'—'}</td>
-      <td><b>${r.model||'—'}</b></td>
-      <td>${r.cpu||'—'}</td>
-      <td>${r.barbone!=null?'$'+r.barbone:'—'}</td>
-      <td>${r.ram||'—'}</td>
-      <td>${r.ssd||'—'}</td>
-      <td class="qt-price ${r.p3&&r.price<r.p3?'qt-below':''}">${(r.tiers&&r.tiers.length)
-        ? `<span style="font-size:11px;font-weight:600;color:var(--blue-text)">📊 ${r.tiers.map(t=>`${t.qty}台×${t.cur==='CNY'?'¥':'$'}${t.price}`).join(' / ')}</span>`
-        : `${r.priceCur==='CNY'?'¥':'$'}${r.price}`
-      }</td>
-      <td>${r.p3!=null?(r.p3Cur==='CNY'?'¥':'$')+r.p3:'—'}</td>
-      <td class="${diff!==null?(diff<0?'qt-diff-neg':'qt-diff-pos'):''}">
-        ${diff!==null?(diff>=0?'+':'')+(r.priceCur==='CNY'?'¥':'$')+diff:'—'}
-      </td>
-      <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;color:var(--text2);font-size:11px">${r.stage||'—'}</td>
-      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>
-      <td><span style="display:flex;gap:4px;flex-wrap:wrap">
-        ${r.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="qtImportToDoc(\''+r.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
-        <button class="btn btn-xs" style="background:var(--bg2);color:var(--text2)" onclick="qtCopyRowSummary('${r.id}',this)" title="复制报价摘要到剪贴板">📋</button>
-        <button class="btn btn-xs" onclick="qtOpenEdit('${r.id}')">编辑</button>
-        ${(r.priceHistory&&r.priceHistory.length)?'<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="qtOpenEdit(\''+r.id+'\')" title="'+r.priceHistory.length+'次价格变更">📋'+r.priceHistory.length+'</button>':''}
-        ${(()=>{
-          if(!r.project)return'';
-          const linked=state.projects.some(p=>p.linkedQuoteProject===r.project||(p.name||p.client)===r.project);
-          if(!linked)return'';
-          const lastSync=qtQuotes.filter(q=>q.project===r.project&&q.lastSyncedAt).map(q=>q.lastSyncedAt).sort().pop()||'';
-          const latestSnap=qtQuotes.filter(q=>q.project===r.project).flatMap(q=>(q.priceHistory||[])).map(h=>h.savedAt||'').sort().pop()||'';
-          const snapNewer2=lastSync&&latestSnap>lastSync;
-          const curDeal2=qtQuotes.filter(q=>q.project===r.project).map(q=>q.deal||'').pop()||'';
-          const syncedDeal2=qtQuotes.filter(q=>q.project===r.project&&q.lastSyncedDeal!==undefined).map(q=>q.lastSyncedDeal).pop()||'';
-          const curStage2=qtQuotes.filter(q=>q.project===r.project).map(q=>q.stage||'').filter(Boolean).pop()||'';
-          const syncedStage2=qtQuotes.filter(q=>q.project===r.project&&q.lastSyncedStage!==undefined).map(q=>q.lastSyncedStage).pop()||'';
-          const hasUpdate=snapNewer2||(lastSync&&curDeal2!==syncedDeal2)||(lastSync&&curStage2!==syncedStage2);
-          if(hasUpdate)return'<button class="btn btn-xs" style="background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber)" onclick="syncQuoteToProject(\''+r.project+'\')" title="报价有更新，点击同步到项目情况">⚠️ 同步</button>';
-          return'<span class="badge badge-green" style="font-size:10px">📋 已导入</span>';
-        })()}
-        <button class="btn btn-danger btn-xs" onclick="qtDel('${r.id}')">删</button>
-      </span></td>
-    </tr>`;
-  }).join(''):`<tr><td colspan="16" style="text-align:center;padding:24px;color:var(--text2)">没有找到匹配的报价</td></tr>`;
+
+  // ── 同项目折叠分组 ──
+  const projectGroups={};
+  const projectOrder=[];
+  data.forEach(r=>{
+    const proj=r.project||'__no_project__';
+    if(!projectGroups[proj]){projectGroups[proj]=[];projectOrder.push(proj);}
+    projectGroups[proj].push(r);
+  });
+
+  let tbody='';
+  if(!data.length){
+    tbody=`<tr><td colspan="16" style="text-align:center;padding:24px;color:var(--text2)">没有找到匹配的报价</td></tr>`;
+  } else {
+    projectOrder.forEach(proj=>{
+      const rows=projectGroups[proj];
+      if(rows.length===1){
+        // single row — render normally
+        const r=rows[0];
+        const diff=r.p3?r.price-r.p3:null;
+        tbody+=`<tr data-qid="${r.id}" style="transition:background .3s">
+          <td>${dealBadge(r.deal)}</td>
+          <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${r.company||''}">${r.company||'—'}</td>
+          <td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;color:var(--blue-text);font-weight:500">${r.contact||'<span style="color:var(--text3)">—</span>'}</td>
+          <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${r.project||''}"><span style="color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onclick="qtOpenEdit('${r.id}')" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r.project||'—'}</span></td>
+          <td>${r.date||'—'}</td>
+          <td><b>${r.model||'—'}</b></td>
+          <td>${r.cpu||'—'}</td>
+          <td>${r.barbone!=null?'$'+r.barbone:'—'}</td>
+          <td>${r.ram||'—'}</td>
+          <td>${r.ssd||'—'}</td>
+          <td class="qt-price ${r.p3&&r.price<r.p3?'qt-below':''}">${(r.tiers&&r.tiers.length)
+            ? `<span style="font-size:11px;font-weight:600;color:var(--blue-text)">📊 ${r.tiers.map(t=>`${t.qty}台×${t.cur==='CNY'?'¥':'$'}${t.price}`).join(' / ')}</span>`
+            : `${r.priceCur==='CNY'?'¥':'$'}${r.price}`
+          }</td>
+          <td>${r.p3!=null?(r.p3Cur==='CNY'?'¥':'$')+r.p3:'—'}</td>
+          <td class="${diff!==null?(diff<0?'qt-diff-neg':'qt-diff-pos'):''}">
+            ${diff!==null?(diff>=0?'+':'')+(r.priceCur==='CNY'?'¥':'$')+diff:'—'}
+          </td>
+          <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;color:var(--text2);font-size:11px">${r.stage||'—'}</td>
+          <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>
+          <td><span style="display:flex;gap:4px;flex-wrap:wrap">
+            ${r.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="qtImportToDoc(\''+r.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
+            <button class="btn btn-xs" style="background:var(--bg2);color:var(--text2)" onclick="qtCopyRowSummary('${r.id}',this)" title="复制报价摘要到剪贴板">📋</button>
+            <button class="btn btn-xs" onclick="qtOpenEdit('${r.id}')">编辑</button>
+            ${(r.priceHistory&&r.priceHistory.length)?'<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="qtOpenEdit(\''+r.id+'\')" title="'+r.priceHistory.length+'次价格变更">📋'+r.priceHistory.length+'</button>':''}
+            ${(()=>{
+              if(!r.project)return'';
+              const linked=state.projects.some(p=>p.linkedQuoteProject===r.project||(p.name||p.client)===r.project);
+              if(!linked)return'';
+              const lastSync=qtQuotes.filter(q=>q.project===r.project&&q.lastSyncedAt).map(q=>q.lastSyncedAt).sort().pop()||'';
+              const latestSnap=qtQuotes.filter(q=>q.project===r.project).flatMap(q=>(q.priceHistory||[])).map(h=>h.savedAt||'').sort().pop()||'';
+              const snapNewer2=lastSync&&latestSnap>lastSync;
+              const curDeal2=qtQuotes.filter(q=>q.project===r.project).map(q=>q.deal||'').pop()||'';
+              const syncedDeal2=qtQuotes.filter(q=>q.project===r.project&&q.lastSyncedDeal!==undefined).map(q=>q.lastSyncedDeal).pop()||'';
+              const curStage2=qtQuotes.filter(q=>q.project===r.project).map(q=>q.stage||'').filter(Boolean).pop()||'';
+              const syncedStage2=qtQuotes.filter(q=>q.project===r.project&&q.lastSyncedStage!==undefined).map(q=>q.lastSyncedStage).pop()||'';
+              const hasUpdate=snapNewer2||(lastSync&&curDeal2!==syncedDeal2)||(lastSync&&curStage2!==syncedStage2);
+              if(hasUpdate)return'<button class="btn btn-xs" style="background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber)" onclick="syncQuoteToProject(\''+r.project+'\')" title="报价有更新，点击同步到项目情况">⚠️ 同步</button>';
+              return'<span class="badge badge-green" style="font-size:10px">📋 已导入</span>';
+            })()}
+            <button class="btn btn-danger btn-xs" onclick="qtDel('${r.id}')">删</button>
+          </span></td>
+        </tr>`;
+      } else {
+        // multiple rows — group header + collapsible children
+        const gid='qtg_'+Math.random().toString(36).slice(2,8);
+        const r0=rows[0];
+        // representative deal: most prominent status
+        const dealPriority={won:4,confirmed:3,open:2,pause:1,lost:0};
+        const repDeal=rows.reduce((a,b)=>(dealPriority[b.deal]||0)>(dealPriority[a.deal]||0)?b:a,r0).deal;
+        const modelsStr=rows.map(r=>r.model||'—').join(' / ');
+        const hasBelow=rows.some(r=>r.p3&&r.price<r.p3);
+        const priceRange=(()=>{
+          const prices=rows.filter(r=>r.price).map(r=>r.price);
+          if(!prices.length)return'—';
+          const mn=Math.min(...prices),mx=Math.max(...prices);
+          const cur=r0.priceCur==='CNY'?'¥':'$';
+          return mn===mx?`${cur}${mn}`:`${cur}${mn}–${mx}`;
+        })();
+        tbody+=`<tr onclick="(function(){var b=document.getElementById('${gid}');var open=b.style.display==='none';b.style.display=open?'':'none';document.getElementById('${gid}-ic').textContent=open?'▾':'▸';})()" style="cursor:pointer;background:var(--bg2);border-top:2px solid var(--border2)" title="点击展开/折叠该项目的 ${rows.length} 个产品">
+          <td>${dealBadge(repDeal)}</td>
+          <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${r0.company||''}">${r0.company||'—'}</td>
+          <td style="color:var(--blue-text);font-weight:500">${r0.contact||'<span style="color:var(--text3)">—</span>'}</td>
+          <td colspan="2" style="max-width:220px" title="${r0.project||''}">
+            <span id="${gid}-ic" style="font-size:10px;color:var(--text3);margin-right:4px">▸</span>
+            <span style="font-weight:500;color:var(--text)">${r0.project||'—'}</span>
+          </td>
+          <td colspan="5"><span style="font-size:11px;color:var(--text2)">${modelsStr}</span></td>
+          <td class="${hasBelow?'qt-below':''}" style="font-weight:500">${priceRange}</td>
+          <td colspan="2"></td>
+          <td><span class="badge badge-blue" style="font-size:10px">${rows.length} 个产品</span></td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tbody id="${gid}" style="display:none">`;
+        rows.forEach(r=>{
+          const diff=r.p3?r.price-r.p3:null;
+          tbody+=`<tr data-qid="${r.id}" style="transition:background .3s;background:var(--bg)">
+            <td style="padding-left:20px">${dealBadge(r.deal)}</td>
+            <td></td>
+            <td style="color:var(--blue-text);font-size:11px">${r.contact||''}</td>
+            <td></td>
+            <td style="color:var(--text2);font-size:11px">${r.date||'—'}</td>
+            <td><b>${r.model||'—'}</b></td>
+            <td>${r.cpu||'—'}</td>
+            <td>${r.barbone!=null?'$'+r.barbone:'—'}</td>
+            <td>${r.ram||'—'}</td>
+            <td>${r.ssd||'—'}</td>
+            <td class="qt-price ${r.p3&&r.price<r.p3?'qt-below':''}">${(r.tiers&&r.tiers.length)
+              ?`<span style="font-size:11px;font-weight:600;color:var(--blue-text)">📊 ${r.tiers.map(t=>`${t.qty}台×${t.cur==='CNY'?'¥':'$'}${t.price}`).join(' / ')}</span>`
+              :`${r.priceCur==='CNY'?'¥':'$'}${r.price}`
+            }</td>
+            <td>${r.p3!=null?(r.p3Cur==='CNY'?'¥':'$')+r.p3:'—'}</td>
+            <td class="${diff!==null?(diff<0?'qt-diff-neg':'qt-diff-pos'):''}">
+              ${diff!==null?(diff>=0?'+':'')+(r.priceCur==='CNY'?'¥':'$')+diff:'—'}
+            </td>
+            <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;color:var(--text2);font-size:11px">${r.stage||'—'}</td>
+            <td title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>
+            <td><span style="display:flex;gap:4px;flex-wrap:wrap">
+              ${r.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="event.stopPropagation();qtImportToDoc(\''+r.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
+              <button class="btn btn-xs" style="background:var(--bg2);color:var(--text2)" onclick="event.stopPropagation();qtCopyRowSummary('${r.id}',this)">📋</button>
+              <button class="btn btn-xs" onclick="event.stopPropagation();qtOpenEdit('${r.id}')">编辑</button>
+              <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();qtDel('${r.id}')">删</button>
+            </span></td>
+          </tr>`;
+        });
+        tbody+=`</tbody>`;
+      }
+    });
+  }
+
+  document.getElementById('qt-tbody').innerHTML=tbody;
   setTimeout(qtInitResizableCols,0);
   // pagination
   const pg=document.getElementById('qt-pg');
@@ -4312,6 +4491,8 @@ function qtClearFilters(){
   const c=document.getElementById('qt-f-cpu');if(c)c.value='';
   const r=document.getElementById('qt-f-ram');if(r)r.value='';
   const s=document.getElementById('qt-f-ssd');if(s)s.value='';
+  const ds=document.getElementById('qt-f-date-start');if(ds)ds.value='';
+  const de=document.getElementById('qt-f-date-end');if(de)de.value='';
   qtPage=1;qtRender();
 }
 
