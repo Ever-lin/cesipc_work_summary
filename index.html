@@ -956,7 +956,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .qt-search input:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg)}
 .qt-search-ic{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text2);pointer-events:none}
 .qt-tbl-wrap{overflow-x:auto;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg)}
-.qt-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.qt-tbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
 .qt-tbl th{background:var(--bg2);padding:7px 10px;text-align:left;font-weight:500;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border2);white-space:nowrap;cursor:pointer;user-select:none}
 .qt-tbl th:hover{color:var(--text)}
 .qt-tbl td{padding:7px 10px;border-bottom:1px solid var(--border2);white-space:nowrap;font-size:12px;color:var(--text)}
@@ -1031,27 +1031,11 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <span id="qt-result-count" style="font-size:12px;color:var(--text2);white-space:nowrap;display:none"></span>
     <button class="btn btn-primary btn-sm" onclick="qtOpenAdd()">＋ 新增报价</button>
     <button class="btn btn-sm" onclick="qtExportCSV()" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97;white-space:nowrap">📥 导出Excel</button>
+    <button class="btn btn-sm" onclick="qtOpenColSettings()" title="自定义显示列和列宽" style="background:var(--bg2);color:var(--text2);border-color:var(--border)">⚙️ 列设置</button>
   </div>
   <div class="qt-tbl-wrap">
-    <table class="qt-tbl">
-      <thead><tr>
-        <th id="qth-deal" onclick="qtSort('deal')">状态</th>
-        <th id="qth-company" onclick="qtSort('company')">公司</th>
-        <th id="qth-contact" onclick="qtSort('contact')">对接业务</th>
-        <th id="qth-project" onclick="qtSort('project')">项目</th>
-        <th id="qth-date" onclick="qtSort('date')">日期</th>
-        <th id="qth-model" onclick="qtSort('model')">型号</th>
-        <th>CPU</th>
-        <th>准系统</th>
-        <th>RAM</th>
-        <th>SSD</th>
-        <th id="qth-price" onclick="qtSort('price')">报价(P)</th>
-        <th id="qth-p3" onclick="qtSort('p3')">P3</th>
-        <th id="qth-diff" onclick="qtSort('diff')">价差</th>
-        <th>项目进度</th>
-        <th>备注/Custom</th>
-        <th>操作</th>
-      </tr></thead>
+    <table class="qt-tbl" id="qt-main-tbl">
+      <thead><tr id="qt-thead-row"></tr></thead>
       <tbody id="qt-tbody"></tbody>
     </table>
   </div>
@@ -4269,6 +4253,101 @@ function syncQuoteToProject(quoteProjectName){
   renderImportQtList();
 }
 
+// ═══════════════════════════════════════════════════
+// 报价列设置 — 必须在 init() 之前定义
+// ═══════════════════════════════════════════════════
+const QT_COL_SETTINGS_KEY='qt_col_settings_v1';
+const QT_COLS_DEFAULT=[
+  {id:'deal',    label:'状态',        w:90,  vis:true,  sortable:true},
+  {id:'company', label:'公司',        w:120, vis:true,  sortable:true},
+  {id:'contact', label:'对接业务',    w:90,  vis:true,  sortable:true},
+  {id:'project', label:'项目',        w:180, vis:true,  sortable:true},
+  {id:'date',    label:'日期',        w:90,  vis:true,  sortable:true},
+  {id:'model',   label:'型号',        w:110, vis:true,  sortable:true},
+  {id:'cpu',     label:'CPU',         w:90,  vis:true,  sortable:false},
+  {id:'barbone', label:'准系统',      w:70,  vis:false, sortable:false},
+  {id:'ram',     label:'RAM',         w:70,  vis:false, sortable:false},
+  {id:'ssd',     label:'SSD',         w:70,  vis:false, sortable:false},
+  {id:'price',   label:'报价(P)',     w:90,  vis:true,  sortable:true},
+  {id:'p3',      label:'P3',          w:70,  vis:true,  sortable:true},
+  {id:'diff',    label:'价差',        w:70,  vis:true,  sortable:true},
+  {id:'stage',   label:'项目进度',    w:100, vis:true,  sortable:false},
+  {id:'notes',   label:'备注/Custom', w:130, vis:true,  sortable:false},
+  {id:'actions', label:'操作',        w:130, vis:true,  sortable:false},
+];
+
+// Load from localStorage immediately — must happen before init()→qtRender()
+let qtColSettings=(()=>{
+  try{
+    const saved=JSON.parse(localStorage.getItem(QT_COL_SETTINGS_KEY)||'null');
+    if(saved&&Array.isArray(saved)&&saved.length){
+      const savedMap={};saved.forEach(c=>{savedMap[c.id]=c;});
+      const merged=QT_COLS_DEFAULT.map(def=>{
+        const s=savedMap[def.id];
+        return s?{...def,w:s.w??def.w,vis:s.vis??def.vis,order:s.order??def.order}:{...def};
+      });
+      merged.sort((a,b)=>(a.order??999)-(b.order??999));
+      return merged;
+    }
+  }catch(e){}
+  return QT_COLS_DEFAULT.map(c=>({...c}));
+})();
+
+function qtSaveColSettingsToStorage(){
+  qtColSettings.forEach((c,i)=>c.order=i);
+  localStorage.setItem(QT_COL_SETTINGS_KEY,JSON.stringify(qtColSettings));
+}
+function qtBuildThead(){
+  const tr=document.getElementById('qt-thead-row');
+  if(!tr)return;
+  const sortLabels={deal:'状态',company:'公司',contact:'对接业务',project:'项目',date:'日期',model:'型号',price:'报价(P)',p3:'P3',diff:'价差'};
+  tr.innerHTML=qtColSettings.filter(c=>c.vis).map(c=>{
+    const isActive=c.sortable&&qtSortCol===c.id;
+    const arrow=isActive?(qtSortDir>0?'↑':'↓'):'';
+    const label=(sortLabels[c.id]||c.label)+(isActive?` ${arrow}`:'');
+    const cls=isActive?'class="qt-sort-active"':'';
+    return`<th id="qth-${c.id}" data-col="${c.id}" style="width:${c.w}px;min-width:${c.w}px;" ${cls} ${c.sortable?`onclick="qtSort('${c.id}')"`:''} >${label}</th>`;
+  }).join('');
+}
+function qtVisColIds(){return qtColSettings.filter(c=>c.vis).map(c=>c.id);}
+function qtOpenColSettings(){qtRenderColList();document.getElementById('qt-col-modal-bg').style.display='flex';}
+function qtCloseColSettings(){document.getElementById('qt-col-modal-bg').style.display='none';}
+function qtRenderColList(){
+  const list=document.getElementById('qt-col-list');
+  list.innerHTML=qtColSettings.map((c,i)=>`
+    <div class="qt-col-row" data-idx="${i}" draggable="true"
+      style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;user-select:none">
+      <span style="cursor:grab;color:var(--text3);font-size:16px;flex-shrink:0" title="拖动排序">☰</span>
+      <input type="checkbox" ${c.vis?'checked':''} onchange="qtColSettings[${i}].vis=this.checked" style="width:auto;flex-shrink:0">
+      <span style="flex:1;font-size:13px">${c.label}</span>
+      <span style="font-size:11px;color:var(--text2);white-space:nowrap">列宽</span>
+      <input type="number" value="${c.w}" min="40" max="600"
+        onchange="qtColSettings[${i}].w=Math.max(40,parseInt(this.value)||${c.w})"
+        style="width:60px;padding:3px 6px;font-size:12px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text)">
+      <span style="font-size:11px;color:var(--text3)">px</span>
+    </div>`).join('');
+  let dragIdx=null;
+  list.querySelectorAll('.qt-col-row').forEach(row=>{
+    row.addEventListener('dragstart',e=>{dragIdx=parseInt(row.dataset.idx);e.dataTransfer.effectAllowed='move';setTimeout(()=>row.style.opacity='.4',0);});
+    row.addEventListener('dragend',()=>{row.style.opacity='';dragIdx=null;});
+    row.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';});
+    row.addEventListener('drop',e=>{
+      e.preventDefault();const toIdx=parseInt(row.dataset.idx);
+      if(dragIdx===null||dragIdx===toIdx)return;
+      const moved=qtColSettings.splice(dragIdx,1)[0];qtColSettings.splice(toIdx,0,moved);qtRenderColList();
+    });
+  });
+}
+function qtSaveColSettings(){
+  const tbl=document.querySelector('.qt-tbl');
+  if(tbl)tbl.querySelectorAll('thead th[data-col]').forEach(th=>{
+    const col=qtColSettings.find(c=>c.id===th.dataset.col);
+    if(col&&th.offsetWidth>0)col.w=th.offsetWidth;
+  });
+  qtSaveColSettingsToStorage();qtCloseColSettings();qtBuildThead();qtRender();showSaveToast();
+}
+function qtColResetDefaults(){qtColSettings=QT_COLS_DEFAULT.map(c=>({...c}));qtRenderColList();}
+
 init();
 
 // ============================================================
@@ -4375,17 +4454,9 @@ function qtRender(){
       countEl.style.display='none';
     }
   }
-  // ── 排序列高亮 ──
-  const sortableCols=['deal','company','contact','project','date','model','price','p3','diff'];
-  sortableCols.forEach(col=>{
-    const th=document.getElementById('qth-'+col);
-    if(!th)return;
-    const isActive=qtSortCol===col;
-    th.classList.toggle('qt-sort-active',isActive);
-    const arrow=qtSortDir>0?'↑':'↓';
-    const base={deal:'状态',company:'公司',contact:'对接业务',project:'项目',date:'日期',model:'型号',price:'报价(P)',p3:'P3',diff:'价差'}[col]||col;
-    th.textContent=isActive?`${base} ${arrow}`:base;
-  });
+  // ── 动态构建表头 ──
+  qtBuildThead();
+  const visCols=qtVisColIds();
   const dealBadge=d=>d==='won'?'<span class="badge qt-stat-won">✅ 已成交</span>':d==='lost'?'<span class="badge qt-stat-lost">❌ 丢单</span>':d==='open'?'<span class="badge qt-stat-open">⭕ 跟进中</span>':d==='confirmed'?'<span class="badge qt-stat-confirmed">🔶 已确认订单</span>':d==='pause'?'<span class="badge qt-stat-pause">⏸️ 暂无进展</span>':'<span class="badge badge-gray">—</span>';
 
   // ── 同项目折叠分组 ──
@@ -4399,70 +4470,70 @@ function qtRender(){
 
   let tbody='';
   if(!data.length){
-    tbody=`<tr><td colspan="16" style="text-align:center;padding:24px;color:var(--text2)">没有找到匹配的报价</td></tr>`;
+    tbody=`<tr><td colspan="${qtVisColIds().length||16}" style="text-align:center;padding:24px;color:var(--text2)">没有找到匹配的报价</td></tr>`;
   } else {
     projectOrder.forEach(proj=>{
       const rows=projectGroups[proj];
       if(rows.length===1){
-        // single row — render normally
         const r=rows[0];
         const diff=r.p3?r.price-r.p3:null;
-        tbody+=`<tr data-qid="${r.id}" style="transition:background .3s">
-          <td>${dealBadge(r.deal)}</td>
-          <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${r.company||''}">${r.company||'—'}</td>
-          <td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;color:var(--blue-text);font-weight:500">${r.contact||'<span style="color:var(--text3)">—</span>'}</td>
-          <td class="qt-td-wrap" style="max-width:180px" title="${r.project||''}"><span style="color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onclick="qtOpenEdit('${r.id}')" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r.project||'—'}</span></td>
-          <td>${r.date||'—'}</td>
-          <td><b>${r.model||'—'}</b></td>
-          <td>${r.cpu||'—'}</td>
-          <td>${r.barbone!=null?'$'+r.barbone:'—'}</td>
-          <td>${r.ram||'—'}</td>
-          <td>${r.ssd||'—'}</td>
-          <td class="qt-price ${r.p3&&r.price<r.p3?'qt-below':''}">${(r.tiers&&r.tiers.length)
-            ? `<span style="font-size:11px;font-weight:600;color:var(--blue-text)">📊 ${r.tiers.map(t=>`${t.qty}台×${t.cur==='CNY'?'¥':'$'}${t.price}`).join(' / ')}</span>`
-            : `${r.priceCur==='CNY'?'¥':'$'}${r.price}`
-          }</td>
-          <td>${r.p3!=null?(r.p3Cur==='CNY'?'¥':'$')+r.p3:'—'}</td>
-          <td class="${diff!==null?(diff<0?'qt-diff-neg':'qt-diff-pos'):''}">
-            ${diff!==null?(diff>=0?'+':'')+(r.priceCur==='CNY'?'¥':'$')+diff:'—'}
-          </td>
-          <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;color:var(--text2);font-size:11px">${(()=>{
-            const stageTxt=r.stage||'—';
-            const lp=qtGetLinkedProjectStatus(r.project);
-            const statusMap={跟进中:'⭕',确认订单:'🔶',成交:'✅',暂无进展:'⏸️',丢单:'❌'};
-            const icon=lp?(statusMap[lp.status]||''):'';
-            const projStr=lp&&lp.stage?`<div style="margin-top:2px;font-size:10px;color:var(--blue-text);background:var(--blue-bg);border-radius:8px;padding:0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:96px" title="关联项目进度：${lp.stage}">${icon} ${lp.stage}</div>`:'';
-            return`<div title="${stageTxt}" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${stageTxt}</div>${projStr}`;
-          })()}</td>
-          <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>
-          <td><span style="display:flex;gap:4px;flex-wrap:wrap">
-            ${r.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="qtImportToDoc(\''+r.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
-            <button class="btn btn-xs" style="background:var(--bg2);color:var(--text2)" onclick="qtCopyRowSummary('${r.id}',this)" title="复制报价摘要到剪贴板">📋</button>
-            <button class="btn btn-xs" onclick="qtOpenEdit('${r.id}')">编辑</button>
-            ${(r.priceHistory&&r.priceHistory.length)?'<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="qtOpenEdit(\''+r.id+'\')" title="'+r.priceHistory.length+'次价格变更">📋'+r.priceHistory.length+'</button>':''}
-            ${(()=>{
-              if(!r.project)return'';
-              const linked=state.projects.some(p=>p.linkedQuoteProject===r.project||(p.name||p.client)===r.project);
-              if(!linked)return'';
-              const lastSync=qtQuotes.filter(q=>q.project===r.project&&q.lastSyncedAt).map(q=>q.lastSyncedAt).sort().pop()||'';
-              const latestSnap=qtQuotes.filter(q=>q.project===r.project).flatMap(q=>(q.priceHistory||[])).map(h=>h.savedAt||'').sort().pop()||'';
-              const snapNewer2=lastSync&&latestSnap>lastSync;
-              const curDeal2=qtQuotes.filter(q=>q.project===r.project).map(q=>q.deal||'').pop()||'';
-              const syncedDeal2=qtQuotes.filter(q=>q.project===r.project&&q.lastSyncedDeal!==undefined).map(q=>q.lastSyncedDeal).pop()||'';
-              const curStage2=qtQuotes.filter(q=>q.project===r.project).map(q=>q.stage||'').filter(Boolean).pop()||'';
-              const syncedStage2=qtQuotes.filter(q=>q.project===r.project&&q.lastSyncedStage!==undefined).map(q=>q.lastSyncedStage).pop()||'';
-              const hasUpdate=snapNewer2||(lastSync&&curDeal2!==syncedDeal2)||(lastSync&&curStage2!==syncedStage2);
-              if(hasUpdate)return'<button class="btn btn-xs" style="background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber)" onclick="syncQuoteToProject(\''+r.project+'\')" title="报价有更新，点击同步到项目情况">⚠️ 同步</button>';
-              return'<span class="badge badge-green" style="font-size:10px">📋 已导入</span>';
-            })()}
-            <button class="btn btn-danger btn-xs" onclick="qtDel('${r.id}')">删</button>
-          </span></td>
-        </tr>`;
+        // Build td per visible column
+        const tdFor=id=>{
+          switch(id){
+            case 'deal': return`<td>${dealBadge(r.deal)}</td>`;
+            case 'company': return`<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${r.company||''}">${r.company||'—'}</td>`;
+            case 'contact': return`<td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;color:var(--blue-text);font-weight:500">${r.contact||'<span style="color:var(--text3)">—</span>'}</td>`;
+            case 'project': return`<td class="qt-td-wrap" style="max-width:180px" title="${r.project||''}"><span style="color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onclick="qtOpenEdit('${r.id}')" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r.project||'—'}</span></td>`;
+            case 'date': return`<td>${r.date||'—'}</td>`;
+            case 'model': return`<td><b>${r.model||'—'}</b></td>`;
+            case 'cpu': return`<td>${r.cpu||'—'}</td>`;
+            case 'barbone': return`<td>${r.barbone!=null?'$'+r.barbone:'—'}</td>`;
+            case 'ram': return`<td>${r.ram||'—'}</td>`;
+            case 'ssd': return`<td>${r.ssd||'—'}</td>`;
+            case 'price': return`<td class="qt-price ${r.p3&&r.price<r.p3?'qt-below':''}">${(r.tiers&&r.tiers.length)?`<span style="font-size:11px;font-weight:600;color:var(--blue-text)">📊 ${r.tiers.map(t=>`${t.qty}台×${t.cur==='CNY'?'¥':'$'}${t.price}`).join(' / ')}</span>`:`${r.priceCur==='CNY'?'¥':'$'}${r.price}`}</td>`;
+            case 'p3': return`<td>${r.p3!=null?(r.p3Cur==='CNY'?'¥':'$')+r.p3:'—'}</td>`;
+            case 'diff': return`<td class="${diff!==null?(diff<0?'qt-diff-neg':'qt-diff-pos'):''}">${diff!==null?(diff>=0?'+':'')+(r.priceCur==='CNY'?'¥':'$')+diff:'—'}</td>`;
+            case 'stage': {
+              const stageTxt=r.stage||'—';
+              const lp=qtGetLinkedProjectStatus(r.project);
+              const statusMap={跟进中:'⭕',确认订单:'🔶',成交:'✅',暂无进展:'⏸️',丢单:'❌'};
+              const icon=lp?(statusMap[lp.status]||''):'';
+              const projStr=lp&&lp.stage?`<div style="margin-top:2px;font-size:10px;color:var(--blue-text);background:var(--blue-bg);border-radius:8px;padding:0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:96px" title="关联项目进度：${lp.stage}">${icon} ${lp.stage}</div>`:'';
+              return`<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;color:var(--text2);font-size:11px"><div title="${stageTxt}" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${stageTxt}</div>${projStr}</td>`;
+            }
+            case 'notes': return`<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>`;
+            case 'actions': {
+              const linked=r.project&&state.projects.some(p=>p.linkedQuoteProject===r.project||(p.name||p.client)===r.project);
+              const syncBtn=(()=>{
+                if(!linked)return'';
+                const lastSync=qtQuotes.filter(q=>q.project===r.project&&q.lastSyncedAt).map(q=>q.lastSyncedAt).sort().pop()||'';
+                const latestSnap=qtQuotes.filter(q=>q.project===r.project).flatMap(q=>(q.priceHistory||[])).map(h=>h.savedAt||'').sort().pop()||'';
+                const snapNewer=lastSync&&latestSnap>lastSync;
+                const curDeal=qtQuotes.filter(q=>q.project===r.project).map(q=>q.deal||'').pop()||'';
+                const syncedDeal=qtQuotes.filter(q=>q.project===r.project&&q.lastSyncedDeal!==undefined).map(q=>q.lastSyncedDeal).pop()||'';
+                const curStage=qtQuotes.filter(q=>q.project===r.project).map(q=>q.stage||'').filter(Boolean).pop()||'';
+                const syncedStage=qtQuotes.filter(q=>q.project===r.project&&q.lastSyncedStage!==undefined).map(q=>q.lastSyncedStage).pop()||'';
+                if(snapNewer||(lastSync&&curDeal!==syncedDeal)||(lastSync&&curStage!==syncedStage))
+                  return`<button class="btn btn-xs" style="background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber)" onclick="syncQuoteToProject('${r.project}')" title="报价有更新，点击同步到项目情况">⚠️ 同步</button>`;
+                return`<span class="badge badge-green" style="font-size:10px">📋 已导入</span>`;
+              })();
+              return`<td><span style="display:flex;gap:4px;flex-wrap:wrap">
+                ${r.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="qtImportToDoc(\''+r.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
+                <button class="btn btn-xs" style="background:var(--bg2);color:var(--text2)" onclick="qtCopyRowSummary('${r.id}',this)" title="复制报价摘要到剪贴板">📋</button>
+                <button class="btn btn-xs" onclick="qtOpenEdit('${r.id}')">编辑</button>
+                ${(r.priceHistory&&r.priceHistory.length)?'<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="qtOpenEdit(\''+r.id+'\')" title="'+r.priceHistory.length+'次价格变更">📋'+r.priceHistory.length+'</button>':''}
+                ${syncBtn}
+                <button class="btn btn-danger btn-xs" onclick="qtDel('${r.id}')">删</button>
+              </span></td>`;
+            }
+            default: return'<td>—</td>';
+          }
+        };
+        tbody+=`<tr data-qid="${r.id}" style="transition:background .3s">${visCols.map(tdFor).join('')}</tr>`;
       } else {
         // multiple rows — group header + collapsible children
         const gid='qtg_'+Math.random().toString(36).slice(2,8);
         const r0=rows[0];
-        // representative deal: most prominent status
         const dealPriority={won:4,confirmed:3,open:2,pause:1,lost:0};
         const repDeal=rows.reduce((a,b)=>(dealPriority[b.deal]||0)>(dealPriority[a.deal]||0)?b:a,r0).deal;
         const modelsStr=rows.map(r=>r.model||'—').join(' / ');
@@ -4474,60 +4545,55 @@ function qtRender(){
           const cur=r0.priceCur==='CNY'?'¥':'$';
           return mn===mx?`${cur}${mn}`:`${cur}${mn}–${mx}`;
         })();
-        tbody+=`<tr onclick="(function(){var open=document.querySelector('tr[data-group=\\'${gid}\\']').style.display==='none';document.querySelectorAll('tr[data-group=\\'${gid}\\']').forEach(function(r){r.style.display=open?'':'none';});document.getElementById('${gid}-ic').textContent=open?'▾':'▸';})()" style="cursor:pointer;background:var(--bg2);border-top:2px solid var(--border2)" title="点击展开/折叠该项目的 ${rows.length} 个产品">
-          <td>${dealBadge(repDeal)}</td>
-          <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${r0.company||''}">${r0.company||'—'}</td>
-          <td style="color:var(--blue-text);font-weight:500">${r0.contact||'<span style="color:var(--text3)">—</span>'}</td>
-          <td class="qt-td-wrap" style="max-width:220px" title="${r0.project||''}">
-            <span id="${gid}-ic" style="font-size:10px;color:var(--text3);margin-right:4px">▸</span>
-            <span onclick="event.stopPropagation();qtOpenEdit('${r0.id}')" style="font-weight:500;color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r0.project||'—'}</span>
-          </td>
-          <td></td>
-          <td style="font-size:11px;color:var(--text2)">${modelsStr}</td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td class="${hasBelow?'qt-below':''}" style="font-weight:500">${priceRange}</td>
-          <td></td>
-          <td></td>
-          <td><span class="badge badge-blue" style="font-size:10px">${rows.length} 个产品</span></td>
-          <td></td>
-          <td><span style="display:flex;gap:4px;flex-wrap:wrap">
-            ${r0.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="event.stopPropagation();qtImportToDoc(\''+r0.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
-            <button class="btn btn-xs" onclick="event.stopPropagation();qtOpenEdit('${r0.id}')" title="编辑第一个产品">编辑</button>
-          </span></td>
-        </tr>`;
+        // Group header tds
+        const grpTdFor=id=>{
+          switch(id){
+            case 'deal': return`<td>${dealBadge(repDeal)}</td>`;
+            case 'company': return`<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${r0.company||''}">${r0.company||'—'}</td>`;
+            case 'contact': return`<td style="color:var(--blue-text);font-weight:500">${r0.contact||'<span style="color:var(--text3)">—</span>'}</td>`;
+            case 'project': return`<td class="qt-td-wrap" style="max-width:220px" title="${r0.project||''}"><span id="${gid}-ic" style="font-size:10px;color:var(--text3);margin-right:4px">▸</span><span onclick="event.stopPropagation();qtOpenEdit('${r0.id}')" style="font-weight:500;color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r0.project||'—'}</span></td>`;
+            case 'date': return`<td></td>`;
+            case 'model': return`<td style="font-size:11px;color:var(--text2)">${modelsStr}</td>`;
+            case 'price': return`<td class="${hasBelow?'qt-below':''}" style="font-weight:500">${priceRange}</td>`;
+            case 'notes': return`<td><span class="badge badge-blue" style="font-size:10px">${rows.length} 个产品</span></td>`;
+            case 'actions': return`<td><span style="display:flex;gap:4px;flex-wrap:wrap">
+              ${r0.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="event.stopPropagation();qtImportToDoc(\''+r0.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
+              <button class="btn btn-xs" onclick="event.stopPropagation();qtOpenEdit('${r0.id}')" title="编辑第一个产品">编辑</button>
+            </span></td>`;
+            default: return`<td></td>`;
+          }
+        };
+        tbody+=`<tr onclick="(function(){var open=document.querySelector('tr[data-group=\\'${gid}\\']').style.display==='none';document.querySelectorAll('tr[data-group=\\'${gid}\\']').forEach(function(r){r.style.display=open?'':'none';});document.getElementById('${gid}-ic').textContent=open?'▾':'▸';})()" style="cursor:pointer;background:var(--bg2);border-top:2px solid var(--border2)" title="点击展开/折叠该项目的 ${rows.length} 个产品">${visCols.map(grpTdFor).join('')}</tr>`;
+        // Child rows
         rows.forEach(r=>{
           const diff=r.p3?r.price-r.p3:null;
-          tbody+=`<tr data-qid="${r.id}" data-group="${gid}" style="display:none;transition:background .3s;background:var(--bg)">
-            <td style="padding-left:20px">${dealBadge(r.deal)}</td>
-            <td></td>
-            <td style="color:var(--blue-text);font-size:11px">${r.contact||''}</td>
-            <td></td>
-            <td style="color:var(--text2);font-size:11px">${r.date||'—'}</td>
-            <td><b>${r.model||'—'}</b></td>
-            <td>${r.cpu||'—'}</td>
-            <td>${r.barbone!=null?'$'+r.barbone:'—'}</td>
-            <td>${r.ram||'—'}</td>
-            <td>${r.ssd||'—'}</td>
-            <td class="qt-price ${r.p3&&r.price<r.p3?'qt-below':''}">${(r.tiers&&r.tiers.length)
-              ?`<span style="font-size:11px;font-weight:600;color:var(--blue-text)">📊 ${r.tiers.map(t=>`${t.qty}台×${t.cur==='CNY'?'¥':'$'}${t.price}`).join(' / ')}</span>`
-              :`${r.priceCur==='CNY'?'¥':'$'}${r.price}`
-            }</td>
-            <td>${r.p3!=null?(r.p3Cur==='CNY'?'¥':'$')+r.p3:'—'}</td>
-            <td class="${diff!==null?(diff<0?'qt-diff-neg':'qt-diff-pos'):''}">
-              ${diff!==null?(diff>=0?'+':'')+(r.priceCur==='CNY'?'¥':'$')+diff:'—'}
-            </td>
-            <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;color:var(--text2);font-size:11px">${r.stage||'—'}</td>
-            <td title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>
-            <td><span style="display:flex;gap:4px;flex-wrap:wrap">
-              ${r.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="event.stopPropagation();qtImportToDoc(\''+r.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
-              <button class="btn btn-xs" style="background:var(--bg2);color:var(--text2)" onclick="event.stopPropagation();qtCopyRowSummary('${r.id}',this)">📋</button>
-              <button class="btn btn-xs" onclick="event.stopPropagation();qtOpenEdit('${r.id}')">编辑</button>
-              <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();qtDel('${r.id}')">删</button>
-            </span></td>
-          </tr>`;
+          const childTdFor=id=>{
+            switch(id){
+              case 'deal': return`<td style="padding-left:20px">${dealBadge(r.deal)}</td>`;
+              case 'company': return`<td></td>`;
+              case 'contact': return`<td style="color:var(--blue-text);font-size:11px">${r.contact||''}</td>`;
+              case 'project': return`<td></td>`;
+              case 'date': return`<td style="color:var(--text2);font-size:11px">${r.date||'—'}</td>`;
+              case 'model': return`<td><b>${r.model||'—'}</b></td>`;
+              case 'cpu': return`<td>${r.cpu||'—'}</td>`;
+              case 'barbone': return`<td>${r.barbone!=null?'$'+r.barbone:'—'}</td>`;
+              case 'ram': return`<td>${r.ram||'—'}</td>`;
+              case 'ssd': return`<td>${r.ssd||'—'}</td>`;
+              case 'price': return`<td class="qt-price ${r.p3&&r.price<r.p3?'qt-below':''}">${(r.tiers&&r.tiers.length)?`<span style="font-size:11px;font-weight:600;color:var(--blue-text)">📊 ${r.tiers.map(t=>`${t.qty}台×${t.cur==='CNY'?'¥':'$'}${t.price}`).join(' / ')}</span>`:`${r.priceCur==='CNY'?'¥':'$'}${r.price}`}</td>`;
+              case 'p3': return`<td>${r.p3!=null?(r.p3Cur==='CNY'?'¥':'$')+r.p3:'—'}</td>`;
+              case 'diff': return`<td class="${diff!==null?(diff<0?'qt-diff-neg':'qt-diff-pos'):''}">${diff!==null?(diff>=0?'+':'')+(r.priceCur==='CNY'?'¥':'$')+diff:'—'}</td>`;
+              case 'stage': return`<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;color:var(--text2);font-size:11px">${r.stage||'—'}</td>`;
+              case 'notes': return`<td title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>`;
+              case 'actions': return`<td><span style="display:flex;gap:4px;flex-wrap:wrap">
+                ${r.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="event.stopPropagation();qtImportToDoc(\''+r.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
+                <button class="btn btn-xs" style="background:var(--bg2);color:var(--text2)" onclick="event.stopPropagation();qtCopyRowSummary('${r.id}',this)">📋</button>
+                <button class="btn btn-xs" onclick="event.stopPropagation();qtOpenEdit('${r.id}')">编辑</button>
+                <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();qtDel('${r.id}')">删</button>
+              </span></td>`;
+              default: return`<td></td>`;
+            }
+          };
+          tbody+=`<tr data-qid="${r.id}" data-group="${gid}" style="display:none;transition:background .3s;background:var(--bg)">${visCols.map(childTdFor).join('')}</tr>`;
         });
       }
     });
@@ -4597,6 +4663,9 @@ function qtInitResizableCols(){
         resizer.classList.remove('resizing');
         document.removeEventListener('mousemove',onMove);
         document.removeEventListener('mouseup',onUp);
+        // Save width to col settings
+        const col=qtColSettings?qtColSettings.find(c=>c.id===th.dataset.col):null;
+        if(col&&th.offsetWidth>0){col.w=th.offsetWidth;qtSaveColSettingsToStorage&&qtSaveColSettingsToStorage();}
       };
       document.addEventListener('mousemove',onMove);
       document.addEventListener('mouseup',onUp);
@@ -6296,6 +6365,11 @@ function checkBackupWarning(){
 setInterval(autoSnapshotNow, 5*60*1000);
 setInterval(checkBackupWarning, 60*1000);
 setTimeout(()=>{autoSnapshotNow();checkBackupWarning();},2000);
+
+// ═══════════════════════════════════════════════════
+// 报价表格列设置
+// ═══════════════════════════════════════════════════
+// Init on load (settings already loaded eagerly above)
 
 </script>
 
@@ -9029,33 +9103,33 @@ document.addEventListener('keydown',e=>{
 </div>
 
 <script>
-// ── 返回栈 ──
+// ── 返回栈 & 回到顶部 ──
+// 注意：必须用变量赋值覆盖，不能用 function 声明（会被提升导致 _origSwitchTab 拿到自身）
 const _navStack=[];
-const _origSwitchTab=switchTab;
+const _origSwitchTab=switchTab;  // 先捕获原函数引用
 
-// Track whether current call came from a tab-bar click
+// 追踪是否是直接点击 Tab 栏
 let _tabBarClick=false;
 document.querySelectorAll('.tab').forEach(t=>{
   t.addEventListener('mousedown',()=>{_tabBarClick=true;});
 });
 
-function switchTab(name, _fromNav){
+// 用箭头函数赋值覆盖，不会被提升
+switchTab=(name)=>{
   const cur=document.querySelector('.tab.active');
-  const curName=cur?cur.getAttribute('onclick').match(/switchTab\('(\w+)'\)/)?.[1]:null;
+  const curName=cur?(cur.getAttribute('onclick')||'').match(/switchTab\('(\w+)'\)/)?.[1]:null;
   const isDirectClick=_tabBarClick;
   _tabBarClick=false;
-  // Only push to back-stack on programmatic jumps, not direct tab clicks or back-nav
-  if(!_fromNav && !isDirectClick && curName && curName!==name){
+  if(!isDirectClick && curName && curName!==name){
     _navStack.push(curName);
     _showBackBtn(curName);
   }
-  // Clear stack on direct tab-bar clicks
   if(isDirectClick){
     _navStack.length=0;
     _hideBackBtn();
   }
   _origSwitchTab(name);
-}
+};
 
 function navBack(){
   if(!_navStack.length)return;
@@ -9090,6 +9164,25 @@ window.addEventListener('scroll',()=>{
 },{passive:true});
 </script>
 
+
+<!-- ===== 报价列设置弹窗 ===== -->
+<div id="qt-col-modal-bg" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center">
+  <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:94%;max-width:540px;max-height:88vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <span style="font-size:15px;font-weight:600">⚙️ 列设置</span>
+      <button onclick="qtCloseColSettings()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2)">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">勾选要显示的列，可设置列宽（像素），拖动 ☰ 可调整顺序。列宽也可在表格中直接拖拽调整后点「保存」。</div>
+    <div id="qt-col-list" style="display:flex;flex-direction:column;gap:4px"></div>
+    <div style="display:flex;gap:8px;justify-content:space-between;margin-top:16px;padding-top:12px;border-top:1px solid var(--border2)">
+      <button onclick="qtColResetDefaults()" class="btn btn-sm" style="color:var(--text2)">↺ 恢复默认</button>
+      <div style="display:flex;gap:8px">
+        <button onclick="qtCloseColSettings()" class="btn btn-sm">取消</button>
+        <button onclick="qtSaveColSettings()" class="btn btn-primary btn-sm">💾 保存</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div id="save-toast" style="position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-60px);background:#1D9E75;color:#fff;font-size:13px;font-weight:500;padding:7px 18px;border-radius:20px;box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:9999;transition:transform .22s cubic-bezier(.34,1.56,.64,1),opacity .22s;opacity:0;pointer-events:none;white-space:nowrap">✓ 已保存</div>
 
