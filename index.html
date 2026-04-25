@@ -4409,16 +4409,25 @@ function qtRender(){
           <td>${dealBadge(repDeal)}</td>
           <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${r0.company||''}">${r0.company||'—'}</td>
           <td style="color:var(--blue-text);font-weight:500">${r0.contact||'<span style="color:var(--text3)">—</span>'}</td>
-          <td colspan="2" style="max-width:220px" title="${r0.project||''}">
+          <td style="max-width:220px" title="${r0.project||''}">
             <span id="${gid}-ic" style="font-size:10px;color:var(--text3);margin-right:4px">▸</span>
-            <span style="font-weight:500;color:var(--text)">${r0.project||'—'}</span>
+            <span onclick="event.stopPropagation();qtOpenEdit('${r0.id}')" style="font-weight:500;color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r0.project||'—'}</span>
           </td>
-          <td colspan="5"><span style="font-size:11px;color:var(--text2)">${modelsStr}</span></td>
+          <td></td>
+          <td style="font-size:11px;color:var(--text2)">${modelsStr}</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
           <td class="${hasBelow?'qt-below':''}" style="font-weight:500">${priceRange}</td>
-          <td colspan="2"></td>
+          <td></td>
+          <td></td>
           <td><span class="badge badge-blue" style="font-size:10px">${rows.length} 个产品</span></td>
           <td></td>
-          <td></td>
+          <td><span style="display:flex;gap:4px;flex-wrap:wrap">
+            ${r0.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="event.stopPropagation();qtImportToDoc(\''+r0.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
+            <button class="btn btn-xs" onclick="event.stopPropagation();qtOpenEdit('${r0.id}')" title="编辑第一个产品">编辑</button>
+          </span></td>
         </tr>`;
         rows.forEach(r=>{
           const diff=r.p3?r.price-r.p3:null;
