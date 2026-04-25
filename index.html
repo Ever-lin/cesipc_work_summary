@@ -1058,7 +1058,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div class="qt-cc-grid" id="qt-contacts"></div>
   <div class="slabel">低于P3的报价</div>
   <div class="qt-tbl-wrap">
-    <table class="qt-tbl"><thead><tr><th>状态</th><th>公司</th><th>项目</th><th>型号</th><th>报价(P)</th><th>P3</th><th>价差</th></tr></thead>
+    <table class="qt-tbl"><thead><tr><th>状态</th><th>公司</th><th>项目</th><th>型号</th><th>报价(P)</th><th>P3</th><th>价差</th><th></th></tr></thead>
     <tbody id="qt-below-body"></tbody></table>
   </div>
 </div>
@@ -4125,7 +4125,7 @@ function qtRender(){
   const dealBadge=d=>d==='won'?'<span class="badge qt-stat-won">✅ 已成交</span>':d==='lost'?'<span class="badge qt-stat-lost">❌ 丢单</span>':d==='open'?'<span class="badge qt-stat-open">⭕ 跟进中</span>':d==='confirmed'?'<span class="badge qt-stat-confirmed">🔶 已确认订单</span>':d==='pause'?'<span class="badge qt-stat-pause">⏸️ 暂无进展</span>':'<span class="badge badge-gray">—</span>';
   document.getElementById('qt-tbody').innerHTML=data.length?data.map(r=>{
     const diff=r.p3?r.price-r.p3:null;
-    return`<tr>
+    return`<tr data-qid="${r.id}" style="transition:background .3s">
       <td>${dealBadge(r.deal)}</td>
       <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis">${r.company||'—'}</td>
       <td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;color:var(--blue-text);font-weight:500">${r.contact||'<span style="color:var(--text3)">—</span>'}</td>
@@ -5389,16 +5389,24 @@ function qtRenderDash(){
   const companies=[...new Set(qtQuotes.map(q=>q.company).filter(Boolean))];
   const totalProjects=new Set(qtQuotes.map(q=>q.project).filter(Boolean)).size;
   document.getElementById('qt-kpis').innerHTML=[
-    {v:totalProjects,l:'总项目数',c:'var(--blue-text)'},
-    {v:qtQuotes.length,l:'总报价数',c:'var(--blue-text)'},
-    {v:won.length,l:'已成交',c:'var(--green-text)'},
-    {v:confirmed.length,l:'已确认订单',c:'var(--amber-text)'},
-    {v:open_.length,l:'跟进中',c:'var(--blue-text)'},
-    {v:pause.length,l:'暂无进展',c:'var(--gray-text)'},
-    {v:lost.length,l:'已丢单',c:'var(--red-text)'},
+    {v:totalProjects,l:'总项目数',c:'var(--blue-text)',filter:''},
+    {v:qtQuotes.length,l:'总报价数',c:'var(--blue-text)',filter:''},
+    {v:won.length,l:'已成交',c:'var(--green-text)',filter:'won'},
+    {v:confirmed.length,l:'已确认订单',c:'var(--amber-text)',filter:'confirmed'},
+    {v:open_.length,l:'跟进中',c:'var(--blue-text)',filter:'open'},
+    {v:pause.length,l:'暂无进展',c:'var(--gray-text)',filter:'pause'},
+    {v:lost.length,l:'已丢单',c:'var(--red-text)',filter:'lost'},
     {v:companies.length,l:'公司数',c:'var(--text)'},
-    {v:belowP3.length,l:'低于P3',c:'var(--red-text)'},
-  ].map(k=>`<div class="qt-kpi"><div class="qt-kpi-val" style="color:${k.c}">${k.v}</div><div class="qt-kpi-lbl">${k.l}</div></div>`).join('');
+    {v:belowP3.length,l:'低于P3',c:'var(--red-text)',p3f:'below'},
+  ].map(k=>{
+    const clickable=k.filter||k.p3f;
+    const onclickAttr=clickable?`onclick="qtKpiJump('${k.filter||''}','${k.p3f||''}')"` :'';
+    const hoverAttr=clickable?`onmouseenter="this.style.boxShadow='0 0 0 2px var(--blue)';this.style.borderColor='var(--blue)'" onmouseleave="this.style.boxShadow='';this.style.borderColor='var(--border2)'"` :'';
+    return`<div class="qt-kpi" ${onclickAttr} ${hoverAttr} style="transition:all .15s;${clickable?'cursor:pointer;':''}">
+      <div class="qt-kpi-val" style="color:${k.c}">${k.v}</div>
+      <div class="qt-kpi-lbl">${k.l}${clickable?'<span style="font-size:9px;opacity:.5;margin-left:3px">↗</span>':''}</div>
+    </div>`;
+  }).join('');
 
   // 公司卡片 — 可点击，选中后高亮并过滤业务概况
   if(!window.qtDashFilterCo)window.qtDashFilterCo='';
@@ -5574,10 +5582,48 @@ function qtRenderDash(){
       }).join('')
     : `<div style="color:var(--text3);font-size:12px;padding:8px">尚未为报价指定业务，可在编辑报价时填写「对接业务」字段。</div>`;
   const dealBadge=d=>d==='won'?'<span class="badge qt-stat-won">✅ 已成交</span>':d==='lost'?'<span class="badge qt-stat-lost">❌ 丢单</span>':d==='open'?'<span class="badge qt-stat-open">⭕ 跟进中</span>':d==='confirmed'?'<span class="badge qt-stat-confirmed">🔶 已确认订单</span>':d==='pause'?'<span class="badge qt-stat-pause">⏸️ 暂无进展</span>':'<span class="badge badge-gray">—</span>';
-  document.getElementById('qt-below-body').innerHTML=belowP3.length?belowP3.map(r=>`<tr>
+  document.getElementById('qt-below-body').innerHTML=belowP3.length?belowP3.map(r=>`<tr
+    data-qid="${r.id}"
+    onclick="qtKpiJump('','below','${r.id}')"
+    style="cursor:pointer;transition:background .3s"
+    onmouseenter="this.style.background='var(--blue-bg)'"
+    onmouseleave="this.style.background=''">
     <td>${dealBadge(r.deal)}</td><td>${r.company||'—'}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">${r.project||'—'}</td>
     <td><b>${r.model}</b></td><td class="qt-price qt-below">${r.priceCur==='CNY'?'¥':'$'}${r.price}</td><td>${r.p3Cur==='CNY'?'¥':'$'}${r.p3}</td>
-    <td class="qt-diff-neg">${r.price-r.p3}</td></tr>`).join(''):`<tr><td colspan="7" style="text-align:center;padding:18px;color:var(--text2)">✅ 没有低于P3的报价</td></tr>`;
+    <td class="qt-diff-neg">${r.price-r.p3}</td>
+    <td style="color:var(--blue-text);font-size:11px;opacity:.6">↗ 查看</td>
+  </tr>`).join(''):`<tr><td colspan="7" style="text-align:center;padding:18px;color:var(--text2)">✅ 没有低于P3的报价</td></tr>`;
+}
+
+
+// ── KPI 跳转 & 行高亮 ──
+function qtKpiJump(statusFilter, p3Filter, highlightId){
+  // 重置所有筛选
+  const sf=document.getElementById('qt-f-status');
+  const p3f=document.getElementById('qt-f-p3');
+  if(sf)sf.value=statusFilter||'';
+  if(p3f)p3f.value=p3Filter||'';
+  // 清除其他筛选（避免干扰）
+  const co=document.getElementById('qt-f-company');if(co)co.value='';
+  const ct=document.getElementById('qt-f-contact');if(ct)ct.value='';
+  // 切到列表 tab
+  const tabListBtn=document.getElementById('qt-tab-list');
+  if(tabListBtn)tabListBtn.click();
+  else qSwitchView('list',null);
+  qtPage=1;
+  qtRender();
+  // 如果有指定行 ID，滚动并高亮它
+  if(highlightId){
+    setTimeout(()=>qtHighlightRow(highlightId),120);
+  }
+}
+function qtHighlightRow(id){
+  const tr=document.querySelector(`tr[data-qid="${id}"]`);
+  if(!tr)return;
+  tr.scrollIntoView({behavior:'smooth',block:'center'});
+  tr.style.background='var(--blue-bg)';
+  tr.style.outline='2px solid var(--blue)';
+  setTimeout(()=>{tr.style.background='';tr.style.outline='';},1800);
 }
 
 function qtExportCSV(){
