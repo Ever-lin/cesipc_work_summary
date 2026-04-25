@@ -10088,8 +10088,7 @@ function projPickerLabel(q) {
   const statusEmoji = PP_STATUS_LABEL[q.deal] || '';
   const company = q.company || '';
   const project = q.project || '';
-  const qty = q.qty ? ` ${q.qty}台` : '';
-  return `${company} ${statusEmoji} ${project}${qty}`.trim();
+  return `${company} ${statusEmoji} ${project}`.trim();
 }
 
 function projPickerKey(q) {
@@ -10127,11 +10126,10 @@ function renderProjPickerList() {
       const checked = _ppSelected.has(key);
       const statusEmoji = PP_STATUS_LABEL[r.deal] || '';
       const project = r.project || '（无项目名）';
-      const qty = r.qty ? ` · ${r.qty}台` : '';
       html += `<label style="display:flex;align-items:flex-start;gap:10px;padding:9px 16px;cursor:pointer;border-bottom:1px solid var(--border2);transition:background .1s" onmouseover="this.style.background='var(--blue-bg)'" onmouseout="this.style.background=''">
         <input type="checkbox" data-key="${key.replace(/"/g,'&quot;')}" ${checked ? 'checked' : ''} onchange="ppickerToggle(this)" style="width:auto;flex-shrink:0;margin-top:2px;accent-color:var(--blue)">
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;color:var(--text);line-height:1.4;word-break:break-all">${project}${qty}</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.4;word-break:break-all">${project}</div>
           <div style="font-size:11px;color:var(--text2);margin-top:2px">${statusEmoji}</div>
         </div>
       </label>`;
