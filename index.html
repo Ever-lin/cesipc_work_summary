@@ -4478,7 +4478,7 @@ function qtRender(){
           <td>${dealBadge(repDeal)}</td>
           <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${r0.company||''}">${r0.company||'—'}</td>
           <td style="color:var(--blue-text);font-weight:500">${r0.contact||'<span style="color:var(--text3)">—</span>'}</td>
-          <td style="max-width:220px" title="${r0.project||''}">
+          <td class="qt-td-wrap" style="max-width:220px" title="${r0.project||''}">
             <span id="${gid}-ic" style="font-size:10px;color:var(--text3);margin-right:4px">▸</span>
             <span onclick="event.stopPropagation();qtOpenEdit('${r0.id}')" style="font-weight:500;color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r0.project||'—'}</span>
           </td>
