@@ -4804,6 +4804,7 @@ function qtOpenAdd(){
 }
 function qtOpenEdit(id){
   const r=qtQuotes.find(q=>String(q.id)===String(id));if(!r)return;
+  _qtJustSaved=false;
   qtEditId=id;
   document.getElementById('qt-add-product-btn').style.display='';
   // 显示型号+项目
@@ -5004,7 +5005,9 @@ function qtShipLoad(str){
 }
 
 // 安全关闭：新增/编辑模式下有数据时弹确认
+var _qtJustSaved=false; // 保存后点击外部直接关闭，不弹确认
 function qtSafeCloseModal(){
+  if(_qtJustSaved){_qtJustSaved=false;qtCloseModal();return;}
   if(qtFormHasData()){
     var msg=qtEditId!=null?'编辑内容尚未保存，确定要放弃修改并关闭吗？':'表单中已填写了内容，确定要放弃并关闭吗？';
     if(!confirm(msg)) return;
@@ -5939,6 +5942,7 @@ function qtSave(){
   const saveBtn=document.querySelector('#qt-modal-bg .btn-primary');
   const orig=saveBtn.textContent;
   saveBtn.textContent='✅ 已保存';
+  _qtJustSaved=true; // 保存成功后，点击外部直接关闭，不弹"未保存"提示
   setTimeout(()=>{saveBtn.textContent=orig;},1200);
 }
 function qtSaveAndAddProduct(){
@@ -8844,23 +8848,37 @@ function doDocImportFromQuotes(proj, mode, target) {
     const desc = descParts.join(' / ');
 
     const addOneRow = (qty, unitPrice) => {
+      // 解析运费：报价里存的是"1台 $90 / 10台 $120"这种格式，取1台的运费
+      let shippingPerUnit = '';
+      if (it.shipping) {
+        // 先尝试直接解析纯数字
+        const direct = parseFloat(it.shipping);
+        if (!isNaN(direct)) {
+          shippingPerUnit = String(direct);
+        } else {
+          // 取第一段"1台 $XX"里的数字
+          const m = it.shipping.match(/\$?\s*([\d.]+)/);
+          if (m) shippingPerUnit = m[1];
+        }
+      }
       if (mode === 'split') {
         addR(docKey, {
-          pn:  it.model  || '',
+          pn:  [it.model, it.partno].filter(Boolean).join('\n'),
           ds:  desc,
           qty: qty,
           bb:  it.barbone != null ? String(it.barbone) : '',
           ram: it.ramp   != null ? String(it.ramp)    : '',
           ssd: it.ssdp   != null ? String(it.ssdp)    : '',
-          sh:  '',
+          sh:  shippingPerUnit,
           ai:  unitPrice,
         });
       } else {
         addR(docKey, {
-          pn:  it.model  || '',
+          pn:  [it.model, it.partno].filter(Boolean).join('\n'),
           ds:  desc,
           qty: qty,
           cfg: unitPrice,
+          sh:  shippingPerUnit,
         });
       }
     };
@@ -8871,23 +8889,31 @@ function doDocImportFromQuotes(proj, mode, target) {
       tiers.forEach(t => {
         const tierQty = t.qty || it.qty || '1';
         const tierPrice = t.price != null ? String(t.price) : (it.price != null ? String(it.price) : '');
+        // 解析运费（同 addOneRow 逻辑）
+        let shippingPerUnit = '';
+        if (it.shipping) {
+          const direct = parseFloat(it.shipping);
+          if (!isNaN(direct)) { shippingPerUnit = String(direct); }
+          else { const m = it.shipping.match(/\$?\s*([\d.]+)/); if (m) shippingPerUnit = m[1]; }
+        }
         if (mode === 'split') {
           addR(docKey, {
-            pn:  it.model || '',
+            pn:  [it.model, it.partno].filter(Boolean).join('\n'),
             ds:  `[${tierQty}台] ${desc}`.trim(),
             qty: tierQty,
             bb:  it.barbone != null ? String(it.barbone) : '',
             ram: it.ramp   != null ? String(it.ramp)    : '',
             ssd: it.ssdp   != null ? String(it.ssdp)    : '',
-            sh:  '',
+            sh:  shippingPerUnit,
             ai:  tierPrice,
           });
         } else {
           addR(docKey, {
-            pn:  it.model || '',
+            pn:  [it.model, it.partno].filter(Boolean).join('\n'),
             ds:  `[${tierQty}台] ${desc}`.trim(),
             qty: tierQty,
             cfg: tierPrice,
+            sh:  shippingPerUnit,
           });
         }
       });
