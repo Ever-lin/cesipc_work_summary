@@ -1050,17 +1050,6 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
 <!-- DASH VIEW -->
 <div id="qt-view-dash" style="display:none">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:8px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);flex-wrap:wrap">
-    <span style="font-size:12px;color:var(--text2);font-weight:500">💱 汇率折算（USD 基准）</span>
-    <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px;margin:0">
-      1 USD =
-      <input type="number" id="qt-cny-rate" value="7.2" min="1" max="20" step="0.01"
-        style="width:70px;padding:4px 6px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text);text-align:center"
-        oninput="qtRenderDash()">
-      CNY
-    </label>
-    <span style="font-size:11px;color:var(--text3)">· CNY 金额将按此汇率折算为 USD 后加总显示</span>
-  </div>
   <div class="qt-kpi-grid" id="qt-kpis"></div>
   <div class="slabel">公司概况</div>
   <div class="qt-cc-grid" id="qt-ccs"></div>
@@ -2285,16 +2274,25 @@ function renderProjects(){
     const historyRows=hasHistory?allEntriesForCard.map((e,i)=>{
       const sc2=SC[e.status]||{label:e.status};
       const isLatest=i===0;
-      return `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;padding:5px 0;border-bottom:1px solid var(--border2)${isLatest?';background:#F0F7FF;margin:0 -4px;padding-left:4px;padding-right:4px;border-radius:3px':''}">
-        <div style="flex:1;min-width:0">
-          <span style="font-size:11px;color:var(--text2)">${e.recordDate||''}${isLatest?' <b style="color:#185FA5">（最新）</b>':''}</span>
-          <span class="badge badge-gray" style="font-size:10px;margin-left:4px">${sc2.label}</span>
-          ${e.progressStage?`<span class="badge badge-blue" style="font-size:10px;margin-left:2px">${e.progressStage}</span>`:''}
-          ${e.progress?`<div style="font-size:12px;color:var(--text2);margin-top:2px">${e.progress.replace(/\n/g,'<br>')}</div>`:''}
+      return `<div style="border-bottom:1px solid var(--border2);padding:8px ${isLatest?'8':'4'}px${isLatest?';background:#F0F7FF;margin:0 -4px;border-radius:3px':''}">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--text2)">${e.recordDate||''}${isLatest?' <b style="color:#185FA5">（最新）</b>':''}</span>
+            <span class="badge badge-gray" style="font-size:10px">${sc2.label}</span>
+            ${e.progressStage?`<span class="badge badge-blue" style="font-size:10px">${e.progressStage}</span>`:''}
+          </div>
+          <div class="inline-flex" style="flex-shrink:0">
+            <button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="editLatestProgress('${k.replace(/'/g,"\\'")}',${e.id})">编辑</button>
+            <button class="btn btn-danger btn-xs" onclick="delProjectEntry(${e.id},'${k.replace(/'/g,"\\'")}')">删除</button>
+          </div>
         </div>
-        <div class="inline-flex" style="flex-shrink:0">
-          <button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="editLatestProgress('${k.replace(/'/g,"\\'")}',${e.id})">编辑</button>
-          <button class="btn btn-danger btn-xs" onclick="delProjectEntry(${e.id},'${k.replace(/'/g,"\\'")}')">删除</button>
+        <div style="font-size:12px;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);line-height:1.8;color:var(--text2)">
+          <div><b>1. 项目名称：</b>${e.name||''}</div>
+          <div><b>2. 项目进度：</b>${e.progressStage||''}</div>
+          <div><b>3. 项目需求：</b>${(e.requirement||'').replace(/\n/g,'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')}</div>
+          <div><b>4. 项目数量：</b>${e.quantity||''}</div>
+          <div><b>5. 项目报价：</b>${(e.quote||'').replace(/\n/g,'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')}</div>
+          <div style="margin-top:4px"><b>6. 跟进详情：</b>${e.progress?e.progress.replace(/\n/g,'<br>'):'<span style="color:var(--text3);font-style:italic">暂无</span>'}</div>
         </div>
       </div>`;
     }).join(''):'';
@@ -6130,8 +6128,6 @@ function qtSaveAndAddProduct(){
 function qtDel(id){qtQuotes=qtQuotes.filter(q=>String(q.id)!==String(id));qtPersist();qtRender();qtUpdateCompanyFilter();}
 
 function qtRenderDash(){
-  const cnyRate=parseFloat(document.getElementById('qt-cny-rate')?.value)||7.2;
-  const toUSD=q=>(q.price||0)*(q.priceCur==='CNY'?1/cnyRate:1);
   const won=qtQuotes.filter(q=>q.deal==='won');
   const open_=qtQuotes.filter(q=>q.deal==='open');
   const confirmed=qtQuotes.filter(q=>q.deal==='confirmed');
@@ -6141,16 +6137,11 @@ function qtRenderDash(){
   const belowP3=withP3.filter(q=>q.price<q.p3);
   const companies=[...new Set(qtQuotes.map(q=>q.company).filter(Boolean))];
   const totalProjects=new Set(qtQuotes.map(q=>q.project).filter(Boolean)).size;
-  const wonUSD=won.reduce((s,q)=>s+toUSD(q),0);
-  const confirmedUSD=confirmed.reduce((s,q)=>s+toUSD(q),0);
-  const fmtUSD=v=>'$'+Math.round(v).toLocaleString();
   document.getElementById('qt-kpis').innerHTML=[
     {v:totalProjects,l:'总项目数',c:'var(--blue-text)',filter:''},
     {v:qtQuotes.length,l:'总报价数',c:'var(--blue-text)',filter:''},
-    {v:won.length,l:'已成交（单数）',c:'var(--green-text)',filter:'won'},
-    {v:fmtUSD(wonUSD),l:'成交总额(USD)',c:'var(--green-text)',filter:'won'},
+    {v:won.length,l:'已成交',c:'var(--green-text)',filter:'won'},
     {v:confirmed.length,l:'已确认订单',c:'var(--amber-text)',filter:'confirmed'},
-    {v:fmtUSD(confirmedUSD),l:'确认总额(USD)',c:'var(--amber-text)',filter:'confirmed'},
     {v:open_.length,l:'跟进中',c:'var(--blue-text)',filter:'open'},
     {v:pause.length,l:'暂无进展',c:'var(--gray-text)',filter:'pause'},
     {v:lost.length,l:'已丢单',c:'var(--red-text)',filter:'lost'},
