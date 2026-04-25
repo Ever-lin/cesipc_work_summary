@@ -8143,13 +8143,12 @@ function bankRows(){
 }
 function p$(v){return v?'$'+parseFloat(v).toFixed(2):'';}
 
-// 将 description HTML 按 <br> 分段，每段单独 nowrap
-// 只有模板里手动加的 <br> 才产生换行，列宽不足时内容超出列而不自动折行
+// 将 description HTML 按 <br> 分段，每段单独一行
+// 手动 <br> 产生换行，列宽不足时每段内自然折行（不撑破表格）
 function _nowrapLines(html){
   if(!html)return'';
-  // 按 <br> 切分，每段各自 nowrap
   const segs = html.split(/<br\s*\/?>/gi);
-  return segs.map(s=>`<span style="white-space:nowrap;display:block;">${s||'&nbsp;'}</span>`).join('');
+  return segs.map(s=>`<div style="white-space:normal;word-break:break-word;line-height:1.4;">${s||'&nbsp;'}</div>`).join('');
 }
 // Part No：型号第一行、料号第二行，各自 nowrap
 function _pnNowrap(pn){
