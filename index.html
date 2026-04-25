@@ -5487,10 +5487,49 @@ function qtRenderDash(){
           const rows=pqs.map(q=>{
             const parts=(q.project||'').split('_');
             const label=parts.slice(1,3).join(' ')||q.project;
-            return`<div style="display:flex;align-items:center;gap:5px;padding:3px 6px;border-radius:4px;background:var(--bg2);margin:2px 0">
+            // 查找对应的项目情况记录
+            const linkedProj=state.projects.filter(p=>p.linkedQuoteProject===q.project||(p.name||p.client)===q.project).sort((a,b)=>b.id-a.id)[0];
+            // 构建悬浮 tooltip 内容
+            const dealLabel={'won':'✅ 已成交','open':'⭕ 跟进中','confirmed':'🔶 已确认订单','lost':'❌ 丢单','pause':'⏸️ 暂无进展'}[q.deal]||q.deal||'—';
+            let tooltipLines=[
+              '📁 '+(q.project||'—'),
+              '📅 报价日期：'+(q.date||'—'),
+              '🏢 公司：'+(q.company||'—'),
+              '📌 状态：'+dealLabel,
+            ];
+            if(q.stage)tooltipLines.push('📊 进度：'+q.stage);
+            if(q.model)tooltipLines.push('🖥️ 型号：'+q.model);
+            if(q.cpu)tooltipLines.push('💻 CPU：'+q.cpu);
+            if(q.ram)tooltipLines.push('💾 RAM：'+q.ram);
+            if(q.ssd)tooltipLines.push('💿 SSD：'+q.ssd);
+            if(q.price!=null)tooltipLines.push('💰 报价：'+(q.priceCur==='CNY'?'¥':'$')+q.price);
+            if(q.custom)tooltipLines.push('⚙️ 定制：'+q.custom);
+            if(q.notes)tooltipLines.push('📝 备注：'+q.notes);
+            if(linkedProj){
+              tooltipLines.push('─────────── 项目情况 ───────────');
+              if(linkedProj.progressStage)tooltipLines.push('🚦 项目进度：'+linkedProj.progressStage);
+              if(linkedProj.requirement)tooltipLines.push('📋 需求：'+linkedProj.requirement.slice(0,80)+(linkedProj.requirement.length>80?'…':''));
+              if(linkedProj.quantity)tooltipLines.push('📦 数量：'+linkedProj.quantity);
+              if(linkedProj.actionContent)tooltipLines.push('🎯 推进计划：'+linkedProj.actionContent.slice(0,60)+(linkedProj.actionContent.length>60?'…':''));
+              if(linkedProj.progress)tooltipLines.push('📈 最新进展：'+linkedProj.progress.slice(0,80)+(linkedProj.progress.length>80?'…':''));
+              tooltipLines.push('👉 点击跳转查看完整项目情况');
+            } else {
+              tooltipLines.push('⚠️ 未找到关联的项目情况记录');
+              tooltipLines.push('👉 点击跳转到项目情况页面');
+            }
+            const tooltipText=tooltipLines.join('\n');
+            // 点击跳转逻辑：设置高亮 key 后切换到项目情况 tab
+            const projKey=linkedProj?(linkedProj.name||linkedProj.client):q.project;
+            const onclickFn=`(function(){_projHighlight=${JSON.stringify(projKey)};switchTab('projects');setTimeout(function(){renderProjects();},50);})()`;
+            return`<div onclick="${onclickFn.replace(/"/g,'&quot;')}"
+              title="${tooltipText.replace(/"/g,'&quot;').replace(/\n/g,'&#10;')}"
+              style="display:flex;align-items:center;gap:5px;padding:3px 6px;border-radius:4px;background:var(--bg2);margin:2px 0;cursor:pointer;transition:background .15s"
+              onmouseenter="this.style.background='var(--blue-bg)'"
+              onmouseleave="this.style.background='var(--bg2)'">
               <span style="font-size:11px;flex-shrink:0;color:${dealColor(q.deal)}">${dealIcon(q.deal)}</span>
-              <span style="font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)" title="${q.project||''}">${label}</span>
+              <span style="font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)">${label}</span>
               <span style="font-size:10px;color:var(--text3);flex-shrink:0">${(q.date||'').slice(2,10)}</span>
+              <span style="font-size:10px;color:var(--blue-text);flex-shrink:0;opacity:.6">↗</span>
             </div>`;
           }).join('');
 
