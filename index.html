@@ -6294,7 +6294,7 @@ function qtSave(){
     qtEditId=String(obj.id);
     document.getElementById('qt-modal-title').textContent='编辑报价';
   }
-  // 同步项目级公共字段到同项目其他所有产品
+  // 同步项目名称、公司、对接业务到同项目其他所有产品（其余字段各产品独立）
   const syncProject=obj.project;
   if(syncProject){
     qtQuotes.forEach(q=>{
@@ -6302,10 +6302,6 @@ function qtSave(){
         q.project=obj.project;
         q.company=obj.company;
         q.contact=obj.contact;
-        q.date=obj.date;
-        q.deal=obj.deal;
-        q.stage=obj.stage;
-        q.notes=obj.notes;
       }
     });
   }
