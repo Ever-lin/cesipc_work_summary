@@ -4720,7 +4720,7 @@ function qtRender(){
         // Group header tds
         const grpTdFor=id=>{
           switch(id){
-            case 'deal': return`<td style="border-left:3px solid #3B82F6">${dealBadge(repDeal)}</td>`;
+            case 'deal': return`<td style="border-right:3px solid #3B82F6">${dealBadge(repDeal)}</td>`;
             case 'company': return`<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${r0.company||''}">${r0.company||'—'}</td>`;
             case 'contact': return`<td style="color:var(--blue-text);font-weight:500">${r0.contact||'<span style="color:var(--text3)">—</span>'}</td>`;
             case 'project': return`<td class="qt-td-wrap" style="max-width:220px" title="${r0.project||''}"><span id="${gid}-ic" style="font-size:10px;color:var(--text3);margin-right:4px">▸</span><span onclick="event.stopPropagation();qtOpenEdit('${r0.id}')" style="font-weight:500;color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r0.project||'—'}</span></td>`;
@@ -6649,7 +6649,7 @@ function renderClients(){
       const badge=latest.deal?`<span style="font-size:10px;background:${dealBg[latest.deal]};color:${dealColor[latest.deal]};border-radius:8px;padding:1px 6px">${dealBadge_[latest.deal]||latest.deal}</span>`:'';
       const projSafe=proj.replace(/'/g,"\\'");
       return`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--border2);font-size:12px">
-        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${proj}">${proj}</span>
+        <span onclick="(function(){_projHighlight=${JSON.stringify(proj)};switchTab('projects');setTimeout(()=>{renderProjects();},50);})()" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;color:var(--blue-text);text-decoration:underline;text-underline-offset:2px" title="点击跳转项目情况：${proj}">${proj}</span>
         ${badge}
         <span style="color:var(--text2);font-size:11px;white-space:nowrap">${qs.length}条报价</span>
         <button onclick="switchTab('quotes');setTimeout(()=>{document.getElementById('qt-search').value='${projSafe}';qtPage=1;qtRender();},80)" style="border:none;background:var(--blue-bg);color:var(--blue-text);border-radius:3px;font-size:10px;padding:1px 6px;cursor:pointer;flex-shrink:0">查看</button>
@@ -6658,7 +6658,7 @@ function renderClients(){
 
     // Perf rows sorted newest first, show up to 5
     const perfHtml=cd.perfs.length
-      ?cd.perfs.slice().sort((a,b)=>(b.calYear||0)-(a.calYear||0)||(b.month||0)-(a.month||0)).slice(0,5)
+      ?cd.perfs.slice().sort((a,b)=>(b.calYear||0)-(a.calYear||0)||(b.month||0)-(a.month||0))
         .map(p=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;border-bottom:1px solid var(--border2)">
           <span style="color:var(--text2)">${p.calYear||''}年${p.month||''}月 ${p.week||''}</span>
           <span style="font-weight:500;color:var(--blue-text)">¥${(p.amount||0).toLocaleString('zh-CN')}</span>
@@ -6690,7 +6690,7 @@ function renderClients(){
         </div>
       </div>
       ${cd.perfs.length?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border2)">
-        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">📊 业绩记录${yearLabel}（最近5条）</div>
+        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">📊 业绩记录${yearLabel}</div>
         ${perfHtml}
       </div>`:''}
     </div>`;
@@ -7743,8 +7743,8 @@ function addR(t, prefill){
 
     if(isSplit){
       tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc[t]}</td>
-        <td><textarea placeholder="EPC-S1092A&#10;料号" style="width:90px;min-height:28px;resize:vertical;font-size:11px;padding:4px 5px;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--c-text);font-family:inherit;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.pn||''}</textarea></td>
-        <td style="padding:0;position:relative;min-width:420px;width:420px;"><div contenteditable="true" style="min-width:420px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;white-space:pre-wrap;word-break:break-word;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds!=null&&p.ds!==''?p.ds:DEFAULT_DESC}</div><button onclick="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
+        <td><textarea placeholder="EPC-S1092A&#10;料号" style="width:90px;min-height:28px;resize:vertical;font-size:11px;padding:4px 5px;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--c-text);font-family:inherit;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();document.execCommand('insertLineBreak');}">${p.pn||''}</textarea></td>
+        <td style="padding:0;position:relative;min-width:420px;width:420px;"><div contenteditable="true" style="min-width:420px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;white-space:pre-wrap;word-break:break-word;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();document.execCommand('insertLineBreak');}">${p.ds!=null&&p.ds!==''?p.ds:DEFAULT_DESC}</div><button onclick="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
         <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
         <td><input type="number" value="${p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:70px;text-align:right;" oninput="calcAI(this);${cf}()"/></td>
         <td><input type="number" value="${p.ram||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;" oninput="calcAI(this);${cf}()"/></td>
@@ -7756,8 +7756,8 @@ function addR(t, prefill){
     } else {
       // simple mode: # | PartNo | Desc | Qty | UnitPrice | Shipping | All-Incl | GrandTotal | ✕
       tr.innerHTML=`<td style="color:#8899AA;text-align:center;">${rc[t]}</td>
-        <td><textarea placeholder="EPC-S1092A&#10;料号" style="width:90px;min-height:28px;resize:vertical;font-size:11px;padding:4px 5px;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--c-text);font-family:inherit;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.pn||''}</textarea></td>
-        <td style="padding:0;position:relative;min-width:420px;width:420px;"><div contenteditable="true" style="min-width:420px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;white-space:pre-wrap;word-break:break-word;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'">${p.ds!=null&&p.ds!==''?p.ds:DEFAULT_DESC}</div><button onclick="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
+        <td><textarea placeholder="EPC-S1092A&#10;料号" style="width:90px;min-height:28px;resize:vertical;font-size:11px;padding:4px 5px;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--c-text);font-family:inherit;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();document.execCommand('insertLineBreak');}">${p.pn||''}</textarea></td>
+        <td style="padding:0;position:relative;min-width:420px;width:420px;"><div contenteditable="true" style="min-width:420px;width:100%;font-size:11px;padding:6px 22px 6px 5px;outline:none;border:1px solid transparent;border-radius:5px;min-height:28px;white-space:pre-wrap;word-break:break-word;" onfocus="this.style.borderColor='#2E75B6';this.style.background='var(--c-surface2)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();document.execCommand('insertLineBreak');}">${p.ds!=null&&p.ds!==''?p.ds:DEFAULT_DESC}</div><button onclick="openDescTpl(this)" title="Description 模板" style="position:absolute;top:3px;right:3px;background:rgba(26,60,94,.12);border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 4px;color:#1A3C5E;line-height:1.4;">📋</button></td>
         <td><input type="number" value="${p.qty||0}" min="0" style="width:42px;" oninput="${cf}()"/></td>
         <td><input type="number" value="${p.cfg||p.ai||p.bb||''}" min="0" step="0.01" placeholder="0.00" style="width:95px;text-align:right;" oninput="calcSimpleAI(this);${cf}()" title="Unit Price (Configured System)"/></td>
         <td><input type="number" value="${p.simpleSh||p.sh||''}" min="0" step="0.01" placeholder="0.00" style="width:60px;text-align:right;" oninput="calcSimpleAI(this);${cf}()" title="Shipping per unit"/></td>
