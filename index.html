@@ -328,8 +328,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     text-align: center; color: #fff; }
   .sig-h.navy { background: #1A3C5E; }
   .sig-h.blue { background: #2E75B6; }
-  .sig-b { background: #FAFCFF; font-size: 7pt; padding: 16pt 5pt 5pt;
-    text-align: center; border: 0.5pt solid #E0E8F0; }
+  .sig-b { background: #FAFCFF; font-size: 7pt; padding: 5pt;
+    text-align: center; border: 0.5pt solid #E0E8F0;
+    min-height: 54pt; display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start; gap: 4pt; }
   .sig-b.a { color: #AABBCC; }
   .sig-b.b { color: #9E9E9E; }
   .sig + .sig .sig-h, .sig + .sig .sig-b { margin-left: 2pt; }
@@ -6433,6 +6435,11 @@ setTimeout(()=>{autoSnapshotNow();checkBackupWarning();},2000);
     <div class="fg"><label>文件日期</label><input type="date" id="docDate" oninput="autoValidUntil()"/></div>
     <div class="fg"><label>有效期（报价单，自动+7天）</label><input type="date" id="validUntil"/></div>
     <div class="fg"><label>货币</label><select id="currency"><option>USD</option><option>EUR</option><option>CNY</option></select></div>
+    <div style="background:rgba(46,117,182,.08);border:1px solid rgba(46,117,182,.22);border-radius:6px;padding:8px 10px;margin-top:4px;">
+      <div style="font-size:10px;font-weight:600;color:#2E75B6;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">📄 PI 专用 — 客户 PO 信息</div>
+      <div class="fg"><label>客户 PO No.（手动填写）</label><input type="text" id="piPoNo" placeholder="e.g. PO-2026-001" style="background:#fff;"/></div>
+      <div class="fg"><label>客户 PO Date（手动填写）</label><input type="date" id="piPoDate" style="background:#fff;"/></div>
+    </div>
   </div>
   <div style="display:flex;gap:6px;flex-wrap:wrap;">
     <button class="btn btn-p" style="flex:1;" onclick="saveDocState()">💾 保存单据</button>
@@ -7819,8 +7826,8 @@ function sigs(navy=true){
   const cls=navy?'navy':'blue';
   const stamp=getStampHtml();
   return`<div class="sigs">
-    <div class="sig"><div class="sig-h ${cls}">AUTHORIZED SIGNATURE</div><div class="sig-b ${navy?'a':'b'}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">Company Stamp &amp; Authorized Signature${stamp}</div></div>
-    <div class="sig"><div class="sig-h ${cls}">CUSTOMER ACCEPTANCE</div><div class="sig-b ${navy?'a':'b'}">Company Stamp &amp; Authorized Signature</div></div>
+    <div class="sig"><div class="sig-h ${cls}">AUTHORIZED SIGNATURE</div><div class="sig-b ${navy?'a':'b'}"><span style="color:${navy?'#AABBCC':'#9E9E9E'}">Company Stamp &amp; Authorized Signature</span>${stamp}</div></div>
+    <div class="sig"><div class="sig-h ${cls}">CUSTOMER ACCEPTANCE</div><div class="sig-b ${navy?'a':'b'}"><span style="color:${navy?'#AABBCC':'#9E9E9E'}">Company Stamp &amp; Authorized Signature</span></div></div>
   </div>`;
 }
 
@@ -7894,7 +7901,7 @@ function buildPI(){
     </div>
     <div class="xhdr-addr-row">
       <div class="xhdr-addr">${g('sAddr').replace(/\n/g,'<br>')}<br>Contact Person: ${g('sCt')}<br>Tel: ${g('sTel')}<br>Email: ${g('sEmail')}<br>Web: ${g('sWeb')}</div>
-      <div class="xhdr-meta"><table class="meta-t">${metaRows([['PI No.',no],['Date',dt],['PO No.',no],['Date',dt],['Currency',c],['Prepared By',g('sCt')]])}</table></div>
+      <div class="xhdr-meta"><table class="meta-t">${metaRows([['PI No.',no],['Date',dt],['PO No.',g('piPoNo')||'—'],['PO Date',g('piPoDate')?fd(g('piPoDate')):'—'],['Currency',c],['Prepared By',g('sCt')]])}</table></div>
     </div>
   </div>
   <div class="parties">
@@ -7944,7 +7951,7 @@ function buildCI(){
     </div>
     <div class="xhdr-addr-row">
       <div class="xhdr-addr">${g('sAddr').replace(/\n/g,'<br>')}<br>Contact Person: ${g('sCt')}<br>Tel: ${g('sTel')}<br>Email: ${g('sEmail')}<br>Web: ${g('sWeb')}</div>
-      <div class="xhdr-meta"><table class="meta-t">${metaRows([['Invoice No.',no],['Date',dt],['PO No.',no],['Date',dt],['Currency',c],['Prepared By',g('sCt')]])}</table></div>
+      <div class="xhdr-meta"><table class="meta-t">${metaRows([['Invoice No.',no],['Date',dt],['PO No.',g('piPoNo')||'—'],['PO Date',g('piPoDate')?fd(g('piPoDate')):'—'],['Currency',c],['Prepared By',g('sCt')]])}</table></div>
     </div>
   </div>
   <div class="parties">
@@ -8174,12 +8181,16 @@ function captureRows(t) {
   return [];
 }
 
+// Track the id of the document currently loaded for editing
+let _currentDocId = null;
+
 function saveDocState() {
   const proj = (document.getElementById('docProject')?.value || '').trim();
   if (!proj) { alert('请先填写「项目名称」再保存。'); return; }
 
   // Collect all field values
   const fields = ['docNo','docDate','validUntil','currency',
+    'piPoNo','piPoDate',
     'sCo','sAddr','sCt','sTel','sEmail','sWeb',
     'bCo','bAddr','bCt','bTel','bEmail',
     'tradeTerm','payTerm','leadTime','warranty',
@@ -8223,12 +8234,16 @@ function saveDocState() {
 
   try {
     const docs = getAllDocs();
-    const idx = docs.findIndex(d => d.proj === proj);
+    // If we have a loaded doc id, always overwrite that exact record first
+    let idx = _currentDocId != null ? docs.findIndex(d => d.id === _currentDocId) : -1;
+    // Fallback: match by project name
+    if (idx < 0) idx = docs.findIndex(d => d.proj === proj);
     if (idx >= 0) {
       doc.id = docs[idx].id;
       docs[idx] = doc;
     } else {
       doc.id = Date.now();
+      _currentDocId = doc.id;
       docs.unshift(doc);
     }
     persistDocs(docs);
@@ -8243,6 +8258,9 @@ function loadDocState(id) {
   const docs = getAllDocs();
   const doc = docs.find(d => String(d.id) === String(id));
   if (!doc) { alert('未找到该记录，id=' + id); return; }
+
+  // Remember which doc we're editing so save overwrites the exact same record
+  _currentDocId = doc.id;
 
   // Restore fields
   Object.entries(doc.fields || {}).forEach(([fid, val]) => {
