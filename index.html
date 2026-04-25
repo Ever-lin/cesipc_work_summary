@@ -9016,7 +9016,81 @@ document.addEventListener('keydown',e=>{
   </div>
 </div>
 
-<!-- ✓ 已保存 flash toast -->
+<!-- ===== 返回 & 回到顶部 悬浮按钮 ===== -->
+<div id="float-btns" style="position:fixed;bottom:56px;right:16px;z-index:7000;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none">
+  <!-- 返回按钮：跳转后出现 -->
+  <button id="float-back" onclick="navBack()" style="pointer-events:auto;display:none;align-items:center;gap:5px;padding:7px 13px;border-radius:20px;border:none;background:var(--blue);color:#fff;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 2px 10px rgba(24,95,165,.35);transition:opacity .2s,transform .2s;white-space:nowrap">
+    ◀ 返回
+  </button>
+  <!-- 回到顶部按钮：滚动后出现 -->
+  <button id="float-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="pointer-events:auto;display:none;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:none;background:var(--bg);color:var(--text2);font-size:16px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.12);border:1px solid var(--border2);transition:opacity .2s,transform .2s">
+    ↑
+  </button>
+</div>
+
+<script>
+// ── 返回栈 ──
+const _navStack=[];
+const _origSwitchTab=switchTab;
+
+// Track whether current call came from a tab-bar click
+let _tabBarClick=false;
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('mousedown',()=>{_tabBarClick=true;});
+});
+
+function switchTab(name, _fromNav){
+  const cur=document.querySelector('.tab.active');
+  const curName=cur?cur.getAttribute('onclick').match(/switchTab\('(\w+)'\)/)?.[1]:null;
+  const isDirectClick=_tabBarClick;
+  _tabBarClick=false;
+  // Only push to back-stack on programmatic jumps, not direct tab clicks or back-nav
+  if(!_fromNav && !isDirectClick && curName && curName!==name){
+    _navStack.push(curName);
+    _showBackBtn(curName);
+  }
+  // Clear stack on direct tab-bar clicks
+  if(isDirectClick){
+    _navStack.length=0;
+    _hideBackBtn();
+  }
+  _origSwitchTab(name);
+}
+
+function navBack(){
+  if(!_navStack.length)return;
+  const prev=_navStack.pop();
+  _origSwitchTab(prev);
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(_navStack.length){
+    _showBackBtn(_navStack[_navStack.length-1]);
+  } else {
+    _hideBackBtn();
+  }
+}
+
+const _tabLabel={'quotes':'💰 报价管理','projects':'项目情况','cesipc':'📄 单据生成','performance':'业绩&回款','targets':'目标设定','export':'导出报告','clients':'👤 客户档案'};
+
+function _showBackBtn(tabName){
+  const btn=document.getElementById('float-back');
+  if(!btn)return;
+  btn.textContent='◀ 返回 '+(_tabLabel[tabName]||tabName);
+  btn.style.display='flex';
+}
+function _hideBackBtn(){
+  const btn=document.getElementById('float-back');
+  if(btn)btn.style.display='none';
+}
+
+// ── 回到顶部 ──
+window.addEventListener('scroll',()=>{
+  const btn=document.getElementById('float-top');
+  if(!btn)return;
+  btn.style.display=window.scrollY>200?'flex':'none';
+},{passive:true});
+</script>
+
+
 <div id="save-toast" style="position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-60px);background:#1D9E75;color:#fff;font-size:13px;font-weight:500;padding:7px 18px;border-radius:20px;box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:9999;transition:transform .22s cubic-bezier(.34,1.56,.64,1),opacity .22s;opacity:0;pointer-events:none;white-space:nowrap">✓ 已保存</div>
 
 </body>
