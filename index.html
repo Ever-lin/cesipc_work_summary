@@ -10066,18 +10066,43 @@ function closeProjPicker() {
   document.getElementById('proj-picker-bg').style.display = 'none';
 }
 
+// 中文status → 英文deal key 映射
+const PROJ_STATUS_TO_DEAL = {
+  '跟进中':'open', '确认订单':'confirmed', '成交':'won', '暂无进展':'pause', '丢单':'lost'
+};
+
 function getProjPickerItems() {
   const cfg = PP_MODES[_ppMode];
   const allowedStatuses = new Set(cfg.statuses);
-
-  // Deduplicate by project name (keep one entry per project — the one with the highest qty or latest date)
   const projMap = {};
+
+  // 1. 读取报价管理（qtQuotes）
   (typeof qtQuotes !== 'undefined' ? qtQuotes : []).forEach(q => {
     const deal = q.deal || '';
     if (!allowedStatuses.has(deal)) return;
     const key = (q.company || '') + '||' + (q.project || '');
     if (!projMap[key] || (q.qty || 0) > (projMap[key].qty || 0)) {
-      projMap[key] = q;
+      projMap[key] = { _src:'qt', company: q.company||'', project: q.project||'', deal };
+    }
+  });
+
+  // 2. 读取项目管理（state.projects）— 取每个项目最新一条记录
+  const grouped = {};
+  (state.projects || []).forEach(p => {
+    const k = p.name || p.client || '';
+    if (!grouped[k]) grouped[k] = [];
+    grouped[k].push(p);
+  });
+  Object.keys(grouped).forEach(k => {
+    const latest = grouped[k].sort((a,b) => b.id - a.id)[0];
+    const deal = PROJ_STATUS_TO_DEAL[latest.status] || '';
+    if (!allowedStatuses.has(deal)) return;
+    const company = latest.client || '';
+    const project = latest.name || latest.client || '';
+    const key = company + '||' + project;
+    // 项目管理优先（有更完整的中文名），但若报价管理已有同key则不覆盖
+    if (!projMap[key]) {
+      projMap[key] = { _src:'proj', company, project, deal };
     }
   });
 
