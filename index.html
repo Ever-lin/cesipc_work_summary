@@ -712,7 +712,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
         <div class="slabel">下周目标</div>
         <div class="field">
-          <label>1. 业绩目标</label>
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>1. 业绩目标</span>
+            <button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:#B3D4F5" onclick="openProjPicker('w-target-perf-detail','perf')">📋 选择项目导入</button>
+          </label>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             <span style="font-size:13px;color:var(--text2);white-space:nowrap">业绩目标：</span>
             <input id="w-target-perf-total" placeholder="如：20W" style="width:120px">
@@ -720,7 +723,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <textarea id="w-target-perf-detail" class="auto-resize" placeholder="客户名字：xxW，项目名称&#10;如：Orange Ltd：5W，Orange_项目A&#10;Master Power：3W，Master_项目B"></textarea>
         </div>
         <div class="field">
-          <label>2. 回款目标</label>
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>2. 回款目标</span>
+            <button class="btn btn-xs" style="background:var(--teal-bg);color:var(--teal-text);border-color:#A8DFD0" onclick="openProjPicker('w-target-collect-detail','collect')">📋 选择项目导入</button>
+          </label>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             <span style="font-size:13px;color:var(--text2);white-space:nowrap">回款目标：</span>
             <input id="w-target-collect-total" placeholder="如：30W" style="width:120px">
@@ -728,7 +734,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <textarea id="w-target-collect-detail" class="auto-resize" placeholder="客户名字：xxW&#10;如：Orange Ltd：10W&#10;Master Power：5W"></textarea>
         </div>
         <div class="field">
-          <label>3. 新成交</label>
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>3. 新成交</span>
+            <button class="btn btn-xs" style="background:var(--amber-bg);color:var(--amber-text);border-color:#F5D59A" onclick="openProjPicker('w-target-deal-detail','deal')">📋 选择项目导入</button>
+          </label>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             <span style="font-size:13px;color:var(--text2);white-space:nowrap">新成交：</span>
             <input id="w-target-deal-total" placeholder="如：2个" style="width:120px">
@@ -806,7 +815,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
         <div class="slabel">下月目标</div>
         <div class="field">
-          <label>1. 业绩目标</label>
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>1. 业绩目标</span>
+            <button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:#B3D4F5" onclick="openProjPicker('wm-target-perf-detail','perf')">📋 选择项目导入</button>
+          </label>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             <span style="font-size:13px;color:var(--text2);white-space:nowrap">业绩目标：</span>
             <input id="wm-target-perf-total" placeholder="如：20W" style="width:120px">
@@ -814,7 +826,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <textarea id="wm-target-perf-detail" class="auto-resize" placeholder="客户名字：xxW，项目名称&#10;如：Orange Ltd：5W，Orange_项目A&#10;Master Power：3W，Master_项目B"></textarea>
         </div>
         <div class="field">
-          <label>2. 回款目标</label>
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>2. 回款目标</span>
+            <button class="btn btn-xs" style="background:var(--teal-bg);color:var(--teal-text);border-color:#A8DFD0" onclick="openProjPicker('wm-target-collect-detail','collect')">📋 选择项目导入</button>
+          </label>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             <span style="font-size:13px;color:var(--text2);white-space:nowrap">回款目标：</span>
             <input id="wm-target-collect-total" placeholder="如：30W" style="width:120px">
@@ -822,7 +837,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <textarea id="wm-target-collect-detail" class="auto-resize" placeholder="客户名字：xxW&#10;如：Orange Ltd：10W&#10;Master Power：5W"></textarea>
         </div>
         <div class="field">
-          <label>3. 新成交</label>
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>3. 新成交</span>
+            <button class="btn btn-xs" style="background:var(--amber-bg);color:var(--amber-text);border-color:#F5D59A" onclick="openProjPicker('wm-target-deal-detail','deal')">📋 选择项目导入</button>
+          </label>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             <span style="font-size:13px;color:var(--text2);white-space:nowrap">新成交：</span>
             <input id="wm-target-deal-total" placeholder="如：2个" style="width:120px">
@@ -9928,6 +9946,178 @@ function submitQuickProgress(){
 </script>
 
 <div id="save-toast" style="position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-60px);background:#1D9E75;color:#fff;font-size:13px;font-weight:500;padding:7px 18px;border-radius:20px;box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:9999;transition:transform .22s cubic-bezier(.34,1.56,.64,1),opacity .22s;opacity:0;pointer-events:none;white-space:nowrap">✓ 已保存</div>
+
+<!-- ===== 项目选择导入弹窗 ===== -->
+<div id="proj-picker-bg" style="position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:700;display:none;align-items:center;justify-content:center" onclick="if(event.target===this)closeProjPicker()">
+  <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:0;width:96%;max-width:580px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 8px 36px rgba(0,0,0,.22);overflow:hidden">
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border2);flex-shrink:0">
+      <div>
+        <span id="ppicker-title" style="font-size:14px;font-weight:600"></span>
+        <span id="ppicker-hint" style="font-size:11px;color:var(--text2);margin-left:8px"></span>
+      </div>
+      <button onclick="closeProjPicker()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2);line-height:1">✕</button>
+    </div>
+    <!-- Search -->
+    <div style="padding:10px 16px;border-bottom:1px solid var(--border2);flex-shrink:0">
+      <input id="ppicker-search" placeholder="🔍 搜索公司 / 项目名称…" oninput="renderProjPickerList()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;font-family:inherit;background:var(--bg2);color:var(--text);outline:none">
+    </div>
+    <!-- List -->
+    <div id="ppicker-list" style="flex:1;overflow-y:auto;padding:8px 0"></div>
+    <!-- Footer -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid var(--border2);flex-shrink:0;gap:8px">
+      <span id="ppicker-selected-count" style="font-size:12px;color:var(--text2)">已选 0 个项目</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" onclick="closeProjPicker()">取消</button>
+        <button class="btn btn-primary btn-sm" onclick="confirmProjPicker()">✓ 导入选中项目</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// 项目选择导入弹窗
+// ============================================================
+let _ppTargetId = '';     // 目标 textarea 的 id
+let _ppMode = 'perf';     // 'perf' | 'collect' | 'deal'
+let _ppSelected = new Set(); // 已勾选的项目唯一key
+
+const PP_MODES = {
+  perf:    { title:'📋 业绩目标 — 选择项目', hint:'可选：⭕ 跟进中 / 🔶 已确认订单 / ⏸️ 暂无进展', statuses:['open','confirmed','pause'] },
+  collect: { title:'💰 回款目标 — 选择项目',  hint:'可选：✅ 已成交',                                   statuses:['won'] },
+  deal:    { title:'🎯 新成交 — 选择项目',    hint:'可选：⭕ 跟进中 / 🔶 已确认订单 / ⏸️ 暂无进展', statuses:['open','confirmed','pause'] },
+};
+
+const PP_STATUS_LABEL = {
+  open:'⭕ 跟进中', confirmed:'🔶 已确认订单', won:'✅ 已成交', pause:'⏸️ 暂无进展', lost:'❌ 丢单'
+};
+
+function openProjPicker(targetId, mode) {
+  _ppTargetId = targetId;
+  _ppMode = mode;
+  _ppSelected = new Set();
+  const cfg = PP_MODES[mode];
+  document.getElementById('ppicker-title').textContent = cfg.title;
+  document.getElementById('ppicker-hint').textContent = cfg.hint;
+  document.getElementById('ppicker-search').value = '';
+  renderProjPickerList();
+  document.getElementById('proj-picker-bg').style.display = 'flex';
+  setTimeout(() => document.getElementById('ppicker-search').focus(), 80);
+}
+
+function closeProjPicker() {
+  document.getElementById('proj-picker-bg').style.display = 'none';
+}
+
+function getProjPickerItems() {
+  const cfg = PP_MODES[_ppMode];
+  const allowedStatuses = new Set(cfg.statuses);
+
+  // Deduplicate by project name (keep one entry per project — the one with the highest qty or latest date)
+  const projMap = {};
+  (typeof qtQuotes !== 'undefined' ? qtQuotes : []).forEach(q => {
+    const deal = q.deal || '';
+    if (!allowedStatuses.has(deal)) return;
+    const key = (q.company || '') + '||' + (q.project || '');
+    if (!projMap[key] || (q.qty || 0) > (projMap[key].qty || 0)) {
+      projMap[key] = q;
+    }
+  });
+
+  return Object.values(projMap);
+}
+
+function projPickerLabel(q) {
+  const statusEmoji = PP_STATUS_LABEL[q.deal] || '';
+  const company = q.company || '';
+  const project = q.project || '';
+  const qty = q.qty ? ` ${q.qty}台` : '';
+  return `${company} ${statusEmoji} ${project}${qty}`.trim();
+}
+
+function projPickerKey(q) {
+  return (q.company || '') + '||' + (q.project || '');
+}
+
+function renderProjPickerList() {
+  const items = getProjPickerItems();
+  const q = (document.getElementById('ppicker-search').value || '').toLowerCase();
+  const filtered = q
+    ? items.filter(r => (projPickerLabel(r).toLowerCase()).includes(q))
+    : items;
+
+  const container = document.getElementById('ppicker-list');
+
+  if (!filtered.length) {
+    container.innerHTML = '<div style="padding:20px 16px;font-size:13px;color:var(--text2);text-align:center">暂无符合条件的项目</div>';
+    updatePpCount();
+    return;
+  }
+
+  // Group by company
+  const groups = {};
+  filtered.forEach(r => {
+    const co = r.company || '（未知公司）';
+    if (!groups[co]) groups[co] = [];
+    groups[co].push(r);
+  });
+
+  let html = '';
+  Object.keys(groups).sort().forEach(co => {
+    html += `<div style="padding:6px 16px 2px;font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.4px;background:var(--bg2);border-bottom:1px solid var(--border2)">${co}</div>`;
+    groups[co].forEach(r => {
+      const key = projPickerKey(r);
+      const checked = _ppSelected.has(key);
+      const statusEmoji = PP_STATUS_LABEL[r.deal] || '';
+      const project = r.project || '（无项目名）';
+      const qty = r.qty ? ` · ${r.qty}台` : '';
+      html += `<label style="display:flex;align-items:flex-start;gap:10px;padding:9px 16px;cursor:pointer;border-bottom:1px solid var(--border2);transition:background .1s" onmouseover="this.style.background='var(--blue-bg)'" onmouseout="this.style.background=''">
+        <input type="checkbox" data-key="${key.replace(/"/g,'&quot;')}" ${checked ? 'checked' : ''} onchange="ppickerToggle(this)" style="width:auto;flex-shrink:0;margin-top:2px;accent-color:var(--blue)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;color:var(--text);line-height:1.4;word-break:break-all">${project}${qty}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">${statusEmoji}</div>
+        </div>
+      </label>`;
+    });
+  });
+
+  container.innerHTML = html;
+  updatePpCount();
+}
+
+function ppickerToggle(cb) {
+  const key = cb.dataset.key;
+  if (cb.checked) _ppSelected.add(key);
+  else _ppSelected.delete(key);
+  updatePpCount();
+}
+
+function updatePpCount() {
+  document.getElementById('ppicker-selected-count').textContent = `已选 ${_ppSelected.size} 个项目`;
+}
+
+function confirmProjPicker() {
+  if (!_ppSelected.size) { alert('请至少勾选一个项目'); return; }
+
+  const items = getProjPickerItems();
+  const selectedItems = items.filter(r => _ppSelected.has(projPickerKey(r)));
+
+  // Build text lines
+  const lines = selectedItems.map(r => projPickerLabel(r));
+
+  const ta = document.getElementById(_ppTargetId);
+  if (ta) {
+    const existing = ta.value.trim();
+    ta.value = existing ? existing + '\n' + lines.join('\n') : lines.join('\n');
+    // Trigger auto-resize
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+  }
+
+  closeProjPicker();
+}
+</script>
 
 </body>
 </html>
