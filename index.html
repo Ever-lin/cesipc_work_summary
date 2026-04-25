@@ -968,13 +968,13 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .qt-tbl td{padding:7px 10px;border-bottom:1px solid var(--border2);white-space:normal;word-break:break-word;font-size:12px;color:var(--text);vertical-align:top}
 .qt-tbl tr:last-child td{border-bottom:none}
 .qt-tbl tr:hover td{background:var(--bg2)}
-.qt-group-row:hover td:first-child{background-image:linear-gradient(to right,#3B82F6 0,#3B82F6 4px,var(--bg2) 4px,var(--bg2) 100%)!important}
+.qt-group-row:hover td:first-child{background:var(--bg2)}
+.qt-group-row td:first-child{position:sticky;left:0;z-index:3;background:var(--bg2);border-left:4px solid #3B82F6}
 /* 首列sticky */
 .qt-tbl thead th:first-child{position:sticky;left:0;top:0;z-index:5;background:var(--bg2)}
 .qt-tbl tbody td:first-child{position:sticky;left:0;z-index:1;background:var(--bg);box-shadow:2px 0 4px rgba(0,0,0,.06)}
 .qt-tbl tbody tr:hover td:first-child{background:var(--bg2)}
-.qt-group-row td{background-image:linear-gradient(to right,#3B82F6 0,#3B82F6 4px,transparent 4px,transparent 100%);background-repeat:no-repeat}
-.qt-group-row td:first-child{background-image:linear-gradient(to right,#3B82F6 0,#3B82F6 4px,var(--bg2) 4px,var(--bg2) 100%);position:sticky;left:0;z-index:3}
+.qt-group-row td:first-child{position:sticky;left:0;z-index:3;background:var(--bg2);border-left:4px solid #3B82F6}
 .qt-price{font-weight:500}
 .qt-below{color:var(--red-text)!important;font-weight:600}
 .qt-ok{color:#1D9E75!important}
@@ -6564,13 +6564,11 @@ let _clientScrollName = '';
 
 function _clientSavePos(clientName){
   _clientScrollName = clientName || '';
-  _navStack.push('clients');
-  _showBackBtn('clients');
+  // 不手动 push navStack，switchTab 会自动处理
 }
 
 // 点击项目名 → 跳项目情况
 function clientJumpToProject(projName){
-  // 找到这个项目属于哪个客户，记录客户名
   const entry = state.projects.find(p=>(p.name||p.client)===projName||p.linkedQuoteProject===projName);
   _clientSavePos(entry ? (entry.client||entry.name) : '');
   _projHighlight = projName;
@@ -6580,7 +6578,6 @@ function clientJumpToProject(projName){
 
 // 点击查看 → 跳报价管理，按项目名筛选
 function clientJumpToQuotes(projName){
-  // 找到这个项目属于哪个客户
   const q = (qtQuotes||[]).find(r=>r.project===projName);
   _clientSavePos(q ? (q.company||'') : '');
   switchTab('quotes');
