@@ -490,7 +490,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
 <!-- ===== 项目情况 ===== -->
 <div id="panel-projects" class="panel">
-  <div class="hint">同一个项目用相同「项目名称」保存，每次追加进展。⭕️ 跟进中 &nbsp;/&nbsp; 🔶 已确认订单 &nbsp;/&nbsp; ✅ 已成交 &nbsp;/&nbsp; ⏸️ 暂无进展 &nbsp;/&nbsp; ❌ 丢单</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+    <div class="hint" style="flex:1;margin-bottom:0;">同一个项目用相同「项目名称」保存，每次追加进展。⭕️ 跟进中 &nbsp;/&nbsp; 🔶 已确认订单 &nbsp;/&nbsp; ✅ 已成交 &nbsp;/&nbsp; ⏸️ 暂无进展 &nbsp;/&nbsp; ❌ 丢单</div>
+    <button id="proj-scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部" style="display:none;flex-shrink:0;padding:4px 10px;border-radius:16px;border:1px solid var(--border2);background:var(--bg);color:var(--text2);font-size:12px;cursor:pointer;white-space:nowrap;">↑ 顶部</button>
+  </div>
   <div class="card" id="proj-form-card">
     <div class="card-header">
       <span class="card-title" id="proj-form-title">新增 / 追加进展</span>
@@ -1006,9 +1009,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .qt-mode-btn:hover{border-color:var(--blue);color:var(--blue-text)}
 </style>
 
-<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
   <button class="sub-tab active" onclick="qSwitchView('list',this)" id="qt-tab-list">📋 报价列表</button>
   <button class="sub-tab" onclick="qSwitchView('dash',this)" id="qt-tab-dash">📊 数据看板</button>
+  <button id="qt-scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部" style="display:none;margin-left:auto;padding:4px 10px;border-radius:16px;border:1px solid var(--border2);background:var(--bg);color:var(--text2);font-size:12px;cursor:pointer;align-items:center;gap:4px;">↑ 顶部</button>
 </div>
 
 <!-- LIST VIEW -->
@@ -4520,6 +4524,7 @@ function qtRender(){
                 ${r.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="qtImportToDoc(\''+r.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
                 <button class="btn btn-xs" style="background:var(--bg2);color:var(--text2)" onclick="qtCopyRowSummary('${r.id}',this)" title="复制报价摘要到剪贴板">📋</button>
                 <button class="btn btn-xs" onclick="qtOpenEdit('${r.id}')">编辑</button>
+                <button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="qtCopyAsNew('${r.id}')" title="复制此报价信息到新增表单（日期改为今天）">⧉ 复制新增</button>
                 ${(r.priceHistory&&r.priceHistory.length)?'<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="qtOpenEdit(\''+r.id+'\')" title="'+r.priceHistory.length+'次价格变更">📋'+r.priceHistory.length+'</button>':''}
                 ${syncBtn}
                 <button class="btn btn-danger btn-xs" onclick="qtDel('${r.id}')">删</button>
@@ -4558,6 +4563,7 @@ function qtRender(){
             case 'actions': return`<td><span style="display:flex;gap:4px;flex-wrap:wrap">
               ${r0.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="event.stopPropagation();qtImportToDoc(\''+r0.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
               <button class="btn btn-xs" onclick="event.stopPropagation();qtOpenEdit('${r0.id}')" title="编辑第一个产品">编辑</button>
+              <button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="event.stopPropagation();qtCopyAsNew('${r0.id}')" title="复制第一个产品报价到新增表单">⧉ 复制新增</button>
             </span></td>`;
             default: return`<td></td>`;
           }
@@ -4587,6 +4593,7 @@ function qtRender(){
                 ${r.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="event.stopPropagation();qtImportToDoc(\''+r.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
                 <button class="btn btn-xs" style="background:var(--bg2);color:var(--text2)" onclick="event.stopPropagation();qtCopyRowSummary('${r.id}',this)">📋</button>
                 <button class="btn btn-xs" onclick="event.stopPropagation();qtOpenEdit('${r.id}')">编辑</button>
+                <button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="event.stopPropagation();qtCopyAsNew('${r.id}')" title="复制此报价信息到新增表单">⧉ 复制新增</button>
                 <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();qtDel('${r.id}')">删</button>
               </span></td>`;
               default: return`<td></td>`;
@@ -9250,9 +9257,66 @@ function _hideBackBtn(){
 // ── 回到顶部 ──
 window.addEventListener('scroll',()=>{
   const btn=document.getElementById('float-top');
-  if(!btn)return;
-  btn.style.display=window.scrollY>200?'flex':'none';
+  if(btn) btn.style.display=window.scrollY>200?'flex':'none';
+  // 报价管理 & 项目情况面板内的↑顶部小按钮
+  const qtTop=document.getElementById('qt-scroll-top');
+  if(qtTop) qtTop.style.display=window.scrollY>200?'inline-flex':'none';
+  const pjTop=document.getElementById('proj-scroll-top');
+  if(pjTop) pjTop.style.display=window.scrollY>200?'inline-flex':'none';
 },{passive:true});
+
+// ── 一键复制新增报价 ──
+// 把现有报价的所有信息复制进新增表单，日期换成今天，方便重复下单的老客户
+function qtCopyAsNew(id){
+  const r=qtQuotes.find(q=>String(q.id)===String(id));
+  if(!r)return;
+  // 先打开空白新增表单
+  qtOpenAdd();
+  // 再填入原始报价的信息
+  document.getElementById('qf-project').value=r.project||'';
+  document.getElementById('qf-company').value=r.company||'';
+  document.getElementById('qf-contact').value=r.contact||'';
+  document.getElementById('qf-date').value=todayStr(); // 日期用今天
+  document.getElementById('qf-model').value=r.model||'';
+  document.getElementById('qf-partno').value=r.partno||'';
+  document.getElementById('qf-qty').value=r.qty||'';
+  document.getElementById('qf-cpu').value=r.cpu||'';
+  document.getElementById('qf-custom').value=r.custom||'';
+  var shipEl=document.getElementById('qf-shipping');if(shipEl)shipEl.value=r.shipping||'';
+  document.getElementById('qf-deal').value=r.deal||'';
+  document.getElementById('qf-stage').value=r.stage||'';
+  document.getElementById('qf-notes').value=r.notes||'';
+  // 定价模式
+  var mode=r.pmode||'breakdown';
+  var modeEl=document.querySelector('input[name="qf-pmode"][value="'+mode+'"]');
+  if(modeEl){modeEl.checked=true;qtTogglePriceMode();}
+  // 分项价格
+  document.getElementById('qf-barbone').value=r.barbone!=null?r.barbone:'';
+  document.getElementById('qf-barbone-cur').value=r.barboneCur||'USD';
+  document.getElementById('qf-ram').value=r.ram||'';
+  document.getElementById('qf-ramp').value=r.ramp!=null?r.ramp:'';
+  document.getElementById('qf-ramp-cur').value=r.rampCur||'USD';
+  document.getElementById('qf-ssd').value=r.ssd||'';
+  document.getElementById('qf-ssdp').value=r.ssdp!=null?r.ssdp:'';
+  document.getElementById('qf-ssdp-cur').value=r.ssdpCur||'USD';
+  // 整机价格
+  var totP=document.getElementById('qf-total-price');if(totP)totP.value=r.price!=null?r.price:'';
+  var totCur=document.getElementById('qf-total-cur');if(totCur)totCur.value=r.priceCur||'USD';
+  var totRam=document.getElementById('qf-total-ram');if(totRam)totRam.value=r.ram||'';
+  var totSsd=document.getElementById('qf-total-ssd');if(totSsd)totSsd.value=r.ssd||'';
+  // 综合报价 P
+  var priceEl=document.getElementById('qf-price');
+  if(priceEl){priceEl.value=r.price!=null?r.price:'';delete priceEl.dataset.manualEdit;}
+  document.getElementById('qf-price-cur').value=r.priceCur||'USD';
+  // P3
+  document.getElementById('qf-p3').value=r.p3!=null?r.p3:'';
+  document.getElementById('qf-p3-cur').value=r.p3Cur||'USD';
+  // 阶梯价
+  _qtSingleTiers=r.tiers?JSON.parse(JSON.stringify(r.tiers)):[];
+  qtRenderSingleTiers();
+  if(typeof qtCalc==='function')qtCalc();
+  document.getElementById('qt-modal-title').textContent='📋 复制新增（源自：'+(r.model||r.project||'上一条')+'）';
+}
 </script>
 
 
