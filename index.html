@@ -2293,6 +2293,12 @@ function renderProjects(){
     }).join('');
     const histHid='hist_'+k.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
     const hasHistory=allEntriesForCard.length>1;
+    // 计算最近更新时间（用于判断是否"新"）：最新记录的 savedAt
+    const latestSavedAt=allEntriesForCard[0].savedAt||'';
+    // 用 sessionStorage 记录上次已见的 savedAt，以便标记新内容
+    const seenKey='proj_seen_'+k.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
+    const seenAt=sessionStorage.getItem(seenKey)||'';
+    const isNewUpdate=hasHistory&&latestSavedAt&&latestSavedAt!==seenAt;
     const historyRows=hasHistory?allEntriesForCard.map((e,i)=>{
       const sc2=SC[e.status]||{label:e.status};
       const isLatest=i===0;
@@ -2338,8 +2344,8 @@ function renderProjects(){
       </div>
 
       ${hasHistory?`<div style="margin-bottom:6px">
-        <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:5px 8px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-xs)" onclick="(function(){var b=document.getElementById('${histHid}');b.style.display=b.style.display==='none'?'block':'none';this.querySelector('.hic').textContent=b.style.display==='none'?'▶ ':'▼ '}).call(this)">
-          <span style="font-size:12px;font-weight:500;color:var(--text2)"><span class="hic">▶ </span>历史记录（${allEntriesForCard.length}条）— 点击展开可编辑任意记录</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:5px 8px;background:${isNewUpdate?'#FFF7ED':'var(--bg2)'};border:1px solid ${isNewUpdate?'#FDBA74':'var(--border2)'};border-radius:var(--radius-xs);transition:background .2s" onclick="(function(){var b=document.getElementById('${histHid}');var open=b.style.display==='none';b.style.display=open?'block':'none';this.querySelector('.hic').textContent=open?'▼ ':'▶ ';if(open){sessionStorage.setItem('${seenKey}','${latestSavedAt.replace(/'/g,'\\x27')}');this.style.background='var(--bg2)';this.style.borderColor='var(--border2)';}}).call(this)">
+          <span style="font-size:12px;font-weight:500;color:${isNewUpdate?'#92400E':'var(--text2)'}"><span class="hic">▶ </span>历史记录（${allEntriesForCard.length}条）— 点击展开可编辑任意记录${isNewUpdate?'&nbsp;<span style="background:#F59E0B;color:#fff;font-size:10px;border-radius:8px;padding:1px 6px;font-weight:600">有更新</span>':''}</span>
         </div>
         <div id="${histHid}" style="display:none;border:1px solid var(--border2);border-top:none;border-radius:0 0 var(--radius-xs) var(--radius-xs);padding:6px 8px">
           ${historyRows}
@@ -6635,17 +6641,33 @@ function renderClients(){
     // 业绩：按年份过滤
     const perfs=(state.perf||[]).filter(p=>p.client===name&&p.type==='业绩'&&!p.noAmount&&yearMatch(p.calYear));
     const collects=(state.perf||[]).filter(p=>p.client===name&&p.type==='回款'&&!p.noAmount&&yearMatch(p.calYear));
+    // 按年份过滤的报价（date字段格式为 YYYY-MM-DD，取前4位为年份）
+    const quotesInYear=yearFilter==='all'?quotes:quotes.filter(q=>{
+      const y=q.date?(q.date+'').slice(0,4):'';
+      return y===yearFilter;
+    });
     // 下单次数 = 业绩记录条数（每条业绩对应一次实际下单，按年份过滤后统计）
     const orderCount=perfs.length;
     const totalPerf=perfs.reduce((s,p)=>s+(p.amount||0),0);
     const totalCollect=collects.reduce((s,p)=>s+(p.amount||0),0);
-    return{name,quotes,projs,perfs,collects,orderCount,totalPerf,totalCollect};
+    // 项目情况各状态统计（不过滤年份，显示全部）
+    const projMap2={};
+    projs.forEach(p=>{const k=p.name||p.client;if(!projMap2[k]||p.id>projMap2[k].id)projMap2[k]=p;});
+    const projStatusCounts={跟进中:0,确认订单:0,成交:0,暂无进展:0,丢单:0};
+    Object.values(projMap2).forEach(p=>{if(projStatusCounts[p.status]!==undefined)projStatusCounts[p.status]++;});
+    // 报价管理各状态统计（当年或全部）
+    const quoteDealCounts={open:0,confirmed:0,won:0,pause:0,lost:0};
+    // 按项目去重取最新deal
+    const qProjMap={};
+    quotesInYear.forEach(q=>{const p=q.project||'';if(!p)return;if(!qProjMap[p]||q.date>qProjMap[p].date)qProjMap[p]=q;});
+    Object.values(qProjMap).forEach(q=>{if(quoteDealCounts[q.deal]!==undefined)quoteDealCounts[q.deal]++;});
+    return{name,quotes,quotesInYear,projs,perfs,collects,orderCount,totalPerf,totalCollect,projStatusCounts,quoteDealCounts};
   });
 
-  // When year is filtered, hide clients with no data in that year
+  // When year is filtered, show clients with ANY data in that year (perf, collect, OR quotes)
   const filtered=yearFilter==='all'
     ? clientData
-    : clientData.filter(cd=>cd.perfs.length||cd.collects.length||cd.quotes.length);
+    : clientData.filter(cd=>cd.perfs.length||cd.collects.length||cd.quotesInYear.length);
 
   if(sortMode==='perf')filtered.sort((a,b)=>b.totalPerf-a.totalPerf);
   else if(sortMode==='quotes')filtered.sort((a,b)=>b.quotes.length-a.quotes.length);
@@ -6672,7 +6694,17 @@ function renderClients(){
     const uniqueProjs=Object.values(projMap);
 
     // Quote projects (filtered by year)
-    const quoteProjects=[...new Set(cd.quotes.map(q=>q.project).filter(Boolean))];
+    const quoteProjects=[...new Set((yearFilter==='all'?cd.quotes:cd.quotesInYear).map(q=>q.project).filter(Boolean))];
+
+    // 项目状态徽章
+    const ps=cd.projStatusCounts;
+    const projStatBadges=[
+      ps['跟进中']?`<span style="font-size:11px;background:var(--blue-bg);color:var(--blue-text);border-radius:10px;padding:1px 7px;white-space:nowrap">⭕ 跟进中 ${ps['跟进中']}</span>`:'',
+      ps['确认订单']?`<span style="font-size:11px;background:var(--amber-bg);color:var(--amber-text);border-radius:10px;padding:1px 7px;white-space:nowrap">🔶 确认订单 ${ps['确认订单']}</span>`:'',
+      ps['成交']?`<span style="font-size:11px;background:var(--green-bg);color:var(--green-text);border-radius:10px;padding:1px 7px;white-space:nowrap">✅ 成交 ${ps['成交']}</span>`:'',
+      ps['暂无进展']?`<span style="font-size:11px;background:var(--gray-bg);color:var(--gray-text);border-radius:10px;padding:1px 7px;white-space:nowrap">⏸️ 暂无进展 ${ps['暂无进展']}</span>`:'',
+      ps['丢单']?`<span style="font-size:11px;background:var(--red-bg);color:var(--red-text);border-radius:10px;padding:1px 7px;white-space:nowrap">❌ 丢单 ${ps['丢单']}</span>`:'',
+    ].filter(Boolean).join('');
 
     const projsHtml=uniqueProjs.length?uniqueProjs.map(p=>{
       const icon=statusIcon[p.status]||'•';
@@ -6717,7 +6749,8 @@ function renderClients(){
           ${cd.totalCollect>0?`<span class="badge badge-green">回款 ¥${(cd.totalCollect/10000).toFixed(2).replace(/\.?0+$/,'')}W</span>`:''}
           ${cd.orderCount>0?`<span class="badge badge-teal">✅ 下单 ${cd.orderCount}次</span>`:''}
         </div>
-        <div style="display:flex;gap:8px;font-size:12px;color:var(--text2)">
+        ${projStatBadges?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px">${projStatBadges}</div>`:''}
+        <div style="display:flex;gap:8px;font-size:12px;color:var(--text2);margin-top:4px">
           <span>项目 ${Object.keys(projMap).length} 个</span>
           <span>报价 ${cd.quotes.length} 条</span>
         </div>
@@ -9425,11 +9458,23 @@ function openDescTpl(btn) {
     // Line 0 = title, lines 1-7 = numbered items
     const g = id => document.getElementById(id);
     g('dtpl-title').value = lines[0] || '';
+    // For numbered fields: accumulate lines belonging to same item (continuation lines)
+    let fieldIdx = 0;
+    const fieldValues = ['','','','','','',''];
+    for (let li = 1; li < lines.length; li++) {
+      const line = lines[li];
+      const match = line.match(/^(\d+)\.\s*[^:]+:\s*(.*)$/);
+      if (match) {
+        fieldIdx = parseInt(match[1]) - 1;
+        if (fieldIdx >= 0 && fieldIdx < 7) fieldValues[fieldIdx] = match[2];
+      } else if (fieldIdx >= 0 && fieldIdx < 7 && fieldValues[fieldIdx]) {
+        // continuation line of previous field
+        fieldValues[fieldIdx] += '\n' + line;
+      }
+    }
     for (let i = 1; i <= 7; i++) {
-      const line = lines[i] || '';
-      // Strip leading "1. PC System: " prefix
-      const match = line.match(/^\d+\.\s*[^:]+:\s*(.*)$/);
-      g('dtpl-' + i).value = match ? match[1] : line;
+      const el = g('dtpl-' + i);
+      if (el) el.value = fieldValues[i-1] || '';
     }
   } else {
     // Load last-used memory; if none, seed with default preset
@@ -9476,20 +9521,21 @@ function applyDescTpl() {
   const labels = ['PC System','Panel','I/O','OS','Other','Accessory','Customization Services'];
   const lines = [];
   const title = g('dtpl-title');
-  if (title) lines.push(title);
+  if (title) lines.push({ text: title, isTitle: true });
   let num = 1;
   labels.forEach((lbl, i) => {
     const val = g('dtpl-' + (i + 1));
-    if (val) lines.push((num++) + '. ' + lbl + ': ' + val);
+    if (val) lines.push({ text: (num++) + '. ' + lbl + ': ' + val, isTitle: false });
   });
 
   // Save to memory before applying
   _descTplSaveMemory();
 
-  // Write as plain text with line breaks
-  _descTplTarget.innerHTML = lines.map((l, i) =>
-    i === 0 ? `<strong>${l}</strong>` : l
-  ).join('<br>');
+  // Write as HTML with line breaks — newlines within a field become <br> too
+  _descTplTarget.innerHTML = lines.map((l, i) => {
+    const escaped = l.text.replace(/\n/g, '<br>');
+    return l.isTitle ? `<strong>${escaped}</strong>` : escaped;
+  }).join('<br>');
 
   // Restore _fmtTarget so toolbar formatting still works on this element
   _fmtTarget = _descTplTarget;
@@ -9560,32 +9606,32 @@ document.addEventListener('keydown',e=>{
         <input id="dtpl-title" type="text" placeholder="e.g. Industrial Panel PC" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
       </div>
       <div style="display:flex;flex-direction:column;gap:3px;">
-        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">1. PC System</label>
-        <input id="dtpl-1" type="text" placeholder="e.g. i5-10210U, 16GB RAM (Hynix), 512GB SSD (Kingston)" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
+        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">1. PC System <span style="font-weight:400;opacity:.6">（按 Shift+Enter 换行）</span></label>
+        <textarea id="dtpl-1" rows="2" placeholder="e.g. i5-10210U, 16GB RAM (Hynix), 512GB SSD (Kingston)" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;resize:vertical;line-height:1.5;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();}"></textarea>
       </div>
       <div style="display:flex;flex-direction:column;gap:3px;">
         <label style="font-size:11px;color:var(--c-muted);font-weight:500;">2. Panel</label>
-        <input id="dtpl-2" type="text" placeholder="e.g. 10-inch, 1024×768, P-Cap touch" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
+        <textarea id="dtpl-2" rows="1" placeholder="e.g. 10-inch, 1024×768, P-Cap touch" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;resize:vertical;line-height:1.5;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();}"></textarea>
       </div>
       <div style="display:flex;flex-direction:column;gap:3px;">
         <label style="font-size:11px;color:var(--c-muted);font-weight:500;">3. I/O</label>
-        <input id="dtpl-3" type="text" placeholder="e.g. 6×USB, 2×LAN, 4×RS232, 2×RS485, VGA, HDMI" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
+        <textarea id="dtpl-3" rows="1" placeholder="e.g. 6×USB, 2×LAN, 4×RS232, 2×RS485, VGA, HDMI" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;resize:vertical;line-height:1.5;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();}"></textarea>
       </div>
       <div style="display:flex;flex-direction:column;gap:3px;">
         <label style="font-size:11px;color:var(--c-muted);font-weight:500;">4. OS</label>
-        <input id="dtpl-4" type="text" placeholder="e.g. Windows 10 LTSC" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
+        <textarea id="dtpl-4" rows="1" placeholder="e.g. Windows 10 LTSC" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;resize:vertical;line-height:1.5;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();}"></textarea>
       </div>
       <div style="display:flex;flex-direction:column;gap:3px;">
         <label style="font-size:11px;color:var(--c-muted);font-weight:500;">5. Other</label>
-        <input id="dtpl-5" type="text" placeholder="e.g. WiFi, 9–36V DC input" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
+        <textarea id="dtpl-5" rows="1" placeholder="e.g. WiFi, 9–36V DC input" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;resize:vertical;line-height:1.5;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();}"></textarea>
       </div>
       <div style="display:flex;flex-direction:column;gap:3px;">
-        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">6. Accessory</label>
-        <input id="dtpl-6" type="text" placeholder="e.g. 1 x Power adaptor, 1 x AC Cable, 2 x WiFi Antenna, 4 x Buckles" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
+        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">6. Accessory <span style="font-weight:400;opacity:.6">（按 Shift+Enter 换行）</span></label>
+        <textarea id="dtpl-6" rows="2" placeholder="e.g. 1 x Power adaptor, 1 x AC Cable, 2 x WiFi Antenna, 4 x Buckles" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;resize:vertical;line-height:1.5;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();}"></textarea>
       </div>
       <div style="display:flex;flex-direction:column;gap:3px;">
-        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">7. Customization Services</label>
-        <input id="dtpl-7" type="text" placeholder="e.g. Available" value="Available" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'"/>
+        <label style="font-size:11px;color:var(--c-muted);font-weight:500;">7. Customization Services <span style="font-weight:400;opacity:.6">（按 Shift+Enter 换行）</span></label>
+        <textarea id="dtpl-7" rows="1" placeholder="e.g. Available" style="padding:7px 10px;border:1px solid var(--c-border);border-radius:7px;font-size:12px;font-family:'Sora',sans-serif;background:var(--c-surface2);color:var(--c-text);outline:none;resize:vertical;line-height:1.5;" onfocus="this.style.borderColor='#2E75B6'" onblur="this.style.borderColor='var(--c-border)'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();}">Available</textarea>
       </div>
     </div>
     <!-- Preset dropdown -->
