@@ -6394,13 +6394,17 @@ setTimeout(()=>{autoSnapshotNow();checkBackupWarning();},2000);
     <button title="斜体 Italic" onmousedown="event.preventDefault();fmtExec('italic')" style="background:#fff;border:1px solid #c8d4e3;border-radius:4px;color:#333;font-style:italic;font-size:13px;width:26px;height:24px;cursor:pointer;line-height:1;">I</button>
     <button title="下划线 Underline" onmousedown="event.preventDefault();fmtExec('underline')" style="background:#fff;border:1px solid #c8d4e3;border-radius:4px;color:#333;text-decoration:underline;font-size:13px;width:26px;height:24px;cursor:pointer;line-height:1;">U</button>
     <div style="width:1px;height:18px;background:#c8d4e3;margin:0 2px;"></div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+    <!-- 字色按钮 -->
+    <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;">
       <span style="font-size:9px;color:#6688aa;line-height:1;">字色</span>
-      <input type="color" value="#E8732A" title="字体颜色" style="width:24px;height:16px;border:1px solid #c8d4e3;border-radius:3px;cursor:pointer;padding:1px;" onmousedown="event.stopPropagation()" onchange="fmtColor(this.value)"/>
+      <button id="fmt-fc-btn" onmousedown="event.preventDefault();toggleColorPalette('fmt-fc-pal')" style="width:24px;height:16px;border:1px solid #c8d4e3;border-radius:3px;cursor:pointer;padding:0;background:#E8732A;" title="字体颜色"></button>
+      <div id="fmt-fc-pal" style="display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:3px;background:#fff;border:1px solid #c8d4e3;border-radius:6px;padding:5px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.18);width:112px;"></div>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+    <!-- 高亮按钮 -->
+    <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;">
       <span style="font-size:9px;color:#6688aa;line-height:1;">🖍高亮</span>
-      <input type="color" value="#FFFF00" title="背景高亮色" style="width:24px;height:16px;border:1px solid #c8d4e3;border-radius:3px;cursor:pointer;padding:1px;" onmousedown="event.stopPropagation()" onchange="fmtBg(this.value)"/>
+      <button id="fmt-bg-btn" onmousedown="event.preventDefault();toggleColorPalette('fmt-bg-pal')" style="width:24px;height:16px;border:1px solid #c8d4e3;border-radius:3px;cursor:pointer;padding:0;background:#FFFF00;" title="背景高亮色"></button>
+      <div id="fmt-bg-pal" style="display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:3px;background:#fff;border:1px solid #c8d4e3;border-radius:6px;padding:5px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.18);width:112px;"></div>
     </div>
     <div style="width:1px;height:18px;background:#c8d4e3;margin:0 2px;"></div>
     <button title="清除格式" onmousedown="event.preventDefault();fmtExec('removeFormat')" style="background:#fff;border:1px solid #c8d4e3;border-radius:4px;color:#666;font-size:11px;padding:2px 7px;cursor:pointer;white-space:nowrap;">✕清除</button>
@@ -7067,6 +7071,11 @@ document.addEventListener('selectionchange',()=>{
   const sel=window.getSelection();
   const bar=getFBar();
   if(!bar)return;
+  // 有调色板打开时，不要隐藏工具栏，也不要清空 _savedRange
+  const palOpen=['fmt-bar-fc-pal','fmt-bar-bg-pal'].some(id=>{
+    const p=document.getElementById(id);return p&&p.style.display!=='none';
+  });
+  if(palOpen)return;
   if(!sel||sel.isCollapsed||!sel.toString().trim()){
     if(!bar.matches(':hover'))bar.style.display='none';
     return;
@@ -7087,11 +7096,20 @@ document.addEventListener('selectionchange',()=>{
 
 document.addEventListener('mousedown',e=>{
   const bar=getFBar();
+  // 判断是否点击了调色板相关元素（色块 div 或触发按钮）
+  const inPal=e.target.closest('[id$="-pal"]')||e.target.closest('[id$="-fc-btn"]')||e.target.closest('[id$="-bg-btn"]');
   if(bar){
-    if(!e.target.closest('#fmt-bar') && !e.target.closest('[contenteditable="true"]')){
+    // 点击调色板时：不隐藏浮动工具栏，不清空选区
+    if(!inPal && !e.target.closest('#fmt-bar') && !e.target.closest('[contenteditable="true"]')){
       bar.style.display='none';
       _savedRange=null;
     }
+  }
+  // 不在调色板内时，关闭所有调色板
+  if(!inPal){
+    ['fmt-fc-pal','fmt-bg-pal','fmt-bar-fc-pal','fmt-bar-bg-pal'].forEach(id=>{
+      const p=document.getElementById(id);if(p)p.style.display='none';
+    });
   }
   // Close preset dropdown if clicking outside
   const drop=document.getElementById('dtpl-preset-drop');
@@ -7114,6 +7132,59 @@ function _restoreAndExec(fn){
   const sel2=window.getSelection();
   if(sel2&&!sel2.isCollapsed) _savedRange=sel2.getRangeAt(0).cloneRange();
 }
+
+// ── 颜色调色板系统 ──
+// 使用自定义色块代替 <input type="color">，完全通过 onmousedown+preventDefault 操作，
+// 不会导致 contenteditable 失去焦点和选区丢失。
+const _FC_COLORS=['#000000','#434343','#666666','#999999','#B7B7B7','#CCCCCC','#FFFFFF',
+  '#FF0000','#FF4D00','#FF9900','#FFFF00','#00FF00','#00FFFF','#0000FF',
+  '#9900FF','#FF00FF','#E8732A','#C00000','#1A3C5E','#2E75B6','#1D9E75',
+  '#27500A','#633806','#791F1F','#4A6080'];
+const _BG_COLORS=['#FFFF00','#FFD700','#FFA500','#FF6B6B','#FFB3BA','#FFDFBA',
+  '#FFFFBA','#BAFFC9','#BAE1FF','#E8BAFF','#FFFFFF','#F0F0F0','#D0E8FF',
+  '#D0FFD0','#FFD0D0','#FFF0D0','#E8FFE8','#D0D0FF','#FFE8D0','#D0FFE8',
+  '#1A3C5E','#2E75B6','#E8732A','#000000','transparent'];
+
+function _buildPalette(palId, colors, execFn, btnId){
+  const pal=document.getElementById(palId);
+  if(!pal||pal.dataset.built)return;
+  pal.dataset.built='1';
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(5,18px);gap:3px;';
+  colors.forEach(c=>{
+    const sw=document.createElement('button');
+    sw.style.cssText=`width:18px;height:18px;border-radius:3px;border:1px solid #ccc;cursor:pointer;padding:0;background:${c==='transparent'?'#fff':c};`;
+    if(c==='transparent'){sw.textContent='✕';sw.style.fontSize='10px';sw.style.color='#999';}
+    sw.onmousedown=e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      // Update the indicator button color
+      const btn=document.getElementById(btnId);
+      if(btn&&c!=='transparent')btn.style.background=c;
+      // Close palette
+      pal.style.display='none';
+      // Apply format
+      execFn(c==='transparent'?null:c);
+    };
+    grid.appendChild(sw);
+  });
+  pal.appendChild(grid);
+}
+
+function toggleColorPalette(palId){
+  // Close all other palettes
+  ['fmt-fc-pal','fmt-bg-pal','fmt-bar-fc-pal','fmt-bar-bg-pal'].forEach(id=>{
+    if(id!==palId){const p=document.getElementById(id);if(p)p.style.display='none';}
+  });
+  const pal=document.getElementById(palId);
+  if(!pal)return;
+  const isFC=palId.includes('-fc-');
+  const btnId=palId.replace('-pal','-btn');
+  if(isFC) _buildPalette(palId,_FC_COLORS,c=>c?fmtColor(c):fmtExec('removeFormat'),btnId);
+  else     _buildPalette(palId,_BG_COLORS,c=>c?fmtBg(c):fmtExec('removeFormat'),btnId);
+  pal.style.display=pal.style.display==='none'?'block':'none';
+}
+
 
 function fmtExec(cmd){_restoreAndExec(()=>document.execCommand(cmd,false,null));}
 function fmtColor(c){_restoreAndExec(()=>document.execCommand('foreColor',false,c));}
@@ -7607,14 +7678,32 @@ function bankRows(){
 }
 function p$(v){return v?'$'+parseFloat(v).toFixed(2):'';}
 
+// 将 description HTML 的每个视觉行（<br>分隔）包成 nowrap block span
+// 使用 DOM 解析确保处理嵌套 span（颜色、加粗等）后仍正确分行
+function _nowrapLines(html){
+  if(!html)return'';
+  // 先把 <br> 统一替换成独特占位符，再按行包装
+  const parts=html.split(/<br\s*\/?>/i);
+  return parts.map(line=>{
+    // 空行保持占位，避免行高塌陷
+    const content=line||'&nbsp;';
+    return`<span style="white-space:nowrap;display:block;">${content}</span>`;
+  }).join('');
+}
+// Part No：型号第一行、料号第二行，各自 nowrap
+function _pnNowrap(pn){
+  if(!pn)return'';
+  return pn.split(/\n/).map(p=>`<span style="white-space:nowrap;display:block;">${p||'&nbsp;'}</span>`).join('');
+}
 function qItemRows(rows){
   const hideTotal = _qTotalColHidden;
   return rows.map(r=>{
-    const pnHtml=r.pn.replace(/\n/g,'<br>');
+    const pnHtml=_pnNowrap(r.pn);
+    const dsHtml=_nowrapLines(r.ds);
     if(r.simple){
       return`<tr class="${r.od?'od':'ev'}">
         <td class="rn">${r.n}</td><td class="pn" style="text-align:center;">${pnHtml}</td>
-        <td class="la" style="text-align:left;">${r.ds}</td>
+        <td class="la" style="text-align:left;">${dsHtml}</td>
         <td class="ct">${r.qty}</td>
         <td class="nr">${r.cfg?'$'+parseFloat(r.cfg).toFixed(2):''}</td>
         <td class="nr">${r.sh?'$'+parseFloat(r.sh).toFixed(2):''}</td>
@@ -7624,7 +7713,7 @@ function qItemRows(rows){
     }
     return`<tr class="${r.od?'od':'ev'}">
       <td class="rn">${r.n}</td><td class="pn" style="text-align:center;">${pnHtml}</td>
-      <td class="la" style="text-align:left;">${r.ds}</td>
+      <td class="la" style="text-align:left;">${dsHtml}</td>
       <td class="ct">${r.qty}</td>
       <td class="nr">${p$(r.bb)}</td><td class="nr">${p$(r.ram)}</td>
       <td class="nr">${p$(r.ssd)}</td><td class="nr">${p$(r.sh)}</td>
@@ -7634,14 +7723,15 @@ function qItemRows(rows){
 }
 function ciItemRows(rows){
   return rows.map(r=>`<tr class="${r.od?'od':'ev'}">
-    <td class="ct">${r.n}</td><td class="ct">${r.mo}</td><td class="ct">${r.hs}</td>
-    <td class="ct">${r.ds}</td><td class="ct">${r.qty}</td>
+    <td class="ct">${r.n}</td><td class="ct" style="white-space:nowrap;">${r.mo}</td><td class="ct">${r.hs}</td>
+    <td class="ct" style="text-align:left;">${_nowrapLines(r.ds)}</td><td class="ct">${r.qty}</td>
     <td class="nr">${r.up?'$'+r.up:''}</td><td class="nr">$${r.amt}</td>
   </tr>`).join('');
 }
 function pkItemRows(rows){
   return rows.map(r=>`<tr class="${r.od?'od':'ev'}">
-    <td class="ct">${r.n}</td><td class="ct">${r.mo}</td><td class="ct">${r.ds}</td>
+    <td class="ct">${r.n}</td><td class="ct" style="white-space:nowrap;">${r.mo}</td>
+    <td class="ct" style="text-align:left;">${_nowrapLines(r.ds)}</td>
     <td class="ct">${r.pcs}</td><td class="ct">${r.pk}</td><td class="ct">${r.ct}</td>
     <td class="ct">${r.qc}</td><td class="ct">${r.nw}</td><td class="ct">${r.gw}</td>
     <td class="ct">${r.l}</td><td class="ct">${r.w}</td><td class="ct">${r.h}</td>
@@ -8020,13 +8110,15 @@ function exportPDF(){
   <button title="斜体 Italic" onmousedown="event.preventDefault();fmtExec('italic')" style="background:#f0f0f0;border:1px solid #ccc;border-radius:4px;color:#333;font-style:italic;font-size:13px;width:28px;height:26px;cursor:pointer;line-height:1;">I</button>
   <button title="下划线 Underline" onmousedown="event.preventDefault();fmtExec('underline')" style="background:#f0f0f0;border:1px solid #ccc;border-radius:4px;color:#333;text-decoration:underline;font-size:13px;width:28px;height:26px;cursor:pointer;line-height:1;">U</button>
   <div style="width:1px;height:20px;background:#ddd;margin:0 2px;"></div>
-  <div style="display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;">
+  <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;">
     <span style="font-size:9px;color:#666;line-height:1;white-space:nowrap;">字色</span>
-    <input type="color" value="#E8732A" title="字体颜色" style="width:26px;height:18px;border:1px solid #ccc;border-radius:3px;cursor:pointer;padding:1px;" onmousedown="event.stopPropagation()" onchange="fmtColor(this.value)"/>
+    <button id="fmt-bar-fc-btn" onmousedown="event.preventDefault();toggleColorPalette('fmt-bar-fc-pal')" style="width:26px;height:18px;border:1px solid #ccc;border-radius:3px;cursor:pointer;padding:0;background:#E8732A;" title="字体颜色"></button>
+    <div id="fmt-bar-fc-pal" style="display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:3px;background:#fff;border:1px solid #ccc;border-radius:6px;padding:5px;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,.18);width:112px;"></div>
   </div>
-  <div style="display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;">
+  <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;">
     <span style="font-size:9px;color:#666;line-height:1;white-space:nowrap;">🖍高亮</span>
-    <input type="color" value="#FFFF00" title="背景高亮色" style="width:26px;height:18px;border:1px solid #ccc;border-radius:3px;cursor:pointer;padding:1px;" onmousedown="event.stopPropagation()" onchange="fmtBg(this.value)"/>
+    <button id="fmt-bar-bg-btn" onmousedown="event.preventDefault();toggleColorPalette('fmt-bar-bg-pal')" style="width:26px;height:18px;border:1px solid #ccc;border-radius:3px;cursor:pointer;padding:0;background:#FFFF00;" title="背景高亮色"></button>
+    <div id="fmt-bar-bg-pal" style="display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:3px;background:#fff;border:1px solid #ccc;border-radius:6px;padding:5px;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,.18);width:112px;"></div>
   </div>
   <div style="width:1px;height:20px;background:#ddd;margin:0 2px;"></div>
   <button title="清除格式" onmousedown="event.preventDefault();fmtExec('removeFormat')" style="background:#f0f0f0;border:1px solid #ccc;border-radius:4px;color:#666;font-size:11px;padding:3px 8px;cursor:pointer;white-space:nowrap;">✕ 清除</button>
