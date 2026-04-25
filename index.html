@@ -6712,15 +6712,15 @@ function renderClients(){
     // Quote projects (filtered by year)
     const quoteProjects=[...new Set((yearFilter==='all'?cd.quotes:cd.quotesInYear).map(q=>q.project).filter(Boolean))];
 
-    // 项目状态徽章
+    // 项目状态徽章（全部显示，0个也显示）
     const ps=cd.projStatusCounts;
     const projStatBadges=[
-      ps['跟进中']?`<span style="font-size:11px;background:var(--blue-bg);color:var(--blue-text);border-radius:10px;padding:1px 7px;white-space:nowrap">⭕ 跟进中 ${ps['跟进中']}</span>`:'',
-      ps['确认订单']?`<span style="font-size:11px;background:var(--amber-bg);color:var(--amber-text);border-radius:10px;padding:1px 7px;white-space:nowrap">🔶 确认订单 ${ps['确认订单']}</span>`:'',
-      ps['成交']?`<span style="font-size:11px;background:var(--green-bg);color:var(--green-text);border-radius:10px;padding:1px 7px;white-space:nowrap">✅ 成交 ${ps['成交']}</span>`:'',
-      ps['暂无进展']?`<span style="font-size:11px;background:var(--gray-bg);color:var(--gray-text);border-radius:10px;padding:1px 7px;white-space:nowrap">⏸️ 暂无进展 ${ps['暂无进展']}</span>`:'',
-      ps['丢单']?`<span style="font-size:11px;background:var(--red-bg);color:var(--red-text);border-radius:10px;padding:1px 7px;white-space:nowrap">❌ 丢单 ${ps['丢单']}</span>`:'',
-    ].filter(Boolean).join('');
+      `<span style="font-size:11px;background:var(--blue-bg);color:var(--blue-text);border-radius:10px;padding:1px 7px;white-space:nowrap">⭕ 跟进中 ${ps['跟进中']||0}</span>`,
+      `<span style="font-size:11px;background:var(--amber-bg);color:var(--amber-text);border-radius:10px;padding:1px 7px;white-space:nowrap">🔶 确认订单 ${ps['确认订单']||0}</span>`,
+      `<span style="font-size:11px;background:var(--green-bg);color:var(--green-text);border-radius:10px;padding:1px 7px;white-space:nowrap">✅ 成交 ${ps['成交']||0}</span>`,
+      `<span style="font-size:11px;background:var(--gray-bg);color:var(--gray-text);border-radius:10px;padding:1px 7px;white-space:nowrap">⏸️ 暂无进展 ${ps['暂无进展']||0}</span>`,
+      `<span style="font-size:11px;background:var(--red-bg);color:var(--red-text);border-radius:10px;padding:1px 7px;white-space:nowrap">❌ 丢单 ${ps['丢单']||0}</span>`,
+    ].join('');
 
     const projsHtml=uniqueProjs.length?uniqueProjs.map(p=>{
       const icon=statusIcon[p.status]||'•';
@@ -8143,14 +8143,13 @@ function bankRows(){
 }
 function p$(v){return v?'$'+parseFloat(v).toFixed(2):'';}
 
-// 将 description HTML 的每个视觉行（<br>分隔）包成 nowrap block span
-// PC System 行（第1行）和 Accessory 行（含"Accessory"关键字）允许自动换行，其他行 nowrap
+// 将 description HTML 按 <br> 分段，每段单独 nowrap
+// 只有模板里手动加的 <br> 才产生换行，列宽不足时内容超出列而不自动折行
 function _nowrapLines(html){
   if(!html)return'';
-  // 将 <br> 换行转成实际换行符，保留 <strong>/<b>/<em> 等格式标签
-  // pre-wrap 保留换行，word-break 让超长行在列宽内自动折叠
-  const processed = html.replace(/<br\s*\/?>/gi, '\n');
-  return `<span style="white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;display:block;">${processed}</span>`;
+  // 按 <br> 切分，每段各自 nowrap
+  const segs = html.split(/<br\s*\/?>/gi);
+  return segs.map(s=>`<span style="white-space:nowrap;display:block;">${s||'&nbsp;'}</span>`).join('');
 }
 // Part No：型号第一行、料号第二行，各自 nowrap
 function _pnNowrap(pn){
