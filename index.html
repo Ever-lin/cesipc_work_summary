@@ -4405,7 +4405,7 @@ function qtRender(){
           const cur=r0.priceCur==='CNY'?'¥':'$';
           return mn===mx?`${cur}${mn}`:`${cur}${mn}–${mx}`;
         })();
-        tbody+=`<tr onclick="(function(){var b=document.getElementById('${gid}');var open=b.style.display==='none';b.style.display=open?'':'none';document.getElementById('${gid}-ic').textContent=open?'▾':'▸';})()" style="cursor:pointer;background:var(--bg2);border-top:2px solid var(--border2)" title="点击展开/折叠该项目的 ${rows.length} 个产品">
+        tbody+=`<tr onclick="(function(){var open=document.querySelector('tr[data-group=\\'${gid}\\']').style.display==='none';document.querySelectorAll('tr[data-group=\\'${gid}\\']').forEach(function(r){r.style.display=open?'':'none';});document.getElementById('${gid}-ic').textContent=open?'▾':'▸';})()" style="cursor:pointer;background:var(--bg2);border-top:2px solid var(--border2)" title="点击展开/折叠该项目的 ${rows.length} 个产品">
           <td>${dealBadge(repDeal)}</td>
           <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${r0.company||''}">${r0.company||'—'}</td>
           <td style="color:var(--blue-text);font-weight:500">${r0.contact||'<span style="color:var(--text3)">—</span>'}</td>
@@ -4419,11 +4419,10 @@ function qtRender(){
           <td><span class="badge badge-blue" style="font-size:10px">${rows.length} 个产品</span></td>
           <td></td>
           <td></td>
-        </tr>
-        <tbody id="${gid}" style="display:none">`;
+        </tr>`;
         rows.forEach(r=>{
           const diff=r.p3?r.price-r.p3:null;
-          tbody+=`<tr data-qid="${r.id}" style="transition:background .3s;background:var(--bg)">
+          tbody+=`<tr data-qid="${r.id}" data-group="${gid}" style="display:none;transition:background .3s;background:var(--bg)">
             <td style="padding-left:20px">${dealBadge(r.deal)}</td>
             <td></td>
             <td style="color:var(--blue-text);font-size:11px">${r.contact||''}</td>
@@ -4452,7 +4451,6 @@ function qtRender(){
             </span></td>
           </tr>`;
         });
-        tbody+=`</tbody>`;
       }
     });
   }
