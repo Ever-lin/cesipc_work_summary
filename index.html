@@ -4292,9 +4292,12 @@ const QT_COLS_DEFAULT=[
   {id:'model',   label:'型号',        w:110, vis:true,  sortable:true},
   {id:'cpu',     label:'CPU',         w:90,  vis:true,  sortable:false},
   {id:'barbone', label:'准系统',      w:70,  vis:false, sortable:false},
+  {id:'ramp',    label:'RAM价格',     w:70,  vis:false, sortable:false},
+  {id:'ssdp',    label:'SSD价格',     w:70,  vis:false, sortable:false},
   {id:'ram',     label:'RAM',         w:70,  vis:false, sortable:false},
   {id:'ssd',     label:'SSD',         w:70,  vis:false, sortable:false},
   {id:'price',   label:'报价(P)',     w:90,  vis:true,  sortable:true},
+  {id:'shipping',label:'运费',        w:80,  vis:true,  sortable:false},
   {id:'p3',      label:'P3',          w:70,  vis:true,  sortable:true},
   {id:'diff',    label:'价差',        w:70,  vis:true,  sortable:true},
   {id:'stage',   label:'项目进度',    w:100, vis:true,  sortable:false},
@@ -4640,10 +4643,13 @@ function qtRender(){
             }
             case 'model': return`<td><b>${r.model||'—'}</b></td>`;
             case 'cpu': return`<td>${r.cpu||'—'}</td>`;
-            case 'barbone': return`<td>${r.barbone!=null?'$'+r.barbone:'—'}</td>`;
+            case 'barbone': return`<td>${r.barbone!=null?(r.barboneCur==='CNY'?'¥':'$')+r.barbone:'—'}</td>`;
+            case 'ramp': return`<td>${r.ramp!=null?(r.rampCur==='CNY'?'¥':'$')+r.ramp:'—'}</td>`;
+            case 'ssdp': return`<td>${r.ssdp!=null?(r.ssdpCur==='CNY'?'¥':'$')+r.ssdp:'—'}</td>`;
             case 'ram': return`<td>${r.ram||'—'}</td>`;
             case 'ssd': return`<td>${r.ssd||'—'}</td>`;
             case 'price': return`<td class="qt-price ${r.p3&&r.price<r.p3?'qt-below':''}">${(r.tiers&&r.tiers.length)?`<span style="font-size:11px;font-weight:600;color:var(--blue-text)">📊 ${r.tiers.map(t=>`${t.qty}台×${t.cur==='CNY'?'¥':'$'}${t.price}`).join(' / ')}</span>`:`${r.priceCur==='CNY'?'¥':'$'}${r.price}`}</td>`;
+            case 'shipping': return`<td style="color:var(--text2);font-size:12px">${r.shipping?'🚢 '+r.shipping:'—'}</td>`;
             case 'p3': return`<td>${r.p3!=null?(r.p3Cur==='CNY'?'¥':'$')+r.p3:'—'}</td>`;
             case 'diff': return`<td class="${diff!==null?(diff<0?'qt-diff-neg':'qt-diff-pos'):''}">${diff!==null?(diff>=0?'+':'')+(r.priceCur==='CNY'?'¥':'$')+diff:'—'}</td>`;
             case 'stage': {
@@ -4717,6 +4723,12 @@ function qtRender(){
             case 'date': return`<td></td>`;
             case 'model': return`<td style="font-size:11px;color:var(--text2)">${modelsStr}</td>`;
             case 'price': return`<td class="${hasBelow?'qt-below':''}" style="font-weight:500">${priceRange}</td>`;
+            case 'barbone': return`<td></td>`;
+            case 'shipping': return`<td></td>`;
+            case 'ramp': return`<td></td>`;
+            case 'ssdp': return`<td></td>`;
+            case 'ram': return`<td></td>`;
+            case 'ssd': return`<td></td>`;
             case 'notes': return`<td><span class="badge badge-blue" style="font-size:10px">${rows.length} 个产品</span></td>`;
             case 'actions': {
               const grpLinked=r0.project&&state.projects.some(p=>p.linkedQuoteProject===r0.project||(p.name||p.client)===r0.project);
@@ -4754,11 +4766,14 @@ function qtRender(){
               case 'date': return`<td style="color:var(--text2);font-size:11px">${r.date||'—'}</td>`;
               case 'model': return`<td><b>${r.model||'—'}</b></td>`;
               case 'cpu': return`<td>${r.cpu||'—'}</td>`;
-              case 'barbone': return`<td>${r.barbone!=null?'$'+r.barbone:'—'}</td>`;
+              case 'barbone': return`<td>${r.barbone!=null?(r.barboneCur==='CNY'?'¥':'$')+r.barbone:'—'}</td>`;
+              case 'ramp': return`<td>${r.ramp!=null?(r.rampCur==='CNY'?'¥':'$')+r.ramp:'—'}</td>`;
+              case 'ssdp': return`<td>${r.ssdp!=null?(r.ssdpCur==='CNY'?'¥':'$')+r.ssdp:'—'}</td>`;
               case 'ram': return`<td>${r.ram||'—'}</td>`;
               case 'ssd': return`<td>${r.ssd||'—'}</td>`;
               case 'price': return`<td class="qt-price ${r.p3&&r.price<r.p3?'qt-below':''}">${(r.tiers&&r.tiers.length)?`<span style="font-size:11px;font-weight:600;color:var(--blue-text)">📊 ${r.tiers.map(t=>`${t.qty}台×${t.cur==='CNY'?'¥':'$'}${t.price}`).join(' / ')}</span>`:`${r.priceCur==='CNY'?'¥':'$'}${r.price}`}</td>`;
               case 'p3': return`<td>${r.p3!=null?(r.p3Cur==='CNY'?'¥':'$')+r.p3:'—'}</td>`;
+              case 'shipping': return`<td style="color:var(--text2);font-size:12px">${r.shipping?'🚢 '+r.shipping:'—'}</td>`;
               case 'diff': return`<td class="${diff!==null?(diff<0?'qt-diff-neg':'qt-diff-pos'):''}">${diff!==null?(diff>=0?'+':'')+(r.priceCur==='CNY'?'¥':'$')+diff:'—'}</td>`;
               case 'stage': return`<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;color:var(--text2);font-size:11px">${r.stage||'—'}</td>`;
               case 'notes': return`<td title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>`;
