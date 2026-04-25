@@ -5445,11 +5445,8 @@ function qtRenderDash(){
   }
   document.getElementById('qt-contacts').innerHTML=allContactGroups.length
     ? allContactGroups.map(({name,qs,isUnassigned})=>{
-        const tw=qs.filter(q=>q.deal==='won').length;
-        const to=qs.filter(q=>q.deal==='open').length;
-        const tc=qs.filter(q=>q.deal==='confirmed').length;
-        const tl=qs.filter(q=>q.deal==='lost').length;
-        const tp=qs.filter(q=>q.deal==='pause').length;
+        // 按项目去重后统计各状态（在下面projMap建好后再算，先占位）
+        // tw/to/tc/tl/tp 在 projMap 建好后计算
         const cos=[...new Set(qs.map(q=>q.company).filter(Boolean))];
         const isHighlighted=filterCo&&cos.includes(filterCo);
         const projMap={};
@@ -5458,6 +5455,11 @@ function qtRenderDash(){
           if(!projMap[p]||q.date>projMap[p].date)projMap[p]=q;
         });
         const projects=Object.values(projMap).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+        const tw=projects.filter(q=>q.deal==='won').length;
+        const to=projects.filter(q=>q.deal==='open').length;
+        const tc=projects.filter(q=>q.deal==='confirmed').length;
+        const tl=projects.filter(q=>q.deal==='lost').length;
+        const tp=projects.filter(q=>q.deal==='pause').length;
 
         // 按前缀分组
         const prefixMap={};
@@ -5475,6 +5477,7 @@ function qtRenderDash(){
         // 每个前缀一个可折叠的小标签块
         const prefixChips=Object.entries(prefixMap).map(([prefix,pqs],pi)=>{
           const gid=uid+'-'+pi;
+          // pqs 已是按项目去重后的数组，直接统计
           const pwon=pqs.filter(q=>q.deal==='won').length;
           const popen=pqs.filter(q=>q.deal==='open').length;
           const pconf=pqs.filter(q=>q.deal==='confirmed').length;
