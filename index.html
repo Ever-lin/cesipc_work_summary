@@ -3895,15 +3895,28 @@ function renderGeneratedWeeklies(expandKey){
   el.innerHTML=list.map(w=>{
     const hid='gw_'+w.id;
     const isNew=w.key===expandKey;
+    const wid=w.id;
+    const secBtns=[
+      {label:'📊 业绩/回款/新成交',idx:0},
+      {label:'📁 重点项目',idx:1},
+      {label:'🔗 长线工作',idx:2},
+      {label:'🎯 下周目标',idx:3},
+      {label:'📝 下周计划',idx:4},
+      {label:'📌 下周长线',idx:5},
+    ].map(s=>`<button class="btn btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();copyGenSection('genWeeklies',${wid},${s.idx},this)">${s.label}</button>`).join('');
     return`<div class="card" style="margin-top:8px;border-left:4px solid #1D9E75">
       <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
         <span style="font-size:13px;font-weight:500;color:#27500A"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> 📋 ${w.fy} ${w.month}月 ${w.week} 周报</span>
         <div class="inline-flex">
-          <button class="btn btn-xs" onclick="event.stopPropagation();copyGenTxt('genWeeklies',${w.id})">复制</button>
+          <button class="btn btn-xs btn-primary" onclick="event.stopPropagation();copyGenTxt('genWeeklies',${w.id})" style="white-space:nowrap">📋 复制全部</button>
           <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delGenWeekly(${w.id})">删除</button>
         </div>
       </div>
       <div id="${hid}" style="display:${isNew?'block':'none'};margin-top:8px">
+        <div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 0 10px;border-bottom:1px solid var(--border2);margin-bottom:8px">
+          <span style="font-size:11px;color:var(--text2);align-self:center;white-space:nowrap">单独复制模块：</span>
+          ${secBtns}
+        </div>
         <div class="export-area" style="margin-top:0;max-height:420px">${w.txt}</div>
         <div style="font-size:11px;color:var(--text2);margin-top:6px">${w.savedAt}</div>
       </div>
@@ -4051,15 +4064,28 @@ function renderGeneratedMonthlies(expandKey){
   el.innerHTML=list.map(m=>{
     const hid='gm_'+m.id;
     const isNew=m.key===expandKey;
+    const mid=m.id;
+    const secBtns=[
+      {label:'📊 业绩/回款/新成交',idx:0},
+      {label:'📁 重点项目',idx:1},
+      {label:'🔗 长线工作',idx:2},
+      {label:'🎯 下月目标',idx:3},
+      {label:'📝 下月计划',idx:4},
+      {label:'📌 下月长线',idx:5},
+    ].map(s=>`<button class="btn btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();copyGenSection('genMonthlies',${mid},${s.idx},this)">${s.label}</button>`).join('');
     return`<div class="card" style="margin-top:8px;border-left:4px solid #EF9F27">
       <div class="card-header" style="margin-bottom:0;cursor:pointer" onclick="(function(){var b=document.getElementById('${hid}');b.style.display=b.style.display==='none'?'block':'none';document.getElementById('${hid}_ic').textContent=b.style.display==='none'?'▶':'▼'})()">
         <span style="font-size:13px;font-weight:500;color:#633806"><span id="${hid}_ic">${isNew?'▼':'▶'}</span> 🗓 ${m.fy} ${m.month}月 月报</span>
         <div class="inline-flex">
-          <button class="btn btn-xs" onclick="event.stopPropagation();copyGenTxt('genMonthlies',${m.id})">复制</button>
+          <button class="btn btn-xs btn-primary" onclick="event.stopPropagation();copyGenTxt('genMonthlies',${m.id})" style="white-space:nowrap">📋 复制全部</button>
           <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delGenMonthly(${m.id})">删除</button>
         </div>
       </div>
       <div id="${hid}" style="display:${isNew?'block':'none'};margin-top:8px">
+        <div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 0 10px;border-bottom:1px solid var(--border2);margin-bottom:8px">
+          <span style="font-size:11px;color:var(--text2);align-self:center;white-space:nowrap">单独复制模块：</span>
+          ${secBtns}
+        </div>
         <div class="export-area" style="margin-top:0;max-height:420px">${m.txt}</div>
         <div style="font-size:11px;color:var(--text2);margin-top:6px">${m.savedAt}</div>
       </div>
@@ -4071,7 +4097,47 @@ function delGenMonthly(id){state.genMonthlies=(state.genMonthlies||[]).filter(x=
 function copyGenTxt(stateKey,id){
   const item=(state[stateKey]||[]).find(x=>x.id===id);
   if(!item||!item.txt){alert('暂无内容');return;}
-  navigator.clipboard.writeText(item.txt).then(()=>alert('已复制！'));
+  navigator.clipboard.writeText(item.txt).then(()=>toast('✅ 已复制全部内容！'));
+}
+
+// 复制周报/月报某个模块
+function copyGenSection(stateKey,id,sectionIdx,btn){
+  const item=(state[stateKey]||[]).find(x=>x.id===id);
+  if(!item||!item.txt){alert('暂无内容');return;}
+  // 按行扫描，遇到全是─的行（≥10个）视为分隔符，将文本切分为若干块
+  const lines=item.txt.split('\n');
+  const blocks=[];
+  let cur=[];
+  for(let i=0;i<lines.length;i++){
+    const l=lines[i];
+    if(/^─{10,}$/.test(l.trim())){
+      blocks.push(cur.join('\n').trim());
+      cur=[];
+    } else {
+      cur.push(l);
+    }
+  }
+  if(cur.length)blocks.push(cur.join('\n').trim());
+  // blocks[0]只含标题行，实际内容从blocks[1]开始，所以真正的内容块索引=sectionIdx+1
+  const sec=(blocks[sectionIdx+1]||'').trim();
+  if(!sec){alert('该模块暂无内容');return;}
+  const doCopy=function(){
+    navigator.clipboard.writeText(sec).then(function(){
+      const orig=btn.textContent;
+      btn.textContent='已复制';
+      btn.style.background='var(--green-bg)';btn.style.color='var(--green-text)';btn.style.borderColor='#C0DD97';
+      setTimeout(function(){btn.textContent=orig;btn.style.background='';btn.style.color='';btn.style.borderColor='';},1500);
+    }).catch(function(){
+      const ta=document.createElement('textarea');
+      ta.value=sec;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+      const orig=btn.textContent;
+      btn.textContent='已复制';
+      btn.style.background='var(--green-bg)';btn.style.color='var(--green-text)';btn.style.borderColor='#C0DD97';
+      setTimeout(function(){btn.textContent=orig;btn.style.background='';btn.style.color='';btn.style.borderColor='';},1500);
+    });
+  };
+  doCopy();
 }
 
 
