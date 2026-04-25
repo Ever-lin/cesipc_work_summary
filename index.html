@@ -6294,6 +6294,21 @@ function qtSave(){
     qtEditId=String(obj.id);
     document.getElementById('qt-modal-title').textContent='编辑报价';
   }
+  // 同步项目级公共字段到同项目其他所有产品
+  const syncProject=obj.project;
+  if(syncProject){
+    qtQuotes.forEach(q=>{
+      if(String(q.id)!==String(obj.id)&&q.project===syncProject){
+        q.project=obj.project;
+        q.company=obj.company;
+        q.contact=obj.contact;
+        q.date=obj.date;
+        q.deal=obj.deal;
+        q.stage=obj.stage;
+        q.notes=obj.notes;
+      }
+    });
+  }
   qtPersist();qtRender();qtUpdateCompanyFilter();
   const r=qtQuotes.find(q=>String(q.id)===String(qtEditId));
   qtRenderHistoryInModal(r?r.priceHistory:[]);
