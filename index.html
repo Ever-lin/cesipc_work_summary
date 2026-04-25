@@ -1190,9 +1190,14 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <input type="number" id="qf-p3" min="0" oninput="qtCalc();" onchange="qtCalc();" placeholder="0">
         </div>
         <!-- 运费 -->
-        <div class="field">
-          <label>运费备注（选填）</label>
-          <input id="qf-shipping" placeholder="如：10台 每台运费$70">
+        <div class="field" style="grid-column:1/-1">
+          <label style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span>运费（选填）</span>
+            <button type="button" onclick="qtShipAddRow()" style="background:var(--blue-bg);color:var(--blue-text);border:1px solid var(--blue);border-radius:4px;font-size:11px;padding:2px 9px;cursor:pointer;font-weight:500">＋ 加档</button>
+          </label>
+          <div id="qf-ship-rows" style="display:flex;flex-direction:column;gap:5px"></div>
+          <input type="hidden" id="qf-shipping">
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">每档填数量和运费金额（美金）；只填 1 档即为固定运费。</div>
         </div>
         <!-- 最终报价 (单价，无阶梯时) -->
         <div class="field" style="grid-column:1/-1" id="qf-price-row">
@@ -4766,7 +4771,7 @@ function qtOpenAdd(){
   document.getElementById('qf-qty').value='';
   document.getElementById('qf-cpu').value='';
   document.getElementById('qf-custom').value='';
-  var shipEl=document.getElementById('qf-shipping');if(shipEl)shipEl.value='';
+  if(typeof qtShipLoad==='function')qtShipLoad('');
   document.getElementById('qf-deal').value='';
   document.getElementById('qf-stage').value='';
   document.getElementById('qf-notes').value='';
@@ -4833,7 +4838,7 @@ function qtOpenEdit(id){
   document.getElementById('qf-qty').value=r.qty||'';
   document.getElementById('qf-cpu').value=r.cpu||'';
   document.getElementById('qf-custom').value=r.custom||'';
-  const shipEl=document.getElementById('qf-shipping');if(shipEl)shipEl.value=r.shipping||'';
+  if(typeof qtShipLoad==='function')qtShipLoad(r.shipping||'');
   document.getElementById('qf-deal').value=r.deal||'';
   document.getElementById('qf-stage').value=r.stage||'';
   document.getElementById('qf-notes').value=r.notes||'';
@@ -4879,7 +4884,8 @@ function qtCloseModal(){document.getElementById('qt-modal-bg').classList.remove(
 
 // 检测新增表单是否已有用户填写的内容（编辑模式不需要保护）
 function qtFormHasData(){
-  if(qtEditId!=null) return false; // 编辑模式直接关，不提示
+  // 编辑模式：始终需要确认（防止误点外面丢失修改）
+  if(qtEditId!=null) return true;
   var fields=['qf-project','qf-contact','qf-model','qf-partno','qf-cpu','qf-custom','qf-notes','qf-barbone','qf-ramp','qf-ssdp','qf-price','qf-p3','qf-total-price'];
   for(var i=0;i<fields.length;i++){
     var el=document.getElementById(fields[i]);
@@ -4890,10 +4896,118 @@ function qtFormHasData(){
   return false;
 }
 
-// 安全关闭：新增模式下有数据时弹确认
+// ── 运费阶梯 UI ──
+var _qtShipRows=[]; // [{qty:'',price:''}]
+
+function qtShipRender(){
+  var wrap=document.getElementById('qf-ship-rows');
+  if(!wrap)return;
+  wrap.innerHTML='';
+  if(_qtShipRows.length===0) _qtShipRows.push({qty:'1',price:''});
+  _qtShipRows.forEach(function(row,i){
+    var div=document.createElement('div');
+    div.style.cssText='display:flex;align-items:center;gap:6px;flex-wrap:wrap';
+    // 数量 label
+    var lbl1=document.createElement('span');
+    lbl1.style.cssText='font-size:11px;color:var(--text2);white-space:nowrap';
+    lbl1.textContent='数量';
+    div.appendChild(lbl1);
+    // 数量 input
+    var qtyIn=document.createElement('input');
+    qtyIn.type='number';qtyIn.min='1';qtyIn.step='1';
+    qtyIn.value=row.qty||'';qtyIn.placeholder='1';
+    qtyIn.style.cssText='width:70px;padding:5px 8px;font-size:13px';
+    (function(idx){qtyIn.oninput=function(){qtShipSync(idx,'qty',this.value);};})(i);
+    div.appendChild(qtyIn);
+    // 台，运费 $ label
+    var lbl2=document.createElement('span');
+    lbl2.style.cssText='font-size:11px;color:var(--text2);white-space:nowrap';
+    lbl2.textContent='台，运费 $';
+    div.appendChild(lbl2);
+    // 金额 input
+    var priceIn=document.createElement('input');
+    priceIn.type='number';priceIn.min='0';priceIn.step='0.01';
+    priceIn.value=row.price||'';priceIn.placeholder='0';
+    priceIn.style.cssText='flex:1;min-width:80px;padding:5px 8px;font-size:13px';
+    (function(idx){priceIn.oninput=function(){qtShipSync(idx,'price',this.value);};})(i);
+    div.appendChild(priceIn);
+    // USD label
+    var lbl3=document.createElement('span');
+    lbl3.style.cssText='font-size:11px;color:var(--text2)';
+    lbl3.textContent='USD';
+    div.appendChild(lbl3);
+    // 删除按钮（多行时显示）
+    if(_qtShipRows.length>1){
+      var rmBtn=document.createElement('button');
+      rmBtn.type='button';
+      rmBtn.textContent='×';
+      rmBtn.style.cssText='background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:4px;font-size:11px;padding:2px 7px;cursor:pointer;flex-shrink:0';
+      (function(idx){rmBtn.onclick=function(){qtShipRemove(idx);};})(i);
+      div.appendChild(rmBtn);
+    }
+    wrap.appendChild(div);
+  });
+  qtShipSerialize();
+}
+
+function qtShipSync(i,field,val){
+  if(_qtShipRows[i]) _qtShipRows[i][field]=val;
+  qtShipSerialize();
+}
+
+function qtShipAddRow(){
+  _qtShipRows.push({qty:'',price:''});
+  qtShipRender();
+}
+
+function qtShipRemove(i){
+  _qtShipRows.splice(i,1);
+  if(_qtShipRows.length===0) _qtShipRows.push({qty:'1',price:''});
+  qtShipRender();
+}
+
+function qtShipSerialize(){
+  // 序列化成可读字符串存入隐藏 input，保持与其他代码兼容
+  var parts=[];
+  _qtShipRows.forEach(function(r){
+    var q=r.qty?r.qty.toString().trim():'';
+    var p=r.price?r.price.toString().trim():'';
+    if(q&&p) parts.push(q+'台 $'+p);
+    else if(p) parts.push('$'+p);
+  });
+  var el=document.getElementById('qf-shipping');
+  if(el) el.value=parts.join(' / ');
+}
+
+function qtShipLoad(str){
+  // 从存储字符串反解析回结构化数组
+  _qtShipRows=[];
+  if(!str||!str.trim()){
+    _qtShipRows.push({qty:'1',price:''});
+    qtShipRender();return;
+  }
+  var parts=str.split('/');
+  parts.forEach(function(p){
+    p=p.trim();
+    // 格式 "N台 $M" 或 "$M"
+    var m=p.match(/(\d+)台\s*\$([\d.]+)/);
+    if(m){_qtShipRows.push({qty:m[1],price:m[2]});return;}
+    var m2=p.match(/\$([\d.]+)/);
+    if(m2){_qtShipRows.push({qty:'1',price:m2[1]});return;}
+    // 纯数字
+    var m3=p.match(/^([\d.]+)$/);
+    if(m3){_qtShipRows.push({qty:'1',price:m3[1]});return;}
+    _qtShipRows.push({qty:'',price:p.replace(/[^\d.]/g,'')});
+  });
+  if(_qtShipRows.length===0) _qtShipRows.push({qty:'1',price:''});
+  qtShipRender();
+}
+
+// 安全关闭：新增/编辑模式下有数据时弹确认
 function qtSafeCloseModal(){
   if(qtFormHasData()){
-    if(!confirm('表单中已填写了内容，确定要放弃并关闭吗？')) return;
+    var msg=qtEditId!=null?'编辑内容尚未保存，确定要放弃修改并关闭吗？':'表单中已填写了内容，确定要放弃并关闭吗？';
+    if(!confirm(msg)) return;
   }
   qtCloseModal();
 }
@@ -5103,8 +5217,8 @@ function qtRenderProductRows(){
           </div>
         </div>
         <!-- 运费 -->
-        <div class="field" style="grid-column:1/-1"><label style="font-size:11px">运费备注（选填）</label>
-          <input data-f="shipping" value="${d.shipping||''}" placeholder="如：10台 每台运费$70" style="font-size:12px;padding:5px 8px">
+        <div class="field" style="grid-column:1/-1"><label style="font-size:11px">运费（选填）</label>
+          <input data-f="shipping" value="${d.shipping||''}" placeholder="如：1台 $90 / 10台 $120" style="font-size:12px;padding:5px 8px">
         </div>
         <!-- 价差提示（无阶梯时显示） -->
         <div data-diffid style="grid-column:1/-1;font-size:11px;min-height:16px"></div>
@@ -9330,7 +9444,7 @@ function qtCopyAsNew(id){
   document.getElementById('qf-qty').value=r.qty||'';
   document.getElementById('qf-cpu').value=r.cpu||'';
   document.getElementById('qf-custom').value=r.custom||'';
-  var shipEl=document.getElementById('qf-shipping');if(shipEl)shipEl.value=r.shipping||'';
+  if(typeof qtShipLoad==='function')qtShipLoad(r.shipping||'');
   document.getElementById('qf-deal').value=r.deal||'';
   document.getElementById('qf-stage').value=r.stage||'';
   document.getElementById('qf-notes').value=r.notes||'';
