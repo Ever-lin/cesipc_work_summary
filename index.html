@@ -6743,7 +6743,7 @@ const g=id=>(document.getElementById(id)?.value||'').trim();
 const fa=n=>isNaN(parseFloat(n))?'0.00':parseFloat(n).toFixed(2);
 function fd(v){if(!v)return'';const d=new Date(v+'T00:00:00');return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
 function ini(s){return(s||'').trim().split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()).join('');}
-function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+function toast(m){const t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
 
 // ── auto valid-until = docDate + 7 ──
 function autoValidUntil(){
@@ -7692,10 +7692,12 @@ function _nowrapLines(html){
   const parts=html.split(/<br\s*\/?>/i);
   return parts.map((line,idx)=>{
     const content=line||'&nbsp;';
-    // 第1行（PC System）或含 Accessory 的行允许换行
+    // 第1行（PC System）或含 Accessory 的行允许自动换行
     const allowWrap = idx===0 || /accessory/i.test(line);
-    const ws = allowWrap ? 'normal' : 'nowrap';
-    return`<span style="white-space:${ws};display:block;">${content}</span>`;
+    if(allowWrap){
+      return`<span style="white-space:normal;word-break:break-word;overflow-wrap:break-word;display:block;">${content}</span>`;
+    }
+    return`<span style="white-space:nowrap;display:block;">${content}</span>`;
   }).join('');
 }
 // Part No：型号第一行、料号第二行，各自 nowrap
@@ -8224,18 +8226,22 @@ function saveDocState() {
     }
   };
 
-  const docs = getAllDocs();
-  const idx = docs.findIndex(d => d.proj === proj);
-  if (idx >= 0) {
-    doc.id = docs[idx].id;
-    docs[idx] = doc;
-  } else {
-    doc.id = Date.now();
-    docs.unshift(doc);
+  try {
+    const docs = getAllDocs();
+    const idx = docs.findIndex(d => d.proj === proj);
+    if (idx >= 0) {
+      doc.id = docs[idx].id;
+      docs[idx] = doc;
+    } else {
+      doc.id = Date.now();
+      docs.unshift(doc);
+    }
+    persistDocs(docs);
+    renderSavedDocsList();
+    try { toast('💾 已保存：' + proj); } catch(te) {}
+  } catch(e) {
+    alert('保存失败：' + e.message);
   }
-  persistDocs(docs);
-  renderSavedDocsList();
-  toast('💾 已保存：' + proj);
 }
 
 function loadDocState(id) {
