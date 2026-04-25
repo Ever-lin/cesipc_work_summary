@@ -322,15 +322,15 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   .ci-hdr td { background: #2E75B6 !important; }
 
   /* signatures */
-  .sigs { display: flex; margin-top: 9pt; page-break-inside: avoid; }
-  .sig { flex: 1; }
+  .sigs { display: flex; margin-top: 9pt; page-break-inside: avoid; align-items: stretch; }
+  .sig { flex: 1; display: flex; flex-direction: column; }
   .sig-h { font-weight: 700; font-size: 7.5pt; padding: 2.5pt 5pt;
-    text-align: center; color: #fff; }
+    text-align: center; color: #fff; flex-shrink: 0; }
   .sig-h.navy { background: #1A3C5E; }
   .sig-h.blue { background: #2E75B6; }
   .sig-b { background: #FAFCFF; font-size: 7pt; padding: 5pt;
     text-align: center; border: 0.5pt solid #E0E8F0;
-    min-height: 54pt; display: flex; flex-direction: column;
+    flex: 1; min-height: 54pt; display: flex; flex-direction: column;
     align-items: center; justify-content: flex-start; gap: 4pt; }
   .sig-b.a { color: #AABBCC; }
   .sig-b.b { color: #9E9E9E; }
@@ -8235,11 +8235,12 @@ function saveDocState() {
   try {
     const docs = getAllDocs();
     // If we have a loaded doc id, always overwrite that exact record first
-    let idx = _currentDocId != null ? docs.findIndex(d => d.id === _currentDocId) : -1;
+    let idx = _currentDocId != null ? docs.findIndex(d => String(d.id) === String(_currentDocId)) : -1;
     // Fallback: match by project name
     if (idx < 0) idx = docs.findIndex(d => d.proj === proj);
     if (idx >= 0) {
       doc.id = docs[idx].id;
+      _currentDocId = doc.id; // keep tracking
       docs[idx] = doc;
     } else {
       doc.id = Date.now();
@@ -8260,7 +8261,7 @@ function loadDocState(id) {
   if (!doc) { alert('未找到该记录，id=' + id); return; }
 
   // Remember which doc we're editing so save overwrites the exact same record
-  _currentDocId = doc.id;
+  _currentDocId = doc.id; // use doc.id directly (already correct type from JSON)
 
   // Restore fields
   Object.entries(doc.fields || {}).forEach(([fid, val]) => {
