@@ -2299,15 +2299,31 @@ function renderProjects(){
     const seenKey='proj_seen_'+k.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
     const seenAt=sessionStorage.getItem(seenKey)||'';
     const isNewUpdate=hasHistory&&latestSavedAt&&latestSavedAt!==seenAt;
+    // allEntriesForCard is sorted newest-first (i=0 is latest)
+    // For diff: compare entry[i] against entry[i+1] (the one before it in time)
+    const _diffFields=['name','progressStage','requirement','quantity','quote','progress','status','actionContent','actionTime','confirmPoints','risks','decisionMaker'];
+    function _hl(val,changed){
+      // wrap changed value with an orange highlight pill
+      if(!changed)return val;
+      return `<span style="background:#FEF3C7;color:#92400E;border-radius:3px;padding:0 3px;border:1px solid #FDE68A">${val}</span> <span style="font-size:10px;color:#D97706;font-weight:600">●&nbsp;有变化</span>`;
+    }
+    function _fmtVal(v){ return (v||'').replace(/\n/g,'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'); }
     const historyRows=hasHistory?allEntriesForCard.map((e,i)=>{
       const sc2=SC[e.status]||{label:e.status};
       const isLatest=i===0;
+      // prev = the entry that existed BEFORE this one (i.e. index i+1, which is older)
+      const prev=allEntriesForCard[i+1]||null;
+      const chg=(field)=>prev&&(e[field]||'')!==(prev[field]||'');
+      // count how many fields changed vs prev
+      const changedCount=prev?_diffFields.filter(f=>chg(f)).length:0;
+      const hasChanges=changedCount>0;
       return `<div style="border-bottom:1px solid var(--border2);padding:8px ${isLatest?'8':'4'}px${isLatest?';background:#F0F7FF;margin:0 -4px;border-radius:3px':''}">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;flex-wrap:wrap">
           <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
             <span style="font-size:11px;color:var(--text2)">${e.recordDate||''}${isLatest?' <b style="color:#185FA5">（最新）</b>':''}</span>
-            <span class="badge badge-gray" style="font-size:10px">${sc2.label}</span>
-            ${e.progressStage?`<span class="badge badge-blue" style="font-size:10px">${e.progressStage}</span>`:''}
+            <span class="badge badge-gray" style="font-size:10px">${sc2.label}${chg('status')?'&nbsp;●':''}</span>
+            ${e.progressStage?`<span class="badge badge-blue" style="font-size:10px${chg('progressStage')?';background:#FEF3C7;color:#92400E;border-color:#FDE68A':''}">${e.progressStage}${chg('progressStage')?'&nbsp;●':''}</span>`:''}
+            ${hasChanges&&!isLatest?`<span style="font-size:10px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;border-radius:8px;padding:1px 7px;font-weight:600">↑ ${changedCount}项有变化</span>`:''}
           </div>
           <div class="inline-flex" style="flex-shrink:0">
             <button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="editLatestProgress('${k.replace(/'/g,"\\'")}',${e.id})">编辑</button>
@@ -2315,12 +2331,12 @@ function renderProjects(){
           </div>
         </div>
         <div style="font-size:12px;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);line-height:1.8;color:var(--text2)">
-          <div><b>1. 项目名称：</b>${e.name||''}</div>
-          <div><b>2. 项目进度：</b>${e.progressStage||''}</div>
-          <div><b>3. 项目需求：</b>${(e.requirement||'').replace(/\n/g,'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')}</div>
-          <div><b>4. 项目数量：</b>${e.quantity||''}</div>
-          <div><b>5. 项目报价：</b>${(e.quote||'').replace(/\n/g,'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')}</div>
-          <div style="margin-top:4px"><b>6. 跟进详情：</b>${e.progress?e.progress.replace(/\n/g,'<br>'):'<span style="color:var(--text3);font-style:italic">暂无</span>'}</div>
+          <div><b>1. 项目名称：</b>${_hl(e.name||'',chg('name'))}</div>
+          <div><b>2. 项目进度：</b>${_hl(e.progressStage||'',chg('progressStage'))}</div>
+          <div><b>3. 项目需求：</b>${_hl(_fmtVal(e.requirement),chg('requirement'))}</div>
+          <div><b>4. 项目数量：</b>${_hl(e.quantity||'',chg('quantity'))}</div>
+          <div><b>5. 项目报价：</b>${_hl(_fmtVal(e.quote),chg('quote'))}</div>
+          <div style="margin-top:4px"><b>6. 跟进详情：</b>${_hl(e.progress?e.progress.replace(/\n/g,'<br>'):'<span style="color:var(--text3);font-style:italic">暂无</span>',chg('progress'))}</div>
         </div>
       </div>`;
     }).join(''):'';
