@@ -960,6 +960,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .qt-tbl th{background:var(--bg2);padding:7px 10px;text-align:left;font-weight:500;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border2);white-space:nowrap;cursor:pointer;user-select:none}
 .qt-tbl th:hover{color:var(--text)}
 .qt-tbl td{padding:7px 10px;border-bottom:1px solid var(--border2);white-space:nowrap;font-size:12px;color:var(--text)}
+.qt-tbl td.qt-td-wrap{white-space:normal;word-break:break-all}
 .qt-tbl tr:last-child td{border-bottom:none}
 .qt-tbl tr:hover td{background:var(--bg2)}
 .qt-price{font-weight:500}
@@ -4410,7 +4411,7 @@ function qtRender(){
           <td>${dealBadge(r.deal)}</td>
           <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${r.company||''}">${r.company||'—'}</td>
           <td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;color:var(--blue-text);font-weight:500">${r.contact||'<span style="color:var(--text3)">—</span>'}</td>
-          <td style="max-width:180px;word-break:break-all;white-space:normal" title="${r.project||''}"><span style="color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onclick="qtOpenEdit('${r.id}')" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r.project||'—'}</span></td>
+          <td class="qt-td-wrap" style="max-width:180px" title="${r.project||''}"><span style="color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onclick="qtOpenEdit('${r.id}')" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r.project||'—'}</span></td>
           <td>${r.date||'—'}</td>
           <td><b>${r.model||'—'}</b></td>
           <td>${r.cpu||'—'}</td>
