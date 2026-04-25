@@ -2270,7 +2270,7 @@ function renderProjects(){
       return block;
     }).join('');
     const histHid='hist_'+k.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
-    const hasHistory=allEntriesForCard.length>1;
+    const hasHistory=allEntriesForCard.length>=1;
     const historyRows=hasHistory?allEntriesForCard.map((e,i)=>{
       const sc2=SC[e.status]||{label:e.status};
       const isLatest=i===0;
