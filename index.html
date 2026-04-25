@@ -418,6 +418,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div class="tab" onclick="switchTab('performance')">业绩&回款</div>
   <div class="tab" onclick="switchTab('targets')">目标设定</div>
   <div class="tab" onclick="switchTab('export')">导出报告</div>
+  <div class="tab" onclick="switchTab('clients')">👤 客户档案</div>
 </div>
 
 <!-- ===== 业绩&回款 ===== -->
@@ -1433,7 +1434,8 @@ function init(){
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  const idx=['quotes','projects','cesipc','performance','targets','export'].indexOf(name);
+  const tabs=['quotes','projects','cesipc','performance','targets','export','clients'];
+  const idx=tabs.indexOf(name);
   document.querySelectorAll('.tab')[idx].classList.add('active');
   document.getElementById('panel-'+name).classList.add('active');
   if(name==='quotes'){qtRender();qtUpdateCompanyFilter();}
@@ -1441,6 +1443,7 @@ function switchTab(name){
   if(name==='projects'){renderProjects();refreshProjDatalist();}
   if(name==='targets'){loadTargetForm();}
   if(name==='export'){fillProjTextareas('w');fillProjTextareas('wm');fillDailyProjects();renderGeneratedWeeklies();renderGeneratedMonthlies();refreshExportTargetPreviews();}
+  if(name==='clients'){renderClients();}
 }
 
 function switchSub(id,btn){
@@ -4076,6 +4079,10 @@ function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'
 function autoResizeAll(){document.querySelectorAll('textarea.auto-resize').forEach(autoResize);}
 document.addEventListener('input',e=>{if(e.target.classList.contains('auto-resize'))autoResize(e.target);});
 
+const BACKUP_SNAPSHOT_KEY='ws6_auto_snapshot';
+const BACKUP_TIMESTAMP_KEY='ws6_last_backup_ts';
+const BACKUP_WARN_MINS=30;
+
 function exportBackup(){
   const json=JSON.stringify(state,null,2);
   const blob=new Blob([json],{type:'application/json'});
@@ -4084,6 +4091,9 @@ function exportBackup(){
   const ds=toCST(new Date());
   a.download=`工作总结备份_${ds}.json`;
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  // 备份后更新时间戳，隐藏提醒条
+  try{localStorage.setItem(BACKUP_TIMESTAMP_KEY,Date.now().toString());}catch(e){}
+  const bar=document.getElementById('auto-backup-bar');if(bar)bar.style.display='none';
 }
 
 function importBackup(evt){
@@ -4364,7 +4374,14 @@ function qtRender(){
           <td class="${diff!==null?(diff<0?'qt-diff-neg':'qt-diff-pos'):''}">
             ${diff!==null?(diff>=0?'+':'')+(r.priceCur==='CNY'?'¥':'$')+diff:'—'}
           </td>
-          <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;color:var(--text2);font-size:11px">${r.stage||'—'}</td>
+          <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;color:var(--text2);font-size:11px">${(()=>{
+            const stageTxt=r.stage||'—';
+            const lp=qtGetLinkedProjectStatus(r.project);
+            const statusMap={跟进中:'⭕',确认订单:'🔶',成交:'✅',暂无进展:'⏸️',丢单:'❌'};
+            const icon=lp?(statusMap[lp.status]||''):'';
+            const projStr=lp&&lp.stage?`<div style="margin-top:2px;font-size:10px;color:var(--blue-text);background:var(--blue-bg);border-radius:8px;padding:0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:96px" title="关联项目进度：${lp.stage}">${icon} ${lp.stage}</div>`:'';
+            return`<div title="${stageTxt}" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${stageTxt}</div>${projStr}`;
+          })()}</td>
           <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>
           <td><span style="display:flex;gap:4px;flex-wrap:wrap">
             ${r.project?'<button class="btn btn-xs" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97" onclick="qtImportToDoc(\''+r.id+'\')" title="导入此项目到单据生成">💰 导入</button>':''}
@@ -6061,6 +6078,135 @@ function qtSeed(){
     priceEl.addEventListener('input',function(){this.dataset.manualEdit='1';});
   }
 })();
+
+// ═══════════════════════════════════════════════════
+// 功能 2：报价列表内显示关联项目当前状态
+// ═══════════════════════════════════════════════════
+function qtGetLinkedProjectStatus(projectName){
+  if(!projectName)return null;
+  const projs=state.projects.filter(p=>p.name===projectName||p.linkedQuoteProject===projectName);
+  if(!projs.length)return null;
+  const latest=projs.reduce((a,b)=>b.id>a.id?b:a,projs[0]);
+  return{stage:latest.progressStage||'',status:latest.status||''};
+}
+
+// ═══════════════════════════════════════════════════
+// 功能 3：客户档案
+// ═══════════════════════════════════════════════════
+function renderClients(){
+  const q=document.getElementById('client-search').value.trim().toLowerCase();
+  const sortMode=document.getElementById('client-sort').value;
+  const clientNames=new Set();
+  (qtQuotes||[]).forEach(r=>{if(r.company)clientNames.add(r.company);});
+  state.projects.forEach(p=>{if(p.client)clientNames.add(p.client);});
+  (state.perf||[]).forEach(p=>{if(p.client)clientNames.add(p.client);});
+  let clients=[...clientNames].filter(n=>!q||n.toLowerCase().includes(q));
+  const clientData=clients.map(name=>{
+    const quotes=(qtQuotes||[]).filter(r=>r.company===name);
+    const projs=state.projects.filter(p=>p.client===name);
+    const perfs=(state.perf||[]).filter(p=>p.client===name&&p.type==='业绩'&&!p.noAmount);
+    const collects=(state.perf||[]).filter(p=>p.client===name&&p.type==='回款'&&!p.noAmount);
+    const deals=(state.perf||[]).filter(p=>p.client===name&&(p.type==='销售成交'||p.type==='借测成交'||p.type==='新成交'));
+    const totalPerf=perfs.reduce((s,p)=>s+(p.amount||0),0);
+    const totalCollect=collects.reduce((s,p)=>s+(p.amount||0),0);
+    return{name,quotes,projs,perfs,collects,deals,totalPerf,totalCollect};
+  });
+  if(sortMode==='perf')clientData.sort((a,b)=>b.totalPerf-a.totalPerf);
+  else if(sortMode==='quotes')clientData.sort((a,b)=>b.quotes.length-a.quotes.length);
+  else clientData.sort((a,b)=>a.name.localeCompare(b.name,'zh'));
+  const container=document.getElementById('client-list');
+  if(!clientData.length){container.innerHTML='<div style="color:var(--text2);padding:20px;text-align:center">暂无客户数据</div>';return;}
+  const statusIcon={跟进中:'⭕',确认订单:'🔶',成交:'✅',暂无进展:'⏸️',丢单:'❌'};
+  const dealBadge_={won:'✅ 已成交',confirmed:'🔶 已确认',open:'⭕ 跟进中',pause:'⏸️ 暂无进展',lost:'❌ 丢单'};
+  const dealColor={won:'var(--green-text)',confirmed:'var(--amber-text)',open:'var(--blue-text)',pause:'var(--gray-text)',lost:'var(--red-text)'};
+  const dealBg={won:'var(--green-bg)',confirmed:'var(--amber-bg)',open:'var(--blue-bg)',pause:'var(--gray-bg)',lost:'var(--red-bg)'};
+  container.innerHTML=clientData.map(cd=>{
+    const projMap={};
+    cd.projs.forEach(p=>{const k=p.name||p.client;if(!projMap[k]||p.id>projMap[k].id)projMap[k]=p;});
+    const uniqueProjs=Object.values(projMap);
+    const quoteProjects=[...new Set(cd.quotes.map(q=>q.project).filter(Boolean))];
+    const projsHtml=uniqueProjs.length?uniqueProjs.map(p=>{
+      const icon=statusIcon[p.status]||'•';
+      const pname=(p.name||'').replace(/`/g,"'");
+      return`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--border2);font-size:12px">
+        <span>${icon}</span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.name||''}">${p.name||'（未命名）'}</span>
+        <span style="color:var(--text2);font-size:11px;white-space:nowrap">${p.progressStage||''}</span>
+        <button onclick="switchTab('projects');setTimeout(()=>{document.getElementById('pj-search').value='${pname}';renderProjects();},80)" style="border:none;background:var(--blue-bg);color:var(--blue-text);border-radius:3px;font-size:10px;padding:1px 6px;cursor:pointer;flex-shrink:0">查看</button>
+      </div>`;
+    }).join(''):'<span style="color:var(--text3);font-size:12px">暂无项目记录</span>';
+    const quotesHtml=quoteProjects.length?quoteProjects.map(proj=>{
+      const qs=cd.quotes.filter(q=>q.project===proj);
+      const latest=qs.reduce((a,b)=>b.date>a.date?b:a,qs[0]);
+      const badge=latest.deal?`<span style="font-size:10px;background:${dealBg[latest.deal]};color:${dealColor[latest.deal]};border-radius:8px;padding:1px 6px">${dealBadge_[latest.deal]||latest.deal}</span>`:'';
+      const projSafe=proj.replace(/'/g,"\\'");
+      return`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--border2);font-size:12px">
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${proj}">${proj}</span>
+        ${badge}
+        <span style="color:var(--text2);font-size:11px;white-space:nowrap">${qs.length}条报价</span>
+        <button onclick="switchTab('quotes');setTimeout(()=>{document.getElementById('qt-search').value='${projSafe}';qtPage=1;qtRender();},80)" style="border:none;background:var(--blue-bg);color:var(--blue-text);border-radius:3px;font-size:10px;padding:1px 6px;cursor:pointer;flex-shrink:0">查看</button>
+      </div>`;
+    }).join(''):'<span style="color:var(--text3);font-size:12px">暂无报价记录</span>';
+    const perfHtml=cd.perfs.length
+      ?cd.perfs.slice().sort((a,b)=>(b.calYear||0)-(a.calYear||0)||(b.month||0)-(a.month||0)).slice(0,5).map(p=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--text2)">${p.calYear||''}年${p.month||''}月 ${p.week||''}</span><span style="font-weight:500;color:var(--blue-text)">¥${(p.amount||0).toLocaleString('zh-CN')}</span></div>`).join('')
+      :'<span style="color:var(--text3);font-size:12px">暂无业绩记录</span>';
+    return`<div class="card" style="margin-bottom:12px">
+      <div class="card-header" style="margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span class="card-title" style="font-size:15px">${cd.name}</span>
+          ${cd.totalPerf>0?`<span class="badge badge-blue">业绩 ¥${(cd.totalPerf/10000).toFixed(2).replace(/\.?0+$/,'')}W</span>`:''}
+          ${cd.totalCollect>0?`<span class="badge badge-green">回款 ¥${(cd.totalCollect/10000).toFixed(2).replace(/\.?0+$/,'')}W</span>`:''}
+          ${cd.deals.length?`<span class="badge badge-amber">成交 ${cd.deals.length}次</span>`:''}
+        </div>
+        <div style="display:flex;gap:8px;font-size:12px;color:var(--text2)">
+          <span>项目 ${Object.keys(projMap).length} 个</span>
+          <span>报价 ${cd.quotes.length} 条</span>
+        </div>
+      </div>
+      <div class="grid2" style="gap:14px">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">📁 项目跟进</div>
+          ${projsHtml}
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">💰 报价记录</div>
+          ${quotesHtml}
+        </div>
+      </div>
+      ${cd.perfs.length?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border2)">
+        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">📊 业绩记录（最近5条）</div>
+        ${perfHtml}
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// 功能 4：自动定时备份
+// ═══════════════════════════════════════════════════
+function autoSnapshotNow(){
+  try{
+    localStorage.setItem(BACKUP_SNAPSHOT_KEY,JSON.stringify(state));
+    localStorage.setItem(BACKUP_TIMESTAMP_KEY,Date.now().toString());
+  }catch(e){}
+}
+function checkBackupWarning(){
+  const bar=document.getElementById('auto-backup-bar');
+  if(!bar)return;
+  const tsStr=localStorage.getItem(BACKUP_TIMESTAMP_KEY);
+  const ts=tsStr?parseInt(tsStr):0;
+  const diffMins=(Date.now()-ts)/60000;
+  if(diffMins>BACKUP_WARN_MINS){
+    const mins=Math.round(diffMins);
+    document.getElementById('auto-backup-msg').textContent=
+      `⏰ 距上次自动快照已 ${mins} 分钟，数据已暂存到浏览器缓存。建议点击「备份数据」导出 JSON 以防标签页意外关闭丢数据。`;
+    bar.style.display='flex';
+  }
+}
+setInterval(autoSnapshotNow, 5*60*1000);
+setInterval(checkBackupWarning, 60*1000);
+setTimeout(()=>{autoSnapshotNow();checkBackupWarning();},2000);
+
 </script>
 
 <!-- ===== CESIPC Document Generator ===== -->
@@ -8692,7 +8838,6 @@ document.addEventListener('keydown',e=>{
 
 </script>
 
-
 <!-- ===== Description 模板填写弹窗 ===== -->
 <div id="desc-tpl-bg" style="position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9000;display:none;align-items:center;justify-content:center;">
   <div style="background:#ffffff;border:1px solid #d0cec6;border-radius:12px;padding:20px 22px;width:94%;max-width:540px;max-height:85vh;overflow-y:auto;font-family:'Sora',sans-serif;box-shadow:0 20px 60px rgba(0,0,0,0.4);color:#1a1a18;">
@@ -8749,6 +8894,29 @@ document.addEventListener('keydown',e=>{
       <button onclick="closeDescTpl()" style="padding:7px 16px;border:1px solid var(--c-border);border-radius:7px;background:transparent;color:var(--c-muted);font-size:12px;cursor:pointer;font-family:'Sora',sans-serif;">取消</button>
       <button onclick="applyDescTpl()" style="padding:7px 18px;border:none;border-radius:7px;background:#1A3C5E;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;">✓ 填入 Description</button>
     </div>
+  </div>
+</div>
+
+<!-- ===== 客户档案 ===== -->
+<div id="panel-clients" class="panel">
+  <div class="hint">汇聚同一客户名下的所有报价、项目、业绩与回款记录，方便复盘完整客户历史。</div>
+  <div class="filter-bar" style="margin-bottom:12px">
+    <input id="client-search" placeholder="🔍 搜索客户名称…" oninput="renderClients()" style="flex:1;max-width:320px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--text)">
+    <select id="client-sort" onchange="renderClients()" style="padding:5px 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text)">
+      <option value="name">按名称排序</option>
+      <option value="perf">按业绩排序</option>
+      <option value="quotes">按报价数排序</option>
+    </select>
+  </div>
+  <div id="client-list"></div>
+</div>
+
+<!-- ===== 自动备份提示条 ===== -->
+<div id="auto-backup-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--amber-bg);border-top:1px solid var(--amber);color:var(--amber-text);font-size:12px;padding:7px 14px;z-index:8000;align-items:center;justify-content:space-between;gap:10px">
+  <span id="auto-backup-msg">⏰ 距上次备份已超过 30 分钟，建议导出备份以防数据丢失</span>
+  <div style="display:flex;gap:8px;flex-shrink:0">
+    <button onclick="exportBackup();document.getElementById('auto-backup-bar').style.display='none'" style="padding:4px 12px;border-radius:4px;border:1px solid var(--amber);background:#fff;color:var(--amber-text);font-size:12px;cursor:pointer;font-weight:600">💾 立即备份</button>
+    <button onclick="document.getElementById('auto-backup-bar').style.display='none'" style="padding:4px 10px;border-radius:4px;border:1px solid var(--amber);background:transparent;color:var(--amber-text);font-size:12px;cursor:pointer">忽略</button>
   </div>
 </div>
 
