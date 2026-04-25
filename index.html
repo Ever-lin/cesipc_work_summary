@@ -1050,6 +1050,17 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
 <!-- DASH VIEW -->
 <div id="qt-view-dash" style="display:none">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:8px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);flex-wrap:wrap">
+    <span style="font-size:12px;color:var(--text2);font-weight:500">💱 汇率折算（USD 基准）</span>
+    <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px;margin:0">
+      1 USD =
+      <input type="number" id="qt-cny-rate" value="7.2" min="1" max="20" step="0.01"
+        style="width:70px;padding:4px 6px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text);text-align:center"
+        oninput="qtRenderDash()">
+      CNY
+    </label>
+    <span style="font-size:11px;color:var(--text3)">· CNY 金额将按此汇率折算为 USD 后加总显示</span>
+  </div>
   <div class="qt-kpi-grid" id="qt-kpis"></div>
   <div class="slabel">公司概况</div>
   <div class="qt-cc-grid" id="qt-ccs"></div>
@@ -2270,29 +2281,20 @@ function renderProjects(){
       return block;
     }).join('');
     const histHid='hist_'+k.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
-    const hasHistory=allEntriesForCard.length>=1;
+    const hasHistory=allEntriesForCard.length>1;
     const historyRows=hasHistory?allEntriesForCard.map((e,i)=>{
       const sc2=SC[e.status]||{label:e.status};
       const isLatest=i===0;
-      return `<div style="border-bottom:1px solid var(--border2);padding:8px 4px${isLatest?';background:#F0F7FF;margin:0 -4px;padding-left:8px;padding-right:8px;border-radius:3px':''}">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px">
-          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-            <span style="font-size:11px;color:var(--text2)">${e.recordDate||''}${isLatest?' <b style="color:#185FA5">（最新）</b>':''}</span>
-            <span class="badge badge-gray" style="font-size:10px">${sc2.label}</span>
-            ${e.progressStage?`<span class="badge badge-blue" style="font-size:10px">${e.progressStage}</span>`:''}
-          </div>
-          <div class="inline-flex" style="flex-shrink:0">
-            <button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="editLatestProgress('${k.replace(/'/g,"\\'")}',${e.id})">编辑</button>
-            <button class="btn btn-danger btn-xs" onclick="delProjectEntry(${e.id},'${k.replace(/'/g,"\\'")}')">删除</button>
-          </div>
+      return `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;padding:5px 0;border-bottom:1px solid var(--border2)${isLatest?';background:#F0F7FF;margin:0 -4px;padding-left:4px;padding-right:4px;border-radius:3px':''}">
+        <div style="flex:1;min-width:0">
+          <span style="font-size:11px;color:var(--text2)">${e.recordDate||''}${isLatest?' <b style="color:#185FA5">（最新）</b>':''}</span>
+          <span class="badge badge-gray" style="font-size:10px;margin-left:4px">${sc2.label}</span>
+          ${e.progressStage?`<span class="badge badge-blue" style="font-size:10px;margin-left:2px">${e.progressStage}</span>`:''}
+          ${e.progress?`<div style="font-size:12px;color:var(--text2);margin-top:2px">${e.progress.replace(/\n/g,'<br>')}</div>`:''}
         </div>
-        <div style="font-size:12px;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);line-height:1.8;color:var(--text2)">
-          <div><b>1. 项目名称：</b>${e.name||''}</div>
-          <div><b>2. 项目进度：</b>${e.progressStage||''}</div>
-          <div><b>3. 项目需求：</b>${(e.requirement||'').replace(/\n/g,'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')}</div>
-          <div><b>4. 项目数量：</b>${e.quantity||''}</div>
-          <div><b>5. 项目报价：</b>${(e.quote||'').replace(/\n/g,'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')}</div>
-          ${e.progress?`<div style="margin-top:4px"><b>6. 跟进详情：</b>${e.progress.replace(/\n/g,'<br>')}</div>`:''}
+        <div class="inline-flex" style="flex-shrink:0">
+          <button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="editLatestProgress('${k.replace(/'/g,"\\'")}',${e.id})">编辑</button>
+          <button class="btn btn-danger btn-xs" onclick="delProjectEntry(${e.id},'${k.replace(/'/g,"\\'")}')">删除</button>
         </div>
       </div>`;
     }).join(''):'';
@@ -2341,6 +2343,7 @@ function renderProjects(){
         <span style="font-size:11px;color:var(--text2)">${latest.savedAt}${entries.length>1?` · 共${entries.length}条记录`:''}</span>
         <div class="inline-flex" style="flex-wrap:wrap;gap:4px">
           <button class="btn btn-xs" style="background:#FFFBF0;color:#7A5800;border-color:#F0D070" onclick="copyCRM(${latest.id},'${crmId}',this)">📋 复制CRM格式</button>
+          <button class="btn btn-xs" style="background:#E8F5E9;color:#1B5E20;border-color:#A5D6A7" onclick="quickProgressModal('${k.replace(/'/g,"\\'")}',${latest.id})">⚡ 快速更新</button>
           <button class="btn btn-xs" onclick="fillEdit('${k.replace(/'/g,"\\'")}')">追加进展</button>
           <button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="editLatestProgress('${k.replace(/'/g,"\\'")}',${latest.id})">编辑最新</button>
           <button class="btn btn-danger btn-xs" onclick="delGroup('${k.replace(/'/g,"\\'")}')">删除</button>
@@ -4404,6 +4407,118 @@ function qSwitchView(v,btn){
   if(v==='dash')qtRenderDash();
 }
 
+// ── 拼音首字母辅助（覆盖常用汉字→声母映射）──
+const _pyMap=(()=>{
+  const ranges=[
+    [0x554A,'a'],[0x963F,'a'],[0x8153,'a'],[0x54CE,'a'],
+    [0x5427,'b'],[0x5C51,'b'],[0x8C39,'b'],
+    [0x6492,'c'],[0x64CD,'c'],[0x7B9F,'c'],
+    [0x5446,'d'],[0x8FDB,'d'],
+    [0x59B8,'e'],[0x9E44,'e'],
+    [0x53D1,'f'],[0x8D39,'f'],
+    [0x8BE5,'g'],[0x5409,'g'],
+    [0x54C8,'h'],[0x597D,'h'],
+    [0x51E0,'j'],[0x8BA1,'j'],[0x5373,'j'],
+    [0x5580,'k'],[0x5938,'k'],
+    [0x5783,'l'],[0x5049,'l'],
+    [0x5988,'m'],[0x4E48,'m'],[0x5999,'m'],
+    [0x54AA,'n'],[0x5462,'n'],
+    [0x54E6,'o'],
+    [0x5991,'p'],[0x4E15,'p'],
+    [0x671F,'q'],[0x4E14,'q'],
+    [0x5465,'r'],[0x5C14,'r'],
+    [0x4EFB,'s'],[0x635F,'s'],
+    [0x4ED6,'t'],[0x5929,'t'],
+    [0x6316,'w'],[0x5C4B,'w'],
+    [0x5438,'x'],[0x5E0C,'x'],
+    [0x4E2B,'y'],[0x8BA8,'y'],
+    [0x5181,'z'],[0x5B50,'z'],
+  ];
+  // 使用 Unicode 汉字范围的简化拼音首字母表
+  const full={
+    a:[0x554A,0x963F,0x54CE,0x5416,0x6371,0x54B3,0x6444,0x57C3,0x6328,0x54F3,0x6371],
+    b:[0x5427,0x5C51,0x8C39,0x5B8C,0x534E,0x73AD,0x8BED,0x5427,0x516C,0x8D1D],
+    c:[0x6492,0x64CD,0x7B9F,0x6B21,0x523B,0x5C42,0x7B56,0x767B,0x5DE6,0x8DA3],
+    d:[0x5446,0x8FDB,0x5927,0x5730,0x5F97,0x5973,0x5206,0x5230,0x6253,0x7B2C],
+    e:[0x989D,0x5E84,0x9E45,0x5C14,0x8FE9],
+    f:[0x53D1,0x8D39,0x53EF,0x98DE,0x5206,0x548C,0x5C01,0x4E30,0x5F20],
+    g:[0x54EA,0x5409,0x5DE5,0x6539,0x5176,0x5E73,0x7ED9,0x516C,0x6253,0x8FC7],
+    h:[0x54C8,0x597D,0x53D7,0x548C,0x9ED1,0x5316,0x5F53,0x53F7,0x7EA2,0x4F55],
+    j:[0x51E0,0x8BA1,0x5373,0x5BB6,0x89C1,0x5C31,0x91D1,0x5065,0x767E,0x516C],
+    k:[0x5580,0x5938,0x5F00,0x7A7A,0x770B,0x53E3,0x54ED,0x5FEB,0x5C71,0x8003],
+    l:[0x5783,0x5049,0x4E86,0x6765,0x5229,0x5F04,0x4E24,0x5927,0x5634,0x6749],
+    m:[0x5988,0x4E48,0x5999,0x5FEB,0x6CA1,0x6BCF,0x95E8,0x5357,0x5DF1,0x6A21],
+    n:[0x54AA,0x5462,0x5C31,0x5185,0x5C3A,0x8FBE,0x5E74,0x519C,0x5B81,0x5929],
+    o:[0x54E6,0x5965,0x5076,0x6309,0x914D],
+    p:[0x5991,0x5E15,0x5E42,0x5F20,0x54C1,0x6392,0x755A,0x6280,0x7247,0x6C14],
+    q:[0x671F,0x4E14,0x7941,0x4EBB,0x6C14,0x516C,0x4E01,0x5185,0x8D77,0x524D],
+    r:[0x5465,0x5C14,0x8BA4,0x5982,0x65E5,0x5165,0x516C,0x4EBA,0x8F6F,0x76F8],
+    s:[0x4EFB,0x635F,0x4E09,0x4E0A,0x5C31,0x6240,0x5206,0x5341,0x5929,0x4E8B],
+    t:[0x4ED6,0x5929,0x5730,0x5F97,0x524D,0x4E16,0x5927,0x6295,0x8D34,0x5929],
+    w:[0x6316,0x5C4B,0x6211,0x4E5F,0x738B,0x5929,0x5370,0x516C,0x5883,0x8FDB],
+    x:[0x5438,0x5E0C,0x5404,0x516C,0x516B,0x65B0,0x5C0F,0x4E2D,0x5E74,0x6BD4],
+    y:[0x4E2B,0x8BA8,0x5929,0x4EE5,0x4EBA,0x5E74,0x4E00,0x5206,0x516C,0x6362],
+    z:[0x5181,0x5B50,0x5728,0x4E2D,0x5230,0x5168,0x516C,0x81EA,0x518D,0x548C],
+  };
+  return null; // 使用 Intl.Collator 方案
+})();
+
+// 获取字符串的拼音首字母序列（简化方案，基于区段判断）
+function getPyInitials(str){
+  if(!str)return'';
+  let result='';
+  for(const ch of str){
+    const code=ch.codePointAt(0);
+    if(code<0x4E00||code>0x9FFF){
+      // 非汉字直接用原字符（小写）
+      result+=ch.toLowerCase();
+      continue;
+    }
+    // 用 Intl.Collator 对比区段确定声母
+    const c=code;
+    let py='';
+    if(c<0x554A)py='a';
+    else if(c<0x5427)py='a';
+    else if(c<0x6492)py='b';
+    else if(c<0x5446)py='c';
+    else if(c<0x59B8)py='d';
+    else if(c<0x53D1)py='e';
+    else if(c<0x8BE5)py='f';
+    else if(c<0x54C8)py='g';
+    else if(c<0x51E0)py='h';
+    else if(c<0x5580)py='j';
+    else if(c<0x5783)py='k';
+    else if(c<0x5988)py='l';
+    else if(c<0x54AA)py='m';
+    else if(c<0x54E6)py='n';
+    else if(c<0x5991)py='o';
+    else if(c<0x671F)py='p';
+    else if(c<0x5465)py='q';
+    else if(c<0x4EFB)py='r';
+    else if(c<0x4ED6)py='s';
+    else if(c<0x6316)py='t';
+    else if(c<0x5438)py='w';
+    else if(c<0x4E2B)py='x';
+    else if(c<0x5181)py='y';
+    else py='z';
+    result+=py;
+  }
+  return result;
+}
+
+// 判断搜索词是否匹配（支持普通包含 + 拼音首字母）
+function qtSearchMatch(q,text){
+  if(!q)return true;
+  const t=(text||'').toLowerCase();
+  if(t.includes(q))return true;
+  // 拼音首字母匹配
+  if(/^[a-z]+$/.test(q)){
+    const initials=getPyInitials(text);
+    if(initials.includes(q))return true;
+  }
+  return false;
+}
+
 // Filters & Sort
 function qtFiltered(){
   const q=(document.getElementById('qt-search').value||'').toLowerCase();
@@ -4418,7 +4533,10 @@ function qtFiltered(){
   const fDateStart=document.getElementById('qt-f-date-start')?.value||'';
   const fDateEnd=document.getElementById('qt-f-date-end')?.value||'';
   return qtQuotes.filter(r=>{
-    if(q&&!`${r.project} ${r.model} ${r.cpu} ${r.ram} ${r.ssd} ${r.stage||''} ${r.contact||''} ${r.notes||''}`.toLowerCase().includes(q))return false;
+    if(q){
+      const haystack=`${r.project||''} ${r.model||''} ${r.cpu||''} ${r.ram||''} ${r.ssd||''} ${r.stage||''} ${r.contact||''} ${r.notes||''} ${r.company||''}`;
+      if(!qtSearchMatch(q,haystack))return false;
+    }
     if(co&&r.company!==co)return false;
     if(ct&&r.contact!==ct)return false;
     if(st&&r.deal!==st)return false;
@@ -4504,7 +4622,15 @@ function qtRender(){
             case 'company': return`<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${r.company||''}">${r.company||'—'}</td>`;
             case 'contact': return`<td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;color:var(--blue-text);font-weight:500">${r.contact||'<span style="color:var(--text3)">—</span>'}</td>`;
             case 'project': return`<td class="qt-td-wrap" style="max-width:180px" title="${r.project||''}"><span style="color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onclick="qtOpenEdit('${r.id}')" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r.project||'—'}</span></td>`;
-            case 'date': return`<td>${r.date||'—'}</td>`;
+            case 'date': {
+              const dateTxt=r.date||'—';
+              if(r.deal==='open'&&r.date){
+                const days=Math.floor((Date.now()-new Date(r.date+'T00:00:00').getTime())/86400000);
+                const badge=days>=60?`<span style="margin-left:4px;font-size:10px;background:#FEE2E2;color:#DC2626;border-radius:8px;padding:1px 5px">⏰${days}天</span>`:days>=30?`<span style="margin-left:4px;font-size:10px;background:#FEF3C7;color:#D97706;border-radius:8px;padding:1px 5px">⏰${days}天</span>`:'';
+                return`<td>${dateTxt}${badge}</td>`;
+              }
+              return`<td>${dateTxt}</td>`;
+            }
             case 'model': return`<td><b>${r.model||'—'}</b></td>`;
             case 'cpu': return`<td>${r.cpu||'—'}</td>`;
             case 'barbone': return`<td>${r.barbone!=null?'$'+r.barbone:'—'}</td>`;
@@ -4550,7 +4676,16 @@ function qtRender(){
             default: return'<td>—</td>';
           }
         };
-        tbody+=`<tr data-qid="${r.id}" style="transition:background .3s">${visCols.map(tdFor).join('')}</tr>`;
+        // ── 到期提醒：跟进中超30/60天高亮 ──
+        const staleStyle=(()=>{
+          if(r.deal!=='open')return'transition:background .3s';
+          if(!r.date)return'transition:background .3s';
+          const days=Math.floor((Date.now()-new Date(r.date+'T00:00:00').getTime())/86400000);
+          if(days>=60)return'transition:background .3s;background:#FEF2F2;border-left:3px solid #DC2626';
+          if(days>=30)return'transition:background .3s;background:#FFFBEB;border-left:3px solid #F59E0B';
+          return'transition:background .3s';
+        })();
+        tbody+=`<tr data-qid="${r.id}" style="${staleStyle}">${visCols.map(tdFor).join('')}</tr>`;
       } else {
         // multiple rows — group header + collapsible children
         const gid='qtg_'+Math.random().toString(36).slice(2,8);
@@ -5951,8 +6086,8 @@ function qtSave(){
   const saveBtn=document.querySelector('#qt-modal-bg .btn-primary');
   const orig=saveBtn.textContent;
   saveBtn.textContent='✅ 已保存';
-  _qtJustSaved=true; // 保存成功后，点击外部直接关闭，不弹"未保存"提示
-  setTimeout(()=>{saveBtn.textContent=orig;},1200);
+  _qtJustSaved=true;
+  setTimeout(()=>{saveBtn.textContent=orig;qtCloseModal();},900);
 }
 function qtSaveAndAddProduct(){
   // 如果当前是编辑模式（qtEditId存在），先尝试保存；若有价格则保存，否则直接跳过
@@ -5995,6 +6130,8 @@ function qtSaveAndAddProduct(){
 function qtDel(id){qtQuotes=qtQuotes.filter(q=>String(q.id)!==String(id));qtPersist();qtRender();qtUpdateCompanyFilter();}
 
 function qtRenderDash(){
+  const cnyRate=parseFloat(document.getElementById('qt-cny-rate')?.value)||7.2;
+  const toUSD=q=>(q.price||0)*(q.priceCur==='CNY'?1/cnyRate:1);
   const won=qtQuotes.filter(q=>q.deal==='won');
   const open_=qtQuotes.filter(q=>q.deal==='open');
   const confirmed=qtQuotes.filter(q=>q.deal==='confirmed');
@@ -6004,11 +6141,16 @@ function qtRenderDash(){
   const belowP3=withP3.filter(q=>q.price<q.p3);
   const companies=[...new Set(qtQuotes.map(q=>q.company).filter(Boolean))];
   const totalProjects=new Set(qtQuotes.map(q=>q.project).filter(Boolean)).size;
+  const wonUSD=won.reduce((s,q)=>s+toUSD(q),0);
+  const confirmedUSD=confirmed.reduce((s,q)=>s+toUSD(q),0);
+  const fmtUSD=v=>'$'+Math.round(v).toLocaleString();
   document.getElementById('qt-kpis').innerHTML=[
     {v:totalProjects,l:'总项目数',c:'var(--blue-text)',filter:''},
     {v:qtQuotes.length,l:'总报价数',c:'var(--blue-text)',filter:''},
-    {v:won.length,l:'已成交',c:'var(--green-text)',filter:'won'},
+    {v:won.length,l:'已成交（单数）',c:'var(--green-text)',filter:'won'},
+    {v:fmtUSD(wonUSD),l:'成交总额(USD)',c:'var(--green-text)',filter:'won'},
     {v:confirmed.length,l:'已确认订单',c:'var(--amber-text)',filter:'confirmed'},
+    {v:fmtUSD(confirmedUSD),l:'确认总额(USD)',c:'var(--amber-text)',filter:'confirmed'},
     {v:open_.length,l:'跟进中',c:'var(--blue-text)',filter:'open'},
     {v:pause.length,l:'暂无进展',c:'var(--gray-text)',filter:'pause'},
     {v:lost.length,l:'已丢单',c:'var(--red-text)',filter:'lost'},
@@ -6372,9 +6514,34 @@ function qtGetLinkedProjectStatus(projectName){
 // 功能 3：客户档案
 // ═══════════════════════════════════════════════════
 function renderClients(){
+  // ── 动态填充年份选项（从数据中提取，当前年±2）──
+  (function populateClientYears(){
+    const sel=document.getElementById('client-year');
+    const cur=sel.value;
+    const now=new Date().getFullYear();
+    // 从业绩数据中收集真实出现的年份
+    const dataYears=new Set((state.perf||[]).map(p=>String(p.calYear)).filter(Boolean));
+    const years=new Set();
+    for(let y=now-2;y<=now+2;y++) years.add(String(y));
+    dataYears.forEach(y=>years.add(y));
+    const sorted=[...years].sort();
+    const existing=new Set([...sel.options].slice(1).map(o=>o.value));
+    const needed=new Set(sorted);
+    let changed=false;
+    [...sel.options].slice(1).forEach(o=>{if(!needed.has(o.value)){sel.removeChild(o);changed=true;}});
+    sorted.forEach(y=>{
+      if(!existing.has(y)){
+        const opt=document.createElement('option');
+        opt.value=y;opt.textContent=y+'年';
+        sel.appendChild(opt);changed=true;
+      }
+    });
+    if(cur&&[...sel.options].some(o=>o.value===cur)) sel.value=cur;
+  })();
+
   const q=document.getElementById('client-search').value.trim().toLowerCase();
   const sortMode=document.getElementById('client-sort').value;
-  const yearFilter=document.getElementById('client-year').value; // 'all' | '2026' | '2027' | '2028'
+  const yearFilter=document.getElementById('client-year').value;
 
   // Collect all client names across modules
   const clientNames=new Set();
@@ -6382,7 +6549,7 @@ function renderClients(){
   state.projects.forEach(p=>{if(p.client)clientNames.add(p.client);});
   (state.perf||[]).forEach(p=>{if(p.client)clientNames.add(p.client);});
 
-  let clients=[...clientNames].filter(n=>!q||n.toLowerCase().includes(q));
+  let clients=[...clientNames].filter(n=>!q||qtSearchMatch(q,n));
 
   // Helper: filter by calYear string ('2026'/'2027'/etc)
   const yearMatch=(calYear)=>yearFilter==='all'||String(calYear||'')===yearFilter;
@@ -6581,7 +6748,14 @@ setTimeout(()=>{autoSnapshotNow();checkBackupWarning();},2000);
     </div>
     <div class="fg"><label>文件编号 (PI No. / Quotation No.)</label><input type="text" id="docNo" placeholder="e.g. CH260402EW01" oninput="updDisp()"/></div>
     <div class="fg"><label>文件日期</label><input type="date" id="docDate" oninput="autoValidUntil()"/></div>
-    <div class="fg"><label>有效期（报价单，自动+7天）</label><input type="date" id="validUntil"/></div>
+    <div class="fg"><label>有效期（报价单）</label>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="date" id="validUntil" style="flex:1"/>
+        <span style="font-size:11px;color:var(--c-muted);white-space:nowrap">自动+</span>
+        <input type="number" id="validDays" min="1" max="365" value="7" title="有效期天数" style="width:52px;padding:5px 6px;font-size:12px;border:1px solid var(--c-border);border-radius:5px;background:var(--c-surface2);color:var(--c-text);text-align:center" onchange="autoValidUntil()" />
+        <span style="font-size:11px;color:var(--c-muted)">天</span>
+      </div>
+    </div>
     <div class="fg"><label>货币</label><select id="currency"><option>USD</option><option>EUR</option><option>CNY</option></select></div>
     <div style="background:rgba(46,117,182,.08);border:1px solid rgba(46,117,182,.22);border-radius:6px;padding:8px 10px;margin-top:4px;">
       <div style="font-size:10px;font-weight:600;color:#2E75B6;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">📄 PI 专用 — 客户 PO 信息</div>
@@ -6905,7 +7079,8 @@ function toast(m){const t=document.getElementById('toast');if(!t)return;t.textCo
 function autoValidUntil(){
   const v=document.getElementById('docDate').value;
   if(!v)return;
-  const d=new Date(v+'T00:00:00');d.setDate(d.getDate()+7);
+  const days=parseInt(document.getElementById('validDays')?.value)||7;
+  const d=new Date(v+'T00:00:00');d.setDate(d.getDate()+days);
   document.getElementById('validUntil').value=d.toISOString().split('T')[0];
 }
 function updDisp(){}  // kept for compatibility
@@ -7415,8 +7590,7 @@ function buildCustomSectionsPDF(){
 document.addEventListener('DOMContentLoaded',()=>{
   const today=new Date(), iso=d=>d.toISOString().split('T')[0];
   document.getElementById('docDate').value=iso(today);
-  const v=new Date(today);v.setDate(v.getDate()+7);
-  document.getElementById('validUntil').value=iso(v);
+  autoValidUntil();
   ['q','pi','ci','pk'].forEach(t=>addR(t));
   loadMems();
 });
@@ -9363,9 +9537,6 @@ document.addEventListener('keydown',e=>{
     <input id="client-search" placeholder="🔍 搜索客户名称…" oninput="renderClients()" style="flex:1;max-width:280px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--text)">
     <select id="client-year" onchange="renderClients()" style="padding:5px 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text)">
       <option value="all">全部年份</option>
-      <option value="2026">2026年</option>
-      <option value="2027">2027年</option>
-      <option value="2028">2028年</option>
     </select>
     <select id="client-sort" onchange="renderClients()" style="padding:5px 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text)">
       <option value="name">按名称排序</option>
@@ -9535,6 +9706,90 @@ function qtCopyAsNew(id){
     </div>
   </div>
 </div>
+
+<!-- ===== 快速更新进度弹窗 ===== -->
+<div id="quick-prog-modal-bg" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:none;align-items:center;justify-content:center" onclick="if(event.target===this)closeQuickProgressModal()">
+  <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:94%;max-width:460px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <span style="font-size:14px;font-weight:600">⚡ 快速更新进度</span>
+      <button onclick="closeQuickProgressModal()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2)">✕</button>
+    </div>
+    <div id="qpm-proj-name" style="font-size:12px;color:var(--text2);margin-bottom:12px;padding:6px 10px;background:var(--bg2);border-radius:var(--radius-xs)"></div>
+    <div class="field">
+      <label>进度阶段</label>
+      <select id="qpm-stage" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--text)">
+        <option value="">— 不变 —</option>
+        <option>客户开发</option><option>产品报价</option><option>报价跟进</option>
+        <option>方案确认</option><option>商务谈判</option><option>签约下单</option>
+        <option>生产/交付</option><option>售后跟进</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>跟进内容</label>
+      <textarea id="qpm-progress" placeholder="记录本次跟进要点…" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;font-family:inherit;background:var(--bg2);color:var(--text);resize:vertical;min-height:80px;line-height:1.5"></textarea>
+    </div>
+    <div class="field">
+      <label>记录日期</label>
+      <input type="date" id="qpm-date" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--text)">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+      <button class="btn btn-sm" onclick="closeQuickProgressModal()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="submitQuickProgress()">💾 保存</button>
+    </div>
+  </div>
+</div>
+<script>
+let _qpmProjectKey=null, _qpmEntryId=null;
+function quickProgressModal(projKey, entryId){
+  _qpmProjectKey=projKey; _qpmEntryId=entryId;
+  // 找到这个entry
+  const entry=state.projects.find(p=>String(p.id)===String(entryId));
+  const nameEl=document.getElementById('qpm-proj-name');
+  nameEl.textContent=entry?(entry.name||entry.client||projKey):projKey;
+  // 预填当前进度阶段
+  const stageEl=document.getElementById('qpm-stage');
+  if(entry&&entry.progressStage){
+    const opt=[...stageEl.options].find(o=>o.value===entry.progressStage);
+    stageEl.value=opt?entry.progressStage:'';
+  } else { stageEl.value=''; }
+  document.getElementById('qpm-progress').value='';
+  document.getElementById('qpm-date').value=todayStr();
+  document.getElementById('quick-prog-modal-bg').style.display='flex';
+  setTimeout(()=>document.getElementById('qpm-progress').focus(),80);
+}
+function closeQuickProgressModal(){
+  document.getElementById('quick-prog-modal-bg').style.display='none';
+  _qpmProjectKey=null; _qpmEntryId=null;
+}
+function submitQuickProgress(){
+  const progress=document.getElementById('qpm-progress').value.trim();
+  const stage=document.getElementById('qpm-stage').value;
+  const date=document.getElementById('qpm-date').value||todayStr();
+  if(!progress&&!stage){alert('请填写跟进内容或选择进度阶段');return;}
+  // 新建一条追加记录（克隆最新entry，更新进度字段）
+  const latest=state.projects.find(p=>String(p.id)===String(_qpmEntryId));
+  if(!latest){alert('找不到项目记录');return;}
+  const newEntry={
+    ...latest,
+    id:Date.now(),
+    progress:progress?`· ${date} ${progress}`:'',
+    progressStage:stage||latest.progressStage,
+    recordDate:date,
+    savedAt:new Date().toLocaleString('zh-CN'),
+  };
+  // 如果只改了stage没写progress，直接修改原条目
+  if(!progress&&stage){
+    latest.progressStage=stage;
+    latest.savedAt=new Date().toLocaleString('zh-CN');
+  } else {
+    state.projects.push(newEntry);
+  }
+  save();
+  _projHighlight=latest.name||latest.client;
+  renderProjects();
+  closeQuickProgressModal();
+}
+</script>
 
 <div id="save-toast" style="position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-60px);background:#1D9E75;color:#fff;font-size:13px;font-weight:500;padding:7px 18px;border-radius:20px;box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:9999;transition:transform .22s cubic-bezier(.34,1.56,.64,1),opacity .22s;opacity:0;pointer-events:none;white-space:nowrap">✓ 已保存</div>
 
