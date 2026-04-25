@@ -4110,7 +4110,7 @@ function copyGenSection(stateKey,id,sectionIdx,btn){
   let cur=[];
   for(let i=0;i<lines.length;i++){
     const l=lines[i];
-    if(/^─{10,}$/.test(l.trim())){
+    if(/^─{25,}$/.test(l.trim())){
       blocks.push(cur.join('\n').trim());
       cur=[];
     } else {
