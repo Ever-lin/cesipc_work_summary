@@ -1020,6 +1020,8 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <select class="ym-s" id="qt-f-cpu" onchange="qtRender()" title="按CPU筛选"><option value="">全部CPU</option></select>
     <select class="ym-s" id="qt-f-ram" onchange="qtRender()" title="按RAM筛选"><option value="">全部RAM</option></select>
     <select class="ym-s" id="qt-f-ssd" onchange="qtRender()" title="按SSD筛选"><option value="">全部SSD</option></select>
+    <button id="qt-clear-filter" class="btn btn-sm" onclick="qtClearFilters()" style="display:none;background:var(--red-bg);color:var(--red-text);border-color:var(--red-border);white-space:nowrap">✕ 清除筛选</button>
+    <span id="qt-result-count" style="font-size:12px;color:var(--text2);white-space:nowrap;display:none"></span>
     <button class="btn btn-primary btn-sm" onclick="qtOpenAdd()">＋ 新增报价</button>
     <button class="btn btn-sm" onclick="qtExportCSV()" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97;white-space:nowrap">📥 导出Excel</button>
   </div>
@@ -1064,7 +1066,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 </div>
 
 <!-- MODAL -->
-<div class="qt-modal-bg" id="qt-modal-bg">
+<div class="qt-modal-bg" id="qt-modal-bg" onclick="if(event.target===this)qtCloseModal()">
   <div class="qt-modal">
     <div class="qt-modal-hd"><span class="qt-modal-title" id="qt-modal-title">新增报价</span><button class="qt-mclose" onclick="qtCloseModal()">✕</button></div>
     <div class="qt-p3warn" id="qt-p3warn">⚠️ 当前报价低于P3价格，请确认！</div>
@@ -4122,6 +4124,30 @@ function qtRender(){
   const total=sorted.length;const pages=Math.max(1,Math.ceil(total/QT_PAGE));
   if(qtPage>pages)qtPage=1;
   const data=sorted.slice((qtPage-1)*QT_PAGE,qtPage*QT_PAGE);
+  // ── 清除筛选按钮 & 计数 ──
+  const hasFilter=!!(
+    (document.getElementById('qt-search').value||'').trim()||
+    document.getElementById('qt-f-company').value||
+    document.getElementById('qt-f-contact').value||
+    document.getElementById('qt-f-status').value||
+    document.getElementById('qt-f-p3').value||
+    (document.getElementById('qt-f-model')?.value)||
+    (document.getElementById('qt-f-cpu')?.value)||
+    (document.getElementById('qt-f-ram')?.value)||
+    (document.getElementById('qt-f-ssd')?.value)
+  );
+  const clearBtn=document.getElementById('qt-clear-filter');
+  const countEl=document.getElementById('qt-result-count');
+  if(clearBtn)clearBtn.style.display=hasFilter?'':'none';
+  if(countEl){
+    if(hasFilter){
+      countEl.style.display='';
+      countEl.textContent=`筛选出 ${total} 条（共 ${qtQuotes.length} 条）`;
+      countEl.style.color=total===0?'var(--red-text)':'var(--text2)';
+    } else {
+      countEl.style.display='none';
+    }
+  }
   const dealBadge=d=>d==='won'?'<span class="badge qt-stat-won">✅ 已成交</span>':d==='lost'?'<span class="badge qt-stat-lost">❌ 丢单</span>':d==='open'?'<span class="badge qt-stat-open">⭕ 跟进中</span>':d==='confirmed'?'<span class="badge qt-stat-confirmed">🔶 已确认订单</span>':d==='pause'?'<span class="badge qt-stat-pause">⏸️ 暂无进展</span>':'<span class="badge badge-gray">—</span>';
   document.getElementById('qt-tbody').innerHTML=data.length?data.map(r=>{
     const diff=r.p3?r.price-r.p3:null;
@@ -4129,7 +4155,7 @@ function qtRender(){
       <td>${dealBadge(r.deal)}</td>
       <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis">${r.company||'—'}</td>
       <td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;color:var(--blue-text);font-weight:500">${r.contact||'<span style="color:var(--text3)">—</span>'}</td>
-      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${r.project||''}">${r.project||'—'}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${r.project||''}"><span style="color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onclick="qtOpenEdit('${r.id}')" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r.project||'—'}</span></td>
       <td>${r.date||'—'}</td>
       <td><b>${r.model||'—'}</b></td>
       <td>${r.cpu||'—'}</td>
@@ -4181,6 +4207,18 @@ function qtRender(){
   setTimeout(qtInitResizableCols,0);
 }
 function qtGo(p){qtPage=p;qtRender();}
+function qtClearFilters(){
+  document.getElementById('qt-search').value='';
+  document.getElementById('qt-f-company').value='';
+  document.getElementById('qt-f-contact').value='';
+  document.getElementById('qt-f-status').value='';
+  document.getElementById('qt-f-p3').value='';
+  const m=document.getElementById('qt-f-model');if(m)m.value='';
+  const c=document.getElementById('qt-f-cpu');if(c)c.value='';
+  const r=document.getElementById('qt-f-ram');if(r)r.value='';
+  const s=document.getElementById('qt-f-ssd');if(s)s.value='';
+  qtPage=1;qtRender();
+}
 
 // Resizable columns
 function qtInitResizableCols(){
@@ -8329,7 +8367,13 @@ function applyDescTpl() {
 // });
 
 function closeOv(){document.getElementById('ov').classList.remove('open');}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOv();});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    closeOv();
+    const qtBg=document.getElementById('qt-modal-bg');
+    if(qtBg&&qtBg.classList.contains('open'))qtCloseModal();
+  }
+});
 
 </script>
 
