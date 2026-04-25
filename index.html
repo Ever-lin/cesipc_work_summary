@@ -7686,15 +7686,16 @@ function bankRows(){
 function p$(v){return v?'$'+parseFloat(v).toFixed(2):'';}
 
 // 将 description HTML 的每个视觉行（<br>分隔）包成 nowrap block span
-// 使用 DOM 解析确保处理嵌套 span（颜色、加粗等）后仍正确分行
+// PC System 行（第1行）和 Accessory 行（含"Accessory"关键字）允许自动换行，其他行 nowrap
 function _nowrapLines(html){
   if(!html)return'';
-  // 先把 <br> 统一替换成独特占位符，再按行包装
   const parts=html.split(/<br\s*\/?>/i);
-  return parts.map(line=>{
-    // 空行保持占位，避免行高塌陷
+  return parts.map((line,idx)=>{
     const content=line||'&nbsp;';
-    return`<span style="white-space:nowrap;display:block;">${content}</span>`;
+    // 第1行（PC System）或含 Accessory 的行允许换行
+    const allowWrap = idx===0 || /accessory/i.test(line);
+    const ws = allowWrap ? 'normal' : 'nowrap';
+    return`<span style="white-space:${ws};display:block;">${content}</span>`;
   }).join('');
 }
 // Part No：型号第一行、料号第二行，各自 nowrap
