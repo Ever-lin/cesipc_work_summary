@@ -510,7 +510,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="field">
         <label style="display:flex;align-items:center;justify-content:space-between">
           <span>项目名称（唯一标识）</span>
-          <button type="button" class="btn btn-xs" onclick="openImportFromQuotes()" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue);white-space:nowrap">💰 从报价导入</button>
+          <span style="position:relative;display:inline-flex;align-items:center">
+              <button type="button" class="btn btn-xs" onclick="openImportFromQuotes()" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue);white-space:nowrap">💰 从报价导入</button>
+              <span id="iqt-update-badge" style="display:none;position:absolute;top:-7px;right:-9px;background:#E53E3E;color:#fff;border-radius:50%;font-size:10px;font-weight:700;min-width:17px;height:17px;line-height:17px;text-align:center;padding:0 3px;pointer-events:none;border:1.5px solid var(--bg)"></span>
+            </span>
         </label>
         <input id="proj-name" placeholder="如：Orange_项目10_260330_UTC-S1272A" list="proj-dl" oninput="onProjNameInput()"><datalist id="proj-dl"></datalist>
       </div>
@@ -1476,7 +1479,7 @@ function switchTab(name){
   document.getElementById('panel-'+name).classList.add('active');
   if(name==='quotes'){qtRender();qtUpdateCompanyFilter();}
   if(name==='performance'){renderPerf();renderPivot();}
-  if(name==='projects'){renderProjects();refreshProjDatalist();}
+  if(name==='projects'){renderProjects();refreshProjDatalist();refreshIqtBadge();}
   if(name==='targets'){loadTargetForm();}
   if(name==='export'){fillProjTextareas('w');fillProjTextareas('wm');fillDailyProjects();renderGeneratedWeeklies();renderGeneratedMonthlies();refreshExportTargetPreviews();}
   if(name==='clients'){
@@ -1993,6 +1996,29 @@ function openImportFromQuotes(){
   document.getElementById('import-qt-modal-bg').style.display='flex';
   document.getElementById('iqt-search').value='';
   renderImportQtList();
+}
+function refreshIqtBadge(){
+  const badge=document.getElementById('iqt-update-badge');
+  if(!badge)return;
+  const groups=qtGroupedByProject();
+  let count=0;
+  groups.forEach(g=>{
+    const projName=g.project||'';
+    if(!projName)return;
+    const alreadyLinked=state.projects.some(p=>p.linkedQuoteProject===projName||(p.name||p.client)===projName);
+    if(!alreadyLinked)return;
+    const lastSync=qtQuotes.filter(q=>q.project===projName&&q.lastSyncedAt).map(q=>q.lastSyncedAt).sort().pop()||'';
+    const latestSnap=qtQuotes.filter(q=>q.project===projName).flatMap(q=>q.priceHistory||[]).map(h=>h.savedAt||'').sort().pop()||'';
+    const snapNewer=lastSync&&latestSnap>lastSync;
+    const curDeal=g.deal||'';const curStage=g.stage||'';
+    const syncedDeal=qtQuotes.filter(q=>q.project===projName&&q.lastSyncedDeal!==undefined).map(q=>q.lastSyncedDeal).pop()||'';
+    const syncedStage=qtQuotes.filter(q=>q.project===projName&&q.lastSyncedStage!==undefined).map(q=>q.lastSyncedStage).pop()||'';
+    const dealChanged=lastSync&&curDeal!==syncedDeal;
+    const stageChanged=lastSync&&curStage!==syncedStage;
+    if(snapNewer||dealChanged||stageChanged)count++;
+  });
+  if(count>0){badge.textContent=count;badge.style.display='';}
+  else{badge.style.display='none';}
 }
 function closeImportFromQuotes(){
   document.getElementById('import-qt-modal-bg').style.display='none';
@@ -4625,7 +4651,7 @@ function qtLoad(){
   if(!qtQuotes.length){qtQuotes=qtSeed();qtPersist();}
   qtQuotes=qtQuotes.map(q=>({...q,company:qtNormalizeCompany(q.company||q.customer||'')}));
 }
-function qtPersist(){localStorage.setItem(QT_KEY,JSON.stringify(qtQuotes));showSaveToast();}
+function qtPersist(){localStorage.setItem(QT_KEY,JSON.stringify(qtQuotes));showSaveToast();refreshIqtBadge();}
 
 function qSwitchView(v,btn){
   document.getElementById('qt-view-list').style.display=v==='list'?'':'none';
@@ -4876,7 +4902,7 @@ function qtDoMergeImport(items, target, mode) {
     if (it.shipping) {
       const direct = parseFloat(it.shipping);
       if (!isNaN(direct)) { shippingPerUnit = String(direct); }
-      else { const m1 = it.shipping.match(/1台\s*\$([\d.]+)/); if (m1) { shippingPerUnit = m1[1]; } else { const m2 = it.shipping.match(/\$([\d.]+)/); if (m2) shippingPerUnit = m2[1]; } }
+      else { const m1 = it.shipping.match(/1台\s*\$([\d.]+)/); if (m1) shippingPerUnit = m1[1]; }
     }
 
     const pn = [it.model, it.partno].filter(Boolean).join('\n');
@@ -9506,7 +9532,7 @@ function doDocImportFromQuotes(proj, mode, target) {
           shippingPerUnit = String(direct);
         } else {
           // 取第一段"1台 $XX"里的数字
-          const m = it.shipping.match(/1台\s*\$([\d.]+)/) || it.shipping.match(/\$([\d.]+)/);
+          const m = it.shipping.match(/1台\s*\$([\d.]+)/);
           if (m) shippingPerUnit = m[1];
         }
       }
@@ -9543,7 +9569,7 @@ function doDocImportFromQuotes(proj, mode, target) {
         if (it.shipping) {
           const direct = parseFloat(it.shipping);
           if (!isNaN(direct)) { shippingPerUnit = String(direct); }
-          else { const m1 = it.shipping.match(/1台\s*\$([\d.]+)/); if (m1) { shippingPerUnit = m1[1]; } else { const m2 = it.shipping.match(/\$([\d.]+)/); if (m2) shippingPerUnit = m2[1]; } }
+          else { const m1 = it.shipping.match(/1台\s*\$([\d.]+)/); if (m1) shippingPerUnit = m1[1]; }
         }
         if (mode === 'split') {
           addR(docKey, {
