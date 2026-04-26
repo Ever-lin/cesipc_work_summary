@@ -604,12 +604,14 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <select class="ym-s" id="pj-week" onchange="renderProjects()"><option value="all">全部周次</option><option value="第一周">第一周</option><option value="第二周">第二周</option><option value="第三周">第三周</option><option value="第四周">第四周</option><option value="第五周">第五周</option></select>
     <select class="ym-s" id="pj-status" onchange="renderProjects()"><option value="all">全部状态</option><option value="跟进中">跟进中</option><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="暂无进展">暂无进展</option><option value="丢单">丢单</option></select>
     <button id="pj-update-btn" class="btn btn-sm" onclick="togglePjUpdateFilter()" title="只显示有新进展的项目" style="white-space:nowrap;background:var(--bg);color:var(--text2);border-color:var(--border)">🔔 有更新</button>
+    <button id="pj-sync-btn" class="btn btn-sm" onclick="togglePjSyncFilter()" title="只显示报价有更新待同步的项目" style="white-space:nowrap;background:var(--bg);color:var(--text2);border-color:var(--border)">⚠️ 待同步</button>
     <button id="pj-sort-btn" class="btn btn-sm" onclick="cycleProjSort()" title="切换排序方式" style="white-space:nowrap;min-width:100px">🚨 紧急优先</button>
     <div style="position:relative;flex:1;min-width:140px;max-width:260px">
       <input id="pj-search" placeholder="🔍 搜索项目/客户/跟进/行动/需求" oninput="renderProjects()" style="width:100%;padding:5px 28px 5px 10px;font-size:13px;background:#F5F4F0;border:0.5px solid var(--border);border-radius:var(--radius-xs)">
       <span id="pj-search-clear" onclick="document.getElementById('pj-search').value='';renderProjects()" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text2);font-size:14px;line-height:1">✕</span>
     </div>
     <button class="btn btn-sm" onclick="exportProjectsExcel()" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97;white-space:nowrap">📥 导出Excel</button>
+    <button class="btn btn-sm" onclick="cleanupAllProjectQuotes()" title="把之前因追加导致重复堆积的报价字段，重置为报价管理的最新干净版本" style="background:#FEF2F2;color:#791F1F;border-color:#F7C1C1;white-space:nowrap">🧹 清理重复报价</button>
   </div>
   <div id="proj-status-counts" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
   <div id="proj-list"></div>
@@ -2254,6 +2256,7 @@ function cycleProjSort(){
 let _projHighlight=null;
 
 let _pjUpdateFilter=false;
+let _pjSyncFilter=false;
 function togglePjUpdateFilter(){
   _pjUpdateFilter=!_pjUpdateFilter;
   const btn=document.getElementById('pj-update-btn');
@@ -2262,6 +2265,17 @@ function togglePjUpdateFilter(){
     btn.style.color=_pjUpdateFilter?'#92400E':'var(--text2)';
     btn.style.borderColor=_pjUpdateFilter?'#FDE68A':'var(--border)';
     btn.style.fontWeight=_pjUpdateFilter?'600':'400';
+  }
+  renderProjects();
+}
+function togglePjSyncFilter(){
+  _pjSyncFilter=!_pjSyncFilter;
+  const btn=document.getElementById('pj-sync-btn');
+  if(btn){
+    btn.style.background=_pjSyncFilter?'#FAEEDA':'var(--bg)';
+    btn.style.color=_pjSyncFilter?'#633806':'var(--text2)';
+    btn.style.borderColor=_pjSyncFilter?'#EF9F27':'var(--border)';
+    btn.style.fontWeight=_pjSyncFilter?'600':'400';
   }
   renderProjects();
 }
@@ -2345,6 +2359,8 @@ function renderProjects(){
     }
     // update filter
     if(_pjUpdateFilter&&!_isNewUpdate(entries,k))return;
+    // sync filter
+    if(_pjSyncFilter&&!qtHasUnsyncedUpdate(latest.linkedQuoteProject||(latest.name||latest.client)||k))return;
     counts[latest.status]=(counts[latest.status]||0)+1;
   });
   const countEl=document.getElementById('proj-status-counts');
@@ -2390,6 +2406,8 @@ function renderProjects(){
     if(!stOk)return;
     // update filter
     if(_pjUpdateFilter&&!_isNewUpdate(entries,k))return;
+    // sync filter
+    if(_pjSyncFilter&&!qtHasUnsyncedUpdate(latest.linkedQuoteProject||(latest.name||latest.client)||k))return;
     // search filter — include progressStage so searching "产品报价" etc. works
     if(pjQ){
       const haystack=(k+' '+(latest.client||'')+' '+(latest.progress||'')+' '+(latest.actionContent||'')+' '+(latest.requirement||'')+' '+(latest.notes||'')+' '+(latest.progressStage||'')+' '+(latest.confirmPoints||'')+' '+(latest.decisionMaker||'')+' '+(latest.quote||'')).toLowerCase();
@@ -4337,6 +4355,8 @@ function exportProjectsExcel(){
       const sk='proj_seen_'+k.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
       if(sessionStorage.getItem(sk)===latestSavedAt)return;
     }
+    // sync filter
+    if(_pjSyncFilter&&!qtHasUnsyncedUpdate(latest.linkedQuoteProject||(latest.name||latest.client)||k))return;
     // expanded search — same fields as renderProjects
     if(pjQ){const hay=(k+' '+(latest.client||'')+' '+(latest.progress||'')+' '+(latest.actionContent||'')+' '+(latest.requirement||'')+' '+(latest.progressStage||'')+' '+(latest.confirmPoints||'')+' '+(latest.decisionMaker||'')+' '+(latest.quote||'')).toLowerCase();if(!hay.includes(pjQ))return;}
     const sc=SC[latest.status]||{label:latest.status};
@@ -4575,20 +4595,12 @@ function syncQuoteToProject(quoteProjectName){
   // Update the LATEST entry in the linked group (highest id)
   const latestEntry=linkedEntries.reduce((a,b)=>b.id>a.id?b:a);
 
-  // ── 项目报价：不覆盖，只追加新内容 ──
+  // ── 项目报价：直接用最新报价覆盖（报价管理是单一来源，同步即刷新）──
   if(newQuoteText){
     const existingQuote=(latestEntry.quote||'').trim();
-    // 提取新报价中已有的行，避免重复追加
-    const newLines=newQuoteText.trim().split('\n');
-    const newLinesUnique=newLines.filter(line=>!existingQuote.includes(line.trim())||!line.trim());
-    const hasNewContent=newLinesUnique.some(l=>l.trim());
-    if(!existingQuote){
-      latestEntry.quote=newQuoteText;
-      changes.push('项目报价（新增）');
-    } else if(hasNewContent&&newQuoteText!==existingQuote){
-      // 追加：在原有内容后加入新内容
-      latestEntry.quote=existingQuote+'\n\n'+newQuoteText.trim();
-      changes.push('项目报价（已追加）');
+    if(newQuoteText.trim()!==existingQuote){
+      latestEntry.quote=newQuoteText.trim();
+      changes.push(existingQuote?'项目报价（已更新）':'项目报价（新增）');
     }
   }
   // ── 当前状态（deal → status）：以最新为准，覆盖 ──
@@ -4632,6 +4644,50 @@ function syncQuoteToProject(quoteProjectName){
 
   // Refresh import modal if open
   renderImportQtList();
+}
+
+// 批量清理已脏的项目报价字段（把旧的追加堆积内容重置为从报价管理重新生成的干净版本）
+function cleanupAllProjectQuotes(){
+  const groups=qtGroupedByProject();
+  const groupMap={};
+  groups.forEach(g=>{groupMap[g.project]=g;});
+
+  let cleaned=0;
+  // 对每个有 linkedQuoteProject 的项目组，找到最新记录，用报价管理重新生成干净的报价文本覆盖
+  const seen=new Set();
+  state.projects.forEach(p=>{
+    const projName=p.linkedQuoteProject||(p.name||p.client)||'';
+    if(!projName||seen.has(projName))return;
+    const g=groupMap[projName];
+    if(!g)return;
+    seen.add(projName);
+    // 找该项目组最新记录
+    const linked=state.projects.filter(x=>(x.linkedQuoteProject===projName)||(x.name||x.client)===projName);
+    if(!linked.length)return;
+    const latest=linked.reduce((a,b)=>b.id>a.id?b:a);
+    // 重新生成干净报价文本
+    const blocks=[];
+    g.quotes.forEach((q,qi)=>{
+      const text=qtBuildQuoteText(q);
+      if(text.trim()){
+        const header=g.quotes.length>1?`【产品${qi+1}】${q.model||''}${q.cpu?' · '+q.cpu:''}\n`:'';
+        blocks.push(header+text.trim());
+      }
+    });
+    const newQuote=blocks.join('\n\n─────\n\n').trim();
+    if(newQuote&&newQuote!==(latest.quote||'').trim()){
+      latest.quote=newQuote;
+      cleaned++;
+    }
+  });
+
+  if(cleaned>0){
+    save();
+    renderProjects();
+    alert(`✅ 已清理 ${cleaned} 个项目的报价字段，重复内容已去除。`);
+  } else {
+    alert('所有项目报价字段均已是最新状态，无需清理。');
+  }
 }
 
 // ═══════════════════════════════════════════════════
