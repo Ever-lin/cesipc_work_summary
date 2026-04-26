@@ -4900,9 +4900,9 @@ function qtDoMergeImport(items, target, mode) {
 
     let shippingPerUnit = '';
     if (it.shipping) {
-      const direct = parseFloat(it.shipping);
-      if (!isNaN(direct)) { shippingPerUnit = String(direct); }
-      else { const m1 = it.shipping.match(/1台\s*\$([\d.]+)/); if (m1) shippingPerUnit = m1[1]; }
+      const s = it.shipping.trim();
+      if (/^[\d.]+$/.test(s)) { shippingPerUnit = s; }
+      else { const m1 = s.match(/1台\s*\$([\d.]+)/); if (m1) shippingPerUnit = m1[1]; }
     }
 
     const pn = [it.model, it.partno].filter(Boolean).join('\n');
@@ -9523,18 +9523,12 @@ function doDocImportFromQuotes(proj, mode, target) {
     const desc = descParts.join(' / ');
 
     const addOneRow = (qty, unitPrice) => {
-      // 解析运费：报价里存的是"1台 $90 / 10台 $120"这种格式，取1台的运费
+      // 解析运费：取"1台 $M"格式的M，或纯数字，否则留空
       let shippingPerUnit = '';
       if (it.shipping) {
-        // 先尝试直接解析纯数字
-        const direct = parseFloat(it.shipping);
-        if (!isNaN(direct)) {
-          shippingPerUnit = String(direct);
-        } else {
-          // 取第一段"1台 $XX"里的数字
-          const m = it.shipping.match(/1台\s*\$([\d.]+)/);
-          if (m) shippingPerUnit = m[1];
-        }
+        const s = it.shipping.trim();
+        if (/^[\d.]+$/.test(s)) { shippingPerUnit = s; }
+        else { const m = s.match(/1台\s*\$([\d.]+)/); if (m) shippingPerUnit = m[1]; }
       }
       if (mode === 'split') {
         addR(docKey, {
@@ -9567,9 +9561,9 @@ function doDocImportFromQuotes(proj, mode, target) {
         // 解析运费（同 addOneRow 逻辑）
         let shippingPerUnit = '';
         if (it.shipping) {
-          const direct = parseFloat(it.shipping);
-          if (!isNaN(direct)) { shippingPerUnit = String(direct); }
-          else { const m1 = it.shipping.match(/1台\s*\$([\d.]+)/); if (m1) shippingPerUnit = m1[1]; }
+          const s = it.shipping.trim();
+          if (/^[\d.]+$/.test(s)) { shippingPerUnit = s; }
+          else { const m1 = s.match(/1台\s*\$([\d.]+)/); if (m1) shippingPerUnit = m1[1]; }
         }
         if (mode === 'split') {
           addR(docKey, {
