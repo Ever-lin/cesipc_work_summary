@@ -401,7 +401,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   #panel-cesipc .cesipc-root .toast { position: fixed; bottom: 18px; right: 18px; background: #1A3C5E; color: #fff;
     border-radius: 8px; padding: 9px 15px; font-size: 12px;
     opacity: 0; transform: translateY(7px); transition: all .22s; z-index: 2000; pointer-events: none; }
-  .toast.show { opacity: 1; transform: translateY(0); }
+  #panel-cesipc .cesipc-root .toast.show { opacity: 1; transform: translateY(0); }
 
 </style>
 </head>
@@ -1911,8 +1911,7 @@ function syncProjectToQuotes(projName, newStatus, newStage){
     }
   });
   if(changed){
-    localStorage.setItem(QT_KEY,JSON.stringify(qtQuotes));
-    refreshIqtBadge();
+    qtPersist();
     if(typeof qtRender==='function')qtRender();
     const msg=document.createElement('div');
     msg.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#185FA5;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);white-space:nowrap';
@@ -2606,7 +2605,9 @@ function submitProject(){
     entry.requirement=document.getElementById('proj-requirement').value.trim();
     entry.quantity=document.getElementById('proj-quantity').value.trim();
     entry.quote=document.getElementById('proj-quote').value.trim();
-    entry.progress=document.getElementById('proj-progress').value.trim();
+    const progressVal=document.getElementById('proj-progress').value.trim();
+    const progressDate=document.getElementById('proj-date').value||todayStr();
+    entry.progress=progressVal?`· ${progressDate} ${progressVal}`:'';
     entry.actionContent=document.getElementById('proj-action-content').value.trim();
     entry.actionTime=document.getElementById('proj-action-time').value.trim();
     entry.confirmPoints=document.getElementById('proj-confirm-points').value.trim();
@@ -2649,6 +2650,8 @@ function submitProject(){
     syncProjectToQuotes(entry.linkedQuoteProject||(entry.name||entry.client)||'',entry.status,entry.progressStage);
     _projHighlight=entry.name||entry.client;
     ['proj-name','proj-client','proj-progress-stage','proj-requirement','proj-quantity','proj-quote','proj-progress','proj-action-content','proj-action-time','proj-confirm-points','proj-risks','proj-decision-maker'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
+    document.getElementById('proj-status').value='跟进中';
+    updateStatusBadge('跟进中');
     window._pendingLinkedQuoteProject='';
     document.getElementById('proj-date').value=todayStr();
     var hd=document.getElementById('proj-progress-history');if(hd){hd.style.display='none';hd.textContent='';}
@@ -2731,7 +2734,12 @@ function editLatestProgress(name,id){
     .join('\n');
   const histDivEdit=document.getElementById('proj-progress-history');
   if(histDivEdit){histDivEdit.textContent=allProgressEdit;histDivEdit.style.display=allProgressEdit?'block':'none';}
-  document.getElementById('proj-progress').value=entry.progress||'';
+  // 去掉存储时加的"· 日期 "前缀，只把正文内容填入编辑框
+  (function(){
+    var raw=entry.progress||'';
+    var stripped=raw.replace(/^·\s*\d{4}-\d{2}-\d{2}\s*/,'');
+    document.getElementById('proj-progress').value=stripped;
+  })();
   // Switch card to edit mode UI
   document.getElementById('proj-form-title').textContent='✏️ 编辑记录';
   document.getElementById('proj-form-card').style.borderColor='#378ADD';
@@ -3314,7 +3322,6 @@ function fillDailyProjects(){
         const entries=grouped[k].sort((a,b)=>b.id-a.id);
         const dayEntries=entries.filter(p=>p.recordDate===date);
         if(dayEntries.length>0&&cat.stages.includes(dayEntries[0].progressStage))items.push(dayEntries[0]);
-        else if(!date&&cat.stages.includes(entries[0].progressStage))items.push(entries[0]);
       });
     } else {
       items=Object.keys(grouped).map(k=>grouped[k].sort((a,b)=>b.id-a.id)[0]).filter(p=>cat.stages.includes(p.progressStage));
@@ -4502,6 +4509,7 @@ function exportBackup(){
     'cesipc_images',
     'descTplPresets',
     'descTplMemory',
+    'qt_col_settings_v1',
   ];
   // Also grab any mem_* keys
   for(let i=0;i<localStorage.length;i++){
@@ -4609,7 +4617,7 @@ function syncQuoteToProject(quoteProjectName){
 
   // ── 4. Derive quantity ──
   const qtys=[...new Set(g.quotes.map(x=>x.qty).filter(Boolean))];
-  const newQty=qtys.length?qtys.join(' / ')+'台':'';
+  const newQty=qtys.length?qtys.map(q=>/台/.test(q)?q:q+'台').join(' / '):'';
 
   // ── 5. Build summary of what changed for feedback ──
   const changes=[];
@@ -4917,33 +4925,32 @@ function getPyInitials(str){
       result+=ch.toLowerCase();
       continue;
     }
-    // 用 Intl.Collator 对比区段确定声母
+    // 按 Unicode 汉字区段近似映射拼音声母（升序排列，无死区）
     const c=code;
     let py='';
-    if(c<0x554A)py='a';
-    else if(c<0x5427)py='a';
-    else if(c<0x6492)py='b';
-    else if(c<0x5446)py='c';
-    else if(c<0x59B8)py='d';
-    else if(c<0x53D1)py='e';
-    else if(c<0x8BE5)py='f';
-    else if(c<0x54C8)py='g';
-    else if(c<0x51E0)py='h';
-    else if(c<0x5580)py='j';
-    else if(c<0x5783)py='k';
-    else if(c<0x5988)py='l';
-    else if(c<0x54AA)py='m';
-    else if(c<0x54E6)py='n';
-    else if(c<0x5991)py='o';
-    else if(c<0x671F)py='p';
-    else if(c<0x5465)py='q';
-    else if(c<0x4EFB)py='r';
-    else if(c<0x4ED6)py='s';
-    else if(c<0x6316)py='t';
-    else if(c<0x5438)py='w';
-    else if(c<0x4E2B)py='x';
-    else if(c<0x5181)py='y';
-    else py='z';
+    if(c<0x5427)py='a';       // 啊(554A)之前 → a
+    else if(c<0x6492)py='b';  // 芭(6492)之前 → b
+    else if(c<0x5446)py='c';  // 擦(64CD)之前 → c（注：区段近似）
+    else if(c<0x59B8)py='d';  // 搭(5446)之前 → d
+    else if(c<0x53D1)py='e';  // 蛾(9E45)之前 → e（近似）
+    else if(c<0x8BE5)py='f';  // 发(53D1)→ f；该段含f~g边界
+    else if(c<0x54C8)py='g';  // 噶 → g
+    else if(c<0x51E0)py='h';  // 哈 → h
+    else if(c<0x5580)py='j';  // 击 → j
+    else if(c<0x5783)py='k';  // 喀 → k
+    else if(c<0x5988)py='l';  // 垃 → l
+    else if(c<0x54AA)py='m';  // 妈 → m
+    else if(c<0x54E6)py='n';  // 拿 → n
+    else if(c<0x5991)py='o';  // 哦 → o
+    else if(c<0x671F)py='p';  // 啪 → p
+    else if(c<0x5465)py='q';  // 期 → q
+    else if(c<0x4EFB)py='r';  // 然 → r（近似）
+    else if(c<0x4ED6)py='s';  // 仨 → s
+    else if(c<0x6316)py='t';  // 他 → t
+    else if(c<0x5438)py='w';  // 挖 → w
+    else if(c<0x4E2B)py='x';  // 昔 → x
+    else if(c<0x5181)py='y';  // 丫 → y
+    else py='z';               // 匝 → z
     result+=py;
   }
   return result;
@@ -6592,7 +6599,7 @@ function qtSave(){
     const notes=document.getElementById('qf-notes').value.trim();
     const now=new Date().toISOString().slice(0,16).replace('T',' ');
 
-    validRows.forEach(d=>{
+    validRows.forEach((d,_rowIdx)=>{
       const mode=d.pmode||'breakdown';
       const price=parseFloat(d.price)||null;
       // 每行独立的 deal 和 shipping，空则继承项目级别
@@ -6620,7 +6627,7 @@ function qtSave(){
         tiers:d.tiers||[],
       };
       const obj={
-        id:Date.now()+Math.random(),
+        id:Date.now()*1000+_rowIdx,
         project:proj,company,contact,date,
         model:d.model||'',partno:d.partno||'',qty:d.qty||'',
         cpu:d.cpu||'',custom:d.custom||'',pmode:mode,
@@ -6692,7 +6699,11 @@ function qtSave(){
   if(qtEditId){
     const i=qtQuotes.findIndex(q=>String(q.id)===String(qtEditId));
     if(i!==-1){
-      obj.priceHistory=[...(qtQuotes[i].priceHistory||[]),snap];
+      // 仅当价格或关键字段有变化时才追加历史记录，避免无修改重复保存
+      const prevSnaps=qtQuotes[i].priceHistory||[];
+      const lastSnap=prevSnaps[prevSnaps.length-1];
+      const priceChanged=!lastSnap||lastSnap.price!==snap.price||lastSnap.priceCur!==snap.priceCur||lastSnap.barbone!==snap.barbone||lastSnap.ramp!==snap.ramp||lastSnap.ssdp!==snap.ssdp||lastSnap.totalPrice!==snap.totalPrice||lastSnap.p3!==snap.p3||lastSnap.deal!==snap.deal||lastSnap.stage!==snap.stage;
+      obj.priceHistory=priceChanged?[...prevSnaps,snap]:prevSnaps;
       qtQuotes[i]=obj;
     }
   } else {
@@ -6731,10 +6742,38 @@ function qtSaveAndAddProduct(){
   var deal=document.getElementById('qf-deal').value;
   var stage=document.getElementById('qf-stage').value.trim();
   var notes=document.getElementById('qf-notes').value.trim();
-  // 若当前单品区有价格填写则先保存
+  // 若当前单品区有价格填写则先保存（直接内联保存逻辑，避免 qtSave 内的 setTimeout 关闭弹窗）
   var priceVal=parseFloat(document.getElementById('qf-price').value);
   if(!isNaN(priceVal)&&priceVal>0){
-    qtSave();
+    var _mode=document.querySelector('input[name="qf-pmode"]:checked').value;
+    var _snap=qtBuildSnap(_mode);
+    var _obj={
+      id:qtEditId||Date.now(),
+      project:proj,company,contact,date,
+      model:document.getElementById('qf-model').value.trim(),
+      partno:document.getElementById('qf-partno').value.trim(),
+      qty:_snap.qty,
+      cpu:document.getElementById('qf-cpu').value.trim(),
+      custom:document.getElementById('qf-custom').value.trim(),
+      pmode:_mode,
+      barbone:_snap.barbone,barboneCur:_snap.barboneCur,
+      ram:_snap.ram,ramp:_snap.ramp,rampCur:_snap.rampCur,
+      ssd:_snap.ssd,ssdp:_snap.ssdp,ssdpCur:_snap.ssdpCur,
+      totalPrice:_snap.totalPrice,totalCur:_snap.totalCur,
+      price:priceVal,priceCur:_snap.priceCur,
+      p3:_snap.p3,p3Cur:_snap.p3Cur,
+      shipping:document.getElementById('qf-shipping').value.trim(),
+      deal:deal,stage:stage,notes:notes,
+      tiers:_snap.tiers||[],
+    };
+    if(qtEditId){
+      var _i=qtQuotes.findIndex(function(q){return String(q.id)===String(qtEditId);});
+      if(_i!==-1){_obj.priceHistory=[...(qtQuotes[_i].priceHistory||[]),_snap];qtQuotes[_i]=_obj;}
+    } else {
+      _obj.priceHistory=[_snap];
+      qtQuotes.unshift(_obj);
+    }
+    qtPersist();qtRender();qtUpdateCompanyFilter();
   }
   // 清空产品字段，切换为新增单品模式
   qtEditId=null;
@@ -7352,7 +7391,8 @@ function renderClients(){
 // ═══════════════════════════════════════════════════
 function autoSnapshotNow(){
   try{
-    localStorage.setItem(BACKUP_SNAPSHOT_KEY,JSON.stringify(state));
+    const snapshot={state:state,qtQuotes:qtQuotes};
+    localStorage.setItem(BACKUP_SNAPSHOT_KEY,JSON.stringify(snapshot));
     localStorage.setItem(BACKUP_TIMESTAMP_KEY,Date.now().toString());
   }catch(e){}
 }
@@ -10356,7 +10396,7 @@ function qtCopyAsNew(id){
   document.getElementById('qf-ssdp').value=r.ssdp!=null?r.ssdp:'';
   document.getElementById('qf-ssdp-cur').value=r.ssdpCur||'USD';
   // 整机价格
-  var totP=document.getElementById('qf-total-price');if(totP)totP.value=r.price!=null?r.price:'';
+  var totP=document.getElementById('qf-total-price');if(totP)totP.value=r.totalPrice!=null?r.totalPrice:(r.pmode==='total'&&r.price!=null?r.price:'');
   var totCur=document.getElementById('qf-total-cur');if(totCur)totCur.value=r.priceCur||'USD';
   var totRam=document.getElementById('qf-total-ram');if(totRam)totRam.value=r.ram||'';
   var totSsd=document.getElementById('qf-total-ssd');if(totSsd)totSsd.value=r.ssd||'';
