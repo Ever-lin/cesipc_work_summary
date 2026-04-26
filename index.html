@@ -7552,6 +7552,9 @@ setTimeout(()=>{autoSnapshotNow();checkBackupWarning();},2000);
     <div class="fg"><label>联系人</label><input type="text" id="bCt" placeholder="联系人"/></div>
     <div class="fg"><label>电话</label><input type="text" id="bTel" placeholder="+1-xxx-xxx"/></div>
     <div class="fg"><label>邮箱</label><input type="text" id="bEmail" placeholder="buyer@co.com"/></div>
+    <!-- Custom buyer extra fields -->
+    <div id="buyer-extra-fields"></div>
+    <button class="btn btn-g btn-sm" style="width:100%;margin-top:6px;font-size:11px;" onclick="addBuyerExtraField()">＋ 自定义字段（VAT / 税号 等）</button>
   </div>
   <div class="divider"></div>
   <div>
@@ -8722,8 +8725,52 @@ function getPKRows(){
 function sellerStr(){
   return `${g('sCo')}<br>${g('sAddr').replace(/\n/g,'<br>')}<br>Contact Person: ${g('sCt')}<br>Tel: ${g('sTel')}<br>Email: ${g('sEmail')}<br>Web: ${g('sWeb')}`;
 }
+// ── Buyer custom extra fields ──
+let _buyerExtraCount = 0;
+
+function addBuyerExtraField(label, value) {
+  const id = ++_buyerExtraCount;
+  const container = document.getElementById('buyer-extra-fields');
+  if (!container) return;
+  const row = document.createElement('div');
+  row.id = 'buyer-extra-' + id;
+  row.style.cssText = 'display:flex;gap:5px;align-items:center;margin-bottom:5px;';
+  row.innerHTML = `
+    <input type="text" placeholder="字段名（如 VAT No.）"
+      style="width:90px;flex-shrink:0;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:7px;font-family:'Sora',sans-serif;font-size:11px;padding:5px 7px;color:var(--c-text);"
+      value="${(label||'').replace(/"/g,'&quot;')}">
+    <input type="text" placeholder="内容"
+      style="flex:1;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:7px;font-family:'Sora',sans-serif;font-size:11px;padding:5px 7px;color:var(--c-text);"
+      value="${(value||'').replace(/"/g,'&quot;')}">
+    <button onclick="document.getElementById('buyer-extra-${id}').remove()"
+      style="flex-shrink:0;background:none;border:none;cursor:pointer;font-size:14px;color:#999;padding:2px 4px;line-height:1;" title="删除">✕</button>
+  `;
+  container.appendChild(row);
+}
+
+function getBuyerExtraFields() {
+  const rows = document.querySelectorAll('#buyer-extra-fields > div');
+  return [...rows].map(row => {
+    const inputs = row.querySelectorAll('input');
+    return { label: inputs[0]?.value || '', value: inputs[1]?.value || '' };
+  }).filter(f => f.label || f.value);
+}
+
+function setBuyerExtraFields(extras) {
+  const container = document.getElementById('buyer-extra-fields');
+  if (!container) return;
+  container.innerHTML = '';
+  _buyerExtraCount = 0;
+  (extras || []).forEach(f => addBuyerExtraField(f.label, f.value));
+}
+
 function buyerStr(){
-  return `Company: ${g('bCo')||'&nbsp;'}<br>Address: ${g('bAddr').replace(/\n/g,' ')||'&nbsp;'}<br>Contact Person: ${g('bCt')||'&nbsp;'}<br>Tel: ${g('bTel')||'&nbsp;'}<br>Email: ${g('bEmail')||'&nbsp;'}`;
+  let base = `Company: ${g('bCo')||'&nbsp;'}<br>Address: ${g('bAddr').replace(/\n/g,' ')||'&nbsp;'}<br>Contact Person: ${g('bCt')||'&nbsp;'}<br>Tel: ${g('bTel')||'&nbsp;'}<br>Email: ${g('bEmail')||'&nbsp;'}`;
+  const extras = getBuyerExtraFields();
+  extras.forEach(({label, value}) => {
+    if (label || value) base += `<br>${label||''}${label&&value?': ':''}${value||''}`;
+  });
+  return base;
 }
 function shipEmpty(){return`Company: &nbsp;<br>Address: &nbsp;<br>Contact Person: &nbsp;<br>Tel: &nbsp;<br>Email: &nbsp;`;}
 function dno(){return g('docNo')||'—';}
@@ -9264,6 +9311,7 @@ function saveDocState() {
     proj,
     savedAt: new Date().toLocaleString('zh-CN'),
     fields: fieldVals,
+    buyerExtras: getBuyerExtraFields(),
     modes: { q: _mode.q, pi: _mode.pi },
     sh: {
       q:  document.getElementById('q-sh')?.value  || '0',
@@ -9318,6 +9366,9 @@ function loadDocState(id) {
   // Set project name
   const projEl = document.getElementById('docProject');
   if (projEl) projEl.value = doc.proj || '';
+
+  // Restore custom buyer extra fields
+  setBuyerExtraFields(doc.buyerExtras || []);
 
   // Restore modes
   if (doc.modes) {
