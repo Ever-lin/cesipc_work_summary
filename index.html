@@ -603,6 +603,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <select class="ym-s" id="pj-month" onchange="renderProjects()"><option value="all">全部月份</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select>
     <select class="ym-s" id="pj-week" onchange="renderProjects()"><option value="all">全部周次</option><option value="第一周">第一周</option><option value="第二周">第二周</option><option value="第三周">第三周</option><option value="第四周">第四周</option><option value="第五周">第五周</option></select>
     <select class="ym-s" id="pj-status" onchange="renderProjects()"><option value="all">全部状态</option><option value="跟进中">跟进中</option><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="暂无进展">暂无进展</option><option value="丢单">丢单</option></select>
+    <button id="pj-update-btn" class="btn btn-sm" onclick="togglePjUpdateFilter()" title="只显示有新进展的项目" style="white-space:nowrap;background:var(--bg);color:var(--text2);border-color:var(--border)">🔔 有更新</button>
     <button id="pj-sort-btn" class="btn btn-sm" onclick="cycleProjSort()" title="切换排序方式" style="white-space:nowrap;min-width:100px">🚨 紧急优先</button>
     <div style="position:relative;flex:1;min-width:140px;max-width:260px">
       <input id="pj-search" placeholder="🔍 搜索项目/客户/跟进/行动/需求" oninput="renderProjects()" style="width:100%;padding:5px 28px 5px 10px;font-size:13px;background:#F5F4F0;border:0.5px solid var(--border);border-radius:var(--radius-xs)">
@@ -2251,6 +2252,18 @@ function cycleProjSort(){
 // Highlighted project key after save (scroll-to target)
 let _projHighlight=null;
 
+let _pjUpdateFilter=false;
+function togglePjUpdateFilter(){
+  _pjUpdateFilter=!_pjUpdateFilter;
+  const btn=document.getElementById('pj-update-btn');
+  if(btn){
+    btn.style.background=_pjUpdateFilter?'#FEF3C7':'var(--bg)';
+    btn.style.color=_pjUpdateFilter?'#92400E':'var(--text2)';
+    btn.style.borderColor=_pjUpdateFilter?'#FDE68A':'var(--border)';
+    btn.style.fontWeight=_pjUpdateFilter?'600':'400';
+  }
+  renderProjects();
+}
 function renderProjects(){
   const pjFY=document.getElementById('pj-fy').value,pjS=document.getElementById('pj-status').value;
   const pjMonth=document.getElementById('pj-month').value;
@@ -2259,6 +2272,18 @@ function renderProjects(){
   const pjQ=(pjSearchEl?pjSearchEl.value.trim().toLowerCase():'');
   const clearBtn=document.getElementById('pj-search-clear');
   if(clearBtn)clearBtn.style.display=pjQ?'inline':'none';
+  // helper: get FY of a recordDate string
+  function _dateFY(rd){if(!rd)return'';const p=rd.split('-');const y=parseInt(p[0]);const m=parseInt(p[1]);return m>=4?`FY${y}`:`FY${y-1}`;}
+  // helper: check if project key has unseen update
+  function _isNewUpdate(entries){
+    const sorted=entries.slice().sort((a,b)=>b.id-a.id);
+    if(sorted.length<2)return false;
+    const latestSavedAt=sorted[0].savedAt||'';
+    if(!latestSavedAt)return false;
+    const seenKey='proj_seen_'+((sorted[0].name||sorted[0].client||'').replace(/[^a-zA-Z0-9]/g,'_').slice(0,30));
+    const seenAt=sessionStorage.getItem(seenKey)||'';
+    return latestSavedAt!==seenAt;
+  }
   const grouped={};
   state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
   let keys=Object.keys(grouped);
@@ -2303,6 +2328,8 @@ function renderProjects(){
   keys.forEach(k=>{
     const entries=grouped[k].sort((a,b)=>b.id-a.id);
     const latest=entries[0];
+    // FY filter: check if latest record's date falls in selected FY
+    if(pjFY&&_dateFY(latest.recordDate)!==pjFY)return;
     // apply month/week filter on latest record date
     if(pjMonth!=='all'){
       const rd=latest.recordDate||'';
@@ -2314,6 +2341,8 @@ function renderProjects(){
       const info=weekInfoOfDay(latest.recordDate);
       if(!info||info.week!==pjWeek)return;
     }
+    // update filter
+    if(_pjUpdateFilter&&!_isNewUpdate(entries))return;
     counts[latest.status]=(counts[latest.status]||0)+1;
   });
   const countEl=document.getElementById('proj-status-counts');
@@ -2341,6 +2370,8 @@ function renderProjects(){
   keys.forEach(k=>{
     const entries=grouped[k].sort((a,b)=>b.id-a.id);
     const latest=entries[0];
+    // FY filter
+    if(pjFY&&_dateFY(latest.recordDate)!==pjFY)return;
     // month filter
     if(pjMonth!=='all'){
       const rd=latest.recordDate||'';
@@ -2355,9 +2386,11 @@ function renderProjects(){
     }
     const stOk=pjS==='all'||latest.status===pjS;
     if(!stOk)return;
-    // search filter
+    // update filter
+    if(_pjUpdateFilter&&!_isNewUpdate(entries))return;
+    // search filter — include progressStage so searching "产品报价" etc. works
     if(pjQ){
-      const haystack=(k+' '+(latest.client||'')+' '+(latest.progress||'')+' '+(latest.actionContent||'')+' '+(latest.requirement||'')+' '+(latest.notes||'')).toLowerCase();
+      const haystack=(k+' '+(latest.client||'')+' '+(latest.progress||'')+' '+(latest.actionContent||'')+' '+(latest.requirement||'')+' '+(latest.notes||'')+' '+(latest.progressStage||'')+' '+(latest.confirmPoints||'')+' '+(latest.decisionMaker||'')+' '+(latest.quote||'')).toLowerCase();
       if(!haystack.includes(pjQ))return;
     }
     // ── 紧急度分隔条（仅 urgent 排序模式）──
