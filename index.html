@@ -725,7 +725,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field">
           <label style="display:flex;align-items:center;justify-content:space-between">
             <span>2. 回款目标</span>
-            <button class="btn btn-xs" style="background:var(--teal-bg);color:var(--teal-text);border-color:#A8DFD0" onclick="openProjPicker('w-target-collect-detail','collect')">📋 选择项目导入</button>
+            <span style="display:flex;gap:4px">
+              <button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="fillUnpaidToCollect('w')">💰 从未回款导入</button>
+              <button class="btn btn-xs" style="background:var(--teal-bg);color:var(--teal-text);border-color:#A8DFD0" onclick="openProjPicker('w-target-collect-detail','collect')">📋 选择项目导入</button>
+            </span>
           </label>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             <span style="font-size:13px;color:var(--text2);white-space:nowrap">回款目标：</span>
@@ -828,7 +831,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field">
           <label style="display:flex;align-items:center;justify-content:space-between">
             <span>2. 回款目标</span>
-            <button class="btn btn-xs" style="background:var(--teal-bg);color:var(--teal-text);border-color:#A8DFD0" onclick="openProjPicker('wm-target-collect-detail','collect')">📋 选择项目导入</button>
+            <span style="display:flex;gap:4px">
+              <button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="fillUnpaidToCollect('wm')">💰 从未回款导入</button>
+              <button class="btn btn-xs" style="background:var(--teal-bg);color:var(--teal-text);border-color:#A8DFD0" onclick="openProjPicker('wm-target-collect-detail','collect')">📋 选择项目导入</button>
+            </span>
           </label>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             <span style="font-size:13px;color:var(--text2);white-space:nowrap">回款目标：</span>
@@ -1066,6 +1072,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <option value="100">100条/页</option>
     </select>
     <button class="btn btn-primary btn-sm" onclick="qtOpenAdd()">＋ 新增报价</button>
+    <button id="qt-merge-doc-btn" class="btn btn-sm" onclick="qtMergeToDoc()" style="display:none;background:#1A3C5E;color:#fff;border-color:#1A3C5E;white-space:nowrap">📄 合并导入单据 (<span id="qt-merge-count">0</span>)</button>
     <button class="btn btn-sm" onclick="qtExportCSV()" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97;white-space:nowrap">📥 导出Excel</button>
     <button class="btn btn-sm" onclick="qtOpenColSettings()" title="自定义显示列和列宽" style="background:var(--bg2);color:var(--text2);border-color:var(--border)">⚙️ 列设置</button>
   </div>
@@ -1527,6 +1534,29 @@ function toggleAmt(){
   const isCollect=type==='回款';
   document.getElementById('unpaid-hint').style.display=isCollect?'':'none';
   if(isCollect)renderUnpaidList();else{document.getElementById('unpaid-panel').style.display='none';}
+}
+
+
+// ── 从未回款数据填入回款目标 ──
+function fillUnpaidToCollect(prefix) {
+  const list = getUnpaidPerf();
+  if (!list.length) { toast('暂无未回款业绩记录'); return; }
+
+  // 总额（万元）
+  const totalYuan = list.reduce((s, r) => s + r.unpaid, 0);
+  const totalW = (totalYuan / 10000).toFixed(2).replace(/\.?0+$/, '');
+  const totalEl = document.getElementById(prefix + '-target-collect-total');
+  if (totalEl) totalEl.value = totalW + 'W';
+
+  // 明细（每行：客户：xxW）
+  const detail = list.map(r => {
+    const w = (r.unpaid / 10000).toFixed(2).replace(/\.?0+$/, '');
+    return r.client + '：' + w + 'W';
+  }).join('\n');
+  const detailEl = document.getElementById(prefix + '-target-collect-detail');
+  if (detailEl) { detailEl.value = detail; detailEl.dispatchEvent(new Event('input')); }
+
+  toast('✅ 已导入 ' + list.length + ' 个未回款客户，合计 ' + totalW + 'W');
 }
 
 // ── 计算某客户的未回款金额（业绩总额 - 回款总额）──
@@ -4512,7 +4542,7 @@ function qtBuildThead(){
   const tr=document.getElementById('qt-thead-row');
   if(!tr)return;
   const sortLabels={deal:'状态',company:'公司',contact:'对接业务',project:'项目',date:'日期',model:'型号',price:'报价(P)',p3:'P3',diff:'价差'};
-  tr.innerHTML=qtColSettings.filter(c=>c.vis).map(c=>{
+  tr.innerHTML='<th style="width:32px;min-width:32px;text-align:center"><input type="checkbox" id="qt-check-all" title="全选/取消" onchange="qtCheckAll(this.checked)" style="width:auto;cursor:pointer;accent-color:var(--blue)"></th>'+qtColSettings.filter(c=>c.vis).map(c=>{
     const isActive=c.sortable&&qtSortCol===c.id;
     const arrow=isActive?(qtSortDir>0?'↑':'↓'):'';
     const label=(sortLabels[c.id]||c.label)+(isActive?` ${arrow}`:'');
@@ -4742,6 +4772,158 @@ function qtFiltered(){
     return true;
   });
 }
+// ── 多选合并导入单据 ──
+let _qtCheckedIds = new Set();
+
+function qtRowCheck() {
+  _qtCheckedIds = new Set(
+    [...document.querySelectorAll('.qt-row-check:checked')].map(cb => cb.dataset.qid)
+  );
+  const btn = document.getElementById('qt-merge-doc-btn');
+  const cnt = document.getElementById('qt-merge-count');
+  if (_qtCheckedIds.size > 0) {
+    btn.style.display = '';
+    cnt.textContent = _qtCheckedIds.size;
+  } else {
+    btn.style.display = 'none';
+  }
+  // 更新全选框状态
+  const all = document.querySelectorAll('.qt-row-check');
+  const chkAll = document.getElementById('qt-check-all');
+  if (chkAll) {
+    chkAll.indeterminate = _qtCheckedIds.size > 0 && _qtCheckedIds.size < all.length;
+    chkAll.checked = all.length > 0 && _qtCheckedIds.size === all.length;
+  }
+}
+
+function qtCheckAll(checked) {
+  document.querySelectorAll('.qt-row-check').forEach(cb => {
+    cb.checked = checked;
+  });
+  qtRowCheck();
+}
+
+function qtMergeToDoc() {
+  if (!_qtCheckedIds.size) return;
+  const items = [..._qtCheckedIds].map(id => qtQuotes.find(q => String(q.id) === String(id))).filter(Boolean);
+  if (!items.length) return;
+
+  // 弹窗让用户选择导入到 Quotation 还是 PI，以及报价模式
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML = `
+    <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:24px;width:360px;max-width:92vw">
+      <div style="font-size:15px;font-weight:600;margin-bottom:16px">📄 合并导入单据</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px">已选 <b style="color:var(--text)">${items.length}</b> 个产品，将合并为一份单据</div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:var(--text2);margin-bottom:4px;display:block">导入到</label>
+        <select id="merge-doc-target" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg2);color:var(--text)">
+          <option value="q">Quotation 报价单</option>
+          <option value="pi">PI 形式发票</option>
+        </select>
+      </div>
+      <div style="margin-bottom:18px">
+        <label style="font-size:12px;color:var(--text2);margin-bottom:4px;display:block">报价方式</label>
+        <select id="merge-doc-mode" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg2);color:var(--text)">
+          <option value="split">📋 分项（Barbone+RAM+SSD）</option>
+          <option value="simple">📦 整机报价</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="padding:7px 16px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:13px;cursor:pointer">取消</button>
+        <button id="merge-doc-confirm" style="padding:7px 16px;border:none;border-radius:6px;background:#1A3C5E;color:#fff;font-size:13px;cursor:pointer;font-weight:500">确认导入</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  modal.querySelector('#merge-doc-confirm').onclick = () => {
+    const target = modal.querySelector('#merge-doc-target').value;
+    const mode   = modal.querySelector('#merge-doc-mode').value;
+    modal.remove();
+    qtDoMergeImport(items, target, mode);
+  };
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+function qtDoMergeImport(items, target, mode) {
+  const docKey = target === 'pi' ? 'pi' : 'q';
+  const targetLabel = docKey === 'pi' ? 'PI 形式发票' : 'Quotation 报价单';
+
+  // 切换模式（UI: breakdown/total → 内部: split/simple）
+  const internalMode = mode === 'breakdown' ? 'split' : 'simple';
+  if (_mode[docKey] !== internalMode) setMode(docKey, internalMode);
+
+  // 清空现有行
+  const tbody = document.getElementById(docKey === 'pi' ? 'pi-b' : 'q-b');
+  if (tbody) { tbody.innerHTML = ''; rc[docKey] = 0; }
+
+  // 填入公司名
+  const bCoEl = document.getElementById('bCo');
+  if (bCoEl && items[0] && items[0].company) bCoEl.value = items[0].company;
+
+  let totalRows = 0;
+  items.forEach(it => {
+    const descParts = [it.cpu, it.ram||'', it.ssd||'', it.custom].filter(Boolean);
+    const desc = descParts.join(' / ');
+
+    let shippingPerUnit = '';
+    if (it.shipping) {
+      const direct = parseFloat(it.shipping);
+      if (!isNaN(direct)) { shippingPerUnit = String(direct); }
+      else { const m = it.shipping.match(/\$?\s*([\d.]+)/); if (m) shippingPerUnit = m[1]; }
+    }
+
+    const pn = [it.model, it.partno].filter(Boolean).join('\n');
+    const tiers = it.tiers || [];
+
+    if (tiers.length > 0 && docKey === 'q') {
+      tiers.forEach(tier => {
+        const tierQty   = tier.qty   || it.qty  || '1';
+        const tierPrice = tier.price != null ? String(tier.price) : (it.price != null ? String(it.price) : '');
+        // 运费按tier重新解析
+        let tSh = shippingPerUnit;
+        if (internalMode === 'split') {
+          addR(docKey, { pn, ds:`[${tierQty}台] ${desc}`.trim(), qty:tierQty,
+            bb:  it.barbone != null ? String(it.barbone) : '',
+            ram: it.ramp    != null ? String(it.ramp)    : '',
+            ssd: it.ssdp    != null ? String(it.ssdp)    : '',
+            sh: tSh, ai: tierPrice });
+        } else {
+          addR(docKey, { pn, ds:`[${tierQty}台] ${desc}`.trim(), qty:tierQty, cfg:tierPrice, sh:tSh });
+        }
+        totalRows++;
+      });
+    } else {
+      const unitPrice = it.price != null ? String(it.price) : '';
+      if (internalMode === 'split') {
+        addR(docKey, { pn, ds:desc, qty:it.qty||'1',
+          bb:  it.barbone != null ? String(it.barbone) : '',
+          ram: it.ramp    != null ? String(it.ramp)    : '',
+          ssd: it.ssdp    != null ? String(it.ssdp)    : '',
+          sh: shippingPerUnit, ai: unitPrice });
+      } else {
+        addR(docKey, { pn, ds:desc, qty:it.qty||'1', cfg:unitPrice, sh:shippingPerUnit });
+      }
+      totalRows++;
+    }
+  });
+
+  if (docKey === 'pi') cPI(); else cQ();
+
+  // 跳转到单据生成
+  switchTab('cesipc');
+  cesipcSwitchTab(docKey === 'pi' ? 'pi' : 'quotation', null);
+
+  // 清空选中状态
+  _qtCheckedIds.clear();
+  document.getElementById('qt-merge-doc-btn').style.display = 'none';
+  document.querySelectorAll('.qt-row-check').forEach(cb => cb.checked = false);
+  const ca = document.getElementById('qt-check-all');
+  if (ca) { ca.checked = false; ca.indeterminate = false; }
+
+  toast(`✅ 已合并导入 ${totalRows} 行 → ${targetLabel}`);
+}
+
 function qtSort(col){if(qtSortCol===col)qtSortDir*=-1;else{qtSortCol=col;qtSortDir=-1;}qtRender();}
 function qtSorted(data){
   return[...data].sort((a,b)=>{
@@ -4879,7 +5061,7 @@ function qtRender(){
           if(days>=30)return'transition:background .3s;background:#FFFBEB;border-left:3px solid #F59E0B';
           return'transition:background .3s';
         })();
-        tbody+=`<tr data-qid="${r.id}" style="${staleStyle}">${visCols.map(tdFor).join('')}</tr>`;
+        tbody+=`<tr data-qid="${r.id}" style="${staleStyle}"><td style="text-align:center;width:32px"><input type="checkbox" class="qt-row-check" data-qid="${r.id}" onchange="qtRowCheck()" style="width:auto;cursor:pointer;accent-color:var(--blue)"></td>${visCols.map(tdFor).join('')}</tr>`;
       } else {
         // multiple rows — group header + collapsible children
         const gid='qtg_'+Math.random().toString(36).slice(2,8);
@@ -4935,7 +5117,7 @@ function qtRender(){
             default: return`<td></td>`;
           }
         };
-        tbody+=`<tr onclick="(function(){var open=document.querySelector('tr[data-group=\\'${gid}\\']').style.display==='none';document.querySelectorAll('tr[data-group=\\'${gid}\\']').forEach(function(r){r.style.display=open?'':'none';});document.getElementById('${gid}-ic').textContent=open?'▾':'▸';})()" class="qt-group-row" style="cursor:pointer;background:var(--bg2);border-top:2px solid var(--border2)" title="点击展开/折叠该项目的 ${rows.length} 个产品">${visCols.map(grpTdFor).join('')}</tr>`;
+        tbody+=`<tr onclick="(function(){var open=document.querySelector('tr[data-group=\\'${gid}\\']').style.display==='none';document.querySelectorAll('tr[data-group=\\'${gid}\\']').forEach(function(r){r.style.display=open?'':'none';});document.getElementById('${gid}-ic').textContent=open?'▾':'▸';})()" class="qt-group-row" style="cursor:pointer;background:var(--bg2);border-top:2px solid var(--border2)" title="点击展开/折叠该项目的 ${rows.length} 个产品"><td style="width:32px"></td>${visCols.map(grpTdFor).join('')}</tr>`;
         // Child rows
         rows.forEach(r=>{
           const diff=r.p3?r.price-r.p3:null;
@@ -4969,7 +5151,7 @@ function qtRender(){
               default: return`<td></td>`;
             }
           };
-          tbody+=`<tr data-qid="${r.id}" data-group="${gid}" style="display:none;transition:background .3s;background:var(--bg)">${visCols.map(childTdFor).join('')}</tr>`;
+          tbody+=`<tr data-qid="${r.id}" data-group="${gid}" style="display:none;transition:background .3s;background:var(--bg)"><td style="text-align:center;width:32px"><input type="checkbox" class="qt-row-check" data-qid="${r.id}" onchange="qtRowCheck()" style="width:auto;cursor:pointer;accent-color:var(--blue)"></td>${visCols.map(childTdFor).join('')}</tr>`;
         });
       }
     });
