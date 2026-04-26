@@ -522,7 +522,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <div class="grid2">
       <div class="field"><label>当前状态（由项目进度自动推导，可手动修改）</label>
         <div style="display:flex;align-items:center;gap:8px">
-          <select id="proj-status">
+          <select id="proj-status" onchange="updateStatusBadge(this.value)">
             <option value="跟进中">跟进中</option>
             <option value="确认订单">已确认订单</option>
             <option value="成交">已成交</option>
@@ -536,7 +536,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <label>项目进度
           <span id="progress-term-toggle" onclick="toggleTerms()" style="cursor:pointer;color:var(--blue);font-size:11px;margin-left:6px">📋 查看术语参考 ▾</span>
         </label>
-        <input id="proj-progress-stage" placeholder="如：方案设计 / 拟标 / 产品报价…">
+        <input id="proj-progress-stage" placeholder="如：方案设计 / 拟标 / 产品报价…" oninput="(function(){const v=this.value.trim();const d=STAGE_TO_STATUS[v];if(d){document.getElementById('proj-status').value=d;updateStatusBadge(d);}}).call(this)">
         <div id="progress-terms-box" style="display:none;margin-top:6px;border:1px solid var(--border2);border-radius:var(--radius-xs);overflow:hidden">
           <div style="display:flex;border-bottom:1px solid var(--border2)">
             <button class="btn btn-xs" id="term-tab-regular" onclick="switchTermTab('regular')" style="flex:1;border-radius:0;border:none;background:var(--blue);color:#fff">常规项目</button>
@@ -2234,6 +2234,13 @@ function onProjNameInput(){
 }
 
 function projIcon(status){return status==='成交'?'✅':status==='确认订单'?'🔶':status==='丢单'?'❌':status==='暂无进展'?'⏸️':'⭕️';}
+function updateStatusBadge(status){
+  const badge=document.getElementById('proj-status-badge');
+  if(!badge)return;
+  if(!status){badge.textContent='选择进度后自动填入';return;}
+  const sc=SC[status]||{label:status};
+  badge.textContent=projIcon(status)+' '+sc.label;
+}
 
 
 // Project sort state: 'recent'(default) | 'oldest' | 'name'
@@ -2609,7 +2616,7 @@ function submitProject(){
     save();cancelEditRecord();
     syncProjectToQuotes(entry.linkedQuoteProject||(entry.name||entry.client)||'',entry.status,entry.progressStage);
     _projHighlight=entry.name||entry.client;
-    renderProjects();refreshProjDatalist();
+    renderProjects();refreshProjDatalist();renderProjSync('w-proj-sync');renderProjSync('wm-proj-sync');
     const a=document.createElement('div');a.className='alert-s';a.textContent='记录已更新！';
     document.getElementById('proj-form-card').prepend(a);setTimeout(()=>a.remove(),1800);
   } else {
@@ -2652,11 +2659,8 @@ function fillEdit(name){
   document.getElementById('proj-name').value=l.name||l.client;
   document.getElementById('proj-client').value=l.client;
   document.getElementById('proj-status').value=l.status;
+  updateStatusBadge(l.status);
   document.getElementById('proj-progress-stage').value=l.progressStage||'';
-  document.getElementById('proj-requirement').value=l.requirement||'';
-  document.getElementById('proj-quantity').value=l.quantity||'';
-  document.getElementById('proj-quote').value=l.quote||'';
-  // 跟进详情：显示所有历史进展记录（正序），用户在此基础上追加
   const allEntries=state.projects.filter(p=>(p.name||p.client)===name).sort((a,b)=>a.id-b.id);
   const allProgress=allEntries
     .filter(e=>e.progress&&e.progress.trim())
@@ -2700,11 +2704,8 @@ function editLatestProgress(name,id){
   document.getElementById('proj-name').value=entry.name||entry.client;
   document.getElementById('proj-client').value=entry.client;
   document.getElementById('proj-status').value=entry.status;
+  updateStatusBadge(entry.status);
   document.getElementById('proj-progress-stage').value=entry.progressStage||'';
-  document.getElementById('proj-requirement').value=entry.requirement||'';
-  document.getElementById('proj-quantity').value=entry.quantity||'';
-  document.getElementById('proj-quote').value=entry.quote||'';
-  document.getElementById('proj-progress').value=entry.progress||'';
   document.getElementById('proj-action-content').value=entry.actionContent||'';
   document.getElementById('proj-action-time').value=entry.actionTime||'';
   document.getElementById('proj-confirm-points').value=entry.confirmPoints||'';
@@ -2805,6 +2806,8 @@ function clearProjForm(){
   document.getElementById('proj-submit-btn').textContent='+ 保存（新增或追加进展）';
   document.getElementById('proj-submit-btn').style.background='';
   window._pendingLinkedQuoteProject='';
+  // 隐藏历史进展栏
+  var hd=document.getElementById('proj-progress-history');if(hd){hd.style.display='none';hd.textContent='';}
   // Auto-resize textareas
   document.querySelectorAll('#proj-form-card textarea').forEach(ta=>{ta.style.height='auto';});
   toast('🗑 已清空表单');
