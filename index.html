@@ -188,9 +188,9 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
   /* ═══ PREVIEW OVERLAY ═══ */
   #panel-cesipc .cesipc-root .overlay { display: none; position: fixed; inset: 0; z-index: 1000;
-    background: rgba(0,0,0,.88); overflow-y: auto; padding: 32px 20px; }
-  #panel-cesipc .cesipc-root .overlay.open { display: flex; flex-direction: column; align-items: center; }
-  #panel-cesipc .cesipc-root .pctrl { display: flex; gap: 9px; margin-bottom: 14px; align-self: center; }
+    background: rgba(0,0,0,.88); overflow-y: auto; overflow-x: auto; padding: 32px 20px; }
+  #panel-cesipc .cesipc-root .overlay.open { display: flex; flex-direction: column; align-items: center; min-width: max-content; }
+  #panel-cesipc .cesipc-root .pctrl { display: flex; gap: 9px; margin-bottom: 14px; align-self: center; position: sticky; left: 0; }
   .doc-print { background: #1A3C5E; color: #fff; border: none; border-radius: 7px;
     padding: 8px 18px; cursor: pointer; font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 600; }
   .doc-print:hover { background: #2E75B6; }
@@ -215,6 +215,8 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     padding: 11mm 13mm;
     font-family: Arial, sans-serif; font-size: 9pt; line-height: 1.3;
     box-shadow: 0 14px 50px rgba(0,0,0,.55);
+    margin: 0 auto;
+    text-align: left;
   }
 
   /* ── PAPER HEADER ── */
@@ -283,7 +285,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
   /* items table */
   .items { margin-top: 7pt; page-break-inside: auto; }
-  .items table { width: 100%; border-collapse: collapse; font-size: 7.5pt; }
+  .items table { width: 100%; border-collapse: collapse; font-size: 7.5pt; table-layout: fixed; }
   .items thead { display: table-header-group; }
   .items tbody tr { page-break-inside: avoid; page-break-after: auto; }
   .items thead tr { background: #1A3C5E; }
@@ -296,7 +298,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   .items td.rn { color: #8899AA; text-align: center; }
   .items td.nr { text-align: right; }
   .items td.ct { text-align: center; }
-  .items td.la { text-align: left; max-width: 200pt; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; }
+  .items td.la { text-align: left; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; }
   .items td.pn { text-align: center; white-space: pre-line; }
 
   /* subtotal block */
@@ -8967,14 +8969,14 @@ function buildQ(){
   <div class="items"><table>
     <thead><tr>
       ${_mode.q==='split'
-        ? `<th style="width:20pt">#</th><th style="width:54pt">Part No.</th>
-           <th class="la">Description</th><th style="width:26pt">Qty</th>
-           <th style="width:46pt">Unit Price<br>(Barebone)</th>
-           <th style="width:40pt">Unit Price<br>(RAM)</th>
-           <th style="width:40pt">Unit Price<br>(SSD)</th>
-           <th style="width:40pt">Unit Price<br>(Shipping)</th>
-           <th style="width:50pt">Unit Price<br>(All Included)</th>
-           ${_qTotalColHidden?'':'<th style="width:50pt">Grand Total</th>'}`
+        ? `<th style="width:4%">#</th><th style="width:10%">Part No.</th>
+           <th class="la" style="width:auto">Description</th><th style="width:5%">Qty</th>
+           <th style="width:8%;font-size:5pt;white-space:normal">Unit Price<br>(Barebone)</th>
+           <th style="width:7%;font-size:5pt;white-space:normal">Unit Price<br>(RAM)</th>
+           <th style="width:7%;font-size:5pt;white-space:normal">Unit Price<br>(SSD)</th>
+           <th style="width:7%;font-size:5pt;white-space:normal">Unit Price<br>(Shipping)</th>
+           <th style="width:9%;font-size:5pt;white-space:normal">Unit Price<br>(All Incl.)</th>
+           ${_qTotalColHidden?'':'<th style="width:9%">Grand Total</th>'}`
         : `<th style="width:20pt">#</th><th style="width:54pt">Part No.</th>
            <th class="la">Description</th><th style="width:26pt">Qty</th>
            <th style="width:68pt">Unit Price<br>(Configured)</th>
@@ -9023,14 +9025,14 @@ function buildPI(){
   <div class="items"><table>
     <thead><tr>
       ${_mode.pi==='split'
-        ? `<th style="width:20pt">#</th><th style="width:54pt">Part No.</th>
-           <th class="la">Description</th><th style="width:26pt">Qty</th>
-           <th style="width:46pt">Unit Price<br>(Barebone)</th>
-           <th style="width:40pt">Unit Price<br>(RAM)</th>
-           <th style="width:40pt">Unit Price<br>(SSD)</th>
-           <th style="width:40pt">Unit Price<br>(Shipping)</th>
-           <th style="width:50pt">Unit Price<br>(All Included)</th>
-           ${_qTotalColHidden?'':'<th style="width:50pt">Grand Total</th>'}`
+        ? `<th style="width:4%">#</th><th style="width:10%">Part No.</th>
+           <th class="la" style="width:auto">Description</th><th style="width:5%">Qty</th>
+           <th style="width:8%;font-size:5pt;white-space:normal">Unit Price<br>(Barebone)</th>
+           <th style="width:7%;font-size:5pt;white-space:normal">Unit Price<br>(RAM)</th>
+           <th style="width:7%;font-size:5pt;white-space:normal">Unit Price<br>(SSD)</th>
+           <th style="width:7%;font-size:5pt;white-space:normal">Unit Price<br>(Shipping)</th>
+           <th style="width:9%;font-size:5pt;white-space:normal">Unit Price<br>(All Incl.)</th>
+           ${_qTotalColHidden?'':'<th style="width:9%">Grand Total</th>'}`
         : `<th style="width:20pt">#</th><th style="width:54pt">Part No.</th>
            <th class="la">Description</th><th style="width:26pt">Qty</th>
            <th style="width:68pt">Unit Price<br>(Configured)</th>
