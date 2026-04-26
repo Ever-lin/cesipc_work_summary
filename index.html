@@ -7615,6 +7615,8 @@ setTimeout(()=>{autoSnapshotNow();checkBackupWarning();},2000);
           <td id="q-ta" class="amt">0.00</td><td></td></tr>
         <tr><td id="q-sh-lbl" colspan="8" style="text-align:right;color:var(--muted);font-size:10px;padding-right:6px;">Shipping <span style="font-size:9px;opacity:.6">(auto: Qty × Shipping/unit)</span></td>
           <td><input type="number" id="q-sh" value="0" min="0" step="0.01" oninput="cQ()" style="text-align:right;width:72px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--c-text);padding:3px 4px;font-size:11px;"/></td><td></td></tr>
+        <tr><td colspan="8" style="text-align:right;color:var(--muted);font-size:10px;padding-right:6px;"><select id="q-tax-lbl" onchange="" style="font-size:10px;color:var(--muted);border:none;background:transparent;cursor:pointer;padding:0;outline:none;"><option value="Tax / VAT">Tax / VAT</option><option value="Handling Fee">Handling Fee</option></select></td>
+          <td><input type="number" id="q-tax" value="0" min="0" step="0.01" oninput="cQ()" style="text-align:right;width:72px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--c-text);padding:3px 4px;font-size:11px;"/></td><td></td></tr>
         <tr class="trow"><td id="q-total-lbl" colspan="9" style="text-align:right;padding-right:8px;font-size:11px;">TOTAL AMOUNT DUE</td>
           <td id="q-gt" class="amt" style="font-size:13px;color:#fff;">0.00</td><td></td></tr>
       </tfoot></table>
@@ -7654,6 +7656,8 @@ setTimeout(()=>{autoSnapshotNow();checkBackupWarning();},2000);
           <td id="pi-ta" class="amt">0.00</td><td></td></tr>
         <tr><td id="pi-sh-lbl" colspan="8" style="text-align:right;color:var(--muted);font-size:10px;padding-right:6px;">Shipping <span style="font-size:9px;opacity:.6">(auto: Qty × Shipping/unit)</span></td>
           <td><input type="number" id="pi-sh" value="0" min="0" step="0.01" oninput="cPI()" style="text-align:right;width:72px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--c-text);padding:3px 4px;font-size:11px;"/></td><td></td></tr>
+        <tr><td colspan="8" style="text-align:right;color:var(--muted);font-size:10px;padding-right:6px;"><select id="pi-tax-lbl" style="font-size:10px;color:var(--muted);border:none;background:transparent;cursor:pointer;padding:0;outline:none;"><option value="Tax / VAT">Tax / VAT</option><option value="Handling Fee">Handling Fee</option></select></td>
+          <td><input type="number" id="pi-tax" value="0" min="0" step="0.01" oninput="cPI()" style="text-align:right;width:72px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--c-text);padding:3px 4px;font-size:11px;"/></td><td></td></tr>
         <tr class="trow"><td id="pi-total-lbl" colspan="9" style="text-align:right;padding-right:8px;font-size:11px;">TOTAL AMOUNT DUE</td>
           <td id="pi-gt" class="amt" style="font-size:13px;color:#fff;">0.00</td><td></td></tr>
       </tfoot></table>
@@ -7684,6 +7688,8 @@ setTimeout(()=>{autoSnapshotNow();checkBackupWarning();},2000);
           <td id="ci-ta" class="amt">0.00</td><td></td></tr>
         <tr><td colspan="5" style="text-align:right;color:var(--muted);font-size:10px;padding-right:6px;">Shipping</td><td></td>
           <td><input type="number" id="ci-sh" value="0" min="0" step="0.01" oninput="cCI()" style="text-align:right;width:84px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--c-text);padding:3px 4px;font-size:11px;"/></td><td></td></tr>
+        <tr><td colspan="5" style="text-align:right;color:var(--muted);font-size:10px;padding-right:6px;"><select id="ci-tax-lbl" style="font-size:10px;color:var(--muted);border:none;background:transparent;cursor:pointer;padding:0;outline:none;"><option value="Tax / VAT">Tax / VAT</option><option value="Handling Fee">Handling Fee</option></select></td><td></td>
+          <td><input type="number" id="ci-tax" value="0" min="0" step="0.01" oninput="cCI()" style="text-align:right;width:84px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--c-text);padding:3px 4px;font-size:11px;"/></td><td></td></tr>
         <tr class="trow"><td colspan="6" style="text-align:right;padding-right:8px;font-size:11px;">TOTAL AMOUNT DUE</td>
           <td id="ci-gt" class="amt" style="font-size:13px;color:#fff;">0.00</td><td></td></tr>
       </tfoot></table>
@@ -8544,7 +8550,8 @@ function cQ(){
   const shEl=document.getElementById('q-sh');
   if(shEl&&tsh>0)shEl.value=tsh.toFixed(2);
   const sh=parseFloat(shEl?.value)||0;
-  document.getElementById('q-gt').textContent=fa(ta+sh);
+  const tax=parseFloat(document.getElementById('q-tax')?.value)||0;
+  document.getElementById('q-gt').textContent=fa(ta+sh+tax);
 }
 
 let _qTotalColHidden=false;
@@ -8612,7 +8619,8 @@ function cPI(){
   const shEl2=document.getElementById('pi-sh');
   if(shEl2&&tsh>0)shEl2.value=tsh.toFixed(2);
   const sh=parseFloat(shEl2?.value)||0;
-  document.getElementById('pi-gt').textContent=fa(ta+sh);
+  const tax=parseFloat(document.getElementById('pi-tax')?.value)||0;
+  document.getElementById('pi-gt').textContent=fa(ta+sh+tax);
 }
 function cCI(){
   let tq=0,ta=0;
@@ -8626,7 +8634,8 @@ function cCI(){
   document.getElementById('ci-tq').textContent=tq;
   document.getElementById('ci-ta').textContent=fa(ta);
   const sh=parseFloat(document.getElementById('ci-sh')?.value)||0;
-  document.getElementById('ci-gt').textContent=fa(ta+sh);
+  const tax=parseFloat(document.getElementById('ci-tax')?.value)||0;
+  document.getElementById('ci-gt').textContent=fa(ta+sh+tax);
 }
 function cCBM(id){
   const tr=document.getElementById('pk-r-'+id);if(!tr)return;
@@ -8844,9 +8853,11 @@ function pkItemRows(rows){
   </tr>`).join('');
 }
 
-function subBlock(tqty,tamt,ship,grand,cols,hideTotal){
+function subBlock(tqty,tamt,ship,grand,cols,hideTotal,tax,taxLabel){
   // cols = 10 (split Q/PI), 6 (simple Q/PI), 7 (CI)
   const c=g('currency');
+  const txAmt=parseFloat(tax)||0;
+  const txLbl=taxLabel||'Tax / VAT';
   if(cols===10){
     return`<table style="width:100%;border-collapse:collapse;margin-top:3pt;">
       <thead><tr class="sub-hdr-row">
@@ -8855,7 +8866,7 @@ function subBlock(tqty,tamt,ship,grand,cols,hideTotal){
         <td style="background:#1A3C5E;color:#fff;font-weight:700;padding:3pt 4pt;border:0.5pt solid #2E75B6;text-align:center;font-size:7pt;">Products</td>
         <td colspan="3" style="background:#1A3C5E;padding:3pt;border:0.5pt solid #2E75B6;"></td>
         <td style="background:#1A3C5E;color:#fff;font-weight:700;padding:3pt 4pt;border:0.5pt solid #2E75B6;text-align:center;font-size:7pt;">Shipping</td>
-        <td style="background:#1A3C5E;color:#fff;font-weight:700;padding:3pt 4pt;border:0.5pt solid #2E75B6;text-align:center;font-size:7pt;">Tax / VAT</td>
+        <td style="background:#1A3C5E;color:#fff;font-weight:700;padding:3pt 4pt;border:0.5pt solid #2E75B6;text-align:center;font-size:7pt;">${txLbl}</td>
       </tr></thead>
       <tbody>
         <tr>
@@ -8864,7 +8875,7 @@ function subBlock(tqty,tamt,ship,grand,cols,hideTotal){
           <td class="sub-data-row" style="background:#F2F7FB;text-align:center;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">${c} ${tamt}</td>
           <td colspan="3" style="background:#F2F7FB;border:0.5pt solid #E0E8F0;"></td>
           <td class="sub-data-row" style="background:#F2F7FB;text-align:center;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">${c} ${ship}</td>
-          <td class="sub-data-row" style="background:#F2F7FB;text-align:center;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">0</td>
+          <td class="sub-data-row" style="background:#F2F7FB;text-align:center;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">${txAmt>0?c+' '+fa(txAmt):'—'}</td>
         </tr>
         ${hideTotal?'':
         `<tr class="total-amt-row">
@@ -8880,14 +8891,14 @@ function subBlock(tqty,tamt,ship,grand,cols,hideTotal){
         <td colspan="3" style="background:#1A3C5E;padding:3pt;border:0.5pt solid #2E75B6;"></td>
         <td style="background:#1A3C5E;color:#fff;font-weight:700;padding:3pt 4pt;border:0.5pt solid #2E75B6;text-align:center;font-size:7pt;">Qty</td>
         <td style="background:#1A3C5E;color:#fff;font-weight:700;padding:3pt 4pt;border:0.5pt solid #2E75B6;text-align:center;font-size:7pt;">Shipping</td>
-        <td style="background:#1A3C5E;color:#fff;font-weight:700;padding:3pt 4pt;border:0.5pt solid #2E75B6;text-align:center;font-size:7pt;">Tax / VAT</td>
+        <td style="background:#1A3C5E;color:#fff;font-weight:700;padding:3pt 4pt;border:0.5pt solid #2E75B6;text-align:center;font-size:7pt;">${txLbl}</td>
       </tr></thead>
       <tbody>
         <tr>
           <td colspan="3" style="background:#F2F7FB;color:#2E75B6;font-weight:700;text-align:right;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">Subtotal</td>
           <td style="background:#F2F7FB;text-align:center;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">${tqty}</td>
           <td style="background:#F2F7FB;text-align:center;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">${c} ${ship}</td>
-          <td style="background:#F2F7FB;text-align:center;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">0</td>
+          <td style="background:#F2F7FB;text-align:center;padding:3pt 5pt;border:0.5pt solid #E0E8F0;">${txAmt>0?c+' '+fa(txAmt):'—'}</td>
         </tr>
         ${hideTotal?'':
         `<tr class="total-amt-row">
@@ -8908,6 +8919,10 @@ function subBlock(tqty,tamt,ship,grand,cols,hideTotal){
         <td style="background:#D9E2EC;border:0.5pt solid #2E75B6;"></td>
         <td style="background:#D9E2EC;color:#1A1A2E;text-align:center;padding:3pt 6pt;font-size:7.5pt;border:0.5pt solid #2E75B6;">${c} ${ship}</td>
       </tr>
+      ${txAmt>0?`<tr><td colspan="5" style="background:#2E75B6;color:#fff;font-weight:700;text-align:right;padding:3pt 6pt;font-size:7.5pt;border:0.5pt solid #2E75B6;">${txLbl}</td>
+        <td style="background:#D9E2EC;border:0.5pt solid #2E75B6;"></td>
+        <td style="background:#D9E2EC;color:#1A1A2E;text-align:center;padding:3pt 6pt;font-size:7.5pt;border:0.5pt solid #2E75B6;">${c} ${fa(txAmt)}</td>
+      </tr>`:''}
       <tr><td colspan="5" style="background:#1A3C5E;color:#fff;font-weight:700;text-align:right;padding:4pt 8pt;font-size:9.5pt;border:0.5pt solid #1A3C5E;">TOTAL AMOUNT DUE:</td>
         <td colspan="2" style="background:#D9E2EC;color:#1A1A2E;font-weight:700;text-align:center;padding:4pt 8pt;font-size:9.5pt;border:0.5pt solid #2E75B6;">${c} ${grand}</td>
       </tr>
@@ -8931,6 +8946,8 @@ function buildQ(){
   const ta=document.getElementById('q-ta').textContent;
   const sh=fa(document.getElementById('q-sh')?.value||0);
   const gt=document.getElementById('q-gt').textContent;
+  const taxAmt=parseFloat(document.getElementById('q-tax')?.value)||0;
+  const taxLbl=document.getElementById('q-tax-lbl')?.value||'Tax / VAT';
   return`
   <div class="xhdr">
     <div class="xhdr-top">
@@ -8967,7 +8984,7 @@ function buildQ(){
     </tr></thead>
     <tbody>${qItemRows(rows)}</tbody>
   </table></div>
-  ${subBlock(tq,ta,sh,gt,10,_qTotalColHidden)}
+  ${subBlock(tq,ta,sh,gt,10,_qTotalColHidden,taxAmt,taxLbl)}
   <div class="sec-h">TERMS &amp; CONDITIONS</div>
   <table class="kv-t">${kvRows([['Trade Terms',g('tradeTerm'),true],['Payment Terms',g('payTerm'),false],['Lead Time',g('leadTime'),true],['Warranty',g('warranty'),false],['Validity','Barebone pricing valid 3 months; RAM &amp; SSD pricing valid 7 days',false]])}</table>
   <div class="sec-h">BANK / REMITTANCE DETAILS</div>
@@ -8985,6 +9002,8 @@ function buildPI(){
   const ta=document.getElementById('pi-ta').textContent;
   const sh=fa(document.getElementById('pi-sh')?.value||0);
   const gt=document.getElementById('pi-gt').textContent;
+  const taxAmt=parseFloat(document.getElementById('pi-tax')?.value)||0;
+  const taxLbl=document.getElementById('pi-tax-lbl')?.value||'Tax / VAT';
   return`
   <div class="xhdr">
     <div class="xhdr-top">
@@ -9021,7 +9040,7 @@ function buildPI(){
     </tr></thead>
     <tbody>${qItemRows(rows)}</tbody>
   </table></div>
-  ${subBlock(tq,ta,sh,gt,10,_qTotalColHidden)}
+  ${subBlock(tq,ta,sh,gt,10,_qTotalColHidden,taxAmt,taxLbl)}
   <div class="sec-h">TERMS &amp; CONDITIONS</div>
   <table class="kv-t">${kvRows([['Trade Terms',g('tradeTerm'),true],['Payment Terms',g('payTerm'),false],['Lead Time',g('leadTime'),true],['Warranty',g('warranty'),false]])}</table>
   <div class="sec-h">BANK / REMITTANCE DETAILS</div>
@@ -9035,6 +9054,8 @@ function buildCI(){
   const ta=document.getElementById('ci-ta').textContent;
   const sh=fa(document.getElementById('ci-sh')?.value||0);
   const gt=document.getElementById('ci-gt').textContent;
+  const taxAmt=parseFloat(document.getElementById('ci-tax')?.value)||0;
+  const taxLbl=document.getElementById('ci-tax-lbl')?.value||'Tax / VAT';
   return`
   <div class="xhdr">
     <div class="xhdr-top">
@@ -9061,7 +9082,7 @@ function buildCI(){
     </tr></thead>
     <tbody>${ciItemRows(rows)}</tbody>
   </table></div>
-  ${subBlock(tq,ta,sh,gt,7)}
+  ${subBlock(tq,ta,sh,gt,7,false,taxAmt,taxLbl)}
   <table class="kv-t" style="margin-top:6pt;"><tr class="od">
     <td class="k" style="background:#2E75B6;color:#fff;">Trade Terms</td>
     <td class="vr">${g('tradeTerm')}</td>
