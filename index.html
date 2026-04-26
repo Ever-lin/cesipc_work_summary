@@ -1554,7 +1554,13 @@ function fillUnpaidToCollect(prefix) {
     return r.client + '：' + w + 'W';
   }).join('\n');
   const detailEl = document.getElementById(prefix + '-target-collect-detail');
-  if (detailEl) { detailEl.value = detail; detailEl.dispatchEvent(new Event('input')); }
+  if (detailEl) {
+    detailEl.value = detail;
+    // 手动触发 auto-resize 高度重算
+    detailEl.style.height = 'auto';
+    detailEl.style.height = detailEl.scrollHeight + 'px';
+    detailEl.dispatchEvent(new Event('input'));
+  }
 
   toast('✅ 已导入 ' + list.length + ' 个未回款客户，合计 ' + totalW + 'W');
 }
@@ -4870,7 +4876,7 @@ function qtDoMergeImport(items, target, mode) {
     if (it.shipping) {
       const direct = parseFloat(it.shipping);
       if (!isNaN(direct)) { shippingPerUnit = String(direct); }
-      else { const m = it.shipping.match(/\$?\s*([\d.]+)/); if (m) shippingPerUnit = m[1]; }
+      else { const m1 = it.shipping.match(/1台\s*\$([\d.]+)/); if (m1) { shippingPerUnit = m1[1]; } else { const m2 = it.shipping.match(/\$([\d.]+)/); if (m2) shippingPerUnit = m2[1]; } }
     }
 
     const pn = [it.model, it.partno].filter(Boolean).join('\n');
@@ -9500,7 +9506,7 @@ function doDocImportFromQuotes(proj, mode, target) {
           shippingPerUnit = String(direct);
         } else {
           // 取第一段"1台 $XX"里的数字
-          const m = it.shipping.match(/\$?\s*([\d.]+)/);
+          const m = it.shipping.match(/1台\s*\$([\d.]+)/) || it.shipping.match(/\$([\d.]+)/);
           if (m) shippingPerUnit = m[1];
         }
       }
@@ -9537,7 +9543,7 @@ function doDocImportFromQuotes(proj, mode, target) {
         if (it.shipping) {
           const direct = parseFloat(it.shipping);
           if (!isNaN(direct)) { shippingPerUnit = String(direct); }
-          else { const m = it.shipping.match(/\$?\s*([\d.]+)/); if (m) shippingPerUnit = m[1]; }
+          else { const m1 = it.shipping.match(/1台\s*\$([\d.]+)/); if (m1) { shippingPerUnit = m1[1]; } else { const m2 = it.shipping.match(/\$([\d.]+)/); if (m2) shippingPerUnit = m2[1]; } }
         }
         if (mode === 'split') {
           addR(docKey, {
