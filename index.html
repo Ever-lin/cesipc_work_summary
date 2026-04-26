@@ -1886,6 +1886,35 @@ function refreshProjDatalist(){
 function qtDealToStatus(deal){
   return{open:'跟进中',confirmed:'确认订单',won:'成交',pause:'暂无进展',lost:'丢单'}[deal]||'跟进中';
 }
+// 项目情况 → 报价管理：同步状态和进度
+function syncProjectToQuotes(projName, newStatus, newStage){
+  if(!projName)return;
+  const dealMap={'跟进中':'open','确认订单':'confirmed','成交':'won','暂无进展':'pause','丢单':'lost'};
+  const newDeal=dealMap[newStatus]||'';
+  let changed=false;
+  qtQuotes.forEach(q=>{
+    if((q.project||'').trim()===(projName||'').trim()){
+      let qChanged=false;
+      if(newDeal&&q.deal!==newDeal){q.deal=newDeal;qChanged=true;}
+      if(newStage&&q.stage!==newStage){q.stage=newStage;qChanged=true;}
+      if(qChanged){
+        if(newDeal)q.lastSyncedDeal=newDeal;
+        if(newStage)q.lastSyncedStage=newStage;
+        changed=true;
+      }
+    }
+  });
+  if(changed){
+    localStorage.setItem(QT_KEY,JSON.stringify(qtQuotes));
+    refreshIqtBadge();
+    if(typeof qtRender==='function')qtRender();
+    const msg=document.createElement('div');
+    msg.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#185FA5;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);white-space:nowrap';
+    msg.textContent='🔄 已同步到报价管理（状态/进度）';
+    document.body.appendChild(msg);
+    setTimeout(()=>msg.remove(),2500);
+  }
+}
 // Convert one price-history snapshot to plain text — mirrors exactly what 📋 价格变更历史 shows.
 // Fields in same order: date+price, project, model·cpu, detail, custom, notes, stage+deal
 function qtSnapToLine(h, parentProject){
@@ -1997,6 +2026,29 @@ function openImportFromQuotes(){
   document.getElementById('iqt-search').value='';
   renderImportQtList();
 }
+// 统一的「报价是否有未同步更新」判断函数
+function qtHasUnsyncedUpdate(projName){
+  if(!projName)return false;
+  const projQuotes=qtQuotes.filter(q=>q.project===projName);
+  if(!projQuotes.length)return false;
+  const lastSync=projQuotes.filter(q=>q.lastSyncedAt).map(q=>q.lastSyncedAt).sort().pop()||'';
+  // 1. priceHistory 有比上次同步更新的快照
+  const latestSnap=projQuotes.flatMap(q=>q.priceHistory||[]).map(h=>h.savedAt||'').sort().pop()||'';
+  const hasAnyHistory=projQuotes.some(q=>q.priceHistory&&q.priceHistory.length>0);
+  if(hasAnyHistory&&(!lastSync||latestSnap>lastSync))return true;
+  // 2. deal 或 stage 与上次同步时不同
+  if(lastSync){
+    const g=qtGroupedByProject().find(x=>x.project===projName);
+    if(g){
+      const syncedDeal=projQuotes.find(q=>q.lastSyncedDeal!==undefined)?.lastSyncedDeal||'';
+      const syncedStage=projQuotes.find(q=>q.lastSyncedStage!==undefined)?.lastSyncedStage||'';
+      if(g.deal&&g.deal!==syncedDeal)return true;
+      if(g.stage&&g.stage!==syncedStage)return true;
+    }
+  }
+  return false;
+}
+
 function refreshIqtBadge(){
   const badge=document.getElementById('iqt-update-badge');
   if(!badge)return;
@@ -2007,10 +2059,7 @@ function refreshIqtBadge(){
     if(!projName)return;
     const alreadyLinked=state.projects.some(p=>p.linkedQuoteProject===projName||(p.name||p.client)===projName);
     if(!alreadyLinked)return;
-    const lastSync=qtQuotes.filter(q=>q.project===projName&&q.lastSyncedAt).map(q=>q.lastSyncedAt).sort().pop()||'';
-    const latestSnap=qtQuotes.filter(q=>q.project===projName).flatMap(q=>q.priceHistory||[]).map(h=>h.savedAt||'').sort().pop()||'';
-    const hasAnyHistory=qtQuotes.filter(q=>q.project===projName).some(q=>q.priceHistory&&q.priceHistory.length>0);
-    if(hasAnyHistory&&(!lastSync||latestSnap>lastSync))count++;
+    if(qtHasUnsyncedUpdate(projName))count++;
   });
   if(count>0){badge.textContent=count;badge.style.display='';}
   else{badge.style.display='none';}
@@ -2049,12 +2098,8 @@ function renderImportQtList(){
           const alreadyLinked = projName && state.projects.some(p=>
             p.linkedQuoteProject===projName || (p.name||p.client)===projName
           );
-          // 只要有任何 priceHistory 记录，且上次同步后有新保存，就算有更新
-          const lastSync = qtQuotes.filter(q=>q.project===projName&&q.lastSyncedAt).map(q=>q.lastSyncedAt).sort().pop()||'';
-          const latestSnap = qtQuotes.filter(q=>q.project===projName).flatMap(q=>q.priceHistory||[]).map(h=>h.savedAt||'').sort().pop()||'';
-          const hasAnyHistory = qtQuotes.filter(q=>q.project===projName).some(q=>q.priceHistory&&q.priceHistory.length>0);
-          // 有更新：有历史记录 且（从未同步过 或 有比上次同步更新的记录）
-          const hasUpdate = alreadyLinked && hasAnyHistory && (!lastSync || latestSnap > lastSync);
+          // 使用统一的更新检测函数
+          const hasUpdate = alreadyLinked && qtHasUnsyncedUpdate(projName);
           if(alreadyLinked && hasUpdate) return '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px"><span style="background:var(--green-bg);color:var(--green-text);border:1px solid #C0DD97;border-radius:var(--radius-xs);padding:3px 10px;font-size:11px;font-weight:600">✅ 已导入</span><button onclick="syncQuoteToProject(\''+projName+'\')" style="flex-shrink:0;background:var(--amber-bg);color:var(--amber-text);border:1px solid var(--amber);border-radius:var(--radius-xs);padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit">⚠️ 有更新，点击同步</button></div>';
           if(alreadyLinked && !hasUpdate) return '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px"><span style="background:var(--green-bg);color:var(--green-text);border:1px solid #C0DD97;border-radius:var(--radius-xs);padding:3px 10px;font-size:11px;font-weight:600">✅ 已导入</span><button onclick="importFromQuoteGroup('+gi+')" style="flex-shrink:0;background:transparent;color:var(--blue-text);border:1px solid var(--blue);border-radius:var(--radius-xs);padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit">↻ 重新导入</button></div>';
           return '<button onclick="importFromQuoteGroup('+gi+')" style="flex-shrink:0;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-xs);padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit">导入此项目</button>';
@@ -2456,6 +2501,11 @@ function renderProjects(){
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
         <span style="font-size:11px;color:var(--text2)">${latest.savedAt}${entries.length>1?` · 共${entries.length}条记录`:''}</span>
         <div class="inline-flex" style="flex-wrap:wrap;gap:4px">
+          ${(()=>{
+            const lqp=latest.linkedQuoteProject||(latest.name||latest.client)||'';
+            const hasQUpdate=lqp&&qtHasUnsyncedUpdate(lqp);
+            return hasQUpdate?`<button class="btn btn-xs" style="background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber);font-weight:600" onclick="syncQuoteToProject('${lqp.replace(/'/g,"\\'")}')">⚠️ 报价有更新，点击同步</button>`:'';
+          })()}
           <button class="btn btn-xs" style="background:#FFFBF0;color:#7A5800;border-color:#F0D070" onclick="copyCRM(${latest.id},'${crmId}',this)">📋 复制CRM格式</button>
           <button class="btn btn-xs" style="background:#E8F5E9;color:#1B5E20;border-color:#A5D6A7" onclick="quickProgressModal('${k.replace(/'/g,"\\'")}',${latest.id})">⚡ 快速更新</button>
           <button class="btn btn-xs" onclick="fillEdit('${k.replace(/'/g,"\\'")}')">追加进展</button>
@@ -2504,6 +2554,7 @@ function submitProject(){
     entry.priority=document.getElementById('proj-priority').value;
     entry.savedAt=new Date().toLocaleString('zh-CN');
     save();cancelEditRecord();
+    syncProjectToQuotes(entry.linkedQuoteProject||(entry.name||entry.client)||'',entry.status,entry.progressStage);
     _projHighlight=entry.name||entry.client;
     renderProjects();refreshProjDatalist();
     const a=document.createElement('div');a.className='alert-s';a.textContent='记录已更新！';
@@ -2531,6 +2582,7 @@ function submitProject(){
       savedAt:new Date().toLocaleString('zh-CN')
     };
     state.projects.push(entry);save();
+    syncProjectToQuotes(entry.linkedQuoteProject||(entry.name||entry.client)||'',entry.status,entry.progressStage);
     _projHighlight=entry.name||entry.client;
     ['proj-name','proj-client','proj-progress-stage','proj-requirement','proj-quantity','proj-quote','proj-progress','proj-action-content','proj-action-time','proj-confirm-points','proj-risks','proj-decision-maker'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
     window._pendingLinkedQuoteProject='';
@@ -2582,6 +2634,8 @@ function fillEdit(name){
     if(actionSection)actionSection.parentNode.insertBefore(h,actionSection.nextSibling);
     setTimeout(()=>h.remove(),6000);
   }
+  // 保留 linkedQuoteProject，让新增记录继承关联
+  window._pendingLinkedQuoteProject=l.linkedQuoteProject||'';
   setTimeout(autoResizeAll, 50);
   switchTab('projects');window.scrollTo(0,0);
 }
@@ -2655,11 +2709,15 @@ function switchTermTab(tab){
 }
 // 项目进度 → 自动推导状态
 const STAGE_TO_STATUS={
+  // 常规项目
   '需求确认':'跟进中','方案设计':'跟进中','产品报价':'跟进中','合同签订':'跟进中',
   '生产/交付':'确认订单','安装/验收':'确认订单',
   '项目完结':'成交',
   '项目延期':'暂无进展','项目停止':'暂无进展',
   '丢单':'丢单',
+  // 投标项目
+  '拟标':'跟进中','挂网':'跟进中','招标':'跟进中','投标':'跟进中',
+  '封标':'跟进中','评标':'跟进中','定标':'确认订单','流标废标':'丢单',
 };
 function setStage(val){
   document.getElementById('proj-progress-stage').value=val;
@@ -2708,10 +2766,21 @@ function cancelEditRecord(){
   document.getElementById('proj-submit-btn').textContent='+ 保存（新增或追加进展）';
   document.getElementById('proj-submit-btn').style.background='';
   var hd=document.getElementById('proj-progress-history');if(hd){hd.style.display='none';hd.textContent='';}
+  // 清空所有表单字段，防止取消后误提交
+  ['proj-name','proj-client','proj-progress-stage','proj-requirement','proj-quantity',
+   'proj-quote','proj-progress','proj-action-content','proj-action-time',
+   'proj-confirm-points','proj-risks','proj-decision-maker'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('proj-status').value='跟进中';
+  document.getElementById('proj-priority').value='中';
+  document.getElementById('proj-date').value=todayStr();
+  window._pendingLinkedQuoteProject='';
 }
 
 function delGroup(name){
-  
+  const count=state.projects.filter(p=>(p.name||p.client)===name).length;
+  if(!confirm(`确认删除「${name}」及其全部 ${count} 条记录？此操作不可撤销。`))return;
   state.projects=state.projects.filter(p=>(p.name||p.client)!==name);
   save();renderProjects();refreshProjDatalist();renderProjSync('w-proj-sync');renderProjSync('wm-proj-sync');
 }
@@ -2719,16 +2788,18 @@ function delGroup(name){
 function qtQuickStatus(name,latestId,newStatus){
   const entry=state.projects.find(p=>p.id===latestId);
   if(entry){entry.status=newStatus;entry.savedAt=new Date().toLocaleString('zh-CN');}
-  save();renderProjects();
+  save();
+  syncProjectToQuotes(entry?(entry.linkedQuoteProject||(entry.name||entry.client)||''):'',newStatus,entry?entry.progressStage||'':'');
+  renderProjects();
   toast('✅ 状态已更新为：'+newStatus);
 }
 
 function delProjectEntry(id,groupName){
   const group=state.projects.filter(p=>(p.name||p.client)===groupName);
   if(group.length<=1){
-    
+    if(!confirm('这是该项目唯一一条记录，删除后整个项目将消失，确认吗？'))return;
   } else {
-    
+    if(!confirm('确认删除这条历史记录？'))return;
   }
   state.projects=state.projects.filter(p=>p.id!==id);
   save();renderProjects();refreshProjDatalist();
@@ -4640,7 +4711,7 @@ function qtLoad(){
   if(!qtQuotes.length){qtQuotes=qtSeed();qtPersist();}
   qtQuotes=qtQuotes.map(q=>({...q,company:qtNormalizeCompany(q.company||q.customer||'')}));
 }
-function qtPersist(){localStorage.setItem(QT_KEY,JSON.stringify(qtQuotes));showSaveToast();refreshIqtBadge();}
+function qtPersist(){localStorage.setItem(QT_KEY,JSON.stringify(qtQuotes));showSaveToast();refreshIqtBadge();if(typeof renderProjects==='function')renderProjects();}
 
 function qSwitchView(v,btn){
   document.getElementById('qt-view-list').style.display=v==='list'?'':'none';
@@ -10207,9 +10278,27 @@ function qtCopyAsNew(id){
       <label>进度阶段</label>
       <select id="qpm-stage" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--text)">
         <option value="">— 不变 —</option>
-        <option>客户开发</option><option>产品报价</option><option>报价跟进</option>
-        <option>方案确认</option><option>商务谈判</option><option>签约下单</option>
-        <option>生产/交付</option><option>售后跟进</option>
+        <optgroup label="常规项目">
+          <option>需求确认</option><option>方案设计</option><option>产品报价</option>
+          <option>合同签订</option><option>生产/交付</option><option>安装/验收</option>
+          <option>项目完结</option><option>项目延期</option><option>项目停止</option>
+        </optgroup>
+        <optgroup label="投标项目">
+          <option>拟标</option><option>挂网</option><option>招标</option>
+          <option>投标</option><option>封标</option><option>评标</option>
+          <option>定标</option><option>流标废标</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="field">
+      <label>当前状态（留空则由进度阶段自动推导）</label>
+      <select id="qpm-status" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--text)">
+        <option value="">— 自动推导 —</option>
+        <option value="跟进中">⭕ 跟进中</option>
+        <option value="确认订单">🔶 已确认订单</option>
+        <option value="成交">✅ 已成交</option>
+        <option value="暂无进展">⏸️ 暂无进展</option>
+        <option value="丢单">❌ 丢单</option>
       </select>
     </div>
     <div class="field">
@@ -10272,7 +10361,23 @@ function submitQuickProgress(){
   } else {
     state.projects.push(newEntry);
   }
+  // 推导状态（与 setStage 逻辑一致）
+  const derivedStatus=stage?({
+    '需求确认':'跟进中','方案设计':'跟进中','产品报价':'跟进中','合同签订':'跟进中',
+    '生产/交付':'确认订单','安装/验收':'确认订单',
+    '项目完结':'成交','项目延期':'暂无进展','项目停止':'暂无进展','丢单':'丢单',
+    '拟标':'跟进中','挂网':'跟进中','招标':'跟进中','投标':'跟进中',
+    '封标':'跟进中','评标':'跟进中','定标':'确认订单','流标废标':'丢单'
+  }[stage]||null):null;
+  const finalStatus=derivedStatus||null;
+  if(finalStatus){
+    if(!progress&&stage){latest.status=finalStatus;}
+    else if(progress){newEntry.status=finalStatus;}
+  }
   save();
+  // 同步到报价管理
+  const syncEntry=progress?newEntry:latest;
+  syncProjectToQuotes(syncEntry.linkedQuoteProject||(syncEntry.name||syncEntry.client)||'',syncEntry.status,syncEntry.progressStage);
   _projHighlight=latest.name||latest.client;
   renderProjects();
   closeQuickProgressModal();
