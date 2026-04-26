@@ -1435,6 +1435,7 @@ function init(){
   document.getElementById('view-month').value=String(cm);
   document.getElementById('perf-month').value=String(cm);
   document.getElementById('pj-month').value=String(cm);
+  document.getElementById('pj-week').value='all';
   // 周报/月报 自动设置当前月份并加载已有数据
   const wMonthEl=document.getElementById('w-month');
   const wmMonthEl=document.getElementById('wm-month');
@@ -2275,12 +2276,13 @@ function renderProjects(){
   // helper: get FY of a recordDate string
   function _dateFY(rd){if(!rd)return'';const p=rd.split('-');const y=parseInt(p[0]);const m=parseInt(p[1]);return m>=4?`FY${y}`:`FY${y-1}`;}
   // helper: check if project key has unseen update
-  function _isNewUpdate(entries){
+  // groupKey must match the card renderer's seenKey (= p.name||p.client)
+  function _isNewUpdate(entries, groupKey){
     const sorted=entries.slice().sort((a,b)=>b.id-a.id);
     if(sorted.length<2)return false;
     const latestSavedAt=sorted[0].savedAt||'';
     if(!latestSavedAt)return false;
-    const seenKey='proj_seen_'+((sorted[0].name||sorted[0].client||'').replace(/[^a-zA-Z0-9]/g,'_').slice(0,30));
+    const seenKey='proj_seen_'+(groupKey||'').replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
     const seenAt=sessionStorage.getItem(seenKey)||'';
     return latestSavedAt!==seenAt;
   }
@@ -2342,7 +2344,7 @@ function renderProjects(){
       if(!info||info.week!==pjWeek)return;
     }
     // update filter
-    if(_pjUpdateFilter&&!_isNewUpdate(entries))return;
+    if(_pjUpdateFilter&&!_isNewUpdate(entries,k))return;
     counts[latest.status]=(counts[latest.status]||0)+1;
   });
   const countEl=document.getElementById('proj-status-counts');
@@ -2387,7 +2389,7 @@ function renderProjects(){
     const stOk=pjS==='all'||latest.status===pjS;
     if(!stOk)return;
     // update filter
-    if(_pjUpdateFilter&&!_isNewUpdate(entries))return;
+    if(_pjUpdateFilter&&!_isNewUpdate(entries,k))return;
     // search filter — include progressStage so searching "产品报价" etc. works
     if(pjQ){
       const haystack=(k+' '+(latest.client||'')+' '+(latest.progress||'')+' '+(latest.actionContent||'')+' '+(latest.requirement||'')+' '+(latest.notes||'')+' '+(latest.progressStage||'')+' '+(latest.confirmPoints||'')+' '+(latest.decisionMaker||'')+' '+(latest.quote||'')).toLowerCase();
@@ -2922,8 +2924,12 @@ function fillProjTextareas(prefix){
   });
   autoResizeAll();
 }
-// 兼容旧代码
-function renderProjSync(){}
+// 保存项目后自动刷新周报/月报项目区块
+function renderProjSync(containerId){
+  // containerId: 'w-proj-sync' → prefix 'w', 'wm-proj-sync' → prefix 'wm'
+  const prefix=containerId==='w-proj-sync'?'w':containerId==='wm-proj-sync'?'wm':null;
+  if(prefix)fillProjTextareas(prefix);
+}
 function getCheckedProjects(){return[];}
 
 // Build accumulated progress across all entries as bullet lines
@@ -4314,13 +4320,25 @@ function exportProjectsExcel(){
   const grouped={};
   state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
   const rows=[];
+  function _exFY(rd){if(!rd)return'';const p=rd.split('-');return parseInt(p[1])>=4?`FY${p[0]}`:`FY${parseInt(p[0])-1}`;}
   Object.keys(grouped).forEach(k=>{
     const entries=grouped[k].sort((a,b)=>b.id-a.id);
     const latest=entries[0];
+    // FY filter — must match renderProjects behaviour
+    if(pjFY&&_exFY(latest.recordDate)!==pjFY)return;
     if(pjMonth!=='all'){const rd=latest.recordDate||'';const info=rd?weekInfoOfDay(rd):null;const m=info?info.month:(rd?String(parseInt(rd.split('-')[1],10)):'');if(m!==pjMonth)return;}
     if(pjWeek!=='all'){const info=weekInfoOfDay(latest.recordDate);if(!info||info.week!==pjWeek)return;}
     if(pjS!=='all'&&latest.status!==pjS)return;
-    if(pjQ){const hay=(k+' '+(latest.client||'')+' '+(latest.progress||'')+' '+(latest.actionContent||'')+' '+(latest.requirement||'')).toLowerCase();if(!hay.includes(pjQ))return;}
+    // update filter
+    if(_pjUpdateFilter){
+      if(entries.length<2)return;
+      const latestSavedAt=entries[0].savedAt||'';
+      if(!latestSavedAt)return;
+      const sk='proj_seen_'+k.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
+      if(sessionStorage.getItem(sk)===latestSavedAt)return;
+    }
+    // expanded search — same fields as renderProjects
+    if(pjQ){const hay=(k+' '+(latest.client||'')+' '+(latest.progress||'')+' '+(latest.actionContent||'')+' '+(latest.requirement||'')+' '+(latest.progressStage||'')+' '+(latest.confirmPoints||'')+' '+(latest.decisionMaker||'')+' '+(latest.quote||'')).toLowerCase();if(!hay.includes(pjQ))return;}
     const sc=SC[latest.status]||{label:latest.status};
     rows.push({
       '项目名称':latest.name||k,
