@@ -285,7 +285,8 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
   /* items table */
   .items { margin-top: 7pt; page-break-inside: auto; }
-  .items table { width: 100%; border-collapse: collapse; font-size: 7.5pt; table-layout: fixed; }
+  .items table { width: 100%; border-collapse: collapse; font-size: 7.5pt; }
+  .items table.split-tbl { table-layout: fixed; }
   .items thead { display: table-header-group; }
   .items tbody tr { page-break-inside: avoid; page-break-after: auto; }
   .items thead tr { background: #1A3C5E; }
@@ -8969,14 +8970,14 @@ function buildQ(){
   <div class="items"><table>
     <thead><tr>
       ${_mode.q==='split'
-        ? `<th style="width:4%">#</th><th style="width:10%">Part No.</th>
-           <th class="la" style="width:auto">Description</th><th style="width:5%">Qty</th>
-           <th style="width:8%;font-size:5pt;white-space:normal">Unit Price<br>(Barebone)</th>
-           <th style="width:7%;font-size:5pt;white-space:normal">Unit Price<br>(RAM)</th>
-           <th style="width:7%;font-size:5pt;white-space:normal">Unit Price<br>(SSD)</th>
-           <th style="width:7%;font-size:5pt;white-space:normal">Unit Price<br>(Shipping)</th>
-           <th style="width:9%;font-size:5pt;white-space:normal">Unit Price<br>(All Incl.)</th>
-           ${_qTotalColHidden?'':'<th style="width:9%">Grand Total</th>'}`
+        ? `<th style="width:16pt">#</th><th style="width:46pt">Part No.</th>
+           <th class="la">Description</th><th style="width:20pt">Qty</th>
+           <th style="width:38pt;font-size:5pt;white-space:normal">Unit Price<br>(Barebone)</th>
+           <th style="width:33pt;font-size:5pt;white-space:normal">Unit Price<br>(RAM)</th>
+           <th style="width:33pt;font-size:5pt;white-space:normal">Unit Price<br>(SSD)</th>
+           <th style="width:33pt;font-size:5pt;white-space:normal">Unit Price<br>(Shipping)</th>
+           <th style="width:40pt;font-size:5pt;white-space:normal">Unit Price<br>(All Incl.)</th>
+           ${_qTotalColHidden?'':'<th style="width:40pt">Grand Total</th>'}`
         : `<th style="width:20pt">#</th><th style="width:54pt">Part No.</th>
            <th class="la">Description</th><th style="width:26pt">Qty</th>
            <th style="width:68pt">Unit Price<br>(Configured)</th>
@@ -9025,14 +9026,14 @@ function buildPI(){
   <div class="items"><table>
     <thead><tr>
       ${_mode.pi==='split'
-        ? `<th style="width:4%">#</th><th style="width:10%">Part No.</th>
-           <th class="la" style="width:auto">Description</th><th style="width:5%">Qty</th>
-           <th style="width:8%;font-size:5pt;white-space:normal">Unit Price<br>(Barebone)</th>
-           <th style="width:7%;font-size:5pt;white-space:normal">Unit Price<br>(RAM)</th>
-           <th style="width:7%;font-size:5pt;white-space:normal">Unit Price<br>(SSD)</th>
-           <th style="width:7%;font-size:5pt;white-space:normal">Unit Price<br>(Shipping)</th>
-           <th style="width:9%;font-size:5pt;white-space:normal">Unit Price<br>(All Incl.)</th>
-           ${_qTotalColHidden?'':'<th style="width:9%">Grand Total</th>'}`
+        ? `<th style="width:16pt">#</th><th style="width:46pt">Part No.</th>
+           <th class="la">Description</th><th style="width:20pt">Qty</th>
+           <th style="width:38pt;font-size:5pt;white-space:normal">Unit Price<br>(Barebone)</th>
+           <th style="width:33pt;font-size:5pt;white-space:normal">Unit Price<br>(RAM)</th>
+           <th style="width:33pt;font-size:5pt;white-space:normal">Unit Price<br>(SSD)</th>
+           <th style="width:33pt;font-size:5pt;white-space:normal">Unit Price<br>(Shipping)</th>
+           <th style="width:40pt;font-size:5pt;white-space:normal">Unit Price<br>(All Incl.)</th>
+           ${_qTotalColHidden?'':'<th style="width:40pt">Grand Total</th>'}`
         : `<th style="width:20pt">#</th><th style="width:54pt">Part No.</th>
            <th class="la">Description</th><th style="width:26pt">Qty</th>
            <th style="width:68pt">Unit Price<br>(Configured)</th>
