@@ -2009,13 +2009,8 @@ function refreshIqtBadge(){
     if(!alreadyLinked)return;
     const lastSync=qtQuotes.filter(q=>q.project===projName&&q.lastSyncedAt).map(q=>q.lastSyncedAt).sort().pop()||'';
     const latestSnap=qtQuotes.filter(q=>q.project===projName).flatMap(q=>q.priceHistory||[]).map(h=>h.savedAt||'').sort().pop()||'';
-    const snapNewer=lastSync&&latestSnap>lastSync;
-    const curDeal=g.deal||'';const curStage=g.stage||'';
-    const syncedDeal=qtQuotes.filter(q=>q.project===projName&&q.lastSyncedDeal!==undefined).map(q=>q.lastSyncedDeal).pop()||'';
-    const syncedStage=qtQuotes.filter(q=>q.project===projName&&q.lastSyncedStage!==undefined).map(q=>q.lastSyncedStage).pop()||'';
-    const dealChanged=lastSync&&curDeal!==syncedDeal;
-    const stageChanged=lastSync&&curStage!==syncedStage;
-    if(snapNewer||dealChanged||stageChanged)count++;
+    const hasAnyHistory=qtQuotes.filter(q=>q.project===projName).some(q=>q.priceHistory&&q.priceHistory.length>0);
+    if(hasAnyHistory&&(!lastSync||latestSnap>lastSync))count++;
   });
   if(count>0){badge.textContent=count;badge.style.display='';}
   else{badge.style.display='none';}
@@ -2054,18 +2049,12 @@ function renderImportQtList(){
           const alreadyLinked = projName && state.projects.some(p=>
             p.linkedQuoteProject===projName || (p.name||p.client)===projName
           );
-          // Check if there's a newer quote update after last sync
+          // 只要有任何 priceHistory 记录，且上次同步后有新保存，就算有更新
           const lastSync = qtQuotes.filter(q=>q.project===projName&&q.lastSyncedAt).map(q=>q.lastSyncedAt).sort().pop()||'';
-          const latestQuoteSnap = qtQuotes.filter(q=>q.project===projName).flatMap(q=>(q.priceHistory||[])).map(h=>h.savedAt||'').sort().pop()||'';
-          // Check quote snapshot time change
-          const snapNewer = lastSync && latestQuoteSnap > lastSync;
-          // Check deal/stage change since last sync
-          const curDeal = g.deal||''; const curStage = g.stage||'';
-          const syncedDeal = qtQuotes.filter(q=>q.project===projName&&q.lastSyncedDeal!==undefined).map(q=>q.lastSyncedDeal).pop()||'';
-          const syncedStage = qtQuotes.filter(q=>q.project===projName&&q.lastSyncedStage!==undefined).map(q=>q.lastSyncedStage).pop()||'';
-          const dealChanged = lastSync && curDeal !== syncedDeal;
-          const stageChanged = lastSync && curStage !== syncedStage;
-          const hasUpdate = alreadyLinked && (snapNewer || dealChanged || stageChanged);
+          const latestSnap = qtQuotes.filter(q=>q.project===projName).flatMap(q=>q.priceHistory||[]).map(h=>h.savedAt||'').sort().pop()||'';
+          const hasAnyHistory = qtQuotes.filter(q=>q.project===projName).some(q=>q.priceHistory&&q.priceHistory.length>0);
+          // 有更新：有历史记录 且（从未同步过 或 有比上次同步更新的记录）
+          const hasUpdate = alreadyLinked && hasAnyHistory && (!lastSync || latestSnap > lastSync);
           if(alreadyLinked && hasUpdate) return '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px"><span style="background:var(--green-bg);color:var(--green-text);border:1px solid #C0DD97;border-radius:var(--radius-xs);padding:3px 10px;font-size:11px;font-weight:600">✅ 已导入</span><button onclick="syncQuoteToProject(\''+projName+'\')" style="flex-shrink:0;background:var(--amber-bg);color:var(--amber-text);border:1px solid var(--amber);border-radius:var(--radius-xs);padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit">⚠️ 有更新，点击同步</button></div>';
           if(alreadyLinked && !hasUpdate) return '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px"><span style="background:var(--green-bg);color:var(--green-text);border:1px solid #C0DD97;border-radius:var(--radius-xs);padding:3px 10px;font-size:11px;font-weight:600">✅ 已导入</span><button onclick="importFromQuoteGroup('+gi+')" style="flex-shrink:0;background:transparent;color:var(--blue-text);border:1px solid var(--blue);border-radius:var(--radius-xs);padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit">↻ 重新导入</button></div>';
           return '<button onclick="importFromQuoteGroup('+gi+')" style="flex-shrink:0;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-xs);padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit">导入此项目</button>';
