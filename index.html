@@ -2464,14 +2464,21 @@ function renderProjects(){
       :at?`<span style="font-size:11px;color:var(--text2)">${at}</span>`:'';
     const urgentBorder=isOverdue?'border-left:3px solid #DC2626;':isToday?'border-left:3px solid #F59E0B;':'';
     const allEntriesForCard=entries.slice().sort((a,b)=>b.id-a.id);
-    const historyBullets=allEntriesForCard.filter(e=>e.progress&&e.progress.trim()).map(e=>{
-      const date=e.recordDate||'';
-      const ls=e.progress.trim().split('\n').filter(l=>l.trim());
-      if(!ls.length)return'';
-      let block=`<div style="padding:1px 0">· ${date} ${ls[0].trim()}</div>`;
-      if(ls.length>1)block+=ls.slice(1).map(l=>`<div style="padding:1px 0 1px 16px">${l.trim()}</div>`).join('');
-      return block;
-    }).join('');
+    // BUG2修复：优先读 progressLog[]（多次编辑追加的历史），降级读 progress
+    const historyBullets=(()=>{
+      const blocks=[];
+      allEntriesForCard.forEach(e=>{
+        const logs=e.progressLog&&e.progressLog.length?e.progressLog:(e.progress&&e.progress.trim()?[e.progress.trim()]:[]);
+        logs.forEach(line=>{
+          const ls=line.trim().split('\n').filter(l=>l.trim());
+          if(!ls.length)return;
+          let block=`<div style="padding:1px 0">${ls[0].trim()}</div>`;
+          if(ls.length>1)block+=ls.slice(1).map(l=>`<div style="padding:1px 0 1px 16px">${l.trim()}</div>`).join('');
+          blocks.push(block);
+        });
+      });
+      return blocks.join('');
+    })();
     const histHid='hist_'+k.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
     const hasHistory=allEntriesForCard.length>1;
     // 计算最近更新时间（用于判断是否"新"）：最新记录的 savedAt
@@ -2517,7 +2524,7 @@ function renderProjects(){
           <div><b>3. 项目需求：</b>${_hl(_fmtVal(e.requirement),chg('requirement'))}</div>
           <div><b>4. 项目数量：</b>${_hl(e.quantity||'',chg('quantity'))}</div>
           <div><b>5. 项目报价：</b>${_hl(_fmtVal(e.quote),chg('quote'))}</div>
-          <div style="margin-top:4px"><b>6. 跟进详情：</b>${_hl(e.progress?e.progress.replace(/\n/g,'<br>'):'<span style="color:var(--text3);font-style:italic">暂无</span>',chg('progress'))}</div>
+          <div style="margin-top:4px"><b>6. 跟进详情：</b>${(()=>{const logs=e.progressLog&&e.progressLog.length?e.progressLog:(e.progress&&e.progress.trim()?[e.progress.trim()]:[]);return logs.length?_hl(logs.join('<br>'),chg('progress')):'<span style="color:var(--text3);font-style:italic">暂无</span>';})()}</div>
         </div>
       </div>`;
     }).join(''):'';
@@ -2610,7 +2617,21 @@ function submitProject(){
     entry.quote=document.getElementById('proj-quote').value.trim();
     const progressVal=document.getElementById('proj-progress').value.trim();
     const progressDate=document.getElementById('proj-date').value||todayStr();
-    entry.progress=progressVal?`· ${progressDate} ${progressVal}`:'';
+    // BUG2深层修复：用 progressLog[] 追加历史，永不覆盖旧内容
+    if(progressVal){
+      const newLine=`· ${progressDate} ${progressVal}`;
+      // 初始化 progressLog（兼容旧数据：若无log则从现有progress迁移）
+      if(!entry.progressLog){
+        entry.progressLog=entry.progress&&entry.progress.trim()?[entry.progress.trim()]:[];
+      }
+      // 若新内容与最后一条不同，才追加（防止重复保存）
+      const lastLog=entry.progressLog[entry.progressLog.length-1]||'';
+      if(newLine!==lastLog){
+        entry.progressLog.push(newLine);
+      }
+      entry.progress=newLine; // progress保留最新一条供旧逻辑兼容
+    }
+    // else: 用户未改跟进详情，保持 progress/progressLog 不变
     entry.actionContent=document.getElementById('proj-action-content').value.trim();
     entry.actionTime=document.getElementById('proj-action-time').value.trim();
     entry.confirmPoints=document.getElementById('proj-confirm-points').value.trim();
@@ -2675,10 +2696,12 @@ function fillEdit(name){
   document.getElementById('proj-quantity').value=l.quantity||'';
   document.getElementById('proj-quote').value=l.quote||'';
   const allEntries=state.projects.filter(p=>(p.name||p.client)===name).sort((a,b)=>a.id-b.id);
-  const allProgress=allEntries
-    .filter(e=>e.progress&&e.progress.trim())
-    .map(e=>{const d=e.recordDate?`· ${e.recordDate} `:'· ';return d+e.progress.trim();})
-    .join('\n');
+  // 读 progressLog（多次编辑追加的完整历史），降级读 progress
+  const allProgress=allEntries.flatMap(e=>{
+    if(e.progressLog&&e.progressLog.length)return e.progressLog;
+    if(e.progress&&e.progress.trim())return[e.progress.trim()];
+    return[];
+  }).join('\n');
   const histDiv=document.getElementById('proj-progress-history');
   if(histDiv){histDiv.textContent=allProgress;histDiv.style.display=allProgress?'block':'none';}
   document.getElementById('proj-progress').value='';
@@ -2737,11 +2760,29 @@ function editLatestProgress(name,id){
     .join('\n');
   const histDivEdit=document.getElementById('proj-progress-history');
   if(histDivEdit){histDivEdit.textContent=allProgressEdit;histDivEdit.style.display=allProgressEdit?'block':'none';}
-  // 去掉存储时加的"· 日期 "前缀，只把正文内容填入编辑框
+  // 编辑框：显示当前entry的最新跟进内容（供修改）；上方历史栏显示所有旧记录
   (function(){
-    var raw=entry.progress||'';
-    var stripped=raw.replace(/^·\s*\d{4}-\d{2}-\d{2}\s*/,'');
-    document.getElementById('proj-progress').value=stripped;
+    // 若有progressLog，最新一条去掉日期前缀后填入编辑框，其余显示在历史栏
+    if(entry.progressLog&&entry.progressLog.length){
+      const latest=entry.progressLog[entry.progressLog.length-1]||'';
+      const stripped=latest.replace(/^·\s*\d{4}-\d{2}-\d{2}\s*/,'');
+      document.getElementById('proj-progress').value=stripped;
+      // 把该entry自身的旧log（除最新一条）也加入历史显示
+      const selfOldLogs=entry.progressLog.slice(0,-1).map(l=>{
+        const d=entry.recordDate?`· ${entry.recordDate} `:'· ';
+        return l.startsWith('·')?l:d+l;
+      }).join('\n');
+      const histDivEdit=document.getElementById('proj-progress-history');
+      if(histDivEdit){
+        const combined=[selfOldLogs,histDivEdit.textContent].filter(x=>x.trim()).join('\n');
+        histDivEdit.textContent=combined;
+        histDivEdit.style.display=combined?'block':'none';
+      }
+    } else {
+      var raw=entry.progress||'';
+      var stripped=raw.replace(/^·\s*\d{4}-\d{2}-\d{2}\s*/,'');
+      document.getElementById('proj-progress').value=stripped;
+    }
   })();
   // Switch card to edit mode UI
   document.getElementById('proj-form-title').textContent='✏️ 编辑记录';
@@ -3037,6 +3078,11 @@ function buildCRMTextFull(latest,allEntries){
   r+=`3. 项目需求：\n${latest.requirement||'暂无'}\n`;
   r+=`4. 项目数量：${latest.quantity||'暂无'}\n`;
   r+=`5. 项目报价：\n${stripEmojiForCRM(latest.quote)||'暂无'}`;
+  // 6. 跟进详情：汇总所有历史进展记录
+  const progressLines=(allEntries||[latest]).slice().sort((a,b)=>a.id-b.id)
+    .flatMap(e=>e.progressLog&&e.progressLog.length?e.progressLog:(e.progress&&e.progress.trim()?[e.progress.trim()]:[]));
+  const followupText=progressLines.length?progressLines.join('\n'):'暂无';
+  r+=`\n6. 跟进详情：\n${followupText}`;
   return r;
 }
 
