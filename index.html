@@ -413,9 +413,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 <div class="page-header">
   <span class="page-title" id="app-title-display" onclick="startTitleEdit()" title="点击重命名" style="cursor:pointer;">工作总结管理工具 v7</span>
   <input id="app-title-input" style="display:none;font-size:15px;font-weight:600;color:var(--text);background:var(--bg2);border:1px solid var(--blue);border-radius:var(--radius-xs);padding:2px 8px;max-width:320px;" onblur="saveTitleEdit()" onkeydown="if(event.key==='Enter')saveTitleEdit();if(event.key==='Escape')cancelTitleEdit();">
-  <div class="inline-flex">
-    <button class="btn btn-sm" onclick="exportBackup()" title="导出全部数据（报价、项目、业绩、单据等所有模块）为JSON备份，换电脑时上传即可完整还原">💾 导出完整备份</button>
-    <label class="btn btn-sm" style="cursor:pointer;margin:0" title="从JSON备份文件恢复所有数据">📂 恢复数据<input type="file" accept=".json" onchange="importBackup(event)" style="display:none"></label>
+  <div class="inline-flex" style="gap:6px;align-items:center">
+    <span id="last-backup-label" style="font-size:11px;color:var(--text3);white-space:nowrap"></span>
+    <button class="btn btn-sm" onclick="openBackupModal()" style="background:#1D9E75;color:#fff;border-color:#1D9E75;font-weight:600;display:flex;align-items:center;gap:4px" title="一键备份所有数据为JSON文件">💾 一键备份</button>
+    <label class="btn btn-sm" style="cursor:pointer;margin:0;white-space:nowrap" title="从JSON备份文件恢复所有数据">📂 恢复数据<input type="file" accept=".json" onchange="importBackup(event)" style="display:none"></label>
   </div>
 </div>
 
@@ -4593,6 +4594,7 @@ function exportBackup(){
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
   try{localStorage.setItem(BACKUP_TIMESTAMP_KEY,Date.now().toString());}catch(e){}
   const bar=document.getElementById('auto-backup-bar');if(bar)bar.style.display='none';
+  updateLastBackupLabel();
   showSaveToast();
 }
 
@@ -10695,6 +10697,30 @@ function submitQuickProgress(){
 
 <div id="save-toast" style="position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-60px);background:#1D9E75;color:#fff;font-size:13px;font-weight:500;padding:7px 18px;border-radius:20px;box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:9999;transition:transform .22s cubic-bezier(.34,1.56,.64,1),opacity .22s;opacity:0;pointer-events:none;white-space:nowrap">✓ 已保存</div>
 
+<!-- ===== 一键备份弹窗 ===== -->
+<div id="backup-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--bg);border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.22);width:380px;max-width:96vw;overflow:hidden">
+    <div style="background:#1D9E75;padding:16px 18px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#fff">💾 一键备份数据</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:2px">将所有模块数据导出为 JSON 文件，随时可恢复</div>
+      </div>
+      <button onclick="closeBackupModal()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+    </div>
+    <div style="padding:16px 18px 8px">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;letter-spacing:.3px">本次备份包含以下数据：</div>
+      <div id="backup-summary" style="display:flex;flex-direction:column;gap:7px"></div>
+    </div>
+    <div style="padding:6px 18px 14px">
+      <div id="backup-last-info" style="font-size:11px;color:var(--text3);background:var(--bg2);padding:6px 10px;border-radius:6px;border:1px solid var(--border2)"></div>
+    </div>
+    <div style="padding:0 18px 18px;display:flex;gap:8px">
+      <button onclick="exportBackup();closeBackupModal()" style="flex:1;padding:10px;background:#1D9E75;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit">💾 立即下载备份文件</button>
+      <button onclick="closeBackupModal()" style="padding:10px 16px;background:var(--bg2);color:var(--text2);border:1px solid var(--border);border-radius:7px;font-size:13px;cursor:pointer;font-family:inherit">取消</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== 项目选择导入弹窗 ===== -->
 <div id="proj-picker-bg" style="position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:700;display:none;align-items:center;justify-content:center" onclick="if(event.target===this)closeProjPicker()">
   <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:0;width:96%;max-width:580px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 8px 36px rgba(0,0,0,.22);overflow:hidden">
@@ -10888,6 +10914,114 @@ function confirmProjPicker() {
 
   closeProjPicker();
 }
+
+// ══════════════════════════════════════════
+// 一键备份弹窗
+// ══════════════════════════════════════════
+function openBackupModal() {
+  // Build data summary
+  const summaryEl = document.getElementById('backup-summary');
+  const items = [];
+
+  // Quotes
+  try {
+    const qt = JSON.parse(localStorage.getItem('quotetrack_v3') || '[]');
+    items.push({ icon: '💰', label: '报价管理', count: qt.length, unit: '条报价' });
+  } catch(e) { items.push({ icon: '💰', label: '报价管理', count: '?', unit: '' }); }
+
+  // Projects + perf
+  try {
+    const ws = JSON.parse(localStorage.getItem('ws6') || '{}');
+    items.push({ icon: '📁', label: '项目情况', count: (ws.projects || []).length, unit: '条记录' });
+    items.push({ icon: '📊', label: '业绩&回款', count: (ws.perf || []).length, unit: '条记录' });
+    const wCnt = (ws.weeklies||[]).length + (ws.monthlies||[]).length + (ws.dailies||[]).length;
+    items.push({ icon: '📝', label: '周报/月报/日报', count: wCnt, unit: '份' });
+  } catch(e) {}
+
+  // CESIPC docs
+  try {
+    const docs = JSON.parse(localStorage.getItem('cesipc_docs_v1') || '[]');
+    items.push({ icon: '📄', label: '单据（报价/PI/CI/装箱）', count: docs.length, unit: '份' });
+  } catch(e) {}
+
+  // Images
+  try {
+    const imgs = JSON.parse(localStorage.getItem('cesipc_images') || '{}');
+    const logoCount = (imgs.logos || []).length;
+    const stampCount = (imgs.stamps || []).length;
+    if (logoCount + stampCount > 0) {
+      items.push({ icon: '🖼', label: 'Logo / 公章图片', count: logoCount + stampCount, unit: '张' });
+    }
+  } catch(e) {}
+
+  // Mem keys
+  let memCount = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('mem_')) memCount++;
+  }
+  if (memCount > 0) items.push({ icon: '🧠', label: '常用记忆词条', count: memCount, unit: '类' });
+
+  summaryEl.innerHTML = items.map(it => `
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-radius:7px;padding:8px 12px;border:1px solid var(--border2)">
+      <span style="font-size:13px;color:var(--text)">${it.icon} ${it.label}</span>
+      <span style="font-size:13px;font-weight:600;color:var(--blue-text);background:var(--blue-bg);padding:2px 9px;border-radius:10px">${it.count} ${it.unit}</span>
+    </div>`).join('');
+
+  // Last backup time
+  const lastInfoEl = document.getElementById('backup-last-info');
+  try {
+    const ts = localStorage.getItem(BACKUP_TIMESTAMP_KEY);
+    if (ts) {
+      const diff = Math.round((Date.now() - parseInt(ts)) / 60000);
+      const timeStr = new Date(parseInt(ts)).toLocaleString('zh-CN', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+      const warn = diff > 60;
+      lastInfoEl.innerHTML = `${warn ? '⚠️' : '✅'} 上次备份：${timeStr}（${diff < 60 ? diff + ' 分钟前' : Math.round(diff/60) + ' 小时前'}）`;
+      lastInfoEl.style.color = warn ? 'var(--amber-text)' : 'var(--green-text)';
+      lastInfoEl.style.background = warn ? 'var(--amber-bg)' : 'var(--green-bg)';
+      lastInfoEl.style.borderColor = warn ? 'var(--amber)' : 'var(--green)';
+    } else {
+      lastInfoEl.textContent = '⚠️ 尚未备份过，建议立即备份以防数据丢失';
+      lastInfoEl.style.color = 'var(--red-text)';
+      lastInfoEl.style.background = 'var(--red-bg)';
+      lastInfoEl.style.borderColor = 'var(--red-border)';
+    }
+  } catch(e) {}
+
+  document.getElementById('backup-modal-bg').style.display = 'flex';
+}
+
+function closeBackupModal() {
+  document.getElementById('backup-modal-bg').style.display = 'none';
+}
+
+// Update the last-backup label in the header
+function updateLastBackupLabel() {
+  const el = document.getElementById('last-backup-label');
+  if (!el) return;
+  try {
+    const ts = localStorage.getItem(BACKUP_TIMESTAMP_KEY);
+    if (ts) {
+      const diff = Math.round((Date.now() - parseInt(ts)) / 60000);
+      if (diff < 60) el.textContent = `上次备份 ${diff}m 前`;
+      else if (diff < 1440) el.textContent = `上次备份 ${Math.round(diff/60)}h 前`;
+      else el.textContent = `上次备份 ${Math.round(diff/1440)}d 前`;
+      el.style.color = diff > 60 ? 'var(--amber-text)' : 'var(--text3)';
+    } else {
+      el.textContent = '尚未备份';
+      el.style.color = 'var(--red-text)';
+    }
+  } catch(e) {}
+}
+
+// Close backup modal when clicking background
+document.getElementById('backup-modal-bg').addEventListener('click', function(e) {
+  if (e.target === this) closeBackupModal();
+});
+
+// Update label on load and every minute
+updateLastBackupLabel();
+setInterval(updateLastBackupLabel, 60000);
 </script>
 
 </body>
