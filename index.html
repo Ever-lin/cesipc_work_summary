@@ -1396,12 +1396,6 @@ function save(){try{localStorage.setItem('ws6',JSON.stringify(state))}catch(e){}
 function showSaveToast(){const t=document.getElementById('save-toast');if(!t)return;t.style.transform='translateX(-50%) translateY(0)';t.style.opacity='1';clearTimeout(t._tid);t._tid=setTimeout(()=>{t.style.transform='translateX(-50%) translateY(-60px)';t.style.opacity='0';},1600);}
 function updateUrgentBadge(){
   const today=todayStr();
-  const tom=(()=>{const d=new Date(today+'T12:00:00');d.setDate(d.getDate()+1);return d.toISOString().slice(0,10);})();
-  const urgent=state.projects.filter(p=>{
-    const at=p.actionTime||'';if(!at)return false;
-    const done=['项目完结','项目停止'].includes(p.progressStage);if(done)return false;
-    return at<=tom;
-  });
   // 按 name 去重（只取每个项目最新条目）
   const seen=new Set();
   let count=0;
@@ -1409,7 +1403,7 @@ function updateUrgentBadge(){
     const k=p.name||p.client;if(seen.has(k))return;seen.add(k);
     const at=p.actionTime||'';if(!at)return;
     const done=['项目完结','项目停止'].includes(p.progressStage);if(done)return;
-    if(at<=tom)count++;
+    if(at<=today)count++;
   });
   const badge=document.getElementById('proj-urgent-badge');
   if(!badge)return;
