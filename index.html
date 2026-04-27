@@ -2469,10 +2469,13 @@ function renderProjects(){
       const blocks=[];
       allEntriesForCard.forEach(e=>{
         const logs=e.progressLog&&e.progressLog.length?e.progressLog:(e.progress&&e.progress.trim()?[e.progress.trim()]:[]);
+        const fallbackDate=e.recordDate||'';
         logs.forEach(line=>{
           const ls=line.trim().split('\n').filter(l=>l.trim());
           if(!ls.length)return;
-          let block=`<div style="padding:1px 0">${ls[0].trim()}</div>`;
+          const firstLine=ls[0].trim();
+          const displayFirst=firstLine.startsWith('·')?firstLine:('· '+fallbackDate+' '+firstLine);
+          let block=`<div style="padding:1px 0">${displayFirst}</div>`;
           if(ls.length>1)block+=ls.slice(1).map(l=>`<div style="padding:1px 0 1px 16px">${l.trim()}</div>`).join('');
           blocks.push(block);
         });
