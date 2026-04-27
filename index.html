@@ -2175,11 +2175,11 @@ function importFromQuoteGroup(gi){
       document.getElementById('proj-date').value=todayStr();
       // 跟进详情：显示所有历史进展记录，用户可在此基础上追加新内容
       const allProgress=linkedEntries
-        .slice().sort((a,b)=>a.id-b.id) // 按时间正序
-        .filter(e=>e.progress&&e.progress.trim())
-        .map(e=>{
-          const d=e.recordDate?`· ${e.recordDate} `:'· ';
-          return d+e.progress.trim();
+        .slice().sort((a,b)=>a.id-b.id)
+        .flatMap(e=>{
+          const logs=e.progressLog&&e.progressLog.length?e.progressLog:(e.progress&&e.progress.trim()?[e.progress.trim()]:[]);
+          const d=e.recordDate||'';
+          return logs.map(l=>l.trim().startsWith('·')?l.trim():('· '+d+' '+l.trim()));
         })
         .join('\n');
       const histDiv=document.getElementById('proj-progress-history');
@@ -2527,7 +2527,7 @@ function renderProjects(){
           <div><b>3. 项目需求：</b>${_hl(_fmtVal(e.requirement),chg('requirement'))}</div>
           <div><b>4. 项目数量：</b>${_hl(e.quantity||'',chg('quantity'))}</div>
           <div><b>5. 项目报价：</b>${_hl(_fmtVal(e.quote),chg('quote'))}</div>
-          <div style="margin-top:4px"><b>6. 跟进详情：</b>${(()=>{const logs=e.progressLog&&e.progressLog.length?e.progressLog:(e.progress&&e.progress.trim()?[e.progress.trim()]:[]);return logs.length?_hl(logs.join('<br>'),chg('progress')):'<span style="color:var(--text3);font-style:italic">暂无</span>';})()}</div>
+          <div style="margin-top:4px"><b>6. 跟进详情：</b>${(()=>{const logs=e.progressLog&&e.progressLog.length?e.progressLog:(e.progress&&e.progress.trim()?[e.progress.trim()]:[]);const d=e.recordDate||'';const formatted=logs.map(l=>l.trim().startsWith('·')?l.trim():('· '+d+' '+l.trim()));return formatted.length?_hl(formatted.join('<br>'),chg('progress')):'<span style="color:var(--text3);font-style:italic">暂无</span>';})()}</div>
         </div>
       </div>`;
     }).join(''):'';
@@ -2758,8 +2758,12 @@ function editLatestProgress(name,id){
   // Show history in progress-history div, and fill progress field with the existing value
   const allEntriesEdit=state.projects.filter(p=>(p.name||p.client)===(entry.name||entry.client)).sort((a,b)=>a.id-b.id);
   const allProgressEdit=allEntriesEdit
-    .filter(e=>e.id!==entry.id&&e.progress&&e.progress.trim())
-    .map(e=>{const d=e.recordDate?`· ${e.recordDate} `:'· ';return d+e.progress.trim();})
+    .filter(e=>e.id!==entry.id)
+    .flatMap(e=>{
+      const logs=e.progressLog&&e.progressLog.length?e.progressLog:(e.progress&&e.progress.trim()?[e.progress.trim()]:[]);
+      const d=e.recordDate||'';
+      return logs.map(l=>l.trim().startsWith('·')?l.trim():('· '+d+' '+l.trim()));
+    })
     .join('\n');
   const histDivEdit=document.getElementById('proj-progress-history');
   if(histDivEdit){histDivEdit.textContent=allProgressEdit;histDivEdit.style.display=allProgressEdit?'block':'none';}
@@ -3081,9 +3085,13 @@ function buildCRMTextFull(latest,allEntries){
   r+=`3. 项目需求：\n${latest.requirement||'暂无'}\n`;
   r+=`4. 项目数量：${latest.quantity||'暂无'}\n`;
   r+=`5. 项目报价：\n${stripEmojiForCRM(latest.quote)||'暂无'}`;
-  // 6. 跟进详情：汇总所有历史进展记录
+  // 6. 跟进详情：汇总所有历史进展记录，确保每条都有"· 日期"前缀
   const progressLines=(allEntries||[latest]).slice().sort((a,b)=>a.id-b.id)
-    .flatMap(e=>e.progressLog&&e.progressLog.length?e.progressLog:(e.progress&&e.progress.trim()?[e.progress.trim()]:[]));
+    .flatMap(e=>{
+      const lines=e.progressLog&&e.progressLog.length?e.progressLog:(e.progress&&e.progress.trim()?[e.progress.trim()]:[]);
+      const d=e.recordDate||'';
+      return lines.map(l=>l.trim().startsWith('·')?l.trim():('· '+d+' '+l.trim()));
+    });
   const followupText=progressLines.length?progressLines.join('\n'):'暂无';
   r+=`\n6. 跟进详情：\n${followupText}`;
   return r;
@@ -6754,7 +6762,7 @@ function qtSave(){
       // 仅当价格或关键字段有变化时才追加历史记录，避免无修改重复保存
       const prevSnaps=qtQuotes[i].priceHistory||[];
       const lastSnap=prevSnaps[prevSnaps.length-1];
-      const priceChanged=!lastSnap||lastSnap.price!==snap.price||lastSnap.priceCur!==snap.priceCur||lastSnap.barbone!==snap.barbone||lastSnap.ramp!==snap.ramp||lastSnap.ssdp!==snap.ssdp||lastSnap.totalPrice!==snap.totalPrice||lastSnap.p3!==snap.p3||lastSnap.deal!==snap.deal||lastSnap.stage!==snap.stage;
+      const priceChanged=!lastSnap||lastSnap.price!==snap.price||lastSnap.priceCur!==snap.priceCur||lastSnap.barbone!==snap.barbone||lastSnap.ramp!==snap.ramp||lastSnap.ssdp!==snap.ssdp||lastSnap.totalPrice!==snap.totalPrice||lastSnap.p3!==snap.p3||lastSnap.deal!==snap.deal||lastSnap.stage!==snap.stage||lastSnap.custom!==snap.custom||lastSnap.qty!==snap.qty||lastSnap.model!==snap.model||lastSnap.cpu!==snap.cpu||lastSnap.ram!==snap.ram||lastSnap.ssd!==snap.ssd;
       obj.priceHistory=priceChanged?[...prevSnaps,snap]:prevSnaps;
       qtQuotes[i]=obj;
     }
