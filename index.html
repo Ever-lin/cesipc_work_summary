@@ -2039,9 +2039,17 @@ function qtHasUnsyncedUpdate(projName){
   if(!projName)return false;
   const projQuotes=qtQuotes.filter(q=>q.project===projName);
   if(!projQuotes.length)return false;
-  const lastSync=projQuotes.filter(q=>q.lastSyncedAt).map(q=>q.lastSyncedAt).sort().pop()||'';
+  // 统一时间比较：把各种格式都转成可排序的字符串（ISO > "YYYY-MM-DD HH:mm" > ""）
+  const norm=s=>{
+    if(!s)return '';
+    // ISO格式(含T)：截取到分钟 "2026-04-27T06:30" → "2026-04-27 06:30"
+    if(s.includes('T'))return s.slice(0,16).replace('T',' ');
+    // 已是"YYYY-MM-DD HH:mm"格式直接用
+    return s.slice(0,16);
+  };
+  const lastSync=norm(projQuotes.filter(q=>q.lastSyncedAt).map(q=>q.lastSyncedAt).sort().pop()||'');
   // 1. priceHistory 有比上次同步更新的快照
-  const latestSnap=projQuotes.flatMap(q=>q.priceHistory||[]).map(h=>h.savedAt||'').sort().pop()||'';
+  const latestSnap=norm(projQuotes.flatMap(q=>q.priceHistory||[]).map(h=>h.savedAt||'').sort().pop()||'');
   const hasAnyHistory=projQuotes.some(q=>q.priceHistory&&q.priceHistory.length>0);
   if(hasAnyHistory&&(!lastSync||latestSnap>lastSync))return true;
   // 2. deal 或 stage 与上次同步时不同
@@ -2664,6 +2672,7 @@ function submitProject(){
       quote:document.getElementById('proj-quote').value.trim(),
       linkedQuoteProject:window._pendingLinkedQuoteProject||'',
       progress:(()=>{const v=document.getElementById('proj-progress').value.trim();if(!v)return'';const d=document.getElementById('proj-date').value||todayStr();return `· ${d} ${v}`;})(),
+      progressLog:(()=>{const v=document.getElementById('proj-progress').value.trim();if(!v)return[];const d=document.getElementById('proj-date').value||todayStr();return[`· ${d} ${v}`];})(),
       actionContent:document.getElementById('proj-action-content').value.trim(),
       actionTime:document.getElementById('proj-action-time').value.trim(),
       confirmPoints:document.getElementById('proj-confirm-points').value.trim(),
@@ -4661,13 +4670,16 @@ function syncQuoteToProject(quoteProjectName){
   const g=groups.find(g=>g.project===quoteProjectName);
   if(!g){alert('未找到对应报价记录');return;}
 
-  // ── 1. Build new quote text ──
+  // ── 1. Build new quote text ──（与 importFromQuoteGroup 保持一致：多产品加 header + 分隔线）
   const blocks=[];
-  g.quotes.forEach(q=>{
+  g.quotes.forEach((q,qi)=>{
     const text=qtBuildQuoteText(q);
-    if(text.trim())blocks.push(text.trim());
+    if(text.trim()){
+      const header=g.quotes.length>1?`【产品${qi+1}】${q.model||''}${q.cpu?' · '+q.cpu:''}\n`:'';
+      blocks.push(header+text.trim());
+    }
   });
-  const newQuoteText=blocks.join('\n\n');
+  const newQuoteText=blocks.join('\n\n─────\n\n');
 
   // ── 2. Derive status from deal ──
   const newStatus=g.deal?qtDealToStatus(g.deal):null;
@@ -10642,8 +10654,9 @@ function closeQuickProgressModal(){
 function submitQuickProgress(){
   const progress=document.getElementById('qpm-progress').value.trim();
   const stage=document.getElementById('qpm-stage').value;
+  const manualStatus=(document.getElementById('qpm-status')||{}).value||''; // 手动指定状态（优先于自动推导）
   const date=document.getElementById('qpm-date').value||todayStr();
-  if(!progress&&!stage){alert('请填写跟进内容或选择进度阶段');return;}
+  if(!progress&&!stage&&!manualStatus){alert('请填写跟进内容或选择进度阶段');return;}
   // 新建一条追加记录（克隆最新entry，更新进度字段）
   const latest=state.projects.find(p=>String(p.id)===String(_qpmEntryId));
   if(!latest){alert('找不到项目记录');return;}
@@ -10651,28 +10664,29 @@ function submitQuickProgress(){
     ...latest,
     id:Date.now(),
     progress:progress?`· ${date} ${progress}`:'',
+    progressLog:[],          // 新条目从空日志开始，历史通过旧条目展示，不重复继承
     progressStage:stage||latest.progressStage,
     recordDate:date,
     savedAt:new Date().toLocaleString('zh-CN'),
   };
-  // 如果只改了stage没写progress，直接修改原条目
-  if(!progress&&stage){
-    latest.progressStage=stage;
+  // 如果只改了stage/status没写progress，直接修改原条目
+  if(!progress&&(stage||manualStatus)){
+    if(stage)latest.progressStage=stage;
     latest.savedAt=new Date().toLocaleString('zh-CN');
   } else {
     state.projects.push(newEntry);
   }
-  // 推导状态（与 setStage 逻辑一致）
+  // 状态优先级：手动选择 > 进度阶段自动推导
   const derivedStatus=stage?({
     '需求确认':'跟进中','方案设计':'跟进中','产品报价':'跟进中','合同签订':'跟进中',
     '生产/交付':'确认订单','安装/验收':'确认订单',
-    '项目完结':'成交','项目延期':'暂无进展','项目停止':'暂无进展','丢单':'丢单',
+    '项目完结':'成交','项目延期':'暂无进展','项目停止':'丢单','丢单':'丢单',
     '拟标':'跟进中','挂网':'跟进中','招标':'跟进中','投标':'跟进中',
     '封标':'跟进中','评标':'跟进中','定标':'确认订单','流标废标':'丢单'
   }[stage]||null):null;
-  const finalStatus=derivedStatus||null;
+  const finalStatus=manualStatus||derivedStatus||null; // 手动选择优先
   if(finalStatus){
-    if(!progress&&stage){latest.status=finalStatus;}
+    if(!progress&&(stage||manualStatus)){latest.status=finalStatus;}
     else if(progress){newEntry.status=finalStatus;}
   }
   save();
