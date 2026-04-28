@@ -1682,8 +1682,11 @@ function editPerf(id){
   document.getElementById('perf-week').value=p.week;
   const cy=p.calYear||calYearOfFYMonth(p.fy,p.month);
   const mm=String(p.month).padStart(2,'0');
-  const wDays={'第一周':'04','第二周':'11','第三周':'18','第四周':'25','第五周':'30'};
-  const day=wDays[p.week]||'01';
+  const wDays={'第一周':4,'第二周':11,'第三周':18,'第四周':25,'第五周':28};
+  const rawDay=wDays[p.week]||1;
+  // 安全钳位：不超过当月最后一天（修复2月等月份无效日期问题）
+  const lastDay=new Date(parseInt(cy),parseInt(p.month),0).getDate();
+  const day=String(Math.min(rawDay,lastDay)).padStart(2,'0');
   document.getElementById('perf-date').value=`${cy}-${mm}-${day}`;
   document.getElementById('perf-week-badge').textContent=`${p.month}月 ${p.week}`;
   // 兼容旧「新成交」类型，默认映射为「销售成交」
@@ -1711,6 +1714,7 @@ function cancelEditPerf(){
   document.getElementById('perf-cancel-edit').style.display='none';
   document.getElementById('perf-submit-btn').textContent='+ 添加';
   document.getElementById('perf-submit-btn').style.background='';
+  document.getElementById('perf-type').value='业绩';
   ['perf-client','perf-amount','perf-note','perf-note-deal'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('perf-date').value=todayStr();
   onPerfDateChange();
@@ -9329,29 +9333,7 @@ function exportPDF(){
         <div class="paper" id="paper">${paper.innerHTML}</div>
       </div>
     </div></div>
-  
-<!-- FLOATING FORMAT TOOLBAR -->
-<div id="fmt-bar" style="display:none;position:fixed;z-index:9999;background:#fff;border:1.5px solid #1A3C5E;border-radius:8px;padding:5px 10px;gap:6px;align-items:center;box-shadow:0 4px 18px rgba(0,0,0,.22);">
-  <span style="font-size:10px;color:#888;margin-right:2px;white-space:nowrap;">格式：</span>
-  <button title="加粗 Bold" onmousedown="event.preventDefault();fmtExec('bold')" style="background:#1A3C5E;border:none;border-radius:4px;color:#fff;font-weight:700;font-size:13px;width:28px;height:26px;cursor:pointer;line-height:1;">B</button>
-  <button title="斜体 Italic" onmousedown="event.preventDefault();fmtExec('italic')" style="background:#f0f0f0;border:1px solid #ccc;border-radius:4px;color:#333;font-style:italic;font-size:13px;width:28px;height:26px;cursor:pointer;line-height:1;">I</button>
-  <button title="下划线 Underline" onmousedown="event.preventDefault();fmtExec('underline')" style="background:#f0f0f0;border:1px solid #ccc;border-radius:4px;color:#333;text-decoration:underline;font-size:13px;width:28px;height:26px;cursor:pointer;line-height:1;">U</button>
-  <div style="width:1px;height:20px;background:#ddd;margin:0 2px;"></div>
-  <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;">
-    <span style="font-size:9px;color:#666;line-height:1;white-space:nowrap;">字色</span>
-    <button id="fmt-bar-fc-btn" onmousedown="event.preventDefault();toggleColorPalette('fmt-bar-fc-pal')" style="width:26px;height:18px;border:1px solid #ccc;border-radius:3px;cursor:pointer;padding:0;background:#E8732A;" title="字体颜色"></button>
-    <div id="fmt-bar-fc-pal" style="display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:3px;background:#fff;border:1px solid #ccc;border-radius:6px;padding:5px;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,.18);width:112px;"></div>
-  </div>
-  <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;">
-    <span style="font-size:9px;color:#666;line-height:1;white-space:nowrap;">🖍高亮</span>
-    <button id="fmt-bar-bg-btn" onmousedown="event.preventDefault();toggleColorPalette('fmt-bar-bg-pal')" style="width:26px;height:18px;border:1px solid #ccc;border-radius:3px;cursor:pointer;padding:0;background:#FFFF00;" title="背景高亮色"></button>
-    <div id="fmt-bar-bg-pal" style="display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:3px;background:#fff;border:1px solid #ccc;border-radius:6px;padding:5px;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,.18);width:112px;"></div>
-  </div>
-  <div style="width:1px;height:20px;background:#ddd;margin:0 2px;"></div>
-  <button title="清除格式" onmousedown="event.preventDefault();fmtExec('removeFormat')" style="background:#f0f0f0;border:1px solid #ccc;border-radius:4px;color:#666;font-size:11px;padding:3px 8px;cursor:pointer;white-space:nowrap;">✕ 清除</button>
-</div>
-
-</body></html>`);
+  </body></html>`);
   doc.close();
 
   // 等待字体加载完成再打印，避免字体未就绪导致排版错乱
@@ -9388,9 +9370,8 @@ function persistDocs(docs) {
 }
 
 function captureRows(t) {
-  if (t === 'q' || t === 'pi') {
-    return getQRows().map ? (t === 'q' ? getQRows() : getPIRows()) : [];
-  }
+  if (t === 'q') return getQRows();
+  if (t === 'pi') return getPIRows();
   if (t === 'ci') return getCIRows();
   if (t === 'pk') return getPKRows();
   return [];
@@ -10683,7 +10664,7 @@ function closeQuickProgressModal(){
 function submitQuickProgress(){
   const progress=document.getElementById('qpm-progress').value.trim();
   const stage=document.getElementById('qpm-stage').value;
-  const manualStatus=(document.getElementById('qpm-status')||{}).value||''; // 手动指定状态（优先于自动推导）
+  const manualStatus=document.getElementById('qpm-status')?.value||''; // 手动指定状态（优先于自动推导）
   const date=document.getElementById('qpm-date').value||todayStr();
   if(!progress&&!stage&&!manualStatus){alert('请填写跟进内容或选择进度阶段');return;}
   // 新建一条追加记录（克隆最新entry，更新进度字段）
@@ -11059,11 +11040,12 @@ function updateBackupScheduleStatus() {
 // ── Scheduled daily backup reminder ──
 (function initScheduledBackup() {
   let lastNotifiedDate = '';
-  function checkScheduledBackup() {
+  function checkScheduledBackup(isInitialCheck) {
     const now = new Date();
     const hhmm = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
     const today = now.toDateString();
     const scheduled = localStorage.getItem('backup_schedule_time') || '17:30';
+    // 初始检查时：只有当前时间恰好等于设定时间才触发，避免页面打开时误标记今天已提醒
     if (hhmm === scheduled && lastNotifiedDate !== today) {
       lastNotifiedDate = today;
       // Show the backup modal as a reminder
@@ -11077,7 +11059,11 @@ function updateBackupScheduleStatus() {
     }
   }
   setInterval(checkScheduledBackup, 30000); // check every 30 seconds
-  setTimeout(checkScheduledBackup, 3000);
+  // 初始延迟检查：不传 isInitialCheck，与常规检查行为一致，
+  // 但延迟至下一分钟边界附近，避免页面打开时恰好在整点前30秒误触发并锁定当天
+  const now = new Date();
+  const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+  setTimeout(checkScheduledBackup, Math.min(msToNextMinute + 500, 60000));
 })();
 
 // Update the last-backup label in the header
