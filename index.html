@@ -4661,10 +4661,6 @@ const BACKUP_TIMESTAMP_KEY='ws6_last_backup_ts';
 const BACKUP_WARN_MINS=30;
 
 function exportBackup(){
-  // ── 先把内存中最新数据刷入 localStorage，确保备份完整 ──
-  try{ if(typeof state!=='undefined') localStorage.setItem('ws6', JSON.stringify(state)); }catch(e){}
-  try{ if(typeof qtQuotes!=='undefined') localStorage.setItem('quotetrack_v3', JSON.stringify(qtQuotes)); }catch(e){}
-
   // Collect ALL data across every localStorage key used by this app
   const ds=toCST(new Date());
   const allKeys=[
@@ -7710,6 +7706,24 @@ setTimeout(()=>{autoSnapshotNow();checkBackupWarning();},2000);
 
     </div>
   </div>
+  <!-- Product / Solution Images -->
+  <div class="divider"></div>
+  <div>
+    <div class="stitle">🖼 产品图片 Product Images</div>
+    <div style="font-size:11px;color:var(--c-muted);margin-bottom:8px;line-height:1.6;">添加 1–4 张产品图片，显示在报价单 TOTAL AMOUNT DUE 下方。支持 PNG / JPG。</div>
+    <div class="fg">
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+        <label style="background:#1A3C5E;color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;">
+          📁 添加图片（最多4张）<input type="file" accept="image/*" multiple style="display:none;" onchange="uploadProductImages(this)">
+        </label>
+        <button onclick="clearProductImages()" style="background:none;border:1px solid var(--c-border);border-radius:5px;padding:4px 8px;font-size:11px;color:var(--c-muted);cursor:pointer;">✕ 清除全部</button>
+      </div>
+      <div id="product-image-list" style="margin-bottom:4px;">
+        <div style="font-size:11px;color:var(--c-muted);padding:6px 0;">暂无产品图片</div>
+      </div>
+      <div style="font-size:10px;color:var(--c-muted);margin-top:2px;">💡 图片将在 PDF 中横向并排排列，支持可选图注文字。</div>
+    </div>
+  </div>
   <div class="divider"></div>
   <div>
     <div class="stitle">🏢 我方信息 Seller</div>
@@ -7932,7 +7946,7 @@ setTimeout(()=>{autoSnapshotNow();checkBackupWarning();},2000);
         <th style="width:54px">Qty/Ctn</th><th style="width:56px">N.W(KG)</th>
         <th style="width:56px">G.W(KG)</th><th style="width:46px">L(cm)</th>
         <th style="width:46px">W(cm)</th><th style="width:46px">H(cm)</th>
-        <th style="width:68px">CBM(m³)</th><th style="width:30px"></th>
+        <th style="width:68px">CBM(m³)<br><span style="font-size:9px;font-weight:400;opacity:.7">Ctns×(L×W×H/10⁶)</span></th><th style="width:30px"></th>
       </tr></thead>
       <tbody id="pk-b"></tbody>
       <tfoot>
@@ -8037,8 +8051,9 @@ function autoValidUntil(){
 function updDisp(){}  // kept for compatibility
 
 // ── Company Images: Logo & Stamp ──
-let _companyImages = { logos: [], stamps: [] };
+let _companyImages = { logos: [], stamps: [], productImages: [] };
 // _companyImages.logos is an array of { dataUrl, height, invert, offsetX, offsetY }
+// _companyImages.productImages is an array of { dataUrl, label } — shown below TOTAL AMOUNT DUE
 let _logoSettings = { height: 28, invert: true, offsetX: 0, offsetY: 0 }; // kept for legacy compat
 let _stampSettings = { size: 70, offsetX: 0, offsetY: 0 }; // legacy compat, used for single stamp fallback
 
@@ -8059,9 +8074,14 @@ let _stampSettings = { size: 70, offsetX: 0, offsetY: 0 }; // legacy compat, use
       const ss2 = saved.stampSettings || _stampSettings;
       _companyImages.stamps = [{ dataUrl: saved.stamp, size: ss2.size||70, offsetX: ss2.offsetX||0, offsetY: ss2.offsetY||0 }];
     }
+    // Load product images
+    if(saved.productImages && Array.isArray(saved.productImages)){
+      _companyImages.productImages = saved.productImages;
+    }
     setTimeout(()=>{
       _renderLogoList();
       _renderStampList();
+      _renderProductImageList();
     }, 300);
   } catch(e) {}
 })();
@@ -8237,6 +8257,7 @@ function _saveImageSettings(){
     delete saved.logo; delete saved.logoSettings;
     saved.stamps = _companyImages.stamps || [];
     delete saved.stamp; delete saved.stampSettings;
+    saved.productImages = _companyImages.productImages || [];
     localStorage.setItem('cesipc_images', JSON.stringify(saved));
   } catch(e) {}
 }
@@ -8291,6 +8312,79 @@ function getStampHtml(){
   return `<div style="display:flex;justify-content:center;align-items:center;gap:6pt;margin-top:6pt;">${imgs}</div>`;
 }
 
+// ── Product / Solution Images ──
+function _renderProductImageList(){
+  const container = document.getElementById("product-image-list");
+  if(!container) return;
+  const imgs = _companyImages.productImages || [];
+  if(!imgs.length){
+    container.innerHTML = '<div style="font-size:11px;color:var(--c-muted);padding:6px 0;">暂无产品图片</div>';
+    return;
+  }
+  container.innerHTML = imgs.map((pi, idx) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:5px;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:6px;margin-bottom:6px;">
+      <img src="${pi.dataUrl}" style="height:48px;max-width:64px;object-fit:contain;border-radius:4px;border:1px solid var(--c-border);flex-shrink:0;" alt="prod ${idx+1}">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:11px;color:var(--c-muted);margin-bottom:4px;">图片 ${idx+1}/${imgs.length}</div>
+        <input type="text" value="${(pi.label||'').replace(/"/g,'&quot;')}" placeholder="图注（可选）" oninput="_updateProdImgLabel(${idx},this.value)" style="width:100%;padding:3px 6px;font-size:11px;border:1px solid var(--c-border);border-radius:4px;background:#fff;color:var(--c-text);font-family:inherit;">
+      </div>
+      <button onclick="_removeProdImg(${idx})" style="background:rgba(255,92,110,.1);border:1px solid rgba(255,92,110,.22);border-radius:4px;cursor:pointer;color:#c0392b;font-size:11px;padding:3px 7px;flex-shrink:0;">✕</button>
+    </div>`).join("");
+}
+function _updateProdImgLabel(idx, val){
+  if(!_companyImages.productImages[idx]) return;
+  _companyImages.productImages[idx].label = val;
+  _saveImageSettings();
+}
+function _removeProdImg(idx){
+  _companyImages.productImages.splice(idx, 1);
+  _saveImageSettings();
+  _renderProductImageList();
+  toast("🗑 已删除产品图片 " + (idx+1));
+}
+function uploadProductImages(input){
+  const files = Array.from(input.files);
+  if(!files.length) return;
+  const limit = 4;
+  const current = (_companyImages.productImages||[]).length;
+  const canAdd = limit - current;
+  if(canAdd <= 0){ toast("⚠️ 最多上传 4 张产品图片"); input.value=""; return; }
+  const toLoad = files.slice(0, canAdd);
+  if(files.length > canAdd) toast("⚠️ 已上传前 " + canAdd + " 张（最多 4 张）");
+  let loaded = 0;
+  toLoad.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      _companyImages.productImages.push({ dataUrl: e.target.result, label: "" });
+      loaded++;
+      if(loaded === toLoad.length){
+        _saveImageSettings();
+        _renderProductImageList();
+        toast("✅ 已上传 " + loaded + " 张产品图片");
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = "";
+}
+function clearProductImages(){
+  _companyImages.productImages = [];
+  _saveImageSettings();
+  _renderProductImageList();
+  toast("🗑 已清除所有产品图片");
+}
+function getProductImagesHtml(){
+  const imgs = (_companyImages.productImages||[]);
+  if(!imgs.length) return "";
+  const count = imgs.length;
+  const cols = count <= 2 ? count : 4;
+  const cellW = Math.floor(100 / cols);
+  const cells = imgs.map((pi, idx) => {
+    const label = pi.label ? `<div style="font-size:7pt;color:#555;text-align:center;margin-top:3pt;">${pi.label}</div>` : "";
+    return `<td style="width:${cellW}%;padding:5pt;text-align:center;vertical-align:middle;border:none;"><img src="${pi.dataUrl}" style="max-width:100%;max-height:90pt;object-fit:contain;display:block;margin:0 auto;">${label}</td>`;
+  }).join("");
+  return `<div style="margin-top:10pt;border:1.5pt solid #B0BEC5;border-radius:5pt;overflow:hidden;"><div style="background:#1A3C5E;color:#fff;font-size:8pt;font-weight:700;padding:5pt 8pt;letter-spacing:.3pt;">🖼&nbsp; Product / Solution Images</div><table style="width:100%;border-collapse:collapse;background:#fff;"><tr>${cells}</tr></table></div>`;
+}
 // ── Drag logo/stamp in PDF preview overlay ──
 function startDragImage(e, type, idx){
   e.preventDefault();
@@ -8859,8 +8953,8 @@ function cCI(){
 function cCBM(id){
   const tr=document.getElementById('pk-r-'+id);if(!tr)return;
   const i=tr.querySelectorAll('input');
-  const ctns=parseFloat(i[4]?.value)||0,l=parseFloat(i[8]?.value)||0,w=parseFloat(i[9]?.value)||0,h=parseFloat(i[10]?.value)||0;
-  const cbm=ctns*(l/100)*(w/100)*(h/100);
+  const ctns=parseFloat(i[4]?.value)||0,l=parseFloat(i[9]?.value)||0,w=parseFloat(i[10]?.value)||0,h=parseFloat(i[11]?.value)||0;
+  const cbm=ctns*(l*w*h/1000000);
   const el=document.getElementById('pk-c-'+id);if(el)el.textContent=cbm.toFixed(2);
   cPK();
 }
@@ -8869,7 +8963,7 @@ function cPK(){
   document.querySelectorAll('#pk-b tr').forEach(tr=>{
     const i=tr.querySelectorAll('input');
     const pcs=parseFloat(i[2]?.value)||0,ctns=parseFloat(i[4]?.value)||0;
-    const nw=parseFloat(i[6]?.value)||0,gw=parseFloat(i[7]?.value)||0;
+    const nw=parseFloat(i[7]?.value)||0,gw=parseFloat(i[8]?.value)||0;
     const id=tr.id.split('-').pop();
     const cbm=parseFloat(document.getElementById('pk-c-'+id)?.textContent)||0;
     tp+=pcs;tc+=ctns;tnw+=nw*ctns;tgw+=gw*ctns;tcbm+=cbm;
@@ -8943,8 +9037,8 @@ function getPKRows(){
     const id=tr.id.split('-').pop();
     rows.push({n:i+1,mo:inp[0]?.value||'',ds:inp[1]?.value||'',pcs:inp[2]?.value||'0',
       pk:inp[3]?.value||'',ct:inp[4]?.value||'0',qc:inp[5]?.value||'0',
-      nw:inp[6]?.value||'0',gw:inp[7]?.value||'0',
-      l:inp[8]?.value||'0',w:inp[9]?.value||'0',h:inp[10]?.value||'0',
+      nw:inp[7]?.value||'0',gw:inp[8]?.value||'0',
+      l:inp[9]?.value||'0',w:inp[10]?.value||'0',h:inp[11]?.value||'0',
       cbm:document.getElementById('pk-c-'+id)?.textContent||'0.00',od:i%2===0});
   });return rows;
 }
@@ -9254,6 +9348,7 @@ function buildQ(){
     <tbody>${qItemRows(rows)}</tbody>
   </table></div>
   ${subBlock(tq,ta,sh,gt,10,_qTotalColHidden,taxAmt,taxLbl)}
+  ${getProductImagesHtml()}
   <div class="sec-h">TERMS &amp; CONDITIONS</div>
   <table class="kv-t">${kvRows([['Trade Terms',g('tradeTerm'),true],['Payment Terms',g('payTerm'),false],['Lead Time',g('leadTime'),true],['Warranty',g('warranty'),false],['Validity','Barebone pricing valid 3 months; RAM &amp; SSD pricing valid 7 days',false]])}</table>
   <div class="sec-h">BANK / REMITTANCE DETAILS</div>
@@ -9695,7 +9790,7 @@ function loadDocState(id) {
           <td><button class="btn btn-d btn-sm" onclick="delR('ci',${rowId})">✕</button></td>`;
         tbody.appendChild(tr2);
       } else if (t === 'pk') {
-        // pk inputs: [0]=model, [1]=desc, [2]=pcs, [3]=packing, [4]=cartons, [5]=qty/ctn, [6]=nw, [7]=gw, [8]=L, [9]=W, [10]=H
+        // pk inputs: [0]=model, [1]=desc, [2]=pcs, [3]=packing, [4]=cartons, [5]=qty/ctn, [6]=qty-no-oninput, [7]=nw, [8]=gw, [9]=L, [10]=W, [11]=H
         const rowId = ++rc.pk;
         const tr2 = document.createElement('tr');
         tr2.id = 'pk-r-' + rowId;
@@ -11122,10 +11217,6 @@ function confirmProjPicker() {
 // 一键备份弹窗
 // ══════════════════════════════════════════
 function openBackupModal() {
-  // ── 先把内存中最新数据刷入 localStorage，确保摘要和备份内容一致 ──
-  try{ if(typeof state!=='undefined') localStorage.setItem('ws6', JSON.stringify(state)); }catch(e){}
-  try{ if(typeof qtQuotes!=='undefined') localStorage.setItem('quotetrack_v3', JSON.stringify(qtQuotes)); }catch(e){}
-
   // Build data summary
   const summaryEl = document.getElementById('backup-summary');
   const items = [];
