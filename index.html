@@ -78,7 +78,18 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .collapse-hdr{cursor:pointer;user-select:none}
 .collapse-hdr:hover{opacity:.85}
 @media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr}.metric-grid{grid-template-columns:repeat(2,1fr)}}
-.term-item{padding:2px 4px;cursor:pointer;border-radius:3px}.term-item:hover{background:var(--blue-bg);color:var(--blue-text)}
+.help-box{background:#F0F7FF;border:1px solid #B8D4F0;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;font-size:12px;line-height:1.9;color:#0C447C}
+.help-box summary{cursor:pointer;font-weight:600;color:#185FA5;font-size:13px;user-select:none;list-style:none;display:flex;align-items:center;gap:6px}
+.help-box summary::-webkit-details-marker{display:none}
+.help-box summary::before{content:'❓';font-size:12px}
+.help-box details[open] summary::before{content:'💡'}
+.help-box .hb-row{display:flex;gap:6px;padding:2px 0}
+.help-box .hb-tag{background:#1A3C5E;color:#fff;border-radius:4px;padding:1px 7px;font-size:11px;white-space:nowrap;flex-shrink:0;font-weight:600}
+.help-box .hb-tag.green{background:var(--green)}
+.help-box .hb-tag.amber{background:var(--amber);color:#fff}
+.help-box .hb-tag.red{background:#DC2626}
+.help-box .hb-tag.gray{background:var(--text2)}
+
 
   /* ── saved docs panel ── */
   #saved-docs-panel { background: var(--bg); border: 1px solid var(--border2); border-radius: 7px; overflow: visible; }
@@ -432,6 +443,21 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
 <!-- ===== 业绩&回款 ===== -->
 <div id="panel-performance" class="panel">
+<div class="help-box"><details><summary>业绩&回款 — 这个页面是做什么的？</summary>
+<div style="margin-top:8px">
+  <div>记录每一笔业绩、回款和新成交，并自动汇总当月/当年的完成情况，与目标对比。</div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">📋 显示的数据来自哪里？</div>
+  <div>完全手动录入。每笔记录需要选择类型（业绩 / 回款 / 新成交）、填写客户名和金额，以及选择对应日期（系统自动判断月份和周次）。</div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">🔘 关键功能说明</div>
+  <div class="hb-row"><span class="hb-tag">业绩</span><span>合同金额入账，代表这一周/月你完成的销售额。</span></div>
+  <div class="hb-row"><span class="hb-tag green">回款</span><span>客户实际打款到账。回款类型下会出现「未回款业绩」快选，方便关联已记录的业绩。</span></div>
+  <div class="hb-row"><span class="hb-tag amber">新成交</span><span>新签客户或新成交项目，用于统计新客数量（金额可不填）。</span></div>
+  <div class="hb-row"><span class="hb-tag gray">数据透视</span><span>下方表格可切换「本月按周」「年度按月」「财年对比」三种视图，横向对比业绩/回款完成情况。</span></div>
+  <div class="hb-row"><span class="hb-tag green">📥 导出Excel</span><span>将当前月份的业绩回款数据导出为 CSV。</span></div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">💡 顶部指标说明</div>
+  <div>四个指标卡（业绩 / 回款 / 新成交 / 应收）显示当月汇总，并与「目标设定」里配置的目标对比，超标显示绿色，未达标显示橙色。</div>
+</div>
+</details></div>
   <div class="filter-bar">
     <select class="ym-s" id="view-fy" onchange="renderPerf()"></select>
     <select class="ym-s" id="view-month" onchange="renderPerf()">
@@ -499,6 +525,25 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
 <!-- ===== 项目情况 ===== -->
 <div id="panel-projects" class="panel">
+<div class="help-box"><details><summary>项目情况 — 这个页面是做什么的？</summary>
+<div style="margin-top:8px">
+  <div>用于跟踪每个销售项目的完整生命周期。同一个项目可以多次追加进展，所有历史记录都会保留，方便复盘。</div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">📋 项目卡片</div>
+  <div>每张卡片默认折叠，显示客户名 + 项目名。点击标题行展开查看详情、跟进记录和推进计划。</div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">🔘 关键按钮说明</div>
+  <div class="hb-row"><span class="hb-tag">💰 从报价导入</span><span>从「报价管理」里选一条报价，自动填入项目名、客户名、数量、报价等字段，省去手动录入。</span></div>
+  <div class="hb-row"><span class="hb-tag amber">⚠️ 报价有更新，点击同步</span><span>当「报价管理」里该项目的报价有变化（改了价格/状态/进度），此按钮出现在卡片上。点击可将最新报价数据同步到项目记录。</span></div>
+  <div class="hb-row"><span class="hb-tag">⚡ 快速更新</span><span>弹出简化版表单，快速补充跟进内容，不需要打开完整编辑表单。</span></div>
+  <div class="hb-row"><span class="hb-tag">追加进展</span><span>在原有项目下新增一次跟进记录（保留历史）。</span></div>
+  <div class="hb-row"><span class="hb-tag">编辑最新</span><span>修改最近一次的跟进记录内容。</span></div>
+  <div class="hb-row"><span class="hb-tag gray">📋 复制CRM格式</span><span>将该项目的信息整理成标准文本格式，方便粘贴到邮件或 CRM 系统。</span></div>
+  <div class="hb-row"><span class="hb-tag green">🔔 有更新</span><span>筛选按钮。只显示本次打开页面后，有新进展但还没点开看过的项目。</span></div>
+  <div class="hb-row"><span class="hb-tag amber">⚠️ 待同步</span><span>筛选按钮。只显示报价管理里有变更、尚未同步回项目的那些项目。</span></div>
+  <div class="hb-row"><span class="hb-tag green">📥 导出Excel</span><span>将项目列表导出为 CSV，可在 Excel 中进一步分析。</span></div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">🚨 排序说明</div>
+  <div>「🚨 紧急优先」模式下，按行动时间分组：已逾期 → 今天 → 明天 → 未来 → 未设时间 → 已完结。</div>
+</div>
+</details></div>
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
     <div class="hint" style="flex:1;margin-bottom:0;">同一个项目用相同「项目名称」保存，每次追加进展。⭕️ 跟进中 &nbsp;/&nbsp; 🔶 已确认订单 &nbsp;/&nbsp; ✅ 已成交 &nbsp;/&nbsp; ⏸️ 暂无进展 &nbsp;/&nbsp; ❌ 丢单</div>
     <button id="proj-scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部" style="display:none;flex-shrink:0;padding:4px 10px;border-radius:16px;border:1px solid var(--border2);background:var(--bg);color:var(--text2);font-size:12px;cursor:pointer;white-space:nowrap;">↑ 顶部</button>
@@ -639,6 +684,18 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
 <!-- ===== 目标设定 ===== -->
 <div id="panel-targets" class="panel">
+<div class="help-box"><details><summary>目标设定 — 这个页面是做什么的？</summary>
+<div style="margin-top:8px">
+  <div>每个财年配置一次业绩、回款和新成交目标。配置后，「业绩&回款」页面的指标卡会自动与目标对比，「导出报告」导出的周报/月报也会自动带入目标数字。</div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">📋 字段说明</div>
+  <div class="hb-row"><span class="hb-tag">年度业绩目标</span><span>全年合同目标总额（单位：万元）。</span></div>
+  <div class="hb-row"><span class="hb-tag">月度业绩目标</span><span>每个月的目标（每月相同）。用于和「业绩&回款」当月数据对比。</span></div>
+  <div class="hb-row"><span class="hb-tag green">回款目标</span><span>同上，针对回款金额。月度目标会累计计算下方的「应收货款预览」。</span></div>
+  <div class="hb-row"><span class="hb-tag amber">新客成交目标</span><span>全年/月计划新成交的客户数量（个）。</span></div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">💡 财年说明</div>
+  <div>财年从 4 月开始（FY2025 = 2025年4月 ~ 2026年3月）。切换财年下拉可设置不同年度的目标。</div>
+</div>
+</details></div>
   <div class="hint">每个财年设置一次，周报和月报导出时自动读取。应收货款根据月度回款目标自动累计计算。</div>
   <div class="card">
     <div class="card-header">
@@ -673,6 +730,18 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
 <!-- ===== 导出报告 ===== -->
 <div id="panel-export" class="panel">
+<div class="help-box"><details><summary>导出报告 — 这个页面是做什么的？</summary>
+<div style="margin-top:8px">
+  <div>根据「项目情况」「业绩&回款」「目标设定」里的数据，自动生成格式化的日报、周报、月报文本，直接复制粘贴发送即可。</div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">📋 四个子页说明</div>
+  <div class="hb-row"><span class="hb-tag">导出日报</span><span>生成当天的工作汇报，自动汇总当日的跟进项目和业绩记录。</span></div>
+  <div class="hb-row"><span class="hb-tag">填写周报/月报</span><span>补充一些需要手动说明的内容（如客户拜访、出差计划、下周目标），系统数据会自动带入。</span></div>
+  <div class="hb-row"><span class="hb-tag green">导出周报</span><span>生成完整的周报文本，包含重点项目、业绩汇总、长线跟进、下周目标等模块。</span></div>
+  <div class="hb-row"><span class="hb-tag amber">导出月报</span><span>生成月度工作总结，包含当月业绩达成、项目进展和下月计划。</span></div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">💡 使用流程</div>
+  <div>① 先在「项目情况」追加最新进展 → ② 在「业绩&回款」录入本周数据 → ③ 来「填写周报/月报」补充手动内容 → ④ 切到「导出周报」生成文本并复制发送。</div>
+</div>
+</details></div>
   <div class="sub-tabs">
     <button class="sub-tab active" onclick="switchSub('sw-daily',this)">导出日报</button>
     <button class="sub-tab" onclick="switchSub('sw-write',this)">填写周报/月报</button>
@@ -991,6 +1060,28 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
 <!-- ===== 报价管理 ===== -->
 <div id="panel-quotes" class="panel active">
+<div class="help-box"><details><summary>💰 报价管理 — 这个页面是做什么的？</summary>
+<div style="margin-top:8px">
+  <div>这里是所有产品报价的核心台账。每一条报价记录一个客户、一个项目、一个型号的报价信息，用于跟踪报价进展、版本历史和成交状态。</div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">📋 显示的数据来自哪里？</div>
+  <div>从「＋ 新增报价」手动录入，或在「项目情况」里点「从报价导入」自动同步过来。</div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">🔘 关键按钮说明</div>
+  <div class="hb-row"><span class="hb-tag">＋ 新增报价</span><span>手动添加一条新的报价记录。</span></div>
+  <div class="hb-row"><span class="hb-tag amber">⚠️ 待同步</span><span>项目情况里有该项目的最新进展，但尚未同步到项目卡片，点此筛选出待同步的报价。</span></div>
+  <div class="hb-row"><span class="hb-tag">📄 合并导入单据</span><span>勾选多条报价后出现。把选中的报价一键导入到「单据生成」的报价单/PI 中。</span></div>
+  <div class="hb-row"><span class="hb-tag green">📥 导出Excel</span><span>将当前筛选结果导出为 CSV 文件，可用 Excel 打开。</span></div>
+  <div class="hb-row"><span class="hb-tag gray">⚙️ 列设置</span><span>自定义显示哪些列、各列宽度。设置会自动保存。</span></div>
+  <div class="hb-row"><span class="hb-tag gray">✕ 清除筛选</span><span>有筛选条件时才出现，点击清除所有搜索和筛选条件。</span></div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">📊 数据看板</div>
+  <div>切换到「数据看板」可查看各公司/业务的汇总 KPI，以及低于 P3 底价的风险报价列表。</div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">💡 状态说明</div>
+  <div class="hb-row"><span class="hb-tag gray">⭕ 跟进中</span><span>报价已发出，客户尚未确认。</span></div>
+  <div class="hb-row"><span class="hb-tag amber">🔶 已确认订单</span><span>客户已确认，等待合同/付款。</span></div>
+  <div class="hb-row"><span class="hb-tag green">✅ 已成交</span><span>款项已收，项目完成。</span></div>
+  <div class="hb-row"><span class="hb-tag gray">⏸️ 暂无进展</span><span>客户暂时没有回应，搁置中。</span></div>
+  <div class="hb-row"><span class="hb-tag red">❌ 丢单</span><span>客户已明确不采购。</span></div>
+</div>
+</details></div>
 <style>
 .qt-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
 .qt-search{flex:1;min-width:160px;position:relative}
@@ -2550,11 +2641,6 @@ function renderProjects(){
 
       <div id="proj-body-${cardId}" style="display:none">
 
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-top:8px;margin-bottom:6px">
-        <div></div>
-        <div class="inline-flex" style="flex-shrink:0"></div>
-      </div>
-
       <div style="font-size:12px;background:var(--bg2);padding:8px 10px;border-radius:var(--radius-xs);margin-bottom:6px;line-height:1.8;color:var(--text2)">
         <div><b>1. 项目名称：</b>${latest.name||''}</div>
         <div><b>2. 项目进度：</b>${latest.progressStage||''}</div>
@@ -2601,11 +2687,6 @@ function renderProjects(){
           <button class="btn btn-danger btn-xs" onclick="delGroup('${k.replace(/'/g,"\\'")}')">删除</button>
         </div>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border2)">
-        <span style="font-size:11px;color:var(--text2);align-self:center;margin-right:2px">快速切换：</span>
-        ${[['跟进中','badge-blue','⭕'],['确认订单','badge-amber','🔶'],['成交','badge-green','✅'],['暂无进展','badge-gray','⏸️'],['丢单','badge-red','❌']].map(([s,cls,icon])=>`<button class="btn btn-xs ${latest.status===s?'btn-primary':''}" style="${latest.status===s?'':'background:var(--bg2);color:var(--text2)'}" onclick="qtQuickStatus('${k.replace(/'/g,"\\'")}',${latest.id},'${s}')">${icon} ${s}</button>`).join('')}
-      </div>
-
       </div><!-- end proj-body -->
     </div>`;
   });
@@ -2614,7 +2695,11 @@ function renderProjects(){
   if(_projHighlight){
     const cardId='card_'+_projHighlight.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
     const el=document.getElementById(cardId);
-    if(el){el.scrollIntoView({behavior:'smooth',block:'center'});}
+    if(el){
+      const body=document.getElementById('proj-body-'+cardId);
+      if(body&&body.style.display==='none'){body.style.display='block';const chev=el.querySelector('.proj-chevron');if(chev)chev.textContent='▼';}
+      el.scrollIntoView({behavior:'smooth',block:'center'});
+    }
     setTimeout(()=>{_projHighlight=null;
       const el2=document.getElementById(cardId);
       if(el2)el2.style.cssText=el2.style.cssText.replace(/border-color[^;]*;?/g,'').replace(/box-shadow[^;]*;?/g,'');
@@ -4641,6 +4726,7 @@ function importBackup(evt){
         qtRender();qtUpdateCompanyFilter();
         renderSavedWeeklies();renderSavedMonthlies();renderSavedDailies();
         fillProjTextareas('w');fillProjTextareas('wm');
+        renderSavedDocsList();renderClients();
         alert('✅ 完整数据恢复成功！所有模块（报价、项目、业绩、单据等）已还原。');
 
       // ── 旧格式：仅包含 state（兼容旧备份）──
@@ -7692,6 +7778,26 @@ setTimeout(()=>{autoSnapshotNow();checkBackupWarning();},2000);
 </aside>
 
 <main>
+  <!-- 单据生成帮助提醒 -->
+  <div class="help-box" style="margin:16px 0 4px;font-family:'Sora',sans-serif;"><details><summary>📄 单据生成 — 这个页面是做什么的？</summary>
+  <div style="margin-top:8px">
+    <div>生成专业的对外贸易单据（PDF 格式），包括：报价单 Quotation、形式发票 PI、商业发票 CI 和装箱单 Packing List。</div>
+    <div style="margin-top:6px;font-weight:600;color:#185FA5">📋 左侧栏填什么？</div>
+    <div class="hb-row"><span class="hb-tag">项目名称</span><span>填写后可保存/调取单据，同一项目的不同版本会合并在一起。</span></div>
+    <div class="hb-row"><span class="hb-tag">我方信息 Seller</span><span>卖方公司信息，默认已填好，可按需修改。</span></div>
+    <div class="hb-row"><span class="hb-tag">客户信息 Buyer</span><span>买方信息（BILL TO）。在公司名处输入可自动联想历史客户。</span></div>
+    <div class="hb-row"><span class="hb-tag amber">收货信息 Ship To</span><span>如果收货地址与 Bill To 不同，在这里单独填写。留空则单据中 Ship To 显示空白占位。勾选「与 Bill To 相同」可一键复制买方信息。</span></div>
+    <div class="hb-row"><span class="hb-tag">贸易条款</span><span>Trade Terms / Payment Terms / Lead Time / Warranty，填好后点 💾 可保存为常用选项，下次直接下拉选择。</span></div>
+    <div class="hb-row"><span class="hb-tag">银行信息</span><span>收款银行账户，显示在 PI 和 CI 的银行信息区域。</span></div>
+    <div style="margin-top:6px;font-weight:600;color:#185FA5">🔘 主区域按钮说明</div>
+    <div class="hb-row"><span class="hb-tag">分拆报价 / 整合报价</span><span>分拆报价：Barebone + RAM + SSD 分开列价，All-Incl. 自动汇总。整合报价：只填一个单价。</span></div>
+    <div class="hb-row"><span class="hb-tag green">预览 / 打印</span><span>生成 PDF 预览，可直接打印或另存为 PDF 文件。</span></div>
+    <div class="hb-row"><span class="hb-tag">⇩ 从 Quotation 同步</span><span>PI / CI 中出现，将 Quotation 的行数据一键复制过来，避免重复填写。</span></div>
+    <div class="hb-row"><span class="hb-tag">💰 从报价管理导入</span><span>从「报价管理」里选择一条或多条报价，自动填入产品行。</span></div>
+    <div class="hb-row"><span class="hb-tag gray">💾 保存单据</span><span>将当前单据（左侧信息 + 产品行）保存到本地，以后可随时重新加载编辑。</span></div>
+    <div class="hb-row"><span class="hb-tag gray">📂 已保存单据</span><span>查看和加载之前保存的单据，按项目分组显示。</span></div>
+  </div>
+  </details></div>
   <!-- Q -->
   <div class="tab-content active" id="tab-quotation">
     <div class="tw">
@@ -10469,7 +10575,21 @@ document.addEventListener('keydown',e=>{
 
 <!-- ===== 客户档案 ===== -->
 <div id="panel-clients" class="panel">
-  <div class="hint">汇聚同一客户名下的所有报价、项目、业绩与回款记录，方便复盘完整客户历史。</div>
+<div class="help-box"><details><summary>👤 客户档案 — 这个页面是做什么的？</summary>
+<div style="margin-top:8px">
+  <div>自动汇聚每位客户名下的所有数据，包括：报价记录、跟进项目、业绩和回款金额。不需要手动维护，数据来自其他几个页面，这里只是整合展示。</div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">📋 每个客户卡片显示什么？</div>
+  <div class="hb-row"><span class="hb-tag">报价数</span><span>该客户在「报价管理」里的所有报价条数。</span></div>
+  <div class="hb-row"><span class="hb-tag green">业绩 / 回款</span><span>从「业绩&回款」里该客户名下的所有入账金额汇总。</span></div>
+  <div class="hb-row"><span class="hb-tag amber">项目数</span><span>「项目情况」里客户名匹配的项目组数。</span></div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">🔘 筛选和排序</div>
+  <div class="hb-row"><span class="hb-tag gray">搜索框</span><span>按客户名称实时搜索。</span></div>
+  <div class="hb-row"><span class="hb-tag gray">全部业绩年份</span><span>按财年筛选，只显示该年度有业绩/回款记录的客户。</span></div>
+  <div class="hb-row"><span class="hb-tag gray">排序</span><span>可按名称、业绩金额、报价数量三种方式排序，快速找出重点客户。</span></div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">💡 提示</div>
+  <div>客户名称在各模块中必须完全一致，才能被正确归并到同一张客户卡片。如果同一个客户在不同页面用了不同写法（如英文全称 vs 缩写），需要统一。</div>
+</div>
+</details></div>
   <div class="filter-bar" style="margin-bottom:12px">
     <input id="client-search" placeholder="🔍 搜索客户名称…" oninput="renderClients()" style="flex:1;max-width:280px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:13px;background:var(--bg2);color:var(--text)">
     <select id="client-year" onchange="renderClients()" title="按业绩/回款数据的年份筛选" style="padding:5px 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text)">
