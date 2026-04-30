@@ -4661,6 +4661,10 @@ const BACKUP_TIMESTAMP_KEY='ws6_last_backup_ts';
 const BACKUP_WARN_MINS=30;
 
 function exportBackup(){
+  // ── 先把内存中最新数据刷入 localStorage，确保备份完整 ──
+  try{ if(typeof state!=='undefined') localStorage.setItem('ws6', JSON.stringify(state)); }catch(e){}
+  try{ if(typeof qtQuotes!=='undefined') localStorage.setItem('quotetrack_v3', JSON.stringify(qtQuotes)); }catch(e){}
+
   // Collect ALL data across every localStorage key used by this app
   const ds=toCST(new Date());
   const allKeys=[
@@ -11118,6 +11122,10 @@ function confirmProjPicker() {
 // 一键备份弹窗
 // ══════════════════════════════════════════
 function openBackupModal() {
+  // ── 先把内存中最新数据刷入 localStorage，确保摘要和备份内容一致 ──
+  try{ if(typeof state!=='undefined') localStorage.setItem('ws6', JSON.stringify(state)); }catch(e){}
+  try{ if(typeof qtQuotes!=='undefined') localStorage.setItem('quotetrack_v3', JSON.stringify(qtQuotes)); }catch(e){}
+
   // Build data summary
   const summaryEl = document.getElementById('backup-summary');
   const items = [];
