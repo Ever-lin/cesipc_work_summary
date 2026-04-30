@@ -7789,7 +7789,7 @@ setTimeout(()=>{autoSnapshotNow();checkBackupWarning();},2000);
   <div class="divider"></div>
   <div>
     <div class="stitle">📝 自定义区块</div>
-    <div style="font-size:11px;color:var(--c-muted);margin-bottom:8px;">可添加额外栏目（蓝色标题 + 浅蓝内容），显示在 PDF 的 NOTES 之后</div>
+    <div style="font-size:11px;color:var(--c-muted);margin-bottom:8px;">可添加额外栏目（蓝色标题 + 浅蓝内容），显示在产品图片之后、TERMS &amp; CONDITIONS 之前</div>
     <div id="custom-sections-list"></div>
     <button class="btn btn-g btn-sm" style="width:100%;margin-top:4px;" onclick="addCustomSection()">＋ 新增区块</button>
   </div>
@@ -8383,7 +8383,7 @@ function getProductImagesHtml(){
     const label = pi.label ? `<div style="font-size:7pt;color:#555;text-align:center;margin-top:3pt;">${pi.label}</div>` : "";
     return `<td style="width:${cellW}%;padding:5pt;text-align:center;vertical-align:middle;border:none;"><img src="${pi.dataUrl}" style="max-width:100%;max-height:90pt;object-fit:contain;display:block;margin:0 auto;">${label}</td>`;
   }).join("");
-  return `<div style="margin-top:10pt;border:1.5pt solid #B0BEC5;border-radius:5pt;overflow:hidden;"><div style="background:#1A3C5E;color:#fff;font-size:8pt;font-weight:700;padding:5pt 8pt;letter-spacing:.3pt;">🖼&nbsp; Product / Solution Images</div><table style="width:100%;border-collapse:collapse;background:#fff;"><tr>${cells}</tr></table></div>`;
+  return `<div style="margin-top:10pt;border:1.5pt solid #B0BEC5;border-radius:5pt;overflow:hidden;"><div style="background:#1A3C5E;color:#fff;font-size:8pt;font-weight:700;padding:5pt 8pt;letter-spacing:.3pt;"> Product / Solution Images</div><table style="width:100%;border-collapse:collapse;background:#fff;"><tr>${cells}</tr></table></div>`;
 }
 // ── Drag logo/stamp in PDF preview overlay ──
 function startDragImage(e, type, idx){
@@ -9349,6 +9349,7 @@ function buildQ(){
   </table></div>
   ${subBlock(tq,ta,sh,gt,10,_qTotalColHidden,taxAmt,taxLbl)}
   ${getProductImagesHtml()}
+  ${buildCustomSectionsPDF()}
   <div class="sec-h">TERMS &amp; CONDITIONS</div>
   <table class="kv-t">${kvRows([['Trade Terms',g('tradeTerm'),true],['Payment Terms',g('payTerm'),false],['Lead Time',g('leadTime'),true],['Warranty',g('warranty'),false],['Validity','Barebone pricing valid 3 months; RAM &amp; SSD pricing valid 7 days',false]])}</table>
   <div class="sec-h">BANK / REMITTANCE DETAILS</div>
@@ -9356,7 +9357,6 @@ function buildQ(){
   <div class="sec-h">NOTES</div>
   <div style="background:#F2F7FB;padding:4pt 6pt;font-size:7.5pt;color:#1A1A2E;border:0.5pt solid #E0E8F0;">
     1. All prices are quoted in ${c} unless otherwise stated.<br>2. Please quote the Quotation No. on your purchase order.<br>3. Prices are subject to change if order is placed after the validity period.</div>
-  ${buildCustomSectionsPDF()}
   ${sigs(true)}`;
 }
 
@@ -9405,6 +9405,8 @@ function buildPI(){
     <tbody>${qItemRows(rows)}</tbody>
   </table></div>
   ${subBlock(tq,ta,sh,gt,10,_qTotalColHidden,taxAmt,taxLbl)}
+  ${getProductImagesHtml()}
+  ${buildCustomSectionsPDF()}
   <div class="sec-h">TERMS &amp; CONDITIONS</div>
   <table class="kv-t">${kvRows([['Trade Terms',g('tradeTerm'),true],['Payment Terms',g('payTerm'),false],['Lead Time',g('leadTime'),true],['Warranty',g('warranty'),false]])}</table>
   <div class="sec-h">BANK / REMITTANCE DETAILS</div>
