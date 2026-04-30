@@ -529,19 +529,25 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 <div style="margin-top:8px">
   <div>用于跟踪每个销售项目的完整生命周期。同一个项目可以多次追加进展，所有历史记录都会保留，方便复盘。</div>
   <div style="margin-top:6px;font-weight:600;color:#185FA5">📋 项目卡片</div>
-  <div>每张卡片默认折叠，显示客户名 + 项目名。点击标题行展开查看详情、跟进记录和推进计划。</div>
+  <div>每张卡片默认折叠，显示客户名 + 项目名 + 当前状态。点击标题行展开查看详情、跟进记录、推进计划和历史进展。</div>
   <div style="margin-top:6px;font-weight:600;color:#185FA5">🔘 关键按钮说明</div>
-  <div class="hb-row"><span class="hb-tag">💰 从报价导入</span><span>从「报价管理」里选一条报价，自动填入项目名、客户名、数量、报价等字段，省去手动录入。</span></div>
-  <div class="hb-row"><span class="hb-tag amber">⚠️ 报价有更新，点击同步</span><span>当「报价管理」里该项目的报价有变化（改了价格/状态/进度），此按钮出现在卡片上。点击可将最新报价数据同步到项目记录。</span></div>
-  <div class="hb-row"><span class="hb-tag">⚡ 快速更新</span><span>弹出简化版表单，快速补充跟进内容，不需要打开完整编辑表单。</span></div>
-  <div class="hb-row"><span class="hb-tag">追加进展</span><span>在原有项目下新增一次跟进记录（保留历史）。</span></div>
-  <div class="hb-row"><span class="hb-tag">编辑最新</span><span>修改最近一次的跟进记录内容。</span></div>
-  <div class="hb-row"><span class="hb-tag gray">📋 复制CRM格式</span><span>将该项目的信息整理成标准文本格式，方便粘贴到邮件或 CRM 系统。</span></div>
-  <div class="hb-row"><span class="hb-tag green">🔔 有更新</span><span>筛选按钮。只显示本次打开页面后，有新进展但还没点开看过的项目。</span></div>
-  <div class="hb-row"><span class="hb-tag amber">⚠️ 待同步</span><span>筛选按钮。只显示报价管理里有变更、尚未同步回项目的那些项目。</span></div>
-  <div class="hb-row"><span class="hb-tag green">📥 导出Excel</span><span>将项目列表导出为 CSV，可在 Excel 中进一步分析。</span></div>
-  <div style="margin-top:6px;font-weight:600;color:#185FA5">🚨 排序说明</div>
-  <div>「🚨 紧急优先」模式下，按行动时间分组：已逾期 → 今天 → 明天 → 未来 → 未设时间 → 已完结。</div>
+  <div class="hb-row"><span class="hb-tag">💰 从报价导入</span><span>从「报价管理」里选一条报价，自动填入项目名、客户名、数量、报价等字段，省去手动录入。填写表单顶部的按钮。</span></div>
+  <div class="hb-row"><span class="hb-tag amber">⚠️ 报价有更新，点击同步</span><span>出现在具体项目卡片上。当「报价管理」里该项目的报价有变化（改了价格/状态/进度），此按钮出现，点击可将最新报价数据同步到项目记录。</span></div>
+  <div class="hb-row"><span class="hb-tag">⚡ 快速更新</span><span>出现在项目卡片上。弹出简化版表单，快速补充跟进内容，不需要打开完整编辑表单。</span></div>
+  <div class="hb-row"><span class="hb-tag">追加进展</span><span>出现在项目卡片上。在原有项目下新增一次跟进记录，原有历史完整保留。</span></div>
+  <div class="hb-row"><span class="hb-tag">编辑最新</span><span>出现在项目卡片上。修改最近一次的跟进记录内容（不新增，原地修改）。</span></div>
+  <div class="hb-row"><span class="hb-tag gray">📋 复制CRM格式</span><span>出现在项目卡片上。将该项目的信息整理成标准文本格式，方便粘贴到邮件或 CRM 系统。</span></div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">🔍 筛选栏说明（列表上方）</div>
+  <div class="hb-row"><span class="hb-tag green">🔔 有更新</span><span>只显示本次打开页面后，有新进展但还没点开看过的项目（标题旁有蓝点提示）。</span></div>
+  <div class="hb-row"><span class="hb-tag amber">⚠️ 待同步</span><span>只显示「报价管理」里已有变更、但还未点击同步回项目的那些项目。触发条件：报价管理里改了价格、状态或进度，项目卡片就会出现同步按钮，此筛选帮你批量找到它们。</span></div>
+  <div class="hb-row"><span class="hb-tag">优先级筛选</span><span>按「高 / 中 / 低」优先级筛选项目。优先级在填写表单的底部设置，默认为「中」。</span></div>
+  <div class="hb-row"><span class="hb-tag">🚨 紧急优先</span><span>切换排序模式。按行动时间分组：<b>已逾期</b>（红色）→ <b>今天</b>（橙色）→ <b>明天</b> → <b>未来</b> → <b>未设时间</b> → <b>已完结</b>。默认为按保存时间倒序。</span></div>
+  <div class="hb-row"><span class="hb-tag green">📥 导出Excel</span><span>将当前筛选结果的项目列表导出为 CSV，可在 Excel 中进一步分析。</span></div>
+  <div class="hb-row"><span class="hb-tag gray">🧹 清理重复报价</span><span>历史问题修复工具。若因多次追加导致报价字段堆积了旧数据，点此将所有项目的报价字段重置为报价管理的最新版本。</span></div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">🔗 与其他页面的联动</div>
+  <div class="hb-row"><span class="hb-tag">→ 报价管理</span><span>项目里的报价字段与「报价管理」双向联动：报价管理变更后，这里出现同步按钮；也可从这里点「从报价导入」直接拉取。</span></div>
+  <div class="hb-row"><span class="hb-tag">→ 导出日报</span><span>「导出报告 → 导出日报」会自动抓取所选日期在本页面记录的进展，填入日报的重点项目区域。</span></div>
+  <div class="hb-row"><span class="hb-tag">→ 明日计划</span><span>日报里的「明日计划」会自动抓取行动时间等于下一个工作日的项目，显示对应的行动内容。</span></div>
 </div>
 </details></div>
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
@@ -656,6 +662,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <select class="ym-s" id="pj-status" onchange="renderProjects()"><option value="all">全部状态</option><option value="跟进中">跟进中</option><option value="确认订单">已确认订单</option><option value="成交">已成交</option><option value="暂无进展">暂无进展</option><option value="丢单">丢单</option></select>
     <button id="pj-update-btn" class="btn btn-sm" onclick="togglePjUpdateFilter()" title="只显示有新进展的项目" style="white-space:nowrap;background:var(--bg);color:var(--text2);border-color:var(--border)">🔔 有更新</button>
     <button id="pj-sync-btn" class="btn btn-sm" onclick="togglePjSyncFilter()" title="只显示报价有更新待同步的项目" style="white-space:nowrap;background:var(--bg);color:var(--text2);border-color:var(--border)">⚠️ 待同步</button>
+    <select class="ym-s" id="pj-priority" onchange="renderProjects()" title="按优先级筛选"><option value="all">全部优先级</option><option value="高">🔴 高优先级</option><option value="中">🟡 中优先级</option><option value="低">🟢 低优先级</option></select>
     <button id="pj-sort-btn" class="btn btn-sm" onclick="cycleProjSort()" title="切换排序方式" style="white-space:nowrap;min-width:100px">🚨 紧急优先</button>
     <div style="position:relative;flex:1;min-width:140px;max-width:260px">
       <input id="pj-search" placeholder="🔍 搜索项目/客户/跟进/行动/需求" oninput="renderProjects()" style="width:100%;padding:5px 28px 5px 10px;font-size:13px;background:#F5F4F0;border:0.5px solid var(--border);border-radius:var(--radius-xs)">
@@ -734,10 +741,16 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 <div style="margin-top:8px">
   <div>根据「项目情况」「业绩&回款」「目标设定」里的数据，自动生成格式化的日报、周报、月报文本，直接复制粘贴发送即可。</div>
   <div style="margin-top:6px;font-weight:600;color:#185FA5">📋 四个子页说明</div>
-  <div class="hb-row"><span class="hb-tag">导出日报</span><span>生成当天的工作汇报，自动汇总当日的跟进项目和业绩记录。</span></div>
-  <div class="hb-row"><span class="hb-tag">填写周报/月报</span><span>补充一些需要手动说明的内容（如客户拜访、出差计划、下周目标），系统数据会自动带入。</span></div>
-  <div class="hb-row"><span class="hb-tag green">导出周报</span><span>生成完整的周报文本，包含重点项目、业绩汇总、长线跟进、下周目标等模块。</span></div>
-  <div class="hb-row"><span class="hb-tag amber">导出月报</span><span>生成月度工作总结，包含当月业绩达成、项目进展和下月计划。</span></div>
+  <div class="hb-row"><span class="hb-tag">导出日报</span><span>生成当天的工作汇报，自动汇总当日在「项目情况」记录的进展，填入重点项目各类别。</span></div>
+  <div class="hb-row"><span class="hb-tag">填写周报/月报</span><span>补充需要手动说明的内容（如客户拜访、出差计划、下周目标）。系统数据会自动带入，手动内容保存后供导出使用。</span></div>
+  <div class="hb-row"><span class="hb-tag green">导出周报</span><span>生成完整的周报文本，包含重点项目、业绩汇总、长线跟进、下周目标等模块。需先在「填写周报/月报」保存对应周次内容。</span></div>
+  <div class="hb-row"><span class="hb-tag amber">导出月报</span><span>生成月度工作总结，包含当月业绩达成、项目进展和下月计划。需先保存对应月份内容。</span></div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">📅 日报 — 明日计划逻辑</div>
+  <div>「明日计划 → 1）重点项目」会自动抓取「项目情况」中行动时间 = 所选目标日期 的项目，显示行动内容。</div>
+  <div style="background:#FFFBEB;border:1px solid #F59E0B;border-radius:4px;padding:6px 9px;font-size:11px;color:#633806;margin:4px 0;line-height:1.8">
+    💡 <b>节假日使用技巧：</b>如果明天开始放假，你可以在「明日计划」区域上方手动调整「目标日期」（默认为日报日期 +1），改成你实际上班的那一天（如假期后第一个工作日），这样系统就会自动抓取那一天需要跟进的项目。<br>
+    例：今天是 4/30，五一假期 5/1–5/5，你应该把目标日期改为 5/6，系统就会显示行动时间为 5/6 的项目作为明日计划。
+  </div>
   <div style="margin-top:6px;font-weight:600;color:#185FA5">💡 使用流程</div>
   <div>① 先在「项目情况」追加最新进展 → ② 在「业绩&回款」录入本周数据 → ③ 来「填写周报/月报」补充手动内容 → ④ 切到「导出周报」生成文本并复制发送。</div>
 </div>
@@ -974,7 +987,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="card-header"><span class="card-title">导出日报</span></div>
       <div class="hint">自动提取「项目情况」中所选日期的进展记录，填写后点击生成日报保存并显示。</div>
       <div class="grid2">
-        <div class="field"><label>日期</label><input id="d-date" type="date" onchange="fillDailyProjects();fillDailyTomorrowPlan();setTimeout(fillDailyFollowup,50)"></div>
+        <div class="field"><label>日期</label><input id="d-date" type="date" onchange="(function(){const td=document.getElementById('d-plan-target-date');if(td)td.value='';fillDailyProjects();fillDailyTomorrowPlan();setTimeout(fillDailyFollowup,50);})()"></div>
         <div class="field" style="display:flex;align-items:flex-end;gap:8px">
           <button class="btn btn-primary" onclick="genDaily()" style="flex:1">生成日报</button>
           <button class="btn" onclick="copyLastDaily()">复制</button>
@@ -1013,6 +1026,11 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="field"><label>5）日常事务</label><textarea id="d-daily" class="auto-resize" placeholder="其他日常工作安排"></textarea></div>
 
       <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">明日计划<span class="inline-flex"><button class="btn btn-sm" onclick="fillDailyTomorrowPlan()">↻ 刷新</button><button class="btn btn-sm" onclick="copyDailySection('plan')">复制全部</button></span></div>
+      <div style="background:#FFFBEB;border:1px solid #F5D59A;border-radius:var(--radius-xs);padding:7px 10px;margin-bottom:10px;font-size:12px;color:#633806;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span>📅 抓取行动时间 =</span>
+        <input id="d-plan-target-date" type="date" style="width:auto;padding:4px 8px;font-size:12px;border:1px solid #F5D59A;border-radius:var(--radius-xs);background:#FFFBEB;color:#633806;font-family:inherit" onchange="fillDailyTomorrowPlan()" title="默认为日报日期+1天，节假日可改为实际上班日">
+        <span style="color:var(--text2)">（节假日可改为实际上班日，如五一后改为5/6）</span>
+      </div>
       <div class="field"><label>1）重点项目</label><textarea id="d-plan-projects" class="auto-resize" placeholder="根据行动时间自动填入，可手动修改" style="min-height:60px"></textarea></div>
       <div class="field"><label>2）背调客户</label><textarea id="d-plan-baodiao" class="auto-resize" placeholder="如：背调3个客户" style="min-height:40px"></textarea></div>
       <div class="field"><label>3）日常事务</label><textarea id="d-plan-daily" class="auto-resize" placeholder="其他工作安排" style="min-height:40px"></textarea></div>
@@ -1067,15 +1085,19 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div>从「＋ 新增报价」手动录入，或在「项目情况」里点「从报价导入」自动同步过来。</div>
   <div style="margin-top:6px;font-weight:600;color:#185FA5">🔘 关键按钮说明</div>
   <div class="hb-row"><span class="hb-tag">＋ 新增报价</span><span>手动添加一条新的报价记录。</span></div>
-  <div class="hb-row"><span class="hb-tag amber">⚠️ 待同步</span><span>项目情况里有该项目的最新进展，但尚未同步到项目卡片，点此筛选出待同步的报价。</span></div>
-  <div class="hb-row"><span class="hb-tag">📄 合并导入单据</span><span>勾选多条报价后出现。把选中的报价一键导入到「单据生成」的报价单/PI 中。</span></div>
-  <div class="hb-row"><span class="hb-tag green">📥 导出Excel</span><span>将当前筛选结果导出为 CSV 文件，可用 Excel 打开。</span></div>
-  <div class="hb-row"><span class="hb-tag gray">⚙️ 列设置</span><span>自定义显示哪些列、各列宽度。设置会自动保存。</span></div>
-  <div class="hb-row"><span class="hb-tag gray">✕ 清除筛选</span><span>有筛选条件时才出现，点击清除所有搜索和筛选条件。</span></div>
+  <div class="hb-row"><span class="hb-tag amber">⚠️ 待同步</span><span>「项目情况」里对应项目有了新进展（追加了记录），但这条报价的状态/进度还没更新，点此筛选出所有待同步的报价，逐一在「项目情况」里点击同步按钮更新。</span></div>
+  <div class="hb-row"><span class="hb-tag">📄 合并导入单据</span><span>勾选多条报价后出现。把选中的报价一键导入到「单据生成」的报价单/PI 中，省去重复填写。</span></div>
+  <div class="hb-row"><span class="hb-tag green">📥 导出Excel</span><span>将当前筛选结果导出为 CSV 文件，可用 Excel 打开进行进一步分析。</span></div>
+  <div class="hb-row"><span class="hb-tag gray">⚙️ 列设置</span><span>自定义显示哪些列、各列宽度。设置会自动保存，下次打开仍然生效。</span></div>
+  <div class="hb-row"><span class="hb-tag gray">✕ 清除筛选</span><span>有筛选条件时才出现（右侧会显示筛选数量），点击一键清除所有搜索和筛选条件。</span></div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">🎨 行颜色 — 没动静预警（仅「⭕ 跟进中」状态）</div>
+  <div class="hb-row"><span class="hb-tag amber">🟡 黄色背景</span><span>报价日期距今 <b>≥ 30 天</b>且状态仍为「跟进中」，代表这条报价已超过一个月没有进展，需要关注并跟进。</span></div>
+  <div class="hb-row"><span class="hb-tag red">🔴 红色背景</span><span>报价日期距今 <b>≥ 60 天</b>且状态仍为「跟进中」，代表超过两个月没动静，属于高风险滞留报价，建议尽快跟进或更新状态。</span></div>
+  <div style="background:#FFFBEB;border:1px solid #F59E0B;border-radius:4px;padding:5px 8px;font-size:11px;color:#633806;margin:3px 0">💡 颜色仅针对「跟进中」状态触发；已确认/成交/丢单的报价不会变色，无需担心历史记录干扰。</div>
   <div style="margin-top:6px;font-weight:600;color:#185FA5">📊 数据看板</div>
   <div>切换到「数据看板」可查看各公司/业务的汇总 KPI，以及低于 P3 底价的风险报价列表。</div>
   <div style="margin-top:6px;font-weight:600;color:#185FA5">💡 状态说明</div>
-  <div class="hb-row"><span class="hb-tag gray">⭕ 跟进中</span><span>报价已发出，客户尚未确认。</span></div>
+  <div class="hb-row"><span class="hb-tag gray">⭕ 跟进中</span><span>报价已发出，客户尚未确认。此状态会触发上方的颜色预警。</span></div>
   <div class="hb-row"><span class="hb-tag amber">🔶 已确认订单</span><span>客户已确认，等待合同/付款。</span></div>
   <div class="hb-row"><span class="hb-tag green">✅ 已成交</span><span>款项已收，项目完成。</span></div>
   <div class="hb-row"><span class="hb-tag gray">⏸️ 暂无进展</span><span>客户暂时没有回应，搁置中。</span></div>
@@ -2392,6 +2414,7 @@ function renderProjects(){
   const pjFY=document.getElementById('pj-fy').value,pjS=document.getElementById('pj-status').value;
   const pjMonth=document.getElementById('pj-month').value;
   const pjWeek=document.getElementById('pj-week').value;
+  const pjPriority=(document.getElementById('pj-priority')||{}).value||'all';
   const pjSearchEl=document.getElementById('pj-search');
   const pjQ=(pjSearchEl?pjSearchEl.value.trim().toLowerCase():'');
   const clearBtn=document.getElementById('pj-search-clear');
@@ -2470,6 +2493,8 @@ function renderProjects(){
     if(_pjUpdateFilter&&!_isNewUpdate(entries,k))return;
     // sync filter
     if(_pjSyncFilter&&!qtHasUnsyncedUpdate(latest.linkedQuoteProject||(latest.name||latest.client)||k))return;
+    // priority filter
+    if(pjPriority!=='all'&&(latest.priority||'中')!==pjPriority)return;
     counts[latest.status]=(counts[latest.status]||0)+1;
   });
   const countEl=document.getElementById('proj-status-counts');
@@ -2517,6 +2542,8 @@ function renderProjects(){
     if(_pjUpdateFilter&&!_isNewUpdate(entries,k))return;
     // sync filter
     if(_pjSyncFilter&&!qtHasUnsyncedUpdate(latest.linkedQuoteProject||(latest.name||latest.client)||k))return;
+    // priority filter
+    if(pjPriority!=='all'&&(latest.priority||'中')!==pjPriority)return;
     // search filter — include progressStage so searching "产品报价" etc. works
     if(pjQ){
       const haystack=(k+' '+(latest.client||'')+' '+(latest.progress||'')+' '+(latest.actionContent||'')+' '+(latest.requirement||'')+' '+(latest.notes||'')+' '+(latest.progressStage||'')+' '+(latest.confirmPoints||'')+' '+(latest.decisionMaker||'')+' '+(latest.quote||'')).toLowerCase();
@@ -3677,10 +3704,18 @@ function onDailyCountInput(type){
 function fillDailyTomorrowPlan(){
   const dateVal=document.getElementById('d-date').value;
   if(!dateVal)return;
+  const pad=n=>String(n).padStart(2,'0');
+  // Compute default tomorrow
   const d=new Date(dateVal+'T00:00:00');
   d.setDate(d.getDate()+1);
-  const pad=n=>String(n).padStart(2,'0');
-  const tomorrow=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const defaultTomorrow=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  // Use the target date picker if set, otherwise default to +1
+  const targetEl=document.getElementById('d-plan-target-date');
+  let tomorrow=defaultTomorrow;
+  if(targetEl){
+    if(!targetEl.value)targetEl.value=defaultTomorrow; // auto-fill default on first call
+    tomorrow=targetEl.value||defaultTomorrow;
+  }
   // Find projects whose actionTime === tomorrow
   const grouped={};
   state.projects.forEach(p=>{const k=p.name||p.client;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
@@ -7788,6 +7823,16 @@ setTimeout(()=>{autoSnapshotNow();checkBackupWarning();},2000);
   </div>
   <div class="divider"></div>
   <div>
+    <div class="stitle">📋 备注 NOTES</div>
+    <div style="font-size:11px;color:var(--c-muted);margin-bottom:8px;line-height:1.6;">每行对应一条备注，自动编号显示在 PDF 中。</div>
+    <div class="fg">
+      <textarea id="docNotes" rows="4" style="font-size:12px;line-height:1.7;">All prices are quoted in USD unless otherwise stated.
+Please quote the Quotation No. on your purchase order.
+Prices are subject to change if order is placed after the validity period.</textarea>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div>
     <div class="stitle">📝 自定义区块</div>
     <div style="font-size:11px;color:var(--c-muted);margin-bottom:8px;">可添加额外栏目（蓝色标题 + 浅蓝内容），显示在产品图片之后、TERMS &amp; CONDITIONS 之前</div>
     <div id="custom-sections-list"></div>
@@ -9354,9 +9399,7 @@ function buildQ(){
   <table class="kv-t">${kvRows([['Trade Terms',g('tradeTerm'),true],['Payment Terms',g('payTerm'),false],['Lead Time',g('leadTime'),true],['Warranty',g('warranty'),false],['Validity','Barebone pricing valid 3 months; RAM &amp; SSD pricing valid 7 days',false]])}</table>
   <div class="sec-h">BANK / REMITTANCE DETAILS</div>
   <table class="kv-t">${bankRows()}</table>
-  <div class="sec-h">NOTES</div>
-  <div style="background:#F2F7FB;padding:4pt 6pt;font-size:7.5pt;color:#1A1A2E;border:0.5pt solid #E0E8F0;">
-    1. All prices are quoted in ${c} unless otherwise stated.<br>2. Please quote the Quotation No. on your purchase order.<br>3. Prices are subject to change if order is placed after the validity period.</div>
+  ${(()=>{const raw=(g('docNotes')||'').trim();if(!raw)return'';const lines=raw.split('\n').filter(l=>l.trim());const body=lines.map((l,i)=>`${i+1}. ${l.trim()}`).join('<br>');return`<div class="sec-h">NOTES</div><div style="background:#F2F7FB;padding:4pt 6pt;font-size:7.5pt;color:#1A1A2E;border:0.5pt solid #E0E8F0;">${body}</div>`;})()}
   ${sigs(true)}`;
 }
 
@@ -9411,6 +9454,7 @@ function buildPI(){
   <table class="kv-t">${kvRows([['Trade Terms',g('tradeTerm'),true],['Payment Terms',g('payTerm'),false],['Lead Time',g('leadTime'),true],['Warranty',g('warranty'),false]])}</table>
   <div class="sec-h">BANK / REMITTANCE DETAILS</div>
   <table class="kv-t">${bankRows()}</table>
+  ${(()=>{const raw=(g('docNotes')||'').trim();if(!raw)return'';const lines=raw.split('\n').filter(l=>l.trim());const body=lines.map((l,i)=>`${i+1}. ${l.trim()}`).join('<br>');return`<div class="sec-h">NOTES</div><div style="background:#F2F7FB;padding:4pt 6pt;font-size:7.5pt;color:#1A1A2E;border:0.5pt solid #E0E8F0;">${body}</div>`;})()}
   ${sigs(true)}`;
 }
 
@@ -9652,7 +9696,7 @@ function saveDocState() {
     'bCo','bAddr','bCt','bTel','bEmail',
     'shCo','shAddr','shCt','shTel','shEmail',
     'tradeTerm','payTerm','leadTime','warranty',
-    'bkAcNm','bkNm','bkAc','bkSW','bkAd'];
+    'bkAcNm','bkNm','bkAc','bkSW','bkAd','docNotes'];
   const fieldVals = {};
   fields.forEach(id => {
     const el = document.getElementById(id);
