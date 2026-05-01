@@ -1086,7 +1086,6 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div style="margin-top:6px;font-weight:600;color:#185FA5">🔘 关键按钮说明</div>
   <div class="hb-row"><span class="hb-tag">＋ 新增报价</span><span>手动添加一条新的报价记录。</span></div>
   <div class="hb-row"><span class="hb-tag amber">⚠️ 待同步</span><span>「项目情况」里对应项目有了新进展（追加了记录），但这条报价的状态/进度还没更新，点此筛选出所有待同步的报价，逐一在「项目情况」里点击同步按钮更新。</span></div>
-  <div class="hb-row"><span class="hb-tag">📄 合并导入单据</span><span>勾选多条报价后出现。把选中的报价一键导入到「单据生成」的报价单/PI 中，省去重复填写。</span></div>
   <div class="hb-row"><span class="hb-tag green">📥 导出Excel</span><span>将当前筛选结果导出为 CSV 文件，可用 Excel 打开进行进一步分析。</span></div>
   <div class="hb-row"><span class="hb-tag gray">⚙️ 列设置</span><span>自定义显示哪些列、各列宽度。设置会自动保存，下次打开仍然生效。</span></div>
   <div class="hb-row"><span class="hb-tag gray">✕ 清除筛选</span><span>有筛选条件时才出现（右侧会显示筛选数量），点击一键清除所有搜索和筛选条件。</span></div>
@@ -1176,7 +1175,26 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
 <!-- LIST VIEW -->
 <div id="qt-view-list">
-  <div class="qt-bar">
+  <!-- 折叠按钮 + 激活筛选指示 -->
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+    <button onclick="qtToggleFilters()" id="qt-filter-toggle-btn" style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg);color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit">
+      <span id="qt-filter-arrow" style="font-size:10px;transition:transform .2s">▼</span> 筛选条件
+      <span id="qt-filter-active-dot" style="display:none;width:7px;height:7px;background:var(--blue);border-radius:50%;margin-left:2px"></span>
+    </button>
+    <span id="qt-result-count" style="font-size:12px;color:var(--text2);white-space:nowrap;display:none"></span>
+    <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+      <select id="qt-page-size" class="ym-s" title="每页显示数量" onchange="qtPageSizeChange()" style="width:auto">
+        <option value="20">20条/页</option>
+        <option value="50">50条/页</option>
+        <option value="100" selected>100条/页</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="qtOpenAdd()">＋ 新增报价</button>
+      <button class="btn btn-sm" onclick="qtExportCSV()" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97;white-space:nowrap">📥 导出Excel</button>
+      <button class="btn btn-sm" onclick="qtOpenColSettings()" title="自定义显示列和列宽" style="background:var(--bg2);color:var(--text2);border-color:var(--border)">⚙️ 列设置</button>
+    </div>
+  </div>
+  <!-- 可折叠筛选区 -->
+  <div id="qt-filter-panel" class="qt-bar" style="margin-bottom:10px">
     <div class="qt-search"><span class="qt-search-ic">🔍</span><input id="qt-search" placeholder="搜索项目、型号、CPU、业务…" oninput="qtRender()"></div>
     <select class="ym-s" id="qt-f-company" onchange="qtRender()"><option value="">全部公司</option></select>
     <select class="ym-s" id="qt-f-contact" onchange="qtRender()"><option value="">全部业务</option></select>
@@ -1190,16 +1208,6 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <span style="font-size:12px;color:var(--text2)">～</span>
     <input type="date" id="qt-f-date-end" onchange="qtRender()" title="结束日期" style="padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text);font-family:inherit">
     <button id="qt-clear-filter" class="btn btn-sm" onclick="qtClearFilters()" style="display:none;background:var(--red-bg);color:var(--red-text);border-color:var(--red-border);white-space:nowrap">✕ 清除筛选</button>
-    <span id="qt-result-count" style="font-size:12px;color:var(--text2);white-space:nowrap;display:none"></span>
-    <select id="qt-page-size" class="ym-s" title="每页显示数量" onchange="qtPageSizeChange()" style="width:auto">
-      <option value="20">20条/页</option>
-      <option value="50">50条/页</option>
-      <option value="100" selected>100条/页</option>
-    </select>
-    <button class="btn btn-primary btn-sm" onclick="qtOpenAdd()">＋ 新增报价</button>
-    <button id="qt-merge-doc-btn" class="btn btn-sm" onclick="qtMergeToDoc()" style="display:none;background:#1A3C5E;color:#fff;border-color:#1A3C5E;white-space:nowrap">📄 合并导入单据 (<span id="qt-merge-count">0</span>)</button>
-    <button class="btn btn-sm" onclick="qtExportCSV()" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97;white-space:nowrap">📥 导出Excel</button>
-    <button class="btn btn-sm" onclick="qtOpenColSettings()" title="自定义显示列和列宽" style="background:var(--bg2);color:var(--text2);border-color:var(--border)">⚙️ 列设置</button>
   </div>
   <div class="qt-tbl-wrap">
     <table class="qt-tbl" id="qt-main-tbl">
@@ -1834,6 +1842,13 @@ function cancelEditPerf(){
   toggleAmt();
 }
 
+function perfToggleWeek(colKey, safeW){
+  let colSet;try{colSet=new Set(JSON.parse(sessionStorage.getItem(colKey)||'[]'));}catch{colSet=new Set();}
+  if(colSet.has(safeW))colSet.delete(safeW);else colSet.add(safeW);
+  sessionStorage.setItem(colKey,JSON.stringify([...colSet]));
+  renderPerf();
+}
+
 function renderPerf(){
   const fy=document.getElementById('view-fy').value,month=document.getElementById('view-month').value;
   const md=state.perf.filter(p=>p.fy===fy&&p.month===month);
@@ -1906,6 +1921,9 @@ function renderPerf(){
       </div>
     </div>`;
   const weeks=['第一周','第二周','第三周','第四周','第五周'];
+  // 当前FY+月的已折叠周次（存在 sessionStorage 里，切换月份后自动重置）
+  const _colKey=`perf_col_${fy}_${month}`;
+  let _colSet;try{_colSet=new Set(JSON.parse(sessionStorage.getItem(_colKey)||'[]'));}catch{_colSet=new Set();}
   let html='';
   weeks.forEach(w=>{
     const wd=md.filter(p=>p.week===w);if(!wd.length)return;
@@ -1916,17 +1934,27 @@ function renderPerf(){
     const wnBorrow=wd.filter(p=>p.type==='借测成交').length;
     const wnOld=wd.filter(p=>p.type==='新成交').length;
     const wnLabel=wnSale||wnBorrow?`销售${wnSale}+借测${wnBorrow}个`:(wnOld?`${wnOld}家`:'');
-    html+=`<div class="card"><div class="card-header"><span class="card-title">${fy} ${month}月 ${w}</span>
-      <span class="inline-flex">${ws?`<span class="badge badge-blue">业绩 ${fmt(ws)}</span>`:''}${wr?`<span class="badge badge-green">回款 ${fmt(wr)}</span>`:''}${wn.length?`<span class="badge badge-amber">新成交 ${wnLabel}</span>`:''}</span></div>`;
+    const collapsed=_colSet.has(w);
+    const safeW=encodeURIComponent(w);
+    html+=`<div class="card">
+      <div class="card-header collapse-hdr" onclick="perfToggleWeek('${_colKey}','${safeW}')" style="cursor:pointer;user-select:none" title="点击折叠/展开">
+        <span class="card-title" style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;color:var(--text3);transition:transform .2s;display:inline-block;transform:${collapsed?'rotate(-90deg)':'rotate(0deg)'}" id="perf-arrow-${safeW}">▼</span>
+          ${fy} ${month}月 ${w}
+          ${collapsed?`<span style="font-size:11px;color:var(--text3)">(${wd.length}条，已折叠)</span>`:''}
+        </span>
+        <span class="inline-flex">${ws?`<span class="badge badge-blue">业绩 ${fmt(ws)}</span>`:''}${wr?`<span class="badge badge-green">回款 ${fmt(wr)}</span>`:''}${wn.length?`<span class="badge badge-amber">新成交 ${wnLabel}</span>`:''}</span>
+      </div>
+      <div id="perf-body-${safeW}" style="${collapsed?'display:none':''}">`;
     wd.forEach(p=>{
       const dc=p.type==='业绩'?'#378ADD':p.type==='回款'?'#1D9E75':'#EF9F27';
       const bc=p.type==='业绩'?'badge-blue':p.type==='回款'?'badge-green':'badge-amber';
       html+=`<div class="summary-row">
         <span class="inline-flex"><span style="width:8px;height:8px;border-radius:50%;background:${dc};display:inline-block;margin-right:5px;flex-shrink:0"></span><span class="badge ${bc}" style="font-size:10px">${p.type}</span><span style="font-size:13px">${p.client}</span>${p.noAmount?'<span class="badge badge-gray" style="font-size:10px">无金额</span>':''}</span>
-        <span class="inline-flex">${(!p.noAmount&&p.amount)?`<span style="font-weight:500">${fmt(p.amount)}</span>`:''}${p.note?`<span style="color:var(--text2);font-size:12px">${p.note}</span>`:''}<button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="editPerf(${p.id})">编辑</button><button class="btn btn-danger btn-xs" onclick="delPerf(${p.id})">删</button></span>
+        <span class="inline-flex">${(!p.noAmount&&p.amount)?`<span style="font-weight:500">${fmt(p.amount)}</span>`:''}${p.note?`<span style="color:var(--text2);font-size:12px">${p.note}</span>`:''}<button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="event.stopPropagation();editPerf(${p.id})">编辑</button><button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delPerf(${p.id})">删</button></span>
       </div>`;
     });
-    html+='</div>';
+    html+='</div></div>';
   });
   document.getElementById('perf-list').innerHTML=html||'<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">暂无记录</div>';
   renderPivot();
@@ -4974,7 +5002,7 @@ function qtBuildThead(){
   const tr=document.getElementById('qt-thead-row');
   if(!tr)return;
   const sortLabels={deal:'状态',company:'公司',contact:'对接业务',project:'项目',date:'日期',model:'型号',price:'报价(P)',p3:'P3',diff:'价差'};
-  tr.innerHTML='<th style="width:32px;min-width:32px;text-align:center"><input type="checkbox" id="qt-check-all" title="全选/取消" onchange="qtCheckAll(this.checked)" style="width:auto;cursor:pointer;accent-color:var(--blue)"></th>'+qtColSettings.filter(c=>c.vis).map(c=>{
+  tr.innerHTML=''+qtColSettings.filter(c=>c.vis).map(c=>{
     const isActive=c.sortable&&qtSortCol===c.id;
     const arrow=isActive?(qtSortDir>0?'↑':'↓'):'';
     const label=(sortLabels[c.id]||c.label)+(isActive?` ${arrow}`:'');
@@ -5203,157 +5231,7 @@ function qtFiltered(){
     return true;
   });
 }
-// ── 多选合并导入单据 ──
-let _qtCheckedIds = new Set();
-
-function qtRowCheck() {
-  _qtCheckedIds = new Set(
-    [...document.querySelectorAll('.qt-row-check:checked')].map(cb => cb.dataset.qid)
-  );
-  const btn = document.getElementById('qt-merge-doc-btn');
-  const cnt = document.getElementById('qt-merge-count');
-  if (_qtCheckedIds.size > 0) {
-    btn.style.display = '';
-    cnt.textContent = _qtCheckedIds.size;
-  } else {
-    btn.style.display = 'none';
-  }
-  // 更新全选框状态
-  const all = document.querySelectorAll('.qt-row-check');
-  const chkAll = document.getElementById('qt-check-all');
-  if (chkAll) {
-    chkAll.indeterminate = _qtCheckedIds.size > 0 && _qtCheckedIds.size < all.length;
-    chkAll.checked = all.length > 0 && _qtCheckedIds.size === all.length;
-  }
-}
-
-function qtCheckAll(checked) {
-  document.querySelectorAll('.qt-row-check').forEach(cb => {
-    cb.checked = checked;
-  });
-  qtRowCheck();
-}
-
-function qtMergeToDoc() {
-  if (!_qtCheckedIds.size) return;
-  const items = [..._qtCheckedIds].map(id => qtQuotes.find(q => String(q.id) === String(id))).filter(Boolean);
-  if (!items.length) return;
-
-  // 弹窗让用户选择导入到 Quotation 还是 PI，以及报价模式
-  const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center';
-  modal.innerHTML = `
-    <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:24px;width:360px;max-width:92vw">
-      <div style="font-size:15px;font-weight:600;margin-bottom:16px">📄 合并导入单据</div>
-      <div style="font-size:13px;color:var(--text2);margin-bottom:14px">已选 <b style="color:var(--text)">${items.length}</b> 个产品，将合并为一份单据</div>
-      <div style="margin-bottom:12px">
-        <label style="font-size:12px;color:var(--text2);margin-bottom:4px;display:block">导入到</label>
-        <select id="merge-doc-target" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg2);color:var(--text)">
-          <option value="q">Quotation 报价单</option>
-          <option value="pi">PI 形式发票</option>
-        </select>
-      </div>
-      <div style="margin-bottom:18px">
-        <label style="font-size:12px;color:var(--text2);margin-bottom:4px;display:block">报价方式</label>
-        <select id="merge-doc-mode" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg2);color:var(--text)">
-          <option value="split">📋 分项（Barbone+RAM+SSD）</option>
-          <option value="simple">📦 整机报价</option>
-        </select>
-      </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="padding:7px 16px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:13px;cursor:pointer">取消</button>
-        <button id="merge-doc-confirm" style="padding:7px 16px;border:none;border-radius:6px;background:#1A3C5E;color:#fff;font-size:13px;cursor:pointer;font-weight:500">确认导入</button>
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
-
-  modal.querySelector('#merge-doc-confirm').onclick = () => {
-    const target = modal.querySelector('#merge-doc-target').value;
-    const mode   = modal.querySelector('#merge-doc-mode').value;
-    modal.remove();
-    qtDoMergeImport(items, target, mode);
-  };
-  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-}
-
-function qtDoMergeImport(items, target, mode) {
-  const docKey = target === 'pi' ? 'pi' : 'q';
-  const targetLabel = docKey === 'pi' ? 'PI 形式发票' : 'Quotation 报价单';
-
-  // 切换模式（UI: breakdown/total → 内部: split/simple）
-  const internalMode = mode === 'breakdown' ? 'split' : 'simple';
-  if (_mode[docKey] !== internalMode) setMode(docKey, internalMode);
-
-  // 清空现有行
-  const tbody = document.getElementById(docKey === 'pi' ? 'pi-b' : 'q-b');
-  if (tbody) { tbody.innerHTML = ''; rc[docKey] = 0; }
-
-  // 填入公司名
-  const bCoEl = document.getElementById('bCo');
-  if (bCoEl && items[0] && items[0].company) bCoEl.value = items[0].company;
-
-  let totalRows = 0;
-  items.forEach(it => {
-    const descParts = [it.cpu, it.ram||'', it.ssd||'', it.custom].filter(Boolean);
-    const desc = descParts.join(' / ');
-
-    let shippingPerUnit = '';
-    if (it.shipping) {
-      const s = it.shipping.trim();
-      if (/^[\d.]+$/.test(s)) { shippingPerUnit = s; }
-      else { const m1 = s.match(/1台\s*\$([\d.]+)/); if (m1) shippingPerUnit = m1[1]; }
-    }
-
-    const pn = [it.model, it.partno].filter(Boolean).join('\n');
-    const tiers = it.tiers || [];
-
-    if (tiers.length > 0 && docKey === 'q') {
-      tiers.forEach(tier => {
-        const tierQty   = tier.qty   || it.qty  || '1';
-        const tierPrice = tier.price != null ? String(tier.price) : (it.price != null ? String(it.price) : '');
-        // 运费按tier重新解析
-        let tSh = shippingPerUnit;
-        if (internalMode === 'split') {
-          addR(docKey, { pn, ds:`[${tierQty}台] ${desc}`.trim(), qty:tierQty,
-            bb:  it.barbone != null ? String(it.barbone) : '',
-            ram: it.ramp    != null ? String(it.ramp)    : '',
-            ssd: it.ssdp    != null ? String(it.ssdp)    : '',
-            sh: tSh, ai: tierPrice });
-        } else {
-          addR(docKey, { pn, ds:`[${tierQty}台] ${desc}`.trim(), qty:tierQty, cfg:tierPrice, sh:tSh });
-        }
-        totalRows++;
-      });
-    } else {
-      const unitPrice = it.price != null ? String(it.price) : '';
-      if (internalMode === 'split') {
-        addR(docKey, { pn, ds:desc, qty:it.qty||'1',
-          bb:  it.barbone != null ? String(it.barbone) : '',
-          ram: it.ramp    != null ? String(it.ramp)    : '',
-          ssd: it.ssdp    != null ? String(it.ssdp)    : '',
-          sh: shippingPerUnit, ai: unitPrice });
-      } else {
-        addR(docKey, { pn, ds:desc, qty:it.qty||'1', cfg:unitPrice, sh:shippingPerUnit });
-      }
-      totalRows++;
-    }
-  });
-
-  if (docKey === 'pi') cPI(); else cQ();
-
-  // 跳转到单据生成
-  switchTab('cesipc');
-  cesipcSwitchTab(docKey === 'pi' ? 'pi' : 'quotation', null);
-
-  // 清空选中状态
-  _qtCheckedIds.clear();
-  document.getElementById('qt-merge-doc-btn').style.display = 'none';
-  document.querySelectorAll('.qt-row-check').forEach(cb => cb.checked = false);
-  const ca = document.getElementById('qt-check-all');
-  if (ca) { ca.checked = false; ca.indeterminate = false; }
-
-  toast(`✅ 已合并导入 ${totalRows} 行 → ${targetLabel}`);
-}
+// ── 合并功能已移除 ──
 
 function qtSort(col){if(qtSortCol===col)qtSortDir*=-1;else{qtSortCol=col;qtSortDir=-1;}qtRender();}
 function qtSorted(data){
@@ -5388,6 +5266,7 @@ function qtRender(){
   const clearBtn=document.getElementById('qt-clear-filter');
   const countEl=document.getElementById('qt-result-count');
   if(clearBtn)clearBtn.style.display=hasFilter?'':'none';
+  qtUpdateFilterDot();
   if(countEl){
     if(hasFilter){
       countEl.style.display='';
@@ -5492,7 +5371,7 @@ function qtRender(){
           if(days>=30)return'transition:background .3s;background:#FFFBEB;border-left:3px solid #F59E0B';
           return'transition:background .3s';
         })();
-        tbody+=`<tr data-qid="${r.id}" style="${staleStyle}"><td style="text-align:center;width:32px"><input type="checkbox" class="qt-row-check" data-qid="${r.id}" onchange="qtRowCheck()" style="width:auto;cursor:pointer;accent-color:var(--blue)"></td>${visCols.map(tdFor).join('')}</tr>`;
+        tbody+=`<tr data-qid="${r.id}" style="${staleStyle}">${visCols.map(tdFor).join('')}</tr>`;
       } else {
         // multiple rows — group header + collapsible children
         const gid='qtg_'+Math.random().toString(36).slice(2,8);
@@ -5582,7 +5461,7 @@ function qtRender(){
               default: return`<td></td>`;
             }
           };
-          tbody+=`<tr data-qid="${r.id}" data-group="${gid}" style="display:none;transition:background .3s;background:var(--bg)"><td style="text-align:center;width:32px"><input type="checkbox" class="qt-row-check" data-qid="${r.id}" onchange="qtRowCheck()" style="width:auto;cursor:pointer;accent-color:var(--blue)"></td>${visCols.map(childTdFor).join('')}</tr>`;
+          tbody+=`<tr data-qid="${r.id}" data-group="${gid}" style="display:none;transition:background .3s;background:var(--bg)">${visCols.map(childTdFor).join('')}</tr>`;
         });
       }
     });
@@ -5612,6 +5491,35 @@ function qtCopyRowSummary(id,btn){
     const orig=btn.textContent;btn.textContent='✓ 已复制';setTimeout(()=>{btn.textContent=orig;},1500);
   });
 }
+let _qtFiltersOpen = true;
+function qtToggleFilters(){
+  _qtFiltersOpen = !_qtFiltersOpen;
+  const panel = document.getElementById('qt-filter-panel');
+  const arrow = document.getElementById('qt-filter-arrow');
+  if(panel) panel.style.display = _qtFiltersOpen ? '' : 'none';
+  if(arrow) arrow.style.transform = _qtFiltersOpen ? 'rotate(0deg)' : 'rotate(-90deg)';
+}
+function qtUpdateFilterDot(){
+  const dot = document.getElementById('qt-filter-active-dot');
+  if(!dot) return;
+  const hasFilter = !!(
+    (document.getElementById('qt-search')||{}).value ||
+    (document.getElementById('qt-f-company')||{}).value ||
+    (document.getElementById('qt-f-contact')||{}).value ||
+    (document.getElementById('qt-f-status')||{}).value ||
+    (document.getElementById('qt-f-p3')||{}).value ||
+    (document.getElementById('qt-f-model')||{}).value ||
+    (document.getElementById('qt-f-cpu')||{}).value ||
+    (document.getElementById('qt-f-ram')||{}).value ||
+    (document.getElementById('qt-f-ssd')||{}).value ||
+    (document.getElementById('qt-f-date-start')||{}).value ||
+    (document.getElementById('qt-f-date-end')||{}).value
+  );
+  dot.style.display = hasFilter ? 'inline-block' : 'none';
+  const btn = document.getElementById('qt-filter-toggle-btn');
+  if(btn) btn.style.borderColor = hasFilter ? 'var(--blue)' : 'var(--border)';
+}
+
 function qtClearFilters(){
   document.getElementById('qt-search').value='';
   document.getElementById('qt-f-company').value='';
@@ -5624,6 +5532,7 @@ function qtClearFilters(){
   const s=document.getElementById('qt-f-ssd');if(s)s.value='';
   const ds=document.getElementById('qt-f-date-start');if(ds)ds.value='';
   const de=document.getElementById('qt-f-date-end');if(de)de.value='';
+  qtUpdateFilterDot();
   qtPage=1;qtRender();
 }
 
@@ -7062,10 +6971,8 @@ function qtRenderDash(){
   // 业务概况 — 选中公司时，有关联该公司的业务员置顶+高亮
   const filterCo=window.qtDashFilterCo||'';
   const contacts=[...new Set(qtQuotes.map(q=>q.contact).filter(Boolean))].sort();
-  const noContact=qtQuotes.filter(q=>!q.contact);
   let allContactGroups=[
-    ...contacts.map(ct=>({name:ct,qs:qtQuotes.filter(q=>q.contact===ct),isUnassigned:false})),
-    ...(noContact.length?[{name:'（未指定业务）',qs:noContact,isUnassigned:true}]:[])
+    ...contacts.map(ct=>({name:ct,qs:qtQuotes.filter(q=>q.contact===ct),isUnassigned:false}))
   ];
   // 有公司筛选时：把该公司相关的业务员排到前面
   if(filterCo){
