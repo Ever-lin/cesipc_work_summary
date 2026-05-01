@@ -1086,6 +1086,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div style="margin-top:6px;font-weight:600;color:#185FA5">🔘 关键按钮说明</div>
   <div class="hb-row"><span class="hb-tag">＋ 新增报价</span><span>手动添加一条新的报价记录。</span></div>
   <div class="hb-row"><span class="hb-tag amber">⚠️ 待同步</span><span>「项目情况」里对应项目有了新进展（追加了记录），但这条报价的状态/进度还没更新，点此筛选出所有待同步的报价，逐一在「项目情况」里点击同步按钮更新。</span></div>
+  <div class="hb-row"><span class="hb-tag">📄 合并导入单据</span><span>勾选多条报价后出现。把选中的报价一键导入到「单据生成」的报价单/PI 中，省去重复填写。</span></div>
   <div class="hb-row"><span class="hb-tag green">📥 导出Excel</span><span>将当前筛选结果导出为 CSV 文件，可用 Excel 打开进行进一步分析。</span></div>
   <div class="hb-row"><span class="hb-tag gray">⚙️ 列设置</span><span>自定义显示哪些列、各列宽度。设置会自动保存，下次打开仍然生效。</span></div>
   <div class="hb-row"><span class="hb-tag gray">✕ 清除筛选</span><span>有筛选条件时才出现（右侧会显示筛选数量），点击一键清除所有搜索和筛选条件。</span></div>
@@ -1189,6 +1190,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <option value="100" selected>100条/页</option>
       </select>
       <button class="btn btn-primary btn-sm" onclick="qtOpenAdd()">＋ 新增报价</button>
+      <button id="qt-merge-doc-btn" class="btn btn-sm" onclick="qtMergeToDoc()" style="display:none;background:#1A3C5E;color:#fff;border-color:#1A3C5E;white-space:nowrap">📄 合并导入单据 (<span id="qt-merge-count">0</span>)</button>
       <button class="btn btn-sm" onclick="qtExportCSV()" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97;white-space:nowrap">📥 导出Excel</button>
       <button class="btn btn-sm" onclick="qtOpenColSettings()" title="自定义显示列和列宽" style="background:var(--bg2);color:var(--text2);border-color:var(--border)">⚙️ 列设置</button>
     </div>
@@ -5002,7 +5004,7 @@ function qtBuildThead(){
   const tr=document.getElementById('qt-thead-row');
   if(!tr)return;
   const sortLabels={deal:'状态',company:'公司',contact:'对接业务',project:'项目',date:'日期',model:'型号',price:'报价(P)',p3:'P3',diff:'价差'};
-  tr.innerHTML=''+qtColSettings.filter(c=>c.vis).map(c=>{
+  tr.innerHTML='<th style="width:32px;min-width:32px;text-align:center"><input type="checkbox" id="qt-check-all" title="全选/取消" onchange="qtCheckAll(this.checked)" style="width:auto;cursor:pointer;accent-color:var(--blue)"></th>'+qtColSettings.filter(c=>c.vis).map(c=>{
     const isActive=c.sortable&&qtSortCol===c.id;
     const arrow=isActive?(qtSortDir>0?'↑':'↓'):'';
     const label=(sortLabels[c.id]||c.label)+(isActive?` ${arrow}`:'');
@@ -5231,7 +5233,130 @@ function qtFiltered(){
     return true;
   });
 }
-// ── 合并功能已移除 ──
+// ── 多选合并导入单据 ──
+let _qtCheckedIds = new Set();
+
+function qtRowCheck() {
+  _qtCheckedIds = new Set(
+    [...document.querySelectorAll('.qt-row-check:checked')].map(cb => cb.dataset.qid)
+  );
+  const btn = document.getElementById('qt-merge-doc-btn');
+  const cnt = document.getElementById('qt-merge-count');
+  if (_qtCheckedIds.size > 0) {
+    btn.style.display = '';
+    cnt.textContent = _qtCheckedIds.size;
+  } else {
+    btn.style.display = 'none';
+  }
+  const all = document.querySelectorAll('.qt-row-check');
+  const chkAll = document.getElementById('qt-check-all');
+  if (chkAll) {
+    chkAll.indeterminate = _qtCheckedIds.size > 0 && _qtCheckedIds.size < all.length;
+    chkAll.checked = all.length > 0 && _qtCheckedIds.size === all.length;
+  }
+}
+
+function qtCheckAll(checked) {
+  document.querySelectorAll('.qt-row-check').forEach(cb => { cb.checked = checked; });
+  qtRowCheck();
+}
+
+function qtMergeToDoc() {
+  if (!_qtCheckedIds.size) return;
+  const items = [..._qtCheckedIds].map(id => qtQuotes.find(q => String(q.id) === String(id))).filter(Boolean);
+  if (!items.length) return;
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML = `
+    <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:24px;width:360px;max-width:92vw">
+      <div style="font-size:15px;font-weight:600;margin-bottom:16px">📄 合并导入单据</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px">已选 <b style="color:var(--text)">${items.length}</b> 个产品，将合并为一份单据</div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:var(--text2);margin-bottom:4px;display:block">导入到</label>
+        <select id="merge-doc-target" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg2);color:var(--text)">
+          <option value="q">Quotation 报价单</option>
+          <option value="pi">PI 形式发票</option>
+        </select>
+      </div>
+      <div style="margin-bottom:18px">
+        <label style="font-size:12px;color:var(--text2);margin-bottom:4px;display:block">报价方式</label>
+        <select id="merge-doc-mode" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg2);color:var(--text)">
+          <option value="split">📋 分项（Barbone+RAM+SSD）</option>
+          <option value="simple">📦 整机报价</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="padding:7px 16px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:13px;cursor:pointer">取消</button>
+        <button id="merge-doc-confirm" style="padding:7px 16px;border:none;border-radius:6px;background:#1A3C5E;color:#fff;font-size:13px;cursor:pointer;font-weight:500">确认导入</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.querySelector('#merge-doc-confirm').onclick = () => {
+    const target = modal.querySelector('#merge-doc-target').value;
+    const mode   = modal.querySelector('#merge-doc-mode').value;
+    modal.remove();
+    qtDoMergeImport(items, target, mode);
+  };
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+function qtDoMergeImport(items, target, mode) {
+  const docKey = target === 'pi' ? 'pi' : 'q';
+  const targetLabel = docKey === 'pi' ? 'PI 形式发票' : 'Quotation 报价单';
+  const internalMode = mode === 'breakdown' ? 'split' : 'simple';
+  if (_mode[docKey] !== internalMode) setMode(docKey, internalMode);
+  const tbody = document.getElementById(docKey === 'pi' ? 'pi-b' : 'q-b');
+  if (tbody) { tbody.innerHTML = ''; rc[docKey] = 0; }
+  const bCoEl = document.getElementById('bCo');
+  if (bCoEl && items[0] && items[0].company) bCoEl.value = items[0].company;
+  let totalRows = 0;
+  items.forEach(it => {
+    const descParts = [it.cpu, it.ram||'', it.ssd||'', it.custom].filter(Boolean);
+    const desc = descParts.join(' / ');
+    let shippingPerUnit = '';
+    if (it.shipping) {
+      const s = it.shipping.trim();
+      if (/^[\d.]+$/.test(s)) { shippingPerUnit = s; }
+      else { const m1 = s.match(/1台\s*\$([\d.]+)/); if (m1) shippingPerUnit = m1[1]; }
+    }
+    const pn = [it.model, it.partno].filter(Boolean).join('\n');
+    const tiers = it.tiers || [];
+    if (tiers.length > 0 && docKey === 'q') {
+      tiers.forEach(tier => {
+        const tierQty   = tier.qty   || it.qty  || '1';
+        const tierPrice = tier.price != null ? String(tier.price) : (it.price != null ? String(it.price) : '');
+        if (internalMode === 'split') {
+          addR(docKey, { pn, ds:`[${tierQty}台] ${desc}`.trim(), qty:tierQty,
+            bb: it.barbone!=null?String(it.barbone):'', ram:it.ramp!=null?String(it.ramp):'',
+            ssd:it.ssdp!=null?String(it.ssdp):'', sh:shippingPerUnit, ai:tierPrice });
+        } else {
+          addR(docKey, { pn, ds:`[${tierQty}台] ${desc}`.trim(), qty:tierQty, cfg:tierPrice, sh:shippingPerUnit });
+        }
+        totalRows++;
+      });
+    } else {
+      const unitPrice = it.price != null ? String(it.price) : '';
+      if (internalMode === 'split') {
+        addR(docKey, { pn, ds:desc, qty:it.qty||'1',
+          bb:it.barbone!=null?String(it.barbone):'', ram:it.ramp!=null?String(it.ramp):'',
+          ssd:it.ssdp!=null?String(it.ssdp):'', sh:shippingPerUnit, ai:unitPrice });
+      } else {
+        addR(docKey, { pn, ds:desc, qty:it.qty||'1', cfg:unitPrice, sh:shippingPerUnit });
+      }
+      totalRows++;
+    }
+  });
+  if (docKey === 'pi') cPI(); else cQ();
+  switchTab('cesipc');
+  cesipcSwitchTab(docKey === 'pi' ? 'pi' : 'quotation', null);
+  _qtCheckedIds.clear();
+  const mergeBtn = document.getElementById('qt-merge-doc-btn');
+  if (mergeBtn) mergeBtn.style.display = 'none';
+  document.querySelectorAll('.qt-row-check').forEach(cb => cb.checked = false);
+  const ca = document.getElementById('qt-check-all');
+  if (ca) { ca.checked = false; ca.indeterminate = false; }
+  toast(`✅ 已合并导入 ${totalRows} 行 → ${targetLabel}`);
+}
 
 function qtSort(col){if(qtSortCol===col)qtSortDir*=-1;else{qtSortCol=col;qtSortDir=-1;}qtRender();}
 function qtSorted(data){
@@ -5281,25 +5406,13 @@ function qtRender(){
   const visCols=qtVisColIds();
   const dealBadge=d=>d==='won'?'<span class="badge qt-stat-won">✅ 已成交</span>':d==='lost'?'<span class="badge qt-stat-lost">❌ 丢单</span>':d==='open'?'<span class="badge qt-stat-open">⭕ 跟进中</span>':d==='confirmed'?'<span class="badge qt-stat-confirmed">🔶 已确认订单</span>':d==='pause'?'<span class="badge qt-stat-pause">⏸️ 暂无进展</span>':'<span class="badge badge-gray">—</span>';
 
-  // ── 同项目折叠分组 ──
-  const projectGroups={};
-  const projectOrder=[];
-  data.forEach(r=>{
-    const proj=r.project||'__no_project__';
-    if(!projectGroups[proj]){projectGroups[proj]=[];projectOrder.push(proj);}
-    projectGroups[proj].push(r);
-  });
-
+  // ── 直接逐行渲染，不再按项目折叠分组 ──
   let tbody='';
   if(!data.length){
-    tbody=`<tr><td colspan="${qtVisColIds().length||16}" style="text-align:center;padding:24px;color:var(--text2)">没有找到匹配的报价</td></tr>`;
+    tbody=`<tr><td colspan="${qtVisColIds().length+1||16}" style="text-align:center;padding:24px;color:var(--text2)">没有找到匹配的报价</td></tr>`;
   } else {
-    projectOrder.forEach(proj=>{
-      const rows=projectGroups[proj];
-      if(rows.length===1){
-        const r=rows[0];
-        const diff=(r.p3&&(r.priceCur||"USD")===(r.p3Cur||"USD"))?r.price-r.p3:null;
-        // Build td per visible column
+    data.forEach(r=>{
+      const diff=(r.p3&&(r.priceCur||"USD")===(r.p3Cur||"USD"))?r.price-r.p3:null;
         const tdFor=id=>{
           switch(id){
             case 'deal': return`<td>${dealBadge(r.deal)}</td>`;
@@ -5371,99 +5484,7 @@ function qtRender(){
           if(days>=30)return'transition:background .3s;background:#FFFBEB;border-left:3px solid #F59E0B';
           return'transition:background .3s';
         })();
-        tbody+=`<tr data-qid="${r.id}" style="${staleStyle}">${visCols.map(tdFor).join('')}</tr>`;
-      } else {
-        // multiple rows — group header + collapsible children
-        const gid='qtg_'+Math.random().toString(36).slice(2,8);
-        const r0=rows[0];
-        const dealPriority={won:4,confirmed:3,open:2,pause:1,lost:0};
-        const repDeal=rows.reduce((a,b)=>(dealPriority[b.deal]||0)>(dealPriority[a.deal]||0)?b:a,r0).deal;
-        const modelsStr=rows.map(r=>r.model||'—').join(' / ');
-        const hasBelow=rows.some(r=>r.p3&&(r.priceCur||'USD')===(r.p3Cur||'USD')&&r.price<r.p3);
-        const priceRange=(()=>{
-          const prices=rows.filter(r=>r.price).map(r=>r.price);
-          if(!prices.length)return'—';
-          const mn=Math.min(...prices),mx=Math.max(...prices);
-          const cur=r0.priceCur==='CNY'?'¥':'$';
-          return mn===mx?`${cur}${mn}`:`${cur}${mn}–${mx}`;
-        })();
-        // Group header tds
-        const grpTdFor=id=>{
-          switch(id){
-            case 'deal': return`<td>${dealBadge(repDeal)}</td>`;
-            case 'company': return`<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${r0.company||''}">${r0.company||'—'}</td>`;
-            case 'contact': return`<td style="color:var(--blue-text);font-weight:500">${r0.contact||'<span style="color:var(--text3)">—</span>'}</td>`;
-            case 'project': return`<td class="qt-td-wrap" style="max-width:220px" title="${r0.project||''}"><span id="${gid}-ic" style="font-size:10px;color:var(--text3);margin-right:4px">▸</span><span onclick="event.stopPropagation();qtOpenEdit('${r0.id}')" style="font-weight:500;color:var(--blue-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(24,95,165,.35)" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--blue-text)'">${r0.project||'—'}</span></td>`;
-            case 'date': return`<td></td>`;
-            case 'model': return`<td style="font-size:11px;color:var(--text2)">${modelsStr}</td>`;
-            case 'price': return`<td class="${hasBelow?'qt-below':''}" style="font-weight:500">${priceRange}</td>`;
-            case 'barbone': return`<td></td>`;
-            case 'shipping': return`<td></td>`;
-            case 'ramp': return`<td></td>`;
-            case 'ssdp': return`<td></td>`;
-            case 'ram': return`<td></td>`;
-            case 'ssd': return`<td></td>`;
-            case 'notes': return`<td><span class="badge badge-blue" style="font-size:10px">${rows.length} 个产品</span></td>`;
-            case 'actions': {
-              const grpLinked=r0.project&&state.projects.some(p=>p.linkedQuoteProject===r0.project||(p.name||p.client)===r0.project);
-              const grpSyncBtn=(()=>{
-                if(!grpLinked)return'';
-                const lastSync=qtQuotes.filter(q=>q.project===r0.project&&q.lastSyncedAt).map(q=>q.lastSyncedAt).sort().pop()||'';
-                const latestSnap=qtQuotes.filter(q=>q.project===r0.project).flatMap(q=>(q.priceHistory||[])).map(h=>h.savedAt||'').sort().pop()||'';
-                const snapNewer=lastSync&&latestSnap>lastSync;
-                const curDeal=rows.map(q=>q.deal||'').pop()||'';
-                const syncedDeal=rows.find(q=>q.lastSyncedDeal!==undefined)?.lastSyncedDeal||'';
-                if(snapNewer||(lastSync&&curDeal!==syncedDeal))
-                  return`<button class="btn btn-xs" style="background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber)" onclick="event.stopPropagation();syncQuoteToProject('${r0.project}')" title="报价有更新，点击同步到项目情况">⚠️ 同步</button>`;
-                return`<span style="display:inline-flex;align-items:center;gap:3px;background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;white-space:nowrap">✔ 已入项目</span>`;
-              })();
-              return`<td><span style="display:flex;gap:4px;flex-wrap:wrap">
-              ${r0.project?`<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="event.stopPropagation();qtImportToDoc('${r0.id}')" title="导入到单据生成">📄 单据</button>`:''}
-              <button class="btn btn-xs" onclick="event.stopPropagation();qtOpenEdit('${r0.id}')" title="编辑第一个产品">编辑</button>
-              <button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="event.stopPropagation();qtCopyAsNew('${r0.id}')" title="复制第一个产品报价到新增表单">⧉ 复制新增</button>
-              ${grpSyncBtn}
-            </span></td>`;
-            }
-            default: return`<td></td>`;
-          }
-        };
-        tbody+=`<tr onclick="(function(){var open=document.querySelector('tr[data-group=\\'${gid}\\']').style.display==='none';document.querySelectorAll('tr[data-group=\\'${gid}\\']').forEach(function(r){r.style.display=open?'':'none';});document.getElementById('${gid}-ic').textContent=open?'▾':'▸';})()" class="qt-group-row" style="cursor:pointer;background:var(--bg2);border-top:2px solid var(--border2)" title="点击展开/折叠该项目的 ${rows.length} 个产品"><td style="width:32px"></td>${visCols.map(grpTdFor).join('')}</tr>`;
-        // Child rows
-        rows.forEach(r=>{
-          const diff=(r.p3&&(r.priceCur||"USD")===(r.p3Cur||"USD"))?r.price-r.p3:null;
-          const childTdFor=id=>{
-            switch(id){
-              case 'deal': return`<td style="padding-left:20px">${dealBadge(r.deal)}</td>`;
-              case 'company': return`<td></td>`;
-              case 'contact': return`<td style="color:var(--blue-text);font-size:11px">${r.contact||''}</td>`;
-              case 'project': return`<td></td>`;
-              case 'date': return`<td style="color:var(--text2);font-size:11px">${r.date||'—'}</td>`;
-              case 'model': return`<td><b>${r.model||'—'}</b></td>`;
-              case 'cpu': return`<td>${r.cpu||'—'}</td>`;
-              case 'barbone': return`<td>${r.barbone!=null?(r.barboneCur==='CNY'?'¥':'$')+r.barbone:'—'}</td>`;
-              case 'ramp': return`<td>${r.ramp!=null?(r.rampCur==='CNY'?'¥':'$')+r.ramp:'—'}</td>`;
-              case 'ssdp': return`<td>${r.ssdp!=null?(r.ssdpCur==='CNY'?'¥':'$')+r.ssdp:'—'}</td>`;
-              case 'ram': return`<td>${r.ram||'—'}</td>`;
-              case 'ssd': return`<td>${r.ssd||'—'}</td>`;
-              case 'price': return`<td class="qt-price ${(r.p3&&(r.priceCur||'USD')===(r.p3Cur||'USD')&&r.price<r.p3)?'qt-below':''}">${(r.tiers&&r.tiers.length)?`<span style="font-size:11px;font-weight:600;color:var(--blue-text)">📊 ${r.tiers.map(t=>`${t.qty}台×${t.cur==='CNY'?'¥':'$'}${t.price}`).join(' / ')}</span>`:`${r.priceCur==='CNY'?'¥':'$'}${r.price}`}</td>`;
-              case 'p3': return`<td>${r.p3!=null?(r.p3Cur==='CNY'?'¥':'$')+r.p3:'—'}</td>`;
-              case 'shipping': return`<td style="color:var(--text2);font-size:12px">${r.shipping?'🚢 '+r.shipping:'—'}</td>`;
-              case 'diff': return`<td class="${diff!==null?(diff<0?'qt-diff-neg':'qt-diff-pos'):''}">${diff!==null?(diff>=0?'+':'')+(r.priceCur==='CNY'?'¥':'$')+diff:'—'}</td>`;
-              case 'stage': return`<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;color:var(--text2);font-size:11px">${r.stage||'—'}</td>`;
-              case 'notes': return`<td title="${[r.custom,r.shipping,r.notes].filter(Boolean).join(' | ')}">${[r.custom,r.shipping?'🚢 '+r.shipping:'',r.notes].filter(Boolean).join(' / ')||'—'}</td>`;
-              case 'actions': return`<td><span style="display:flex;gap:4px;flex-wrap:wrap">
-                ${r.project?'<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="event.stopPropagation();qtImportToDoc(\''+r.id+'\')" title="导入到单据生成">📄 单据</button>':''}
-                <button class="btn btn-xs" onclick="event.stopPropagation();qtOpenEdit('${r.id}')">编辑</button>
-                <button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="event.stopPropagation();qtCopyAsNew('${r.id}')" title="复制此报价信息到新增表单">⧉ 复制新增</button>
-                ${(r.priceHistory&&r.priceHistory.length)?`<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)" onclick="event.stopPropagation();qtOpenEdit('${r.id}')" title="${r.priceHistory.length}次价格变更，点击查看历史">📋${r.priceHistory.length}</button>`:''}
-                <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();qtDel('${r.id}')">删</button>
-              </span></td>`;
-              default: return`<td></td>`;
-            }
-          };
-          tbody+=`<tr data-qid="${r.id}" data-group="${gid}" style="display:none;transition:background .3s;background:var(--bg)">${visCols.map(childTdFor).join('')}</tr>`;
-        });
-      }
+        tbody+=`<tr data-qid="${r.id}" style="${staleStyle}"><td style="text-align:center;width:32px"><input type="checkbox" class="qt-row-check" data-qid="${r.id}" onchange="qtRowCheck()" style="width:auto;cursor:pointer;accent-color:var(--blue)"></td>${visCols.map(tdFor).join('')}</tr>`;
     });
   }
 
