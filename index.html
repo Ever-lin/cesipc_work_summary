@@ -309,6 +309,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   .items tr.ev td { background: #FFFFFF; }
   .items td.rn { color: #8899AA; text-align: center; }
   .items td.nr { text-align: right; }
+  .items td.nr.cr { text-align: center; }
   .items td.ct { text-align: center; }
   .items td.la { text-align: left; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; }
   .items td.pn { text-align: center; white-space: pre-line; }
@@ -366,6 +367,10 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   .pk-tot td { border: 0.5pt solid #2E75B6; text-align: center; font-size: 7.5pt; font-weight: 700; }
   .pk-tot td.hd { background: #1A3C5E; color: #fff; }
   .pk-tot td.vl { background: #D9E2EC; color: #1A1A2E; }
+
+  /* Center price/amount columns in paper */
+  .paper .items td.nr { text-align: center; }
+  .paper .sub-data-row td { text-align: center; }
 
   @media print {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
@@ -777,7 +782,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
             <select class="ym-s" id="w-week" onchange="fillProjTextareas('w')"><option>第一周</option><option selected>第二周</option><option>第三周</option><option>第四周</option><option>第五周</option></select>
           </div>
         </div>
-        <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目（按项目节点划分）<button class="btn btn-sm" onclick="fillProjTextareas('w')">↻ 刷新项目</button></div>
+        <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目（按项目节点划分）<button class="btn btn-sm" onclick="fillProjTextareas('w');showRefreshToast()">↻ 刷新项目</button></div>
         <div class="field"><label>1）合同签订（含走流程）<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：生产/交付、安装/验收、项目完结、合同签订</span></label><textarea id="w-p1" class="auto-resize"></textarea></div>
         <div class="field"><label>2）产品报价<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：产品报价</span></label><textarea id="w-p2" class="auto-resize"></textarea></div>
         <div class="field"><label>3）方案设计<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：方案设计</span></label><textarea id="w-p3" class="auto-resize"></textarea></div>
@@ -792,7 +797,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <div class="field">
             <label style="display:flex;align-items:center;justify-content:space-between">
               <span>跟进客户（每行一家）<span style="font-size:11px;color:var(--text2);margin-left:4px">数量：<input id="w-followup-count" type="number" min="0" placeholder="自动" style="width:48px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onWListCountInput('w','followup')"></span></span>
-              <button class="btn btn-xs" onclick="fillWeeklyFollowup()">↻ 刷新</button>
+              <button class="btn btn-xs" onclick="fillWeeklyFollowup();showRefreshToast()">↻ 刷新</button>
             </label>
             <textarea id="w-followup" class="auto-resize" placeholder="每行填写一家公司名称" oninput="onWListInput('w','followup')"></textarea>
           </div>
@@ -844,7 +849,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         </div>
 
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">下周工作计划<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span></div>
-        <div class="field"><label style="font-weight:500;display:flex;align-items:center;justify-content:space-between">一、重点项目（按项目节点划分）<button class="btn btn-xs" onclick="fillNextPlanTextareas('w')">↻ 刷新</button></label></div>
+        <div class="field"><label style="font-weight:500;display:flex;align-items:center;justify-content:space-between">一、重点项目（按项目节点划分）<button class="btn btn-xs" onclick="fillNextPlanTextareas('w');showRefreshToast()">↻ 刷新</button></label></div>
         <div class="field"><label>1）合同签订（含走流程）</label><textarea id="w-np1" class="auto-resize" placeholder="填写下周跟进的合同签订项目"></textarea></div>
         <div class="field"><label>2）产品报价</label><textarea id="w-np2" class="auto-resize" placeholder="填写下周跟进的报价项目"></textarea></div>
         <div class="field"><label>3）方案设计</label><textarea id="w-np3" class="auto-resize" placeholder="填写下周跟进的方案项目"></textarea></div>
@@ -860,7 +865,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>2）长线客户跟进情况如下</label></div>
         <div class="grid2">
           <div class="field">
-            <label style="display:flex;align-items:center;justify-content:space-between">—跟进（每行一家）<button class="btn btn-xs" onclick="fillNlongFollowup('w')">↻ 刷新</button></label>
+            <label style="display:flex;align-items:center;justify-content:space-between">—跟进（每行一家）<button class="btn btn-xs" onclick="fillNlongFollowup('w');showRefreshToast()">↻ 刷新</button></label>
             <textarea id="w-nlong-followup" class="auto-resize" placeholder="每行填写一家公司名称"></textarea>
           </div>
           <div class="field">
@@ -883,7 +888,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
             <select class="ym-s" id="wm-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select>
           </div>
         </div>
-        <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目（按项目节点划分）<button class="btn btn-sm" onclick="fillProjTextareas('wm')">↻ 刷新项目</button></div>
+        <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目（按项目节点划分）<button class="btn btn-sm" onclick="fillProjTextareas('wm');showRefreshToast()">↻ 刷新项目</button></div>
         <div class="field"><label>1）合同签订（含走流程）<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：生产/交付、安装/验收、项目完结、合同签订</span></label><textarea id="wm-p1" class="auto-resize"></textarea></div>
         <div class="field"><label>2）产品报价<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：产品报价</span></label><textarea id="wm-p2" class="auto-resize"></textarea></div>
         <div class="field"><label>3）方案设计<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：方案设计</span></label><textarea id="wm-p3" class="auto-resize"></textarea></div>
@@ -898,7 +903,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <div class="field">
             <label style="display:flex;align-items:center;justify-content:space-between">
               <span>跟进客户（每行一家）<span style="font-size:11px;color:var(--text2);margin-left:4px">数量：<input id="wm-followup-count" type="number" min="0" placeholder="自动" style="width:48px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onWListCountInput('wm','followup')"></span></span>
-              <button class="btn btn-xs" onclick="fillMonthlyFollowup()">↻ 刷新</button>
+              <button class="btn btn-xs" onclick="fillMonthlyFollowup();showRefreshToast()">↻ 刷新</button>
             </label>
             <textarea id="wm-followup" class="auto-resize" placeholder="每行填写一家公司名称" oninput="onWListInput('wm','followup')"></textarea>
           </div>
@@ -950,7 +955,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         </div>
 
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">下月工作计划<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span></div>
-        <div class="field"><label style="font-weight:500;display:flex;align-items:center;justify-content:space-between">一、重点项目（按项目节点划分）<button class="btn btn-xs" onclick="fillNextPlanTextareas('wm')">↻ 刷新</button></label></div>
+        <div class="field"><label style="font-weight:500;display:flex;align-items:center;justify-content:space-between">一、重点项目（按项目节点划分）<button class="btn btn-xs" onclick="fillNextPlanTextareas('wm');showRefreshToast()">↻ 刷新</button></label></div>
         <div class="field"><label>1）合同签订（含走流程）</label><textarea id="wm-np1" class="auto-resize" placeholder="填写下月跟进的合同签订项目"></textarea></div>
         <div class="field"><label>2）产品报价</label><textarea id="wm-np2" class="auto-resize" placeholder="填写下月跟进的报价项目"></textarea></div>
         <div class="field"><label>3）方案设计</label><textarea id="wm-np3" class="auto-resize" placeholder="填写下月跟进的方案项目"></textarea></div>
@@ -966,7 +971,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>2）长线客户跟进情况如下</label></div>
         <div class="grid2">
           <div class="field">
-            <label style="display:flex;align-items:center;justify-content:space-between">—跟进（每行一家）<button class="btn btn-xs" onclick="fillNlongFollowup('wm')">↻ 刷新</button></label>
+            <label style="display:flex;align-items:center;justify-content:space-between">—跟进（每行一家）<button class="btn btn-xs" onclick="fillNlongFollowup('wm');showRefreshToast()">↻ 刷新</button></label>
             <textarea id="wm-nlong-followup" class="auto-resize" placeholder="每行填写一家公司名称"></textarea>
           </div>
           <div class="field">
@@ -995,7 +1000,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         </div>
       </div>
 
-      <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目（按项目节点划分）<span class="inline-flex"><button class="btn btn-sm" onclick="fillDailyProjects();fillDailyFollowup()">↻ 刷新项目</button><button class="btn btn-sm" onclick="copyDailySection('projects')">复制全部</button></span></div>
+      <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目（按项目节点划分）<span class="inline-flex"><button class="btn btn-sm" onclick="fillDailyProjects();fillDailyFollowup();showRefreshToast()">↻ 刷新项目</button><button class="btn btn-sm" onclick="copyDailySection('projects')">复制全部</button></span></div>
       <div class="field"><label>1）合同签订（含走流程）<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：生产/交付、安装/验收、项目完结、合同签订</span></label><textarea id="d-p1" class="auto-resize"></textarea></div>
       <div class="field"><label>2）产品报价<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：产品报价</span></label><textarea id="d-p2" class="auto-resize"></textarea></div>
       <div class="field"><label>3）方案设计<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：方案设计</span></label><textarea id="d-p3" class="auto-resize"></textarea></div>
@@ -1013,7 +1018,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field">
           <label style="display:flex;align-items:center;justify-content:space-between">
             <span>跟进客户（每行一家）<span style="font-size:11px;color:var(--text2);margin-left:4px">数量：<input id="d-followup-count" type="number" min="0" placeholder="自动" style="width:48px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onDailyCountInput('followup')"></span></span>
-            <button class="btn btn-xs" onclick="fillDailyFollowup()">↻ 刷新</button>
+            <button class="btn btn-xs" onclick="fillDailyFollowup();showRefreshToast()">↻ 刷新</button>
           </label>
           <textarea id="d-followup" class="auto-resize" placeholder="每行填写一家公司名称" oninput="onDailyListInput('followup')"></textarea>
         </div>
@@ -1026,7 +1031,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="field"><label>4）售后情况</label><textarea id="d-aftersales" class="auto-resize"></textarea></div>
       <div class="field"><label>5）日常事务</label><textarea id="d-daily" class="auto-resize" placeholder="其他日常工作安排"></textarea></div>
 
-      <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">明日计划<span class="inline-flex"><button class="btn btn-sm" onclick="fillDailyTomorrowPlan()">↻ 刷新</button><button class="btn btn-sm" onclick="copyDailySection('plan')">复制全部</button></span></div>
+      <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">明日计划<span class="inline-flex"><button class="btn btn-sm" onclick="fillDailyTomorrowPlan();showRefreshToast()">↻ 刷新</button><button class="btn btn-sm" onclick="copyDailySection('plan')">复制全部</button></span></div>
       <div style="background:#FFFBEB;border:1px solid #F5D59A;border-radius:var(--radius-xs);padding:7px 10px;margin-bottom:10px;font-size:12px;color:#633806;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <span>📅 抓取行动时间 =</span>
         <input id="d-plan-target-date" type="date" style="width:auto;padding:4px 8px;font-size:12px;border:1px solid #F5D59A;border-radius:var(--radius-xs);background:#FFFBEB;color:#633806;font-family:inherit" onchange="fillDailyTomorrowPlan()" title="默认为日报日期+1天，节假日可改为实际上班日">
@@ -1209,9 +1214,12 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <select class="ym-s" id="qt-f-cpu" onchange="qtRender()" title="按CPU筛选"><option value="">全部CPU</option></select>
     <select class="ym-s" id="qt-f-ram" onchange="qtRender()" title="按RAM筛选"><option value="">全部RAM</option></select>
     <select class="ym-s" id="qt-f-ssd" onchange="qtRender()" title="按SSD筛选"><option value="">全部SSD</option></select>
-    <input type="date" id="qt-f-date-start" onchange="qtRender()" title="开始日期" style="padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text);font-family:inherit">
-    <span style="font-size:12px;color:var(--text2)">～</span>
-    <input type="date" id="qt-f-date-end" onchange="qtRender()" title="结束日期" style="padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text);font-family:inherit">
+    <div style="display:flex;align-items:center;gap:4px;white-space:nowrap">
+      <span style="font-size:11px;color:var(--text2)">日期</span>
+      <input type="date" id="qt-f-date-start" onchange="qtRender()" title="开始日期" style="width:120px;padding:4px 6px;font-size:11px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text);font-family:inherit">
+      <span style="font-size:11px;color:var(--text2)">～</span>
+      <input type="date" id="qt-f-date-end" onchange="qtRender()" title="结束日期" style="width:120px;padding:4px 6px;font-size:11px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg2);color:var(--text);font-family:inherit">
+    </div>
     <button id="qt-clear-filter" class="btn btn-sm" onclick="qtClearFilters()" style="display:none;background:var(--red-bg);color:var(--red-text);border-color:var(--red-border);white-space:nowrap">✕ 清除筛选</button>
   </div>
   <div class="qt-tbl-wrap">
@@ -4236,6 +4244,14 @@ function renderReceivablePreview(fy){
   wrap.innerHTML=`<div style="font-size:12px;color:var(--text2);margin-bottom:6px">月度回款目标：${t.collectMonth}W／月 → 累计应收</div>`+rows.join('');
 }
 
+function showRefreshToast(msg){
+  msg=msg||'✅ 已刷新';
+  var t=document.createElement('div');
+  t.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#1D9E75;color:#fff;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,.2);pointer-events:none;white-space:nowrap;font-family:inherit;transition:opacity .3s;';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove();},350);},1800);
+}
 function refreshExportTargetPreviews(){
   // Update the target preview boxes in export panels
   const ewFy=document.getElementById('ew-fy');
@@ -5813,6 +5829,7 @@ function qtOpenAdd(){
 function qtOpenEdit(id){
   const r=qtQuotes.find(q=>String(q.id)===String(id));if(!r)return;
   _qtJustSaved=false;
+  _qtFormDirty=false;
   qtEditId=id;
   document.getElementById('qt-add-product-btn').style.display='';
   // 显示型号+项目
@@ -5895,6 +5912,16 @@ function qtOpenEdit(id){
   document.getElementById('qt-modal-bg').classList.add('open');
 }
 function qtCloseModal(){document.getElementById('qt-modal-bg').classList.remove('open');}
+// 监听报价弹窗内的任意输入变化，标记为已修改
+(function(){
+  document.addEventListener('DOMContentLoaded',function(){
+    var modal=document.getElementById('qt-modal-bg');
+    if(modal){
+      modal.addEventListener('input',function(e){if(modal.classList.contains('open'))_qtFormDirty=true;},true);
+      modal.addEventListener('change',function(e){if(modal.classList.contains('open'))_qtFormDirty=true;},true);
+    }
+  });
+})();
 
 // 检测新增表单是否已有用户填写的内容（编辑模式不需要保护）
 function qtFormHasData(){
@@ -6019,9 +6046,12 @@ function qtShipLoad(str){
 
 // 安全关闭：新增/编辑模式下有数据时弹确认
 var _qtJustSaved=false; // 保存后点击外部直接关闭，不弹确认
+var _qtFormDirty=false; // 用户实际修改过内容才为 true
+function qtMarkDirty(){_qtFormDirty=true;}
 function qtSafeCloseModal(){
   if(_qtJustSaved){_qtJustSaved=false;qtCloseModal();return;}
-  if(qtFormHasData()){
+  // 编辑模式：只有实际修改过才警告；新增模式：有填写内容才警告
+  if((qtEditId!=null&&_qtFormDirty)||(qtEditId==null&&qtFormHasData())){
     var msg=qtEditId!=null?'编辑内容尚未保存，确定要放弃修改并关闭吗？':'表单中已填写了内容，确定要放弃并关闭吗？';
     if(!confirm(msg)) return;
   }
@@ -6340,8 +6370,45 @@ function qtRowModeChange(i, radio){
 }
 
 function qtSyncTiersFromDOM(i){
-  // Keep for compatibility — now just calls full sync
-  qtSyncAllRowsFromDOM();
+  // Sync only tier data from DOM without full re-render (preserves focus)
+  const wrap=document.getElementById('qf-product-rows');
+  if(!wrap||!_qtProdRows[i])return;
+  const el=wrap.querySelectorAll('.qf-prod-row')[i];
+  if(!el)return;
+  const tierContainer=el.querySelector('#qt-tiers-'+i);
+  if(tierContainer){
+    const tiers=[];
+    Array.from(tierContainer.children).forEach(tierDiv=>{
+      const qtyI=tierDiv.querySelector('[data-tierf="qty"]');
+      const curI=tierDiv.querySelector('[data-tierf="cur"]');
+      const priceI=tierDiv.querySelector('[data-tierf="price"]');
+      if(qtyI&&priceI)tiers.push({qty:qtyI.value,cur:curI?.value||'USD',price:priceI.value});
+    });
+    _qtProdRows[i].tiers=tiers;
+  }
+  // Update P3-diff labels in tier rows without full re-render
+  qtUpdateTierDiffs(i);
+}
+function qtUpdateTierDiffs(i){
+  if(!_qtProdRows[i])return;
+  const p3v=parseFloat(_qtProdRows[i].p3)||0;
+  const sym=c=>c==='CNY'?'¥':'$';
+  const tiers=_qtProdRows[i].tiers||[];
+  const wrap=document.getElementById('qf-product-rows');
+  if(!wrap)return;
+  const el=wrap.querySelectorAll('.qf-prod-row')[i];
+  if(!el)return;
+  el.querySelectorAll('.qt-tier-row').forEach((row,ti)=>{
+    const t=tiers[ti];if(!t)return;
+    const price=parseFloat(t.price)||0;
+    const diff=p3v>0&&price>0?price-p3v:null;
+    const diffColor=diff===null?'var(--text2)':diff<0?'var(--red-text)':'#1D9E75';
+    const grid=row.querySelector('[style*="grid-template-columns"]');
+    if(grid){
+      const cells=grid.querySelectorAll('div>div:first-child');
+      if(cells[2]){cells[2].textContent=diff!==null?(diff>=0?'+':'')+sym(t.cur||'USD')+diff:'—';cells[2].style.color=diffColor;}
+    }
+  });
 }
 
 function qtAddTier(i){
@@ -6502,6 +6569,24 @@ function qtSingleRemoveTier(ti){
   _qtSingleTiers.splice(ti,1);
   qtRenderSingleTiers();
 }
+function qtUpdateSingleTierDiffs(){
+  qtSyncSingleTiersFromDOM();
+  const cont=document.getElementById('qf-single-tiers');
+  if(!cont)return;
+  const p3=parseFloat(document.getElementById('qf-p3')?.value)||0;
+  const sym=c=>c==='CNY'?'¥':'$';
+  cont.querySelectorAll('.qt-single-tier-row').forEach((row,ti)=>{
+    const t=_qtSingleTiers[ti];if(!t)return;
+    const price=parseFloat(t.price)||0;
+    const diff=p3>0&&price>0?price-p3:null;
+    const diffColor=diff===null?'var(--text2)':diff<0?'var(--red-text)':'#1D9E75';
+    const grid=row.querySelector('[style*="grid-template-columns"]');
+    if(grid){
+      const cells=grid.querySelectorAll('div>div:first-child');
+      if(cells[2]){cells[2].textContent=diff!==null?(diff>=0?'+':'')+sym(t.cur||'USD')+diff:'—';cells[2].style.color=diffColor;}
+    }
+  });
+}
 function qtSyncSingleTiersFromDOM(){
   const cont=document.getElementById('qf-single-tiers');
   if(!cont)return;
@@ -6558,7 +6643,7 @@ function qtRenderSingleTiers(){
   const ssdSpec=document.getElementById('qf-ssd')?.value||'';
 
   const mkCurSel=(stf,val)=>`<select data-stf="${stf}" style="padding:1px 3px;font-size:10px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" onchange="qtSyncSingleTiersFromDOM();qtRenderSingleTiers()"><option value="USD" ${val!=='CNY'?'selected':''}>$</option><option value="CNY" ${val==='CNY'?'selected':''}>¥</option></select>`;
-  const mkNum=(stf,val,ph)=>`<input type="number" data-stf="${stf}" value="${val||''}" placeholder="${ph}" min="0" step="0.01" style="width:100%;font-size:12px;font-weight:600;padding:2px 5px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)" oninput="qtSyncSingleTiersFromDOM();qtRenderSingleTiers()">`;
+  const mkNum=(stf,val,ph)=>`<input type="number" data-stf="${stf}" value="${val||''}" placeholder="${ph}" min="0" step="0.01" style="width:100%;font-size:12px;font-weight:600;padding:2px 5px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)" oninput="qtSyncSingleTiersFromDOM();qtUpdateSingleTierDiffs()">`;
 
   // Render each tier row
   cont.innerHTML=_qtSingleTiers.map((t,ti)=>{
