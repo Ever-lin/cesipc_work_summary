@@ -1738,24 +1738,34 @@ function renderUnpaidList(){
   container.innerHTML=list.map(r=>{
     const pct=r.perfTotal>0?Math.round((r.collectTotal/r.perfTotal)*100):0;
     const latestNote=r.entries.length?r.entries[r.entries.length-1].note||'':'';
-    return`<div onclick="selectUnpaidClient('${r.client.replace(/'/g,"\\'")}',${r.unpaid},'${latestNote.replace(/'/g,"\\'")}',${r.perfTotal},${r.collectTotal})"
+    const safeClient=r.client.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    const safeNote=latestNote.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    return`<div onclick="selectUnpaidClient(this)"
+      data-client="${safeClient}"
+      data-unpaid="${Math.round(r.unpaid)}"
+      data-note="${safeNote}"
+      data-perf="${Math.round(r.perfTotal)}"
+      data-collect="${Math.round(r.collectTotal)}"
       style="padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border2);transition:background .1s"
       onmouseover="this.style.background='var(--blue-bg)'" onmouseout="this.style.background=''">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-        <span style="font-size:13px;font-weight:500;color:var(--text)">${r.client}</span>
+        <span style="font-size:13px;font-weight:500;color:var(--text)">${r.client.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
         <span style="font-size:12px;font-weight:600;color:var(--red-text)">未回款 ¥${Math.round(r.unpaid).toLocaleString('zh-CN')}</span>
       </div>
       <div style="display:flex;gap:12px;font-size:11px;color:var(--text2)">
         <span>业绩 ¥${Math.round(r.perfTotal).toLocaleString('zh-CN')}</span>
         <span>已回款 ¥${Math.round(r.collectTotal).toLocaleString('zh-CN')}</span>
         <span style="color:${pct>=80?'var(--green-text)':'var(--amber-text)'}">已回 ${pct}%</span>
-        ${latestNote?`<span>备注：${latestNote.slice(0,20)}${latestNote.length>20?'…':''}</span>`:''}
+        ${latestNote?`<span>备注：${latestNote.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').slice(0,20)}${latestNote.length>20?'…':''}</span>`:''}
       </div>
     </div>`;
   }).join('');
 }
 
-function selectUnpaidClient(client,unpaid,note,perfTotal,collectTotal){
+function selectUnpaidClient(el){
+  const client = el.dataset ? el.dataset.client : el;
+  const unpaid = el.dataset ? parseFloat(el.dataset.unpaid)||0 : arguments[1];
+  const note   = el.dataset ? el.dataset.note   : arguments[2];
   document.getElementById('perf-client').value=client;
   document.getElementById('perf-amount').value=Math.round(unpaid);
   if(note)document.getElementById('perf-note').value=note;
@@ -3497,17 +3507,21 @@ function loadWeekly(id){
 function delWeekly(id){state.weeklies=state.weeklies.filter(x=>x.id!==id);save();renderSavedWeeklies();}
 function editWeekly(id){
   loadWeekly(id);
-  // Switch to the write-weekly tab
-  switchSub('sw-write',document.querySelector('.sub-tab'));
+  // 直接通过 ID 操作，避免依赖错误的 btn 引用
+  // 激活外层 sw-write 子面板
   document.querySelectorAll('#panel-export > .sub-panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('sw-write').classList.add('active');
-  document.querySelectorAll('#panel-export .sub-tab').forEach(b=>b.classList.remove('active'));
-  document.querySelector('[onclick="switchSub(\'sw-write\',this)"]').classList.add('active');
-  // Switch to write-weekly sub tab
+  document.querySelectorAll('#panel-export > .sub-tabs .sub-tab').forEach(b=>b.classList.remove('active'));
+  const swWriteBtn=document.querySelector('[onclick="switchSub(\'sw-write\',this)"]');
+  if(swWriteBtn)swWriteBtn.classList.add('active');
+  // 激活内层 write-weekly 子面板
   ['write-weekly','write-monthly'].forEach(i=>document.getElementById(i).classList.remove('active'));
   document.getElementById('write-weekly').classList.add('active');
-  document.querySelectorAll('#sw-write .sub-tab').forEach(b=>b.classList.remove('active'));
-  document.querySelector('[onclick="switchWrite(\'write-weekly\',this)"]').classList.add('active');
+  document.querySelectorAll('#sw-write .sub-tabs .sub-tab').forEach(b=>b.classList.remove('active'));
+  const writeWeeklyBtn=document.querySelector('[onclick="switchWrite(\'write-weekly\',this)"]');
+  if(writeWeeklyBtn)writeWeeklyBtn.classList.add('active');
+  // 填充项目文本区
+  fillProjTextareas('w');
   window.scrollTo(0,0);
 }
 
@@ -4462,7 +4476,7 @@ function renderGeneratedWeeklies(expandKey){
           <span style="font-size:11px;color:var(--text2);align-self:center;white-space:nowrap">单独复制模块：</span>
           ${secBtns}
         </div>
-        <div class="export-area" style="margin-top:0;max-height:420px">${w.txt}</div>
+        <div class="export-area" style="margin-top:0;max-height:420px">${w.txt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
         <div style="font-size:11px;color:var(--text2);margin-top:6px">${w.savedAt}</div>
       </div>
     </div>`;
@@ -4631,7 +4645,7 @@ function renderGeneratedMonthlies(expandKey){
           <span style="font-size:11px;color:var(--text2);align-self:center;white-space:nowrap">单独复制模块：</span>
           ${secBtns}
         </div>
-        <div class="export-area" style="margin-top:0;max-height:420px">${m.txt}</div>
+        <div class="export-area" style="margin-top:0;max-height:420px">${m.txt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
         <div style="font-size:11px;color:var(--text2);margin-top:6px">${m.savedAt}</div>
       </div>
     </div>`;
@@ -9995,7 +10009,17 @@ function saveDocState() {
     document.querySelectorAll('#' + tbodyId + ' tr').forEach(tr => {
       const allInputs = [...tr.querySelectorAll('input,select,textarea')].map(el => el.value);
       const ce = tr.querySelector('div[contenteditable],td[contenteditable]');
-      rows.push({ inputs: allInputs, ds: ce ? ce.innerHTML : '', isSplit: isSplitMode });
+      const rowData = { inputs: allInputs, ds: ce ? ce.innerHTML : '', isSplit: isSplitMode };
+      // For PK rows, also save named fields to avoid positional-index fragility on restore
+      if (t === 'pk') {
+        const inps = tr.querySelectorAll('input,select,textarea');
+        // Column order: model(0), desc(1), pcs(2), packing(3), cartons(4), qtyctn(5), nw(6), gw(7), L(8), W(9), H(10)
+        const pkKeys = ['model','desc','pcs','packing','cartons','qtyctn','nw','gw','L','W','H'];
+        const nf = {};
+        pkKeys.forEach((k, i) => { if (inps[i]) nf[k] = inps[i].value; });
+        rowData.namedFields = nf;
+      }
+      rows.push(rowData);
     });
     return rows;
   }
@@ -10124,22 +10148,26 @@ function loadDocState(id) {
           <td><button class="btn btn-d btn-sm" onclick="delR('ci',${rowId})">✕</button></td>`;
         tbody.appendChild(tr2);
       } else if (t === 'pk') {
-        // pk inputs: [0]=model, [1]=desc, [2]=pcs, [3]=packing, [4]=cartons, [5]=qty/ctn, [6]=qty-no-oninput, [7]=nw, [8]=gw, [9]=L, [10]=W, [11]=H
+        // pk inputs: [0]=model, [1]=desc, [2]=pcs, [3]=packing, [4]=cartons, [5]=qty/ctn, [6]=nw, [7]=gw, [8]=L, [9]=W, [10]=H
+        // Use named fields from r if available (newer saves), fall back to positional index
+        const hasNamed = r.namedFields && typeof r.namedFields === 'object';
+        const nf = hasNamed ? r.namedFields : {};
+        const g = (namedKey, idx) => hasNamed ? (nf[namedKey] ?? inp[idx] ?? '') : (inp[idx] ?? '');
         const rowId = ++rc.pk;
         const tr2 = document.createElement('tr');
         tr2.id = 'pk-r-' + rowId;
         tr2.innerHTML = `<td style="color:#8899AA;text-align:center;">${rowId}</td>
-          <td><input type="text" value="${(inp[0]||'').replace(/"/g,'&quot;')}" style="width:80px;"/></td>
-          <td><input type="text" value="${(inp[1]||'').replace(/"/g,'&quot;')}" style="min-width:90px;width:100%;"/></td>
-          <td><input type="number" value="${inp[2]||0}" min="0" style="width:46px;" oninput="cPK()"/></td>
-          <td><input type="text" value="${inp[3]||'Carton'}" style="width:58px;"/></td>
-          <td><input type="number" value="${inp[4]||1}" min="0" style="width:46px;" oninput="cPK()"/></td>
-          <td><input type="number" value="${inp[5]||0}" min="0" style="width:46px;"/></td>
-          <td><input type="number" value="${inp[6]||0}" min="0" step="0.01" style="width:50px;" oninput="cPK()"/></td>
-          <td><input type="number" value="${inp[7]||0}" min="0" step="0.01" style="width:50px;" oninput="cPK()"/></td>
-          <td><input type="number" value="${inp[8]||0}" min="0" step="0.1" style="width:40px;" oninput="cCBM(${rowId})"/></td>
-          <td><input type="number" value="${inp[9]||0}" min="0" step="0.1" style="width:40px;" oninput="cCBM(${rowId})"/></td>
-          <td><input type="number" value="${inp[10]||0}" min="0" step="0.1" style="width:40px;" oninput="cCBM(${rowId})"/></td>
+          <td><input type="text" value="${(g('model',0)||'').replace(/"/g,'&quot;')}" style="width:80px;"/></td>
+          <td><input type="text" value="${(g('desc',1)||'').replace(/"/g,'&quot;')}" style="min-width:90px;width:100%;"/></td>
+          <td><input type="number" value="${g('pcs',2)||0}" min="0" style="width:46px;" oninput="cPK()"/></td>
+          <td><input type="text" value="${g('packing',3)||'Carton'}" style="width:58px;"/></td>
+          <td><input type="number" value="${g('cartons',4)||1}" min="0" style="width:46px;" oninput="cPK()"/></td>
+          <td><input type="number" value="${g('qtyctn',5)||0}" min="0" style="width:46px;"/></td>
+          <td><input type="number" value="${g('nw',6)||0}" min="0" step="0.01" style="width:50px;" oninput="cPK()"/></td>
+          <td><input type="number" value="${g('gw',7)||0}" min="0" step="0.01" style="width:50px;" oninput="cPK()"/></td>
+          <td><input type="number" value="${g('L',8)||0}" min="0" step="0.1" style="width:40px;" oninput="cCBM(${rowId})"/></td>
+          <td><input type="number" value="${g('W',9)||0}" min="0" step="0.1" style="width:40px;" oninput="cCBM(${rowId})"/></td>
+          <td><input type="number" value="${g('H',10)||0}" min="0" step="0.1" style="width:40px;" oninput="cCBM(${rowId})"/></td>
           <td class="amt" id="pk-c-${rowId}">0.00</td>
           <td><button class="btn btn-d btn-sm" onclick="delR('pk',${rowId})">✕</button></td>`;
         tbody.appendChild(tr2);
@@ -10340,18 +10368,21 @@ function onDocProjectInput() {
   const matches = all.filter(p => p.toLowerCase().includes(val)).slice(0, 8);
   if (!matches.length) { drop.style.display = 'none'; return; }
   drop.innerHTML = matches.map(p =>
-    `<div onmousedown="pickDocProject('${p.replace(/'/g,"&#39;")}')" style="padding:6px 10px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onmouseover="this.style.background='var(--blue-bg)'" onmouseout="this.style.background=''">${p}</div>`
+    `<div onmousedown="pickDocProject(this)" data-proj="${p.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}" style="padding:6px 10px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onmouseover="this.style.background='var(--blue-bg)'" onmouseout="this.style.background=''">${p.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`
   ).join('');
-  // Position drop below input
+  // Position drop below input using fixed positioning (works regardless of scroll/parent transforms)
   const input = document.getElementById('docProject');
   const rect = input.getBoundingClientRect();
-  drop.style.top = (rect.bottom + window.scrollY) + 'px';
+  drop.style.position = 'fixed';
+  drop.style.top = rect.bottom + 'px';
   drop.style.left = rect.left + 'px';
+  drop.style.width = Math.max(rect.width, 220) + 'px';
   drop.style.display = 'block';
 }
-function pickDocProject(val) {
-  const el = document.getElementById('docProject');
-  if (el) el.value = val;
+function pickDocProject(el) {
+  const val = el.dataset ? el.dataset.proj : el;
+  const input = document.getElementById('docProject');
+  if (input) input.value = val;
   document.getElementById('doc-proj-drop').style.display = 'none';
 }
 document.addEventListener('click', e => {
@@ -10431,18 +10462,19 @@ function renderDocIqList() {
       }
     }).join('');
 
-    const safeProjJson = proj.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    const safeModeJson = mode.replace(/'/g,"\\'");
+    const safeProjAttr = proj.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    const safeModeAttr = mode.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
     const target = document.querySelector('input[name="diq-target"]:checked')?.value || 'q';
-    const safeTargetJson = target.replace(/'/g,"\\'");
+    const safeTargetAttr = target.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
     const targetLabel = target === 'pi' ? 'PI 形式发票' : 'Quotation 报价单';
     return `<div style="border:1px solid #e8e6de;border-radius:8px;margin-bottom:10px;overflow:hidden;">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#1A3C5E;flex-wrap:wrap;gap:6px;">
         <div>
-          <div style="font-weight:600;color:#fff;font-size:12px;">${proj}</div>
+          <div style="font-weight:600;color:#fff;font-size:12px;">${proj.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
           <div style="color:#9db8d4;font-size:10px;margin-top:1px;">${pg.company} · ${pg.items.length} 个型号 · ${pg.date || ''}</div>
         </div>
-        <button onclick="doDocImportFromQuotes('${safeProjJson}','${safeModeJson}','${safeTargetJson}')"
+        <button data-proj="${safeProjAttr}" data-mode="${safeModeAttr}" data-target="${safeTargetAttr}"
+          onclick="doDocImportFromQuotes(this.dataset.proj,this.dataset.mode,this.dataset.target)"
           style="background:#E8732A;color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;">
           ✓ 导入到 ${targetLabel}
         </button>
@@ -11128,48 +11160,58 @@ window.addEventListener('scroll',()=>{
 function qtCopyAsNew(id){
   const r=qtQuotes.find(q=>String(q.id)===String(id));
   if(!r)return;
-  // 先打开空白新增表单
+  // 先打开空白新增表单（确保单品区可见、多产品区已隐藏）
   qtOpenAdd();
-  // 再填入原始报价的信息
+  // qtOpenAdd 已将 qf-single-wrap 设为 block，以下直接写入单品字段
+  // 基本信息
   document.getElementById('qf-project').value=r.project||'';
   document.getElementById('qf-company').value=r.company||'';
   document.getElementById('qf-contact').value=r.contact||'';
   document.getElementById('qf-date').value=todayStr(); // 日期用今天
-  document.getElementById('qf-model').value=r.model||'';
-  document.getElementById('qf-partno').value=r.partno||'';
-  document.getElementById('qf-qty').value=r.qty||'';
-  document.getElementById('qf-cpu').value=r.cpu||'';
-  document.getElementById('qf-custom').value=r.custom||'';
-  if(typeof qtShipLoad==='function')qtShipLoad(r.shipping||'');
   document.getElementById('qf-deal').value=r.deal||'';
   document.getElementById('qf-stage').value=r.stage||'';
   document.getElementById('qf-notes').value=r.notes||'';
+  // 产品字段（单品模式下的字段）
+  var setVal=function(elId,v){var el=document.getElementById(elId);if(el)el.value=v;};
+  setVal('qf-model',r.model||'');
+  setVal('qf-partno',r.partno||'');
+  setVal('qf-qty',r.qty||'');
+  setVal('qf-cpu',r.cpu||'');
+  setVal('qf-custom',r.custom||'');
+  if(typeof qtShipLoad==='function')qtShipLoad(r.shipping||'');
   // 定价模式
   var mode=r.pmode||'breakdown';
   var modeEl=document.querySelector('input[name="qf-pmode"][value="'+mode+'"]');
   if(modeEl){modeEl.checked=true;qtTogglePriceMode();}
-  // 分项价格
-  document.getElementById('qf-barbone').value=r.barbone!=null?r.barbone:'';
-  document.getElementById('qf-barbone-cur').value=r.barboneCur||'USD';
-  document.getElementById('qf-ram').value=r.ram||'';
-  document.getElementById('qf-ramp').value=r.ramp!=null?r.ramp:'';
-  document.getElementById('qf-ramp-cur').value=r.rampCur||'USD';
-  document.getElementById('qf-ssd').value=r.ssd||'';
-  document.getElementById('qf-ssdp').value=r.ssdp!=null?r.ssdp:'';
-  document.getElementById('qf-ssdp-cur').value=r.ssdpCur||'USD';
-  // 整机价格
-  var totP=document.getElementById('qf-total-price');if(totP)totP.value=r.totalPrice!=null?r.totalPrice:(r.pmode==='total'&&r.price!=null?r.price:'');
-  var totCur=document.getElementById('qf-total-cur');if(totCur)totCur.value=r.priceCur||'USD';
-  var totRam=document.getElementById('qf-total-ram');if(totRam)totRam.value=r.ram||'';
-  var totSsd=document.getElementById('qf-total-ssd');if(totSsd)totSsd.value=r.ssd||'';
-  // 综合报价 P
+  // 分项价格（breakdown 模式）
+  setVal('qf-barbone',r.barbone!=null?String(r.barbone):'');
+  setVal('qf-barbone-cur',r.barboneCur||'USD');
+  setVal('qf-ram',r.ram||'');
+  setVal('qf-ramp',r.ramp!=null?String(r.ramp):'');
+  setVal('qf-ramp-cur',r.rampCur||'USD');
+  setVal('qf-ssd',r.ssd||'');
+  setVal('qf-ssdp',r.ssdp!=null?String(r.ssdp):'');
+  setVal('qf-ssdp-cur',r.ssdpCur||'USD');
+  // 整机价格（total 模式）
+  setVal('qf-total-price',r.totalPrice!=null?String(r.totalPrice):(r.pmode==='total'&&r.price!=null?String(r.price):''));
+  setVal('qf-total-cur',r.totalCur||r.priceCur||'USD');
+  setVal('qf-total-ram',r.ram||'');
+  setVal('qf-total-ssd',r.ssd||'');
+  // 综合报价 P（若原来是手动编辑则保留，否则让 qtCalc 自动算出）
   var priceEl=document.getElementById('qf-price');
-  if(priceEl){priceEl.value=r.price!=null?r.price:'';delete priceEl.dataset.manualEdit;}
-  document.getElementById('qf-price-cur').value=r.priceCur||'USD';
+  if(priceEl){
+    priceEl.value=r.price!=null?String(r.price):'';
+    // 判断是否需要标记为手动编辑（与自动计算结果不一致时）
+    var bSum=(parseFloat(r.barbone)||0)+(parseFloat(r.ramp)||0)+(parseFloat(r.ssdp)||0);
+    if(mode==='breakdown'&&r.price!=null&&r.price!=bSum){priceEl.dataset.manualEdit='1';}
+    else if(mode==='total'&&r.price!=null&&r.price!=r.totalPrice){priceEl.dataset.manualEdit='1';}
+    else{delete priceEl.dataset.manualEdit;}
+  }
+  setVal('qf-price-cur',r.priceCur||'USD');
   // P3
-  document.getElementById('qf-p3').value=r.p3!=null?r.p3:'';
-  document.getElementById('qf-p3-cur').value=r.p3Cur||'USD';
-  // 阶梯价
+  setVal('qf-p3',r.p3!=null?String(r.p3):'');
+  setVal('qf-p3-cur',r.p3Cur||'USD');
+  // 阶梯价（深拷贝，避免与原记录共享引用）
   _qtSingleTiers=r.tiers?JSON.parse(JSON.stringify(r.tiers)):[];
   qtRenderSingleTiers();
   if(typeof qtCalc==='function')qtCalc();
