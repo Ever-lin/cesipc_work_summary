@@ -4903,6 +4903,8 @@ function importBackup(evt){
           if(!state.monthlies)state.monthlies=[];
           if(!state.dailies)state.dailies=[];
           if(!state.weeklies)state.weeklies=[];
+          if(!state.genWeeklies)state.genWeeklies=[];
+          if(!state.genMonthlies)state.genMonthlies=[];
           if(!state.fyTargets)state.fyTargets={};
           SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});
           save();
@@ -4911,6 +4913,7 @@ function importBackup(evt){
         renderPerf();renderPivot();renderProjects();refreshProjDatalist();
         qtRender();qtUpdateCompanyFilter();
         renderSavedWeeklies();renderSavedMonthlies();renderSavedDailies();
+        renderGeneratedWeeklies();renderGeneratedMonthlies();
         fillProjTextareas('w');fillProjTextareas('wm');
         renderSavedDocsList();renderClients();
         alert('✅ 完整数据恢复成功！所有模块（报价、项目、业绩、单据等）已还原。');
