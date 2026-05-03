@@ -552,6 +552,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div class="hb-row"><span class="hb-tag">→ 报价管理</span><span>项目里的报价字段与「报价管理」双向联动：报价管理变更后，这里出现同步按钮；也可从这里点「从报价导入」直接拉取。</span></div>
   <div class="hb-row"><span class="hb-tag">→ 导出日报</span><span>「导出报告 → 导出日报」会自动抓取所选日期在本页面记录的进展，填入日报的重点项目区域。</span></div>
   <div class="hb-row"><span class="hb-tag">→ 明日计划</span><span>日报里的「明日计划」会自动抓取行动时间等于下一个工作日的项目，显示对应的行动内容。</span></div>
+  <div class="hb-row"><span class="hb-tag">→ 填写周报/月报</span><span>「导出报告 → 填写周报/月报」里的「↻ 刷新项目」会自动抓取本周在此页面记录的进展，按进度阶段（产品报价、方案设计、合同签订等）分类填入对应区域。</span></div>
 </div>
 </details></div>
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
@@ -1086,7 +1087,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 <div style="margin-top:8px">
   <div>这里是所有产品报价的核心台账。每一条报价记录一个客户、一个项目、一个型号的报价信息，用于跟踪报价进展、版本历史和成交状态。</div>
   <div style="margin-top:6px;font-weight:600;color:#185FA5">📋 显示的数据来自哪里？</div>
-  <div>从「＋ 新增报价」手动录入，或在「项目情况」里点「从报价导入」自动同步过来。</div>
+  <div>从「＋ 新增报价」手动录入。「项目情况」里的「从报价导入」功能会读取这里的数据填入项目字段，但不会反向在此新增记录。</div>
   <div style="margin-top:6px;font-weight:600;color:#185FA5">🔘 关键按钮说明</div>
   <div class="hb-row"><span class="hb-tag">＋ 新增报价</span><span>手动添加一条新的报价记录。</span></div>
   <div class="hb-row"><span class="hb-tag amber">⚠️ 待同步</span><span>「项目情况」里对应项目有了新进展（追加了记录），但这条报价的状态/进度还没更新，点此筛选出所有待同步的报价，逐一在「项目情况」里点击同步按钮更新。</span></div>
@@ -1095,6 +1096,9 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div class="hb-row"><span class="hb-tag gray">⚙️ 列设置</span><span>自定义显示哪些列、各列宽度。设置会自动保存，下次打开仍然生效。</span></div>
   <div class="hb-row"><span class="hb-tag gray">✕ 清除筛选</span><span>有筛选条件时才出现（右侧会显示筛选数量），点击一键清除所有搜索和筛选条件。</span></div>
   <div class="hb-row"><span class="hb-tag amber">⏱ 跟进滞留筛选</span><span>下拉可选「≥30天未跟进」或「≥60天未跟进」，快速过滤出超时未有进展的「跟进中」报价，配合行颜色预警使用。</span></div>
+  <div style="margin-top:6px;font-weight:600;color:#185FA5">🔗 与其他页面的联动</div>
+  <div class="hb-row"><span class="hb-tag">→ 项目情况</span><span>双向联动：「项目情况」可点「从报价导入」拉取这里的数据；这里的报价状态/价格变更后，项目卡片会出现「⚠️ 报价有更新，点击同步」按钮。</span></div>
+  <div class="hb-row"><span class="hb-tag">→ 单据生成</span><span>勾选一条或多条报价后点「📄 合并导入单据」，可将报价行直接导入到「单据生成」的 Quotation / PI 产品行，无需重复填写。</span></div>
   <div style="margin-top:6px;font-weight:600;color:#185FA5">🎨 行颜色 — 没动静预警（仅「⭕ 跟进中」状态）</div>
   <div class="hb-row"><span class="hb-tag amber">🟡 黄色背景</span><span>报价日期距今 <b>≥ 30 天</b>且状态仍为「跟进中」，代表这条报价已超过一个月没有进展，需要关注并跟进。</span></div>
   <div class="hb-row"><span class="hb-tag red">🔴 红色背景</span><span>报价日期距今 <b>≥ 60 天</b>且状态仍为「跟进中」，代表超过两个月没动静，属于高风险滞留报价，建议尽快跟进或更新状态。</span></div>
