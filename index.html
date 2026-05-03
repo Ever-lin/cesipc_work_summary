@@ -461,6 +461,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div class="filter-bar">
     <select class="ym-s" id="view-fy" onchange="renderPerf()"></select>
     <select class="ym-s" id="view-month" onchange="renderPerf()">
+      <option value="all">📅 全年</option>
       <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
     </select>
     <button class="btn btn-sm" onclick="exportPerfExcel()" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97;white-space:nowrap">📥 导出Excel</button>
@@ -1844,16 +1845,38 @@ function cancelEditPerf(){
   toggleAmt();
 }
 
-function perfToggleWeek(colKey, safeW){
+function perfToggleWeek(el){
+  const colKey=el.dataset.colkey;
+  const w=el.dataset.week;
+  if(!colKey||!w)return;
   let colSet;try{colSet=new Set(JSON.parse(sessionStorage.getItem(colKey)||'[]'));}catch{colSet=new Set();}
-  if(colSet.has(safeW))colSet.delete(safeW);else colSet.add(safeW);
+  const nowCollapsed=colSet.has(w);
+  if(nowCollapsed)colSet.delete(w);else colSet.add(w);
   sessionStorage.setItem(colKey,JSON.stringify([...colSet]));
-  renderPerf();
+  // Toggle DOM directly without full re-render for snappiness
+  // w could be a week string (第一周) or a month colId (m_4)
+  const wid=w.startsWith('m_')?('pw_'+w):('pw_'+w.replace(/[^a-z0-9]/gi,'_'));
+  const body=document.getElementById(wid+'-body');
+  const arrow=document.getElementById(wid+'-arrow');
+  const hint=document.getElementById(wid+'-hint');
+  const willCollapse=!nowCollapsed;
+  if(body)body.style.display=willCollapse?'none':'';
+  if(arrow)arrow.style.transform=willCollapse?'rotate(-90deg)':'rotate(0deg)';
+  if(hint){
+    if(willCollapse){
+      const count=body?body.querySelectorAll('.summary-row').length:0;
+      hint.textContent=`(${count}条，已折叠)`;
+    }
+    hint.style.display=willCollapse?'':'none';
+  }
 }
 
 function renderPerf(){
   const fy=document.getElementById('view-fy').value,month=document.getElementById('view-month').value;
-  const md=state.perf.filter(p=>p.fy===fy&&p.month===month);
+  const isAllYear=month==='all';
+  const md=isAllYear
+    ? state.perf.filter(p=>p.fy===fy)
+    : state.perf.filter(p=>p.fy===fy&&p.month===month);
   const ts=md.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
   const tr=md.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
   const nd=md.filter(p=>p.type==='新成交'||p.type==='销售成交'||p.type==='借测成交');
@@ -1897,10 +1920,11 @@ function renderPerf(){
     </div>`;
   }
   // 月度指标卡 + 财年汇总卡
+  const monthLabel=isAllYear?'全年':month+'月';
   document.getElementById('metrics').innerHTML=`
-    <div class="metric"><div class="metric-label">${month}月总业绩</div><div class="metric-value" style="color:#185FA5">${fmt(ts)}</div>${progressBar(ts,perfMonthTarget,'#185FA5')}</div>
-    <div class="metric"><div class="metric-label">${month}月总回款</div><div class="metric-value" style="color:#1D9E75">${fmt(tr)}</div>${progressBar(tr,collectMonthTarget,'#1D9E75')}</div>
-    <div class="metric"><div class="metric-label">本月新成交</div><div class="metric-value" style="color:#BA7517">${nd.length}家</div>${dealProgressBar(nd.length,dealMonthTarget)}</div>
+    <div class="metric"><div class="metric-label">${monthLabel}总业绩</div><div class="metric-value" style="color:#185FA5">${fmt(ts)}</div>${isAllYear?'':progressBar(ts,perfMonthTarget,'#185FA5')}</div>
+    <div class="metric"><div class="metric-label">${monthLabel}总回款</div><div class="metric-value" style="color:#1D9E75">${fmt(tr)}</div>${isAllYear?'':progressBar(tr,collectMonthTarget,'#1D9E75')}</div>
+    <div class="metric"><div class="metric-label">${isAllYear?'全年':'本月'}新成交</div><div class="metric-value" style="color:#BA7517">${nd.length}家</div>${isAllYear?'':dealProgressBar(nd.length,dealMonthTarget)}</div>
     <div class="metric"><div class="metric-label">记录条数</div><div class="metric-value">${md.length}</div></div>
     <div class="metric" style="background:linear-gradient(135deg,#E6F1FB 0%,#EAF3DE 100%);border:1px solid #B8D4F0;grid-column:1/-1">
       <div class="metric-label" style="color:#0C447C;font-weight:600;margin-bottom:8px">📊 ${fy} 财年累计</div>
@@ -1922,11 +1946,49 @@ function renderPerf(){
         </div>
       </div>
     </div>`;
+  const fyMonths=['4','5','6','7','8','9','10','11','12','1','2','3'];
   const weeks=['第一周','第二周','第三周','第四周','第五周'];
-  // 当前FY+月的已折叠周次（存在 sessionStorage 里，切换月份后自动重置）
-  const _colKey=`perf_col_${fy}_${month}`;
+  const _colKey=isAllYear?`perf_col_${fy}_all`:`perf_col_${fy}_${month}`;
   let _colSet;try{_colSet=new Set(JSON.parse(sessionStorage.getItem(_colKey)||'[]'));}catch{_colSet=new Set();}
   let html='';
+
+  if(isAllYear){
+    // 全年：按月分组，每个月一个卡片
+    fyMonths.forEach(m=>{
+      const mdata=md.filter(p=>p.month===m);
+      if(!mdata.length)return;
+      const ms=mdata.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
+      const mr=mdata.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
+      const mn=mdata.filter(p=>p.type==='新成交'||p.type==='销售成交'||p.type==='借测成交');
+      const mnSale=mdata.filter(p=>p.type==='销售成交').length;
+      const mnBorrow=mdata.filter(p=>p.type==='借测成交').length;
+      const mnOld=mdata.filter(p=>p.type==='新成交').length;
+      const mnLabel=mnSale||mnBorrow?`销售${mnSale}+借测${mnBorrow}个`:(mnOld?`${mnOld}家`:'');
+      const colKey2=`perf_col_${fy}_all`;
+      const colId=`m_${m}`;
+      const collapsed=_colSet.has(colId);
+      const wid='pw_m_'+m;
+      html+=`<div class="card">
+        <div class="card-header collapse-hdr" data-colkey="${colKey2}" data-week="${colId}" onclick="perfToggleWeek(this)" style="cursor:pointer;user-select:none" title="点击折叠/展开">
+          <span class="card-title" style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:11px;color:var(--text3);transition:transform .2s;display:inline-block;transform:${collapsed?'rotate(-90deg)':'rotate(0deg)'}" id="${wid}-arrow">▼</span>
+            ${fy} ${m}月
+            ${collapsed?`<span style="font-size:11px;color:var(--text3)" id="${wid}-hint">(${mdata.length}条，已折叠)</span>`:`<span id="${wid}-hint" style="display:none"></span>`}
+          </span>
+          <span class="inline-flex">${ms?`<span class="badge badge-blue">业绩 ${fmt(ms)}</span>`:''}${mr?`<span class="badge badge-green">回款 ${fmt(mr)}</span>`:''}${mn.length?`<span class="badge badge-amber">新成交 ${mnLabel}</span>`:''}</span>
+        </div>
+        <div id="${wid}-body" style="${collapsed?'display:none':''}">`;
+      mdata.forEach(p=>{
+        const dc=p.type==='业绩'?'#378ADD':p.type==='回款'?'#1D9E75':'#EF9F27';
+        const bc=p.type==='业绩'?'badge-blue':p.type==='回款'?'badge-green':'badge-amber';
+        html+=`<div class="summary-row">
+          <span class="inline-flex"><span style="width:8px;height:8px;border-radius:50%;background:${dc};display:inline-block;margin-right:5px;flex-shrink:0"></span><span class="badge ${bc}" style="font-size:10px">${p.type}</span><span style="font-size:13px;color:var(--text2)">${m}月 ${p.week||''}</span><span style="font-size:13px">${p.client}</span>${p.noAmount?'<span class="badge badge-gray" style="font-size:10px">无金额</span>':''}</span>
+          <span class="inline-flex">${(!p.noAmount&&p.amount)?`<span style="font-weight:500">${fmt(p.amount)}</span>`:''}${p.note?`<span style="color:var(--text2);font-size:12px">${p.note}</span>`:''}<button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="event.stopPropagation();editPerf(${p.id})">编辑</button><button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delPerf(${p.id})">删</button></span>
+        </div>`;
+      });
+      html+='</div></div>';
+    });
+  } else {
   weeks.forEach(w=>{
     const wd=md.filter(p=>p.week===w);if(!wd.length)return;
     const ws=wd.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
@@ -1937,17 +1999,17 @@ function renderPerf(){
     const wnOld=wd.filter(p=>p.type==='新成交').length;
     const wnLabel=wnSale||wnBorrow?`销售${wnSale}+借测${wnBorrow}个`:(wnOld?`${wnOld}家`:'');
     const collapsed=_colSet.has(w);
-    const safeW=encodeURIComponent(w);
+    const wid='pw_'+w.replace(/[^a-z0-9]/gi,'_');
     html+=`<div class="card">
-      <div class="card-header collapse-hdr" onclick="perfToggleWeek('${_colKey}','${safeW}')" style="cursor:pointer;user-select:none" title="点击折叠/展开">
+      <div class="card-header collapse-hdr" data-colkey="${_colKey}" data-week="${w}" onclick="perfToggleWeek(this)" style="cursor:pointer;user-select:none" title="点击折叠/展开">
         <span class="card-title" style="display:flex;align-items:center;gap:6px">
-          <span style="font-size:11px;color:var(--text3);transition:transform .2s;display:inline-block;transform:${collapsed?'rotate(-90deg)':'rotate(0deg)'}" id="perf-arrow-${safeW}">▼</span>
+          <span style="font-size:11px;color:var(--text3);transition:transform .2s;display:inline-block;transform:${collapsed?'rotate(-90deg)':'rotate(0deg)'}" id="${wid}-arrow">▼</span>
           ${fy} ${month}月 ${w}
-          ${collapsed?`<span style="font-size:11px;color:var(--text3)">(${wd.length}条，已折叠)</span>`:''}
+          ${collapsed?`<span style="font-size:11px;color:var(--text3)" id="${wid}-hint">(${wd.length}条，已折叠)</span>`:`<span id="${wid}-hint" style="display:none"></span>`}
         </span>
         <span class="inline-flex">${ws?`<span class="badge badge-blue">业绩 ${fmt(ws)}</span>`:''}${wr?`<span class="badge badge-green">回款 ${fmt(wr)}</span>`:''}${wn.length?`<span class="badge badge-amber">新成交 ${wnLabel}</span>`:''}</span>
       </div>
-      <div id="perf-body-${safeW}" style="${collapsed?'display:none':''}">`;
+      <div id="${wid}-body" style="${collapsed?'display:none':''}">`;
     wd.forEach(p=>{
       const dc=p.type==='业绩'?'#378ADD':p.type==='回款'?'#1D9E75':'#EF9F27';
       const bc=p.type==='业绩'?'badge-blue':p.type==='回款'?'badge-green':'badge-amber';
@@ -1958,6 +2020,7 @@ function renderPerf(){
     });
     html+='</div></div>';
   });
+  } // end isAllYear else
   document.getElementById('perf-list').innerHTML=html||'<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">暂无记录</div>';
   renderPivot();
 }
@@ -1976,6 +2039,28 @@ function renderPivot(){
     return arr.filter(p=>p.type===t);
   }
   if(mode==='week'){
+    // 全年模式下 week 视图没有意义，自动切换显示月度视图
+    if(month==='all'){
+      const fyData=pivotFilter(state.perf.filter(p=>p.fy===fy),type);
+      const activeMonths=['4','5','6','7','8','9','10','11','12','1','2','3'].filter(m=>fyData.some(p=>p.month===m));
+      if(!activeMonths.length){document.getElementById('pivot-wrap').innerHTML='<div style="font-size:12px;color:var(--text2);padding:8px">暂无数据</div>';return;}
+      html=`<table class="pivot-tbl"><thead><tr><th>${fy} 各月</th>`;
+      activeMonths.forEach(m=>{html+=`<th class="nr">${m}月</th>`;});
+      html+=`<th class="nr">年度合计</th></tr></thead><tbody>`;
+      const clients=[...new Set(fyData.map(p=>p.client))];
+      let colT={};activeMonths.forEach(m=>colT[m]=0);let grand=0;
+      clients.forEach(c=>{
+        const rows=fyData.filter(p=>p.client===c);const total=rows.reduce((a,b)=>a+b.amount,0);grand+=total;
+        html+=`<tr><td style="font-size:12px">${c}</td>`;
+        activeMonths.forEach(m=>{const a=rows.filter(p=>p.month===m).reduce((x,b)=>x+b.amount,0);colT[m]+=a;html+=`<td class="nr" style="font-size:12px">${isDeal?(rows.some(p=>p.month===m)?'✓':'—'):a?fmt(a):'—'}</td>`;});
+        html+=isDeal?`<td class="nr">✓</td>`:`<td class="nr" style="font-weight:500">${total?fmt(total):'—'}</td>`;html+='</tr>';
+      });
+      html+=`<tr class="tr"><td>合计</td>`;
+      activeMonths.forEach(m=>{html+=`<td class="nr">${isDeal?fyData.filter(p=>p.month===m).length+'家':(colT[m]?fmt(colT[m]):'—')}</td>`;});
+      html+=isDeal?`<td class="nr">${clients.length}家</td>`:`<td class="nr">${fmt(grand)}</td>`;
+      html+='</tr></tbody></table>';
+      document.getElementById('pivot-wrap').innerHTML=html;return;
+    }
     const md=pivotFilter(state.perf.filter(p=>p.fy===fy&&p.month===month),type);
     const weeks=['第一周','第二周','第三周','第四周','第五周'];
     const clients=[...new Set(md.map(p=>p.client))];
@@ -3128,7 +3213,7 @@ function weekInfoOfDay(dateStr){
   const diffMs=mon.getTime()-firstMon.getTime();
   const weekIdx=Math.floor(diffMs/(7*24*3600*1000)); // 0-based
   const labels=['第一周','第二周','第三周','第四周','第五周'];
-  const week=labels[Math.min(weekIdx,4)]||'第五周';
+  const week=labels[Math.max(0,Math.min(weekIdx,4))]||'第一周';
   return{week,month:String(ownerMonth),year:String(ownerYear)};
 }
 function weekOfDay(dateStr){
@@ -5161,29 +5246,19 @@ function getPyInitials(str){
     // 按 Unicode 汉字区段近似映射拼音声母（升序排列，无死区）
     const c=code;
     let py='';
-    if(c<0x5427)py='a';       // 啊(554A)之前 → a
-    else if(c<0x6492)py='b';  // 芭(6492)之前 → b
-    else if(c<0x5446)py='c';  // 擦(64CD)之前 → c（注：区段近似）
-    else if(c<0x59B8)py='d';  // 搭(5446)之前 → d
-    else if(c<0x53D1)py='e';  // 蛾(9E45)之前 → e（近似）
-    else if(c<0x8BE5)py='f';  // 发(53D1)→ f；该段含f~g边界
-    else if(c<0x54C8)py='g';  // 噶 → g
-    else if(c<0x51E0)py='h';  // 哈 → h
-    else if(c<0x5580)py='j';  // 击 → j
-    else if(c<0x5783)py='k';  // 喀 → k
-    else if(c<0x5988)py='l';  // 垃 → l
-    else if(c<0x54AA)py='m';  // 妈 → m
-    else if(c<0x54E6)py='n';  // 拿 → n
-    else if(c<0x5991)py='o';  // 哦 → o
-    else if(c<0x671F)py='p';  // 啪 → p
-    else if(c<0x5465)py='q';  // 期 → q
-    else if(c<0x4EFB)py='r';  // 然 → r（近似）
-    else if(c<0x4ED6)py='s';  // 仨 → s
-    else if(c<0x6316)py='t';  // 他 → t
-    else if(c<0x5438)py='w';  // 挖 → w
-    else if(c<0x4E2B)py='x';  // 昔 → x
-    else if(c<0x5181)py='y';  // 丫 → y
-    else py='z';               // 匝 → z
+    // 按 Unicode 码点严格升序的声母区段表（每段上界为下一声母起始点）
+    // 参考：GB2312 一级汉字拼音排序 + Unicode CJK 分布规律
+    const pyRanges=[
+      [0x4E00,'a'],[0x54C8,'b'],[0x5766,'c'],[0x59B9,'d'],[0x5C39,'e'],
+      [0x5F58,'f'],[0x6208,'g'],[0x6309,'h'],[0x63D0,'j'],[0x64BB,'k'],
+      [0x6BBA,'l'],[0x6C37,'m'],[0x6D2A,'n'],[0x70EB,'o'],[0x721B,'p'],
+      [0x7483,'q'],[0x7566,'r'],[0x76D7,'s'],[0x7977,'t'],[0x7C73,'w'],
+      [0x82A6,'x'],[0x8CA0,'y'],[0x9FA5,'z'],
+    ];
+    for(let i=pyRanges.length-1;i>=0;i--){
+      if(c>=pyRanges[i][0]){py=pyRanges[i][1];break;}
+    }
+    if(!py)py='z';
     result+=py;
   }
   return result;
@@ -5303,7 +5378,7 @@ function qtMergeToDoc() {
 function qtDoMergeImport(items, target, mode) {
   const docKey = target === 'pi' ? 'pi' : 'q';
   const targetLabel = docKey === 'pi' ? 'PI 形式发票' : 'Quotation 报价单';
-  const internalMode = mode === 'breakdown' ? 'split' : 'simple';
+  const internalMode = mode === 'split' ? 'split' : 'simple';
   if (_mode[docKey] !== internalMode) setMode(docKey, internalMode);
   const tbody = document.getElementById(docKey === 'pi' ? 'pi-b' : 'q-b');
   if (tbody) { tbody.innerHTML = ''; rc[docKey] = 0; }
@@ -5783,7 +5858,12 @@ function qtOpenEdit(id){
   qtTogglePriceMode();
   qtRenderHistoryInModal(r.priceHistory||[]);
   // Load tiers into single-edit tier UI
-  _qtSingleTiers = (r.tiers||[]).map(t=>({qty:t.qty||'',cur:t.cur||'USD',price:t.price||''}));
+  _qtSingleTiers = (r.tiers||[]).map(t=>({
+    qty:t.qty||'', cur:t.cur||'USD', price:t.price||'',
+    barbone:t.barbone||'', barboneCur:t.barboneCur||'USD',
+    ramp:t.ramp||'', rampCur:t.rampCur||'USD',
+    ssdp:t.ssdp||'', ssdpCur:t.ssdpCur||'USD',
+  }));
   qtRenderSingleTiers();
   document.getElementById('qt-modal-bg').classList.add('open');
 }
@@ -6403,7 +6483,13 @@ function qtSyncSingleTiersFromDOM(){
     const qty=row.querySelector('[data-stf="qty"]')?.value||'';
     const cur=row.querySelector('[data-stf="cur"]')?.value||'USD';
     const price=row.querySelector('[data-stf="price"]')?.value||'';
-    _qtSingleTiers.push({qty,cur,price});
+    const barbone=row.querySelector('[data-stf="barbone"]')?.value||'';
+    const barboneCur=row.querySelector('[data-stf="barbone-cur"]')?.value||'USD';
+    const ramp=row.querySelector('[data-stf="ramp"]')?.value||'';
+    const rampCur=row.querySelector('[data-stf="ramp-cur"]')?.value||'USD';
+    const ssdp=row.querySelector('[data-stf="ssdp"]')?.value||'';
+    const ssdpCur=row.querySelector('[data-stf="ssdp-cur"]')?.value||'USD';
+    _qtSingleTiers.push({qty,cur,price,barbone,barboneCur,ramp,rampCur,ssdp,ssdpCur});
   });
 }
 function qtRenderSingleTiers(){
@@ -6415,6 +6501,7 @@ function qtRenderSingleTiers(){
   if(!cont)return;
 
   const qtyRow=document.getElementById('qf-qty')?.closest('.field');
+  const breakdownSection=document.getElementById('qf-breakdown-section');
   if(_qtSingleTiers.length===0){
     // No tiers: show normal single price row and single summary panel
     if(priceRow)priceRow.style.display='';
@@ -6422,47 +6509,51 @@ function qtRenderSingleTiers(){
     if(tiersPanel)tiersPanel.style.display='none';
     if(hint)hint.style.display='none';
     if(qtyRow)qtyRow.style.display='';
+    if(breakdownSection)breakdownSection.style.display='';
     cont.innerHTML='';
     return;
   }
 
-  // Has tiers: hide qty field (quantity defined per-tier), hide single price input
+  // Has tiers: hide qty, hide single price input, hide breakdown section (prices move into each tier)
   if(qtyRow)qtyRow.style.display='none';
   if(priceRow)priceRow.style.display='none';
   if(singlePanel)singlePanel.style.display='none';
   if(hint)hint.style.display='block';
+  // Hide breakdown section completely — barbone/ram/ssd are now per-tier
+  if(breakdownSection)breakdownSection.style.display='none';
 
   const priceCur=document.getElementById('qf-price-cur')?.value||'USD';
   const p3=parseFloat(document.getElementById('qf-p3')?.value)||0;
   const p3Cur=document.getElementById('qf-p3-cur')?.value||'USD';
   const sym=c=>c==='CNY'?'¥':'$';
   const mode=document.querySelector('input[name="qf-pmode"]:checked')?.value||'breakdown';
+  const ramSpec=document.getElementById('qf-ram')?.value||'';
+  const ssdSpec=document.getElementById('qf-ssd')?.value||'';
+
+  const mkCurSel=(stf,val)=>`<select data-stf="${stf}" style="padding:1px 3px;font-size:10px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" onchange="qtSyncSingleTiersFromDOM();qtRenderSingleTiers()"><option value="USD" ${val!=='CNY'?'selected':''}>$</option><option value="CNY" ${val==='CNY'?'selected':''}>¥</option></select>`;
+  const mkNum=(stf,val,ph)=>`<input type="number" data-stf="${stf}" value="${val||''}" placeholder="${ph}" min="0" step="0.01" style="width:100%;font-size:12px;font-weight:600;padding:2px 5px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)" oninput="qtSyncSingleTiersFromDOM();qtRenderSingleTiers()">`;
 
   // Render each tier row
   cont.innerHTML=_qtSingleTiers.map((t,ti)=>{
-    const price=parseFloat(t.price)||0;
+    const bb=parseFloat(t.barbone)||0;
+    const rp=parseFloat(t.ramp)||0;
+    const sp=parseFloat(t.ssdp)||0;
+    const base=bb+rp+sp;
+    // auto-compute price from parts if price empty
+    const price=parseFloat(t.price)||(base>0?base:0);
     const diff=p3>0&&price>0?price-p3:null;
-    const diffStr=diff!==null?(diff>=0?'+':'')+sym(priceCur)+diff:'—';
+    const diffStr=diff!==null?(diff>=0?'+':'')+sym(t.cur||'USD')+diff.toFixed(2).replace(/\.00$/,''):'—';
     const diffColor=diff===null?'var(--text2)':diff<0?'var(--red-text)':'#1D9E75';
 
-    // For breakdown mode: base price hint
-    let basePriceHint='';
-    if(mode==='breakdown'){
-      const b=parseFloat(document.getElementById('qf-barbone')?.value)||0;
-      const rp=parseFloat(document.getElementById('qf-ramp')?.value)||0;
-      const sp=parseFloat(document.getElementById('qf-ssdp')?.value)||0;
-      const base=b+rp+sp;
-      if(base>0)basePriceHint=`<span style="font-size:10px;color:var(--text2)">基础成本 ${sym(priceCur)}${base}</span>`;
-    }
-
-    return `<div class="qt-single-tier-row" style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px 10px;margin-bottom:2px">
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+    return `<div class="qt-single-tier-row" style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;margin-bottom:6px">
+      <!-- 数量 + 报价P + 删除 -->
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
         <div style="display:flex;align-items:center;gap:4px">
           <span style="font-size:11px;color:var(--text2);white-space:nowrap;font-weight:500">数量</span>
           <input type="number" data-stf="qty" value="${t.qty||''}" placeholder="台数" min="1"
             style="width:64px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)"
             oninput="qtSyncSingleTiersFromDOM();qtRenderSingleTiers()">
-          <span style="font-size:11px;color:var(--text2);white-space:nowrap">台</span>
+          <span style="font-size:11px;color:var(--text2)">台</span>
         </div>
         <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:160px">
           <span style="font-size:11px;color:var(--text2);white-space:nowrap;font-weight:500">报价 P</span>
@@ -6471,68 +6562,102 @@ function qtRenderSingleTiers(){
             <option value="USD" ${(t.cur||'USD')==='USD'?'selected':''}>$</option>
             <option value="CNY" ${t.cur==='CNY'?'selected':''}>¥</option>
           </select>
-          <input type="number" data-stf="price" value="${t.price||''}" placeholder="0.00" min="0" step="0.01"
-            style="flex:1;min-width:80px;font-size:13px;font-weight:600;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)"
+          <input type="number" data-stf="price" value="${t.price||''}" placeholder="${base>0?base:'0.00'}" min="0" step="0.01"
+            style="flex:1;min-width:80px;font-size:14px;font-weight:700;padding:3px 6px;border:1px solid var(--blue);border-radius:3px;background:var(--bg2);color:var(--blue-text)"
             oninput="qtSyncSingleTiersFromDOM();qtRenderSingleTiers()">
         </div>
         <button onmousedown="event.preventDefault();qtSingleRemoveTier(${ti})"
           style="background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:3px;font-size:11px;padding:2px 8px;cursor:pointer">✕</button>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:6px 8px;background:var(--bg2);border-radius:4px">
-        <div style="text-align:center">
-          <div style="font-size:13px;font-weight:600;color:var(--text2)">${p3>0?sym(p3Cur)+p3:'—'}</div>
-          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">P3 参考价</div>
+      ${mode==='breakdown'?`
+      <!-- 分项价格 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:8px 10px;background:var(--bg2);border-radius:5px;margin-bottom:6px">
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:3px;display:flex;align-items:center;justify-content:space-between">
+            <span>准系统 (Barbone)</span>${mkCurSel('barbone-cur',t.barboneCur||'USD')}
+          </div>
+          ${mkNum('barbone',t.barbone,'0')}
         </div>
-        <div style="text-align:center">
-          <div style="font-size:13px;font-weight:600;color:var(--blue-text)">${price>0?sym(t.cur||'USD')+price:'—'}</div>
-          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">报价 (P)</div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:3px;display:flex;align-items:center;justify-content:space-between">
+            <span>RAM${ramSpec?` (${ramSpec})`:''}</span>${mkCurSel('ramp-cur',t.rampCur||'USD')}
+          </div>
+          ${mkNum('ramp',t.ramp,'0')}
         </div>
-        <div style="text-align:center">
-          <div style="font-size:13px;font-weight:600;color:${diffColor}">${diffStr}</div>
-          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">P − P3 差价</div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:3px;display:flex;align-items:center;justify-content:space-between">
+            <span>SSD${ssdSpec?` (${ssdSpec})`:''}</span>${mkCurSel('ssdp-cur',t.ssdpCur||'USD')}
+          </div>
+          ${mkNum('ssdp',t.ssdp,'0')}
         </div>
+      </div>`:''}
+      <!-- 汇总条 -->
+      <div style="display:grid;grid-template-columns:repeat(${(mode==='breakdown'&&base>0?1:0)+(p3>0?1:0)+2},1fr);gap:6px;padding:5px 8px;background:var(--bg2);border-radius:4px;border:1px solid var(--border)">
+        ${mode==='breakdown'&&base>0?`<div style="text-align:center"><div style="font-size:12px;font-weight:500;color:var(--text2)">${sym(t.barboneCur||'USD')}${base.toFixed(2).replace(/\.00$/,'')}</div><div style="font-size:9px;color:var(--text3);margin-top:1px">成本合计</div></div>`:''}
+        ${p3>0?`<div style="text-align:center"><div style="font-size:12px;font-weight:600;color:var(--text2)">${sym(p3Cur)+p3}</div><div style="font-size:9px;color:var(--text3);margin-top:1px">P3</div></div>`:''}
+        <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:var(--blue-text)">${price>0?sym(t.cur||'USD')+price:'—'}</div><div style="font-size:9px;color:var(--text3);margin-top:1px">报价 P</div></div>
+        <div style="text-align:center"><div style="font-size:13px;font-weight:600;color:${diffColor}">${diffStr}</div><div style="font-size:9px;color:var(--text3);margin-top:1px">P − P3</div></div>
       </div>
-      ${basePriceHint?`<div style="margin-top:4px;padding:0 2px">${basePriceHint}</div>`:''}
     </div>`;
   }).join('');
 
-  // Summary tier panel (compact overview)
+  // Summary tier panel (compact overview table above tiers)
   if(tiersPanel){
     tiersPanel.style.display='block';
-    tiersPanel.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);overflow:hidden">
-      <div style="display:grid;grid-template-columns:auto repeat(3,1fr);font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:5px 10px;border-bottom:1px solid var(--border2)">
-        <div style="padding-right:12px">数量</div><div style="text-align:center">P3 参考价</div><div style="text-align:center">报价 P</div><div style="text-align:center">差价</div>
+    const hasBreakdown=mode==='breakdown';
+    tiersPanel.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:4px">
+      <div style="display:grid;grid-template-columns:auto${hasBreakdown?' repeat(3,1fr)':''} ${p3>0?'1fr ':''} 1fr 1fr;font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:5px 10px;border-bottom:1px solid var(--border2)">
+        <div style="padding-right:12px">数量</div>
+        ${hasBreakdown?`<div style="text-align:center">准系统</div><div style="text-align:center">RAM${ramSpec?`<br><span style="font-weight:400;text-transform:none">${ramSpec}</span>`:''}</div><div style="text-align:center">SSD${ssdSpec?`<br><span style="font-weight:400;text-transform:none">${ssdSpec}</span>`:''}</div>`:''}
+        ${p3>0?`<div style="text-align:center">P3</div>`:''}
+        <div style="text-align:center">报价 P</div><div style="text-align:center">差价</div>
       </div>
       ${_qtSingleTiers.map((t,i)=>{
+        const bb=parseFloat(t.barbone)||0;
+        const rp=parseFloat(t.ramp)||0;
+        const sp=parseFloat(t.ssdp)||0;
         const price=parseFloat(t.price)||0;
         const diff=p3>0&&price>0?price-p3:null;
         const diffColor=diff===null?'var(--text2)':diff<0?'var(--red-text)':'#1D9E75';
-        return `<div style="display:grid;grid-template-columns:auto repeat(3,1fr);padding:5px 10px;border-bottom:1px solid var(--border2);font-size:12px;${i===_qtSingleTiers.length-1?'border-bottom:none':''}">
-          <div style="font-weight:600;padding-right:12px">${t.qty||'?'}台</div>
-          <div style="text-align:center;color:var(--text2)">${p3>0?sym(p3Cur)+p3:'—'}</div>
-          <div style="text-align:center;font-weight:600;color:var(--blue-text)">${price>0?sym(t.cur||'USD')+price:'—'}</div>
-          <div style="text-align:center;font-weight:600;color:${diffColor}">${diff!==null?(diff>=0?'+':'')+sym(priceCur)+diff:'—'}</div>
+        const s=c=>c==='CNY'?'¥':'$';
+        return `<div style="display:grid;grid-template-columns:auto${hasBreakdown?' repeat(3,1fr)':''} ${p3>0?'1fr ':''} 1fr 1fr;padding:5px 10px;border-bottom:1px solid var(--border2);font-size:12px;${i===_qtSingleTiers.length-1?'border-bottom:none':''}">
+          <div style="font-weight:600;padding-right:12px;white-space:nowrap">${t.qty||'?'}台</div>
+          ${hasBreakdown?`
+          <div style="text-align:center;color:var(--text2)">${bb>0?s(t.barboneCur||'USD')+bb:'—'}</div>
+          <div style="text-align:center;color:var(--text2)">${rp>0?s(t.rampCur||'USD')+rp:'—'}</div>
+          <div style="text-align:center;color:var(--text2)">${sp>0?s(t.ssdpCur||'USD')+sp:'—'}</div>`:''}
+          ${p3>0?`<div style="text-align:center;color:var(--text2)">${sym(p3Cur)+p3}</div>`:''}
+          <div style="text-align:center;font-weight:600;color:var(--blue-text)">${price>0?s(t.cur||'USD')+price:'—'}</div>
+          <div style="text-align:center;font-weight:600;color:${diffColor}">${diff!==null?(diff>=0?'+':'')+s(priceCur)+diff:'—'}</div>
         </div>`;
       }).join('')}
     </div>`;
   }
-}
+} // end qtRenderSingleTiers
 
 function qtBuildSnap(mode){
   qtSyncSingleTiersFromDOM();
+  const hasTiers=_qtSingleTiers.length>0;
+  const t0=hasTiers?_qtSingleTiers[0]:{};
+  // When tiers exist, barbone/ramp/ssdp come from first tier (for backward compat display in list)
+  const barbone=mode==='breakdown'?(hasTiers?(parseFloat(t0.barbone)||null):(parseFloat(document.getElementById('qf-barbone').value)||null)):null;
+  const barboneCur=hasTiers?(t0.barboneCur||'USD'):document.getElementById('qf-barbone-cur').value;
+  const ramp=mode==='breakdown'?(hasTiers?(parseFloat(t0.ramp)||null):(parseFloat(document.getElementById('qf-ramp').value)||null)):null;
+  const rampCur=hasTiers?(t0.rampCur||'USD'):document.getElementById('qf-ramp-cur').value;
+  const ssdp=mode==='breakdown'?(hasTiers?(parseFloat(t0.ssdp)||null):(parseFloat(document.getElementById('qf-ssdp').value)||null)):null;
+  const ssdpCur=hasTiers?(t0.ssdpCur||'USD'):document.getElementById('qf-ssdp-cur').value;
+  // Price: when tiers exist, use first tier price as representative
+  const price=hasTiers?(parseFloat(t0.price)||null):(parseFloat(document.getElementById('qf-price').value)||null);
   return{
     savedAt:new Date().toISOString().slice(0,16).replace('T',' '),
     pmode:mode,
-    price:parseFloat(document.getElementById('qf-price').value)||null,
+    price,
     priceCur:document.getElementById('qf-price-cur').value,
-    barbone:mode==='breakdown'?(parseFloat(document.getElementById('qf-barbone').value)||null):null,
-    barboneCur:document.getElementById('qf-barbone-cur').value,
+    barbone, barboneCur,
     ram:mode==='breakdown'?document.getElementById('qf-ram').value.trim():(document.getElementById('qf-total-ram')?.value.trim()||''),
-    ramp:mode==='breakdown'?(parseFloat(document.getElementById('qf-ramp').value)||null):null,
-    rampCur:document.getElementById('qf-ramp-cur').value,
+    ramp, rampCur,
     ssd:mode==='breakdown'?document.getElementById('qf-ssd').value.trim():(document.getElementById('qf-total-ssd')?.value.trim()||''),
-    ssdp:mode==='breakdown'?(parseFloat(document.getElementById('qf-ssdp').value)||null):null,
-    ssdpCur:document.getElementById('qf-ssdp-cur').value,
+    ssdp, ssdpCur,
     totalPrice:mode==='total'?(parseFloat(document.getElementById('qf-total-price').value)||null):null,
     totalCur:document.getElementById('qf-total-cur').value,
     qty:document.getElementById('qf-qty').value.trim(),
@@ -6546,7 +6671,12 @@ function qtBuildSnap(mode){
     partno:document.getElementById('qf-partno').value.trim(),
     shipping:document.getElementById('qf-shipping').value.trim(),
     notes:document.getElementById('qf-notes').value.trim(),
-    tiers:_qtSingleTiers.filter(t=>t.price!=='').map(t=>({qty:t.qty,cur:t.cur||'USD',price:t.price})),
+    tiers:_qtSingleTiers.filter(t=>t.price!=='').map(t=>({
+      qty:t.qty, cur:t.cur||'USD', price:t.price,
+      barbone:t.barbone||'', barboneCur:t.barboneCur||'USD',
+      ramp:t.ramp||'', rampCur:t.rampCur||'USD',
+      ssdp:t.ssdp||'', ssdpCur:t.ssdpCur||'USD',
+    })),
   };
 }
 function qtDelHistory(quoteId, histIdx){
@@ -6801,8 +6931,11 @@ function qtSave(){
   }
 
   // ── 单品编辑模式（原有逻辑）──
+  qtSyncSingleTiersFromDOM();
+  const hasTiersNow=_qtSingleTiers.length>0&&_qtSingleTiers.some(t=>parseFloat(t.price)>0);
   const price=parseFloat(document.getElementById('qf-price').value);
-  if(isNaN(price)||price<=0){alert('请填写报价 (P)');return;}
+  if(!hasTiersNow&&(isNaN(price)||price<=0)){alert('请填写报价 (P)，或在批量价格中添加至少一档价格');return;}
+  const finalPrice=hasTiersNow&&(isNaN(price)||price<=0)?(_qtSingleTiers[0]?parseFloat(_qtSingleTiers[0].price)||0:0):price;
   const mode=document.querySelector('input[name="qf-pmode"]:checked').value;
   const snap=qtBuildSnap(mode);
   const obj={
@@ -6821,7 +6954,7 @@ function qtSave(){
     ram:snap.ram,ramp:snap.ramp,rampCur:snap.rampCur,
     ssd:snap.ssd,ssdp:snap.ssdp,ssdpCur:snap.ssdpCur,
     totalPrice:snap.totalPrice,totalCur:snap.totalCur,
-    price,priceCur:snap.priceCur,
+    price:hasTiersNow&&!price?finalPrice:price,priceCur:snap.priceCur,
     p3:snap.p3,p3Cur:snap.p3Cur,
     shipping:document.getElementById('qf-shipping').value.trim(),
     deal:document.getElementById('qf-deal').value,
@@ -6992,8 +7125,10 @@ function qtRenderDash(){
   // 业务概况 — 选中公司时，有关联该公司的业务员置顶+高亮
   const filterCo=window.qtDashFilterCo||'';
   const contacts=[...new Set(qtQuotes.map(q=>q.contact).filter(Boolean))].sort();
+  const noContact=qtQuotes.filter(q=>!q.contact);
   let allContactGroups=[
-    ...contacts.map(ct=>({name:ct,qs:qtQuotes.filter(q=>q.contact===ct),isUnassigned:false}))
+    ...contacts.map(ct=>({name:ct,qs:qtQuotes.filter(q=>q.contact===ct),isUnassigned:false})),
+    ...(noContact.length?[{name:'（未指定业务）',qs:noContact,isUnassigned:true}]:[])
   ];
   // 有公司筛选时：把该公司相关的业务员排到前面
   if(filterCo){
@@ -9644,9 +9779,13 @@ function saveDocState() {
     return rows;
   }
 
+  const activeTabEl = document.querySelector('#panel-cesipc .tab-btn.active');
+  const activeTabName = activeTabEl ? (activeTabEl.getAttribute('onclick')||'').match(/cesipcSwitchTab\('(\w+)'/)?.[1] || 'quotation' : 'quotation';
+
   const doc = {
     proj,
     savedAt: new Date().toLocaleString('zh-CN'),
+    activeTab: activeTabName,
     fields: fieldVals,
     buyerExtras: getBuyerExtraFields(),
     modes: { q: _mode.q, pi: _mode.pi },
@@ -9811,9 +9950,9 @@ function loadDocState(id) {
   // Make sure panel-cesipc is active (outer tab)
   switchTab('cesipc');
 
-  // Switch to Quotation inner tab after a short delay to let DOM settle
+  // Switch to saved inner tab (or Quotation by default) after a short delay to let DOM settle
   setTimeout(() => {
-    cesipcSwitchTab('quotation', null);
+    cesipcSwitchTab(doc.activeTab || 'quotation', null);
     // Scroll to top of the main content
     const mainEl = document.querySelector('#panel-cesipc .cesipc-root main');
     if (mainEl) mainEl.scrollTop = 0;
