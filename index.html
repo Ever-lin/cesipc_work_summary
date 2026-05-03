@@ -309,7 +309,6 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   .items tr.ev td { background: #FFFFFF; }
   .items td.rn { color: #8899AA; text-align: center; }
   .items td.nr { text-align: right; }
-  .items td.nr.cr { text-align: center; }
   .items td.ct { text-align: center; }
   .items td.la { text-align: left; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; }
   .items td.pn { text-align: center; white-space: pre-line; }
@@ -370,7 +369,6 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 
   /* Center price/amount columns in paper */
   .paper .items td.nr { text-align: center; }
-  .paper .sub-data-row td { text-align: center; }
 
   @media print {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
@@ -5912,13 +5910,13 @@ function qtOpenEdit(id){
   document.getElementById('qt-modal-bg').classList.add('open');
 }
 function qtCloseModal(){document.getElementById('qt-modal-bg').classList.remove('open');}
-// 监听报价弹窗内的任意输入变化，标记为已修改
+// Mark form dirty on any input/change inside the modal
 (function(){
   document.addEventListener('DOMContentLoaded',function(){
     var modal=document.getElementById('qt-modal-bg');
     if(modal){
-      modal.addEventListener('input',function(e){if(modal.classList.contains('open'))_qtFormDirty=true;},true);
-      modal.addEventListener('change',function(e){if(modal.classList.contains('open'))_qtFormDirty=true;},true);
+      modal.addEventListener('input',function(){if(modal.classList.contains('open'))_qtFormDirty=true;},true);
+      modal.addEventListener('change',function(){if(modal.classList.contains('open'))_qtFormDirty=true;},true);
     }
   });
 })();
@@ -6047,10 +6045,9 @@ function qtShipLoad(str){
 // 安全关闭：新增/编辑模式下有数据时弹确认
 var _qtJustSaved=false; // 保存后点击外部直接关闭，不弹确认
 var _qtFormDirty=false; // 用户实际修改过内容才为 true
-function qtMarkDirty(){_qtFormDirty=true;}
 function qtSafeCloseModal(){
   if(_qtJustSaved){_qtJustSaved=false;qtCloseModal();return;}
-  // 编辑模式：只有实际修改过才警告；新增模式：有填写内容才警告
+  // 编辑模式：只有实际修改过内容才弹确认；新增模式：有填写内容才弹确认
   if((qtEditId!=null&&_qtFormDirty)||(qtEditId==null&&qtFormHasData())){
     var msg=qtEditId!=null?'编辑内容尚未保存，确定要放弃修改并关闭吗？':'表单中已填写了内容，确定要放弃并关闭吗？';
     if(!confirm(msg)) return;
@@ -6285,32 +6282,64 @@ function qtRenderProductRows(){
               const diff=p3v>0&&price>0?price-p3v:null;
               const diffStr=diff!==null?(diff>=0?'+':'')+sym(tcur)+diff:'—';
               const diffColor=diff===null?'var(--text2)':diff<0?'var(--red-text)':'#1D9E75';
+              const bbv=parseFloat(t.bb)||0,rpv=parseFloat(t.ramp)||0,spv=parseFloat(t.ssdp)||0;
+              const autoSum=bbv+rpv+spv;
+              const effPrice=price>0?price:(autoSum>0?autoSum:0);
+              const effDiff=p3v>0&&effPrice>0?effPrice-p3v:null;
+              const effDiffStr=effDiff!==null?(effDiff>=0?'+':'')+sym(tcur)+Math.abs(effDiff).toFixed(2):'—';
+              const effDiffColor=effDiff===null?'var(--text2)':effDiff<0?'var(--red-text)':'#1D9E75';
+              const ramL=d.ram?` (${d.ram})`:'';
+              const ssdL=d.ssd?` (${d.ssd})`:'';
               return `<div class="qt-tier-row" style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px 10px">
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
                   <div style="display:flex;align-items:center;gap:4px">
                     <span style="font-size:11px;color:var(--text2);font-weight:500">数量</span>
                     <input type="number" data-tier="${ti}" data-tierf="qty" value="${t.qty||''}" placeholder="台数" min="1"
                       style="width:64px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)"
-                      oninput="qtSyncTiersFromDOM(${i});qtRowCalc(${i})">
+                      oninput="qtSyncTiersFromDOM(${i})">
                     <span style="font-size:11px;color:var(--text2)">台</span>
                   </div>
                   <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:140px">
-                    <span style="font-size:11px;color:var(--text2);font-weight:500">价格 P</span>
+                    <span style="font-size:11px;color:var(--text2);font-weight:500">报价 P</span>
                     <select data-tier="${ti}" data-tierf="cur" style="width:auto;padding:2px 5px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--bg)"
-                      onchange="qtSyncTiersFromDOM(${i});qtRowCalc(${i})">
+                      onchange="qtSyncTiersFromDOM(${i})">
                       <option value="USD" ${(t.cur||'USD')==='USD'?'selected':''}>$</option>
                       <option value="CNY" ${t.cur==='CNY'?'selected':''}>¥</option>
                     </select>
-                    <input type="number" data-tier="${ti}" data-tierf="price" value="${t.price||''}" placeholder="0.00" min="0" step="0.01"
-                      style="flex:1;min-width:80px;font-size:13px;font-weight:600;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)"
-                      oninput="qtSyncTiersFromDOM(${i});qtRowCalc(${i})">
+                    <input type="number" data-tier="${ti}" data-tierf="price" value="${effPrice||''}" placeholder="自动合计" min="0" step="0.01"
+                      style="flex:1;min-width:80px;font-size:13px;font-weight:700;padding:3px 6px;border:1px solid var(--blue);border-radius:3px;background:var(--bg2);color:var(--blue-text)"
+                      oninput="this.dataset.manualEdit='1';qtSyncTiersFromDOM(${i})">
                   </div>
                   <button onmousedown="event.preventDefault();qtRemoveTierDOM(this,${i})" style="background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:3px;font-size:11px;padding:2px 8px;cursor:pointer">✕</button>
                 </div>
+                ${pmode==='breakdown'?`
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;padding:6px 8px;background:var(--bg2);border-radius:5px;margin-bottom:5px">
+                  <div>
+                    <div style="font-size:9px;color:var(--text3);margin-bottom:2px">准系统 (Barbone)${ramL?'<br><span style="color:var(--text3)">RAM'+ramL+'</span>':''}</div>
+                    <div style="display:flex;gap:2px">
+                      <select data-tier="${ti}" data-tierf="bb-cur" style="width:auto;padding:1px 3px;font-size:10px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" onchange="qtSyncTiersFromDOM(${i})"><option value="USD" ${(t.bbCur||'USD')==='USD'?'selected':''}>$</option><option value="CNY" ${t.bbCur==='CNY'?'selected':''}>¥</option></select>
+                      <input type="number" data-tier="${ti}" data-tierf="bb" value="${t.bb||''}" placeholder="0" min="0" step="0.01" style="width:100%;font-size:11px;padding:2px 4px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" oninput="qtSyncTiersFromDOM(${i})">
+                    </div>
+                  </div>
+                  <div>
+                    <div style="font-size:9px;color:var(--text3);margin-bottom:2px">RAM${ramL}</div>
+                    <div style="display:flex;gap:2px">
+                      <select data-tier="${ti}" data-tierf="ramp-cur" style="width:auto;padding:1px 3px;font-size:10px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" onchange="qtSyncTiersFromDOM(${i})"><option value="USD" ${(t.rampCur||'USD')==='USD'?'selected':''}>$</option><option value="CNY" ${t.rampCur==='CNY'?'selected':''}>¥</option></select>
+                      <input type="number" data-tier="${ti}" data-tierf="ramp" value="${t.ramp||''}" placeholder="0" min="0" step="0.01" style="width:100%;font-size:11px;padding:2px 4px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" oninput="qtSyncTiersFromDOM(${i})">
+                    </div>
+                  </div>
+                  <div>
+                    <div style="font-size:9px;color:var(--text3);margin-bottom:2px">SSD${ssdL}</div>
+                    <div style="display:flex;gap:2px">
+                      <select data-tier="${ti}" data-tierf="ssdp-cur" style="width:auto;padding:1px 3px;font-size:10px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" onchange="qtSyncTiersFromDOM(${i})"><option value="USD" ${(t.ssdpCur||'USD')==='USD'?'selected':''}>$</option><option value="CNY" ${t.ssdpCur==='CNY'?'selected':''}>¥</option></select>
+                      <input type="number" data-tier="${ti}" data-tierf="ssdp" value="${t.ssdp||''}" placeholder="0" min="0" step="0.01" style="width:100%;font-size:11px;padding:2px 4px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" oninput="qtSyncTiersFromDOM(${i})">
+                    </div>
+                  </div>
+                </div>`:''}
                 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:5px 8px;background:var(--bg2);border-radius:4px">
-                  <div style="text-align:center"><div style="font-size:12px;font-weight:600;color:var(--text2)">${p3v>0?sym(p3cur)+p3v:'—'}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">P3 参考</div></div>
-                  <div style="text-align:center"><div style="font-size:12px;font-weight:600;color:var(--blue-text)">${price>0?sym(tcur)+price:'—'}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">报价 P</div></div>
-                  <div style="text-align:center"><div style="font-size:12px;font-weight:600;color:${diffColor}">${diffStr}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">差价</div></div>
+                  ${pmode==='breakdown'?`<div style="text-align:center"><div style="font-size:11px;font-weight:600;color:var(--text2)" data-tier-sum>${autoSum>0?sym(t.bbCur||'USD')+autoSum.toFixed(2):'—'}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">成本合计</div></div>`:`<div style="text-align:center"><div style="font-size:11px;font-weight:600;color:var(--text2)">${p3v>0?sym(p3cur)+p3v:'—'}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">P3 参考</div></div>`}
+                  <div style="text-align:center"><div style="font-size:12px;font-weight:600;color:var(--blue-text)">${effPrice>0?sym(tcur)+effPrice:'—'}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">报价 P</div></div>
+                  <div style="text-align:center"><div style="font-size:12px;font-weight:600;color:${effDiffColor}" data-tier-diff>${effDiffStr}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">差价</div></div>
                 </div>
               </div>`;
             }).join('')}
@@ -6355,7 +6384,25 @@ function qtSyncAllRowsFromDOM(){
         const qtyI=tierDiv.querySelector('[data-tierf="qty"]');
         const curI=tierDiv.querySelector('[data-tierf="cur"]');
         const priceI=tierDiv.querySelector('[data-tierf="price"]');
-        if(qtyI&&priceI)tiers.push({qty:qtyI.value,cur:curI?.value||'USD',price:priceI.value});
+        const bbI=tierDiv.querySelector('[data-tierf="bb"]');
+        const bbCurI=tierDiv.querySelector('[data-tierf="bb-cur"]');
+        const ramI=tierDiv.querySelector('[data-tierf="ramp"]');
+        const ramCurI=tierDiv.querySelector('[data-tierf="ramp-cur"]');
+        const ssdI=tierDiv.querySelector('[data-tierf="ssdp"]');
+        const ssdCurI=tierDiv.querySelector('[data-tierf="ssdp-cur"]');
+        if(qtyI&&priceI){
+          const bb=parseFloat(bbI?.value)||0;
+          const rp=parseFloat(ramI?.value)||0;
+          const sp=parseFloat(ssdI?.value)||0;
+          const autoSum=bb+rp+sp;
+          if(autoSum>0&&!priceI.dataset.manualEdit)priceI.value=autoSum;
+          tiers.push({
+            qty:qtyI.value,cur:curI?.value||'USD',price:priceI.value,
+            bb:bbI?.value||'',bbCur:bbCurI?.value||'USD',
+            ramp:ramI?.value||'',rampCur:ramCurI?.value||'USD',
+            ssdp:ssdI?.value||'',ssdpCur:ssdCurI?.value||'USD',
+          });
+        }
       });
       _qtProdRows[i].tiers=tiers;
     }
@@ -6370,7 +6417,7 @@ function qtRowModeChange(i, radio){
 }
 
 function qtSyncTiersFromDOM(i){
-  // Sync only tier data from DOM without full re-render (preserves focus)
+  // Sync tier data only, no full re-render (preserves focus)
   const wrap=document.getElementById('qf-product-rows');
   if(!wrap||!_qtProdRows[i])return;
   const el=wrap.querySelectorAll('.qf-prod-row')[i];
@@ -6382,11 +6429,31 @@ function qtSyncTiersFromDOM(i){
       const qtyI=tierDiv.querySelector('[data-tierf="qty"]');
       const curI=tierDiv.querySelector('[data-tierf="cur"]');
       const priceI=tierDiv.querySelector('[data-tierf="price"]');
-      if(qtyI&&priceI)tiers.push({qty:qtyI.value,cur:curI?.value||'USD',price:priceI.value});
+      const bbI=tierDiv.querySelector('[data-tierf="bb"]');
+      const bbCurI=tierDiv.querySelector('[data-tierf="bb-cur"]');
+      const ramI=tierDiv.querySelector('[data-tierf="ramp"]');
+      const ramCurI=tierDiv.querySelector('[data-tierf="ramp-cur"]');
+      const ssdI=tierDiv.querySelector('[data-tierf="ssdp"]');
+      const ssdCurI=tierDiv.querySelector('[data-tierf="ssdp-cur"]');
+      if(qtyI&&priceI){
+        const bb=parseFloat(bbI?.value)||0;
+        const rp=parseFloat(ramI?.value)||0;
+        const sp=parseFloat(ssdI?.value)||0;
+        const autoSum=bb+rp+sp;
+        // Auto-fill price from BB+RAM+SSD if price field is empty or matches previous auto
+        if(priceI&&autoSum>0&&!priceI.dataset.manualEdit){
+          priceI.value=autoSum;
+        }
+        tiers.push({
+          qty:qtyI.value, cur:curI?.value||'USD', price:priceI.value,
+          bb:bbI?.value||'', bbCur:bbCurI?.value||'USD',
+          ramp:ramI?.value||'', rampCur:ramCurI?.value||'USD',
+          ssdp:ssdI?.value||'', ssdpCur:ssdCurI?.value||'USD',
+        });
+      }
     });
     _qtProdRows[i].tiers=tiers;
   }
-  // Update P3-diff labels in tier rows without full re-render
   qtUpdateTierDiffs(i);
 }
 function qtUpdateTierDiffs(i){
@@ -6400,13 +6467,24 @@ function qtUpdateTierDiffs(i){
   if(!el)return;
   el.querySelectorAll('.qt-tier-row').forEach((row,ti)=>{
     const t=tiers[ti];if(!t)return;
-    const price=parseFloat(t.price)||0;
+    const bb=parseFloat(t.bb)||0;
+    const rp=parseFloat(t.ramp)||0;
+    const sp=parseFloat(t.ssdp)||0;
+    const autoSum=bb+rp+sp;
+    const priceI=row.querySelector('[data-tierf="price"]');
+    if(priceI&&autoSum>0&&!priceI.dataset.manualEdit){
+      priceI.value=autoSum;
+      t.price=String(autoSum);
+    }
+    const price=parseFloat(priceI?.value)||0;
     const diff=p3v>0&&price>0?price-p3v:null;
     const diffColor=diff===null?'var(--text2)':diff<0?'var(--red-text)':'#1D9E75';
-    const grid=row.querySelector('[style*="grid-template-columns"]');
-    if(grid){
-      const cells=grid.querySelectorAll('div>div:first-child');
-      if(cells[2]){cells[2].textContent=diff!==null?(diff>=0?'+':'')+sym(t.cur||'USD')+diff:'—';cells[2].style.color=diffColor;}
+    const sumEl=row.querySelector('[data-tier-sum]');
+    if(sumEl)sumEl.textContent=autoSum>0?sym(t.bbCur||'USD')+autoSum.toFixed(2):'—';
+    const diffEl=row.querySelector('[data-tier-diff]');
+    if(diffEl){
+      diffEl.textContent=diff!==null?(diff>=0?'+':'')+sym(t.cur||'USD')+Math.abs(diff).toFixed(2):'—';
+      diffEl.style.color=diffColor;
     }
   });
 }
@@ -6474,10 +6552,9 @@ function qtRowCalc(i){
     const sym=(g('price-cur')||'USD')==='CNY'?'¥':'$';
     diffEl.innerHTML=`<span style="color:${d<0?'var(--red-text)':'#1D9E75'};font-weight:600">${d>=0?'▲ +':'▼ '}${sym}${Math.abs(d).toFixed(2)} vs P3</span>${d<0?' ⚠️ 低于P3':''} `;
   } else if(diffEl){diffEl.innerHTML='';}
-  // If this row has tiers, re-render the row so P3 diffs stay current
+  // If this row has tiers, sync without re-rendering (qtSyncTiersFromDOM handles diffs)
   if(_qtProdRows[i]&&(_qtProdRows[i].tiers||[]).length>0){
     qtSyncTiersFromDOM(i);
-    qtRenderProductRows();
   }
 }
 
@@ -6569,23 +6646,40 @@ function qtSingleRemoveTier(ti){
   _qtSingleTiers.splice(ti,1);
   qtRenderSingleTiers();
 }
-function qtUpdateSingleTierDiffs(){
+function qtAutoSumSingleTier(row){
+  // Auto-sum BB+RAM+SSD into price without re-rendering (preserves focus)
+  if(!row)return;
   qtSyncSingleTiersFromDOM();
-  const cont=document.getElementById('qf-single-tiers');
-  if(!cont)return;
+  const bbI=row.querySelector('[data-stf="barbone"]');
+  const rpI=row.querySelector('[data-stf="ramp"]');
+  const spI=row.querySelector('[data-stf="ssdp"]');
+  const priceI=row.querySelector('[data-stf="price"]');
+  if(!priceI)return;
+  const bb=parseFloat(bbI?.value)||0;
+  const rp=parseFloat(rpI?.value)||0;
+  const sp=parseFloat(spI?.value)||0;
+  const sum=bb+rp+sp;
+  if(sum>0&&!priceI.dataset.manualEdit){
+    priceI.value=sum.toFixed(2).replace(/\.00$/,'');
+  }
+  // Update summary values in this row without re-render
   const p3=parseFloat(document.getElementById('qf-p3')?.value)||0;
+  const price=parseFloat(priceI.value)||0;
+  const priceCur=row.querySelector('[data-stf="cur"]')?.value||'USD';
   const sym=c=>c==='CNY'?'¥':'$';
-  cont.querySelectorAll('.qt-single-tier-row').forEach((row,ti)=>{
-    const t=_qtSingleTiers[ti];if(!t)return;
-    const price=parseFloat(t.price)||0;
-    const diff=p3>0&&price>0?price-p3:null;
-    const diffColor=diff===null?'var(--text2)':diff<0?'var(--red-text)':'#1D9E75';
-    const grid=row.querySelector('[style*="grid-template-columns"]');
-    if(grid){
-      const cells=grid.querySelectorAll('div>div:first-child');
-      if(cells[2]){cells[2].textContent=diff!==null?(diff>=0?'+':'')+sym(t.cur||'USD')+diff:'—';cells[2].style.color=diffColor;}
+  const diff=p3>0&&price>0?price-p3:null;
+  const diffColor=diff===null?'var(--text2)':diff<0?'var(--red-text)':'#1D9E75';
+  // update cost total display
+  const grid=row.querySelector('[style*="grid-template-columns"]:last-child');
+  if(grid){
+    const cells=grid.querySelectorAll(':scope>div');
+    if(cells[0]){const v=cells[0].querySelector('div:first-child');if(v&&sum>0)v.textContent=sym('USD')+sum.toFixed(2);}
+    if(cells[1]){const v=cells[1].querySelector('div:first-child');if(v)v.textContent=price>0?sym(priceCur)+price:'—';}
+    if(cells[2]){
+      const v=cells[2].querySelector('div:first-child');
+      if(v){v.textContent=diff!==null?(diff>=0?'+':'')+sym(priceCur)+Math.abs(diff).toFixed(2):'—';v.style.color=diffColor;}
     }
-  });
+  }
 }
 function qtSyncSingleTiersFromDOM(){
   const cont=document.getElementById('qf-single-tiers');
@@ -6643,7 +6737,7 @@ function qtRenderSingleTiers(){
   const ssdSpec=document.getElementById('qf-ssd')?.value||'';
 
   const mkCurSel=(stf,val)=>`<select data-stf="${stf}" style="padding:1px 3px;font-size:10px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" onchange="qtSyncSingleTiersFromDOM();qtRenderSingleTiers()"><option value="USD" ${val!=='CNY'?'selected':''}>$</option><option value="CNY" ${val==='CNY'?'selected':''}>¥</option></select>`;
-  const mkNum=(stf,val,ph)=>`<input type="number" data-stf="${stf}" value="${val||''}" placeholder="${ph}" min="0" step="0.01" style="width:100%;font-size:12px;font-weight:600;padding:2px 5px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)" oninput="qtSyncSingleTiersFromDOM();qtUpdateSingleTierDiffs()">`;
+  const mkNum=(stf,val,ph)=>`<input type="number" data-stf="${stf}" value="${val||''}" placeholder="${ph}" min="0" step="0.01" style="width:100%;font-size:12px;font-weight:600;padding:2px 5px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)" oninput="qtSyncSingleTiersFromDOM();qtAutoSumSingleTier(this.closest('.qt-single-tier-row'))">`;
 
   // Render each tier row
   cont.innerHTML=_qtSingleTiers.map((t,ti)=>{
@@ -6664,7 +6758,7 @@ function qtRenderSingleTiers(){
           <span style="font-size:11px;color:var(--text2);white-space:nowrap;font-weight:500">数量</span>
           <input type="number" data-stf="qty" value="${t.qty||''}" placeholder="台数" min="1"
             style="width:64px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg2)"
-            oninput="qtSyncSingleTiersFromDOM();qtRenderSingleTiers()">
+            oninput="qtSyncSingleTiersFromDOM();qtAutoSumSingleTier(this.closest('.qt-single-tier-row'))">
           <span style="font-size:11px;color:var(--text2)">台</span>
         </div>
         <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:160px">
@@ -6676,7 +6770,7 @@ function qtRenderSingleTiers(){
           </select>
           <input type="number" data-stf="price" value="${t.price||''}" placeholder="${base>0?base:'0.00'}" min="0" step="0.01"
             style="flex:1;min-width:80px;font-size:14px;font-weight:700;padding:3px 6px;border:1px solid var(--blue);border-radius:3px;background:var(--bg2);color:var(--blue-text)"
-            oninput="qtSyncSingleTiersFromDOM();qtRenderSingleTiers()">
+            oninput="qtSyncSingleTiersFromDOM();qtAutoSumSingleTier(this.closest('.qt-single-tier-row'))">
         </div>
         <button onmousedown="event.preventDefault();qtSingleRemoveTier(${ti})"
           style="background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:3px;font-size:11px;padding:2px 8px;cursor:pointer">✕</button>
@@ -6686,7 +6780,7 @@ function qtRenderSingleTiers(){
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:8px 10px;background:var(--bg2);border-radius:5px;margin-bottom:6px">
         <div>
           <div style="font-size:10px;color:var(--text3);margin-bottom:3px;display:flex;align-items:center;justify-content:space-between">
-            <span>准系统 (Barbone)</span>${mkCurSel('barbone-cur',t.barboneCur||'USD')}
+            <span>准系统 (Barbone)${ramSpec?` <span style="font-size:9px;color:var(--blue-text);font-weight:500">${ramSpec}</span>`:''}</span>${mkCurSel('barbone-cur',t.barboneCur||'USD')}
           </div>
           ${mkNum('barbone',t.barbone,'0')}
         </div>
