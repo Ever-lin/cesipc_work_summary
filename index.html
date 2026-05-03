@@ -1091,6 +1091,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div class="hb-row"><span class="hb-tag green">📥 导出Excel</span><span>将当前筛选结果导出为 CSV 文件，可用 Excel 打开进行进一步分析。</span></div>
   <div class="hb-row"><span class="hb-tag gray">⚙️ 列设置</span><span>自定义显示哪些列、各列宽度。设置会自动保存，下次打开仍然生效。</span></div>
   <div class="hb-row"><span class="hb-tag gray">✕ 清除筛选</span><span>有筛选条件时才出现（右侧会显示筛选数量），点击一键清除所有搜索和筛选条件。</span></div>
+  <div class="hb-row"><span class="hb-tag amber">⏱ 跟进滞留筛选</span><span>下拉可选「≥30天未跟进」或「≥60天未跟进」，快速过滤出超时未有进展的「跟进中」报价，配合行颜色预警使用。</span></div>
   <div style="margin-top:6px;font-weight:600;color:#185FA5">🎨 行颜色 — 没动静预警（仅「⭕ 跟进中」状态）</div>
   <div class="hb-row"><span class="hb-tag amber">🟡 黄色背景</span><span>报价日期距今 <b>≥ 30 天</b>且状态仍为「跟进中」，代表这条报价已超过一个月没有进展，需要关注并跟进。</span></div>
   <div class="hb-row"><span class="hb-tag red">🔴 红色背景</span><span>报价日期距今 <b>≥ 60 天</b>且状态仍为「跟进中」，代表超过两个月没动静，属于高风险滞留报价，建议尽快跟进或更新状态。</span></div>
@@ -1199,10 +1200,11 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <!-- 可折叠筛选区 -->
   <div id="qt-filter-panel" class="qt-bar" style="margin-bottom:10px">
     <div class="qt-search"><span class="qt-search-ic">🔍</span><input id="qt-search" placeholder="搜索项目、型号、CPU、业务…" oninput="qtRender()"></div>
-    <select class="ym-s" id="qt-f-company" onchange="qtRender()"><option value="">全部公司</option></select>
-    <select class="ym-s" id="qt-f-contact" onchange="qtRender()"><option value="">全部业务</option></select>
+    <select class="ym-s" id="qt-f-company" onchange="qtContactVisibility();qtRender()"><option value="">全部公司</option></select>
+    <select class="ym-s" id="qt-f-contact" onchange="qtRender()" style="display:none"><option value="">全部业务</option></select>
     <select class="ym-s" id="qt-f-status" onchange="qtRender()"><option value="">全部状态</option><option value="open">⭕ 跟进中</option><option value="confirmed">🔶 已确认订单</option><option value="won">✅ 已成交</option><option value="pause">⏸️ 暂无进展</option><option value="lost">❌ 丢单</option></select>
     <select class="ym-s" id="qt-f-p3" onchange="qtRender()"><option value="">全部价格</option><option value="below">⚠️ 低于P3</option><option value="ok">✅ 高于P3</option></select>
+    <select class="ym-s" id="qt-f-stale" onchange="qtRender()" title="按跟进滞留天数筛选（仅跟进中）"><option value="">⏱ 全部跟进状态</option><option value="30">🟡 ≥30天未跟进</option><option value="60">🔴 ≥60天未跟进</option></select>
     <select class="ym-s" id="qt-f-model" onchange="qtRender()" title="按型号筛选"><option value="">全部型号</option></select>
     <select class="ym-s" id="qt-f-cpu" onchange="qtRender()" title="按CPU筛选"><option value="">全部CPU</option></select>
     <select class="ym-s" id="qt-f-ram" onchange="qtRender()" title="按RAM筛选"><option value="">全部RAM</option></select>
@@ -3264,8 +3266,8 @@ function fillProjTextareas(prefix){
       const allEntries=(grouped[p.name||p.client]||[]).sort((a,b)=>b.id-a.id);
       return buildCRMTextFull(p,allEntries);
     }).join('\n\n──────────────\n\n');
+    autoResize(el);
   });
-  autoResizeAll();
 }
 // 保存项目后自动刷新周报/月报项目区块
 function renderProjSync(containerId){
@@ -5284,6 +5286,7 @@ function qtFiltered(){
   const ct=document.getElementById('qt-f-contact').value;
   const st=document.getElementById('qt-f-status').value;
   const p3f=document.getElementById('qt-f-p3').value;
+  const fStale=document.getElementById('qt-f-stale')?.value||'';
   const fModel=document.getElementById('qt-f-model')?.value||'';
   const fCpu=document.getElementById('qt-f-cpu')?.value||'';
   const fRam=document.getElementById('qt-f-ram')?.value||'';
@@ -5299,6 +5302,12 @@ function qtFiltered(){
     if(ct&&r.contact!==ct)return false;
     if(st&&r.deal!==st)return false;
     if(p3f){const sameCur=(r.priceCur||'USD')===(r.p3Cur||'USD');const d=(r.p3&&sameCur)?r.price-r.p3:null;if(p3f==='below'&&(d===null||d>=0))return false;if(p3f==='ok'&&(d===null||d<0))return false;}
+    if(fStale){
+      const staleDays=parseInt(fStale);
+      if(r.deal!=='open'||!r.date)return false;
+      const days=Math.floor((Date.now()-new Date(r.date+'T00:00:00').getTime())/86400000);
+      if(days<staleDays)return false;
+    }
     if(fModel&&r.model!==fModel)return false;
     if(fCpu&&r.cpu!==fCpu)return false;
     if(fRam&&r.ram!==fRam)return false;
@@ -5456,6 +5465,7 @@ function qtRender(){
     document.getElementById('qt-f-contact').value||
     document.getElementById('qt-f-status').value||
     document.getElementById('qt-f-p3').value||
+    (document.getElementById('qt-f-stale')?.value)||
     (document.getElementById('qt-f-model')?.value)||
     (document.getElementById('qt-f-cpu')?.value)||
     (document.getElementById('qt-f-ram')?.value)||
@@ -5604,6 +5614,7 @@ function qtUpdateFilterDot(){
     (document.getElementById('qt-f-contact')||{}).value ||
     (document.getElementById('qt-f-status')||{}).value ||
     (document.getElementById('qt-f-p3')||{}).value ||
+    (document.getElementById('qt-f-stale')||{}).value ||
     (document.getElementById('qt-f-model')||{}).value ||
     (document.getElementById('qt-f-cpu')||{}).value ||
     (document.getElementById('qt-f-ram')||{}).value ||
@@ -5620,8 +5631,10 @@ function qtClearFilters(){
   document.getElementById('qt-search').value='';
   document.getElementById('qt-f-company').value='';
   document.getElementById('qt-f-contact').value='';
+  qtContactVisibility();
   document.getElementById('qt-f-status').value='';
   document.getElementById('qt-f-p3').value='';
+  const stale=document.getElementById('qt-f-stale');if(stale)stale.value='';
   const m=document.getElementById('qt-f-model');if(m)m.value='';
   const c=document.getElementById('qt-f-cpu');if(c)c.value='';
   const r=document.getElementById('qt-f-ram');if(r)r.value='';
@@ -5667,6 +5680,19 @@ function qtInitResizableCols(){
   });
 }
 
+// 选了公司时隐藏业务下拉（公司已足够区分）；无公司筛选时显示
+function qtContactVisibility(){
+  const co=document.getElementById('qt-f-company').value;
+  const sel=document.getElementById('qt-f-contact');
+  if(!sel)return;
+  if(co){
+    sel.style.display='none';
+    sel.value=''; // 清掉业务筛选，避免残留条件
+  } else {
+    sel.style.display='';
+  }
+}
+
 function qtUpdateCompanyFilter(){
   const companies=[...new Set(qtQuotes.map(q=>q.company).filter(Boolean))].sort();
   const sel=document.getElementById('qt-f-company');const cur=sel.value;
@@ -5703,6 +5729,7 @@ function qtUpdateCompanyFilter(){
   setDl('qf-ssd-dl',    uniq(qtQuotes.map(q=>q.ssd)));
   // qf-contact-dl 默认全量，输入公司后按公司过滤（见 qtUpdateContactDl）
   setDl('qf-contact-dl', uniq(contacts));
+  qtContactVisibility();
 }
 
 // 根据当前输入公司过滤对接业务下拉，同时保存新公司名到 datalist
@@ -7128,7 +7155,12 @@ function qtRenderDash(){
   const noContact=qtQuotes.filter(q=>!q.contact);
   let allContactGroups=[
     ...contacts.map(ct=>({name:ct,qs:qtQuotes.filter(q=>q.contact===ct),isUnassigned:false})),
-    ...(noContact.length?[{name:'（未指定业务）',qs:noContact,isUnassigned:true}]:[])
+    ...(noContact.length?(()=>{
+      // 按公司分组无业务报价，每家公司一个卡片（label=公司名），汇总无业务员的项目
+      const byCo={};
+      noContact.forEach(q=>{const co=q.company||'（未指定业务）';if(!byCo[co])byCo[co]=[];byCo[co].push(q);});
+      return Object.entries(byCo).map(([co,qs])=>({name:co,qs,isUnassigned:true}));
+    })():[])
   ];
   // 有公司筛选时：把该公司相关的业务员排到前面
   if(filterCo){
