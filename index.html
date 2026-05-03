@@ -2140,6 +2140,31 @@ function refreshProjDatalist(){
   document.getElementById('proj-dl').innerHTML=names.map(n=>`<option value="${n}">`).join('');
 }
 
+// ===== 从项目情况创建对应报价 =====
+function openCreateQuoteFromProj(projName){
+  if(!projName)return;
+  // 找最新项目记录，预填字段
+  const entries=state.projects
+    .filter(p=>(p.name||p.client)===projName||p.linkedQuoteProject===projName)
+    .sort((a,b)=>b.id-a.id);
+  const latest=entries[0];
+  if(!latest)return;
+  // 记录来源项目，供 qtSave 保存后建立联动
+  window._pendingLinkProjName=projName;
+  // 复用现有新增报价弹窗
+  qtOpenAdd();
+  // 预填项目名、公司名
+  document.getElementById('qf-project').value=latest.name||projName;
+  document.getElementById('qf-company').value=latest.client||'';
+  // 预填成单状态（从项目状态映射）
+  const dealMap={'跟进中':'open','确认订单':'confirmed','成交':'won','暂无进展':'pause','丢单':'lost'};
+  document.getElementById('qf-deal').value=dealMap[latest.status]||'open';
+  // 预填项目进度
+  if(latest.progressStage)document.getElementById('qf-stage').value=latest.progressStage;
+  // 修改弹窗标题
+  document.getElementById('qt-modal-title').textContent='新增报价（来自项目：'+(latest.name||projName)+'）';
+}
+
 // ===== 从报价导入 =====
 function qtDealToStatus(deal){
   return{open:'跟进中',confirmed:'确认订单',won:'成交',pause:'暂无进展',lost:'丢单'}[deal]||'跟进中';
@@ -2842,7 +2867,15 @@ function renderProjects(){
           ${(()=>{
             const lqp=latest.linkedQuoteProject||(latest.name||latest.client)||'';
             const hasQUpdate=lqp&&qtHasUnsyncedUpdate(lqp);
-            return hasQUpdate?`<button class="btn btn-xs" style="background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber);font-weight:600" onclick="syncQuoteToProject('${lqp.replace(/'/g,"\\'")}')">⚠️ 报价有更新，点击同步</button>`:'';
+            if(hasQUpdate){
+              return `<button class="btn btn-xs" style="background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber);font-weight:600" onclick="syncQuoteToProject('${lqp.replace(/'/g,"\\'")}')">⚠️ 报价有更新，点击同步</button>`;
+            }
+            const projNameForCheck=latest.linkedQuoteProject||latest.name||latest.client||'';
+            const hasQuoteRecord=projNameForCheck&&qtQuotes.some(q=>q.project===projNameForCheck);
+            if(!hasQuoteRecord&&projNameForCheck){
+              return `<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue);font-weight:600" onclick="openCreateQuoteFromProj('${projNameForCheck.replace(/'/g,"\\'")}')">💰 创建对应报价</button>`;
+            }
+            return '';
           })()}
           <button class="btn btn-xs" style="background:#FFFBF0;color:#7A5800;border-color:#F0D070" onclick="copyCRM(${latest.id},'${crmId}',this)">📋 复制CRM格式</button>
           <button class="btn btn-xs" style="background:#E8F5E9;color:#1B5E20;border-color:#A5D6A7" onclick="quickProgressModal('${k.replace(/'/g,"\\'")}',${latest.id})">⚡ 快速更新</button>
@@ -7234,6 +7267,44 @@ function qtSave(){
   const orig=saveBtn.textContent;
   saveBtn.textContent='✅ 已保存';
   _qtJustSaved=true;
+  // ── 若是从「项目情况」触发创建的，保存后建立双向联动 ──
+  if(window._pendingLinkProjName){
+    const linkTarget=window._pendingLinkProjName;
+    window._pendingLinkProjName=null;
+    const savedProjName=document.getElementById('qf-project').value.trim()||linkTarget;
+    // 为该项目所有记录写入 linkedQuoteProject
+    state.projects.forEach(p=>{
+      if((p.name||p.client)===linkTarget||p.linkedQuoteProject===linkTarget){
+        p.linkedQuoteProject=savedProjName;
+      }
+    });
+    saveState();
+    // 同步报价管理里刚新增记录的 lastSyncedAt，避免立即出现「报价有更新」按钮
+    const syncTime=new Date().toISOString();
+    qtQuotes.forEach(q=>{if(q.project===savedProjName&&!q.lastSyncedAt){q.lastSyncedAt=syncTime;q.lastSyncedDeal=q.deal||'';q.lastSyncedStage=q.stage||'';}});
+    qtPersist();
+    // 保存后切换到报价管理 Tab 并高亮新记录
+    setTimeout(()=>{
+      switchTab('quotes');
+      setTimeout(()=>{
+        const newQuote=qtQuotes.find(q=>q.project===savedProjName);
+        if(newQuote){
+          const rowEl=document.querySelector(`tr[data-id="${newQuote.id}"]`);
+          if(rowEl){
+            rowEl.scrollIntoView({behavior:'smooth',block:'center'});
+            rowEl.style.transition='background 0.4s';
+            rowEl.style.background='#FEF3C7';
+            setTimeout(()=>{rowEl.style.background='';},2200);
+          }
+        }
+        const toast=document.createElement('div');
+        toast.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#185FA5;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);white-space:nowrap';
+        toast.textContent='✅ 报价已创建，已与项目情况建立联动';
+        document.body.appendChild(toast);
+        setTimeout(()=>toast.remove(),2800);
+      },300);
+    },950);
+  }
   setTimeout(()=>{saveBtn.textContent=orig;qtCloseModal();},900);
 }
 function qtSaveAndAddProduct(){
