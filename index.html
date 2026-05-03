@@ -1568,7 +1568,7 @@ function init(){
   const now=new Date();const cm=now.getMonth()+1;
   document.getElementById('view-month').value=String(cm);
   document.getElementById('perf-month').value=String(cm);
-  document.getElementById('pj-month').value=String(cm);
+  document.getElementById('pj-month').value='all';
   document.getElementById('pj-week').value='all';
   // 周报/月报 自动设置当前月份并加载已有数据
   const wMonthEl=document.getElementById('w-month');
@@ -2897,6 +2897,9 @@ function submitProject(){
     save();cancelEditRecord();
     syncProjectToQuotes(entry.linkedQuoteProject||(entry.name||entry.client)||'',entry.status,entry.progressStage);
     _projHighlight=entry.name||entry.client;
+    // Reset filters so saved project is always visible
+    document.getElementById('pj-month').value='all';
+    document.getElementById('pj-week').value='all';
     renderProjects();refreshProjDatalist();renderProjSync('w-proj-sync');renderProjSync('wm-proj-sync');
     const a=document.createElement('div');a.className='alert-s';a.textContent='记录已更新！';
     document.getElementById('proj-form-card').prepend(a);setTimeout(()=>a.remove(),1800);
@@ -2928,6 +2931,9 @@ function submitProject(){
     state.projects.push(entry);save();
     syncProjectToQuotes(entry.linkedQuoteProject||(entry.name||entry.client)||'',entry.status,entry.progressStage);
     _projHighlight=entry.name||entry.client;
+    // Reset filters so new project is always visible
+    document.getElementById('pj-month').value='all';
+    document.getElementById('pj-week').value='all';
     ['proj-name','proj-client','proj-progress-stage','proj-requirement','proj-quantity','proj-quote','proj-progress','proj-action-content','proj-action-time','proj-confirm-points','proj-risks','proj-decision-maker'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
     document.getElementById('proj-status').value='跟进中';
     updateStatusBadge('跟进中');
@@ -5910,13 +5916,12 @@ function qtOpenEdit(id){
   document.getElementById('qt-modal-bg').classList.add('open');
 }
 function qtCloseModal(){document.getElementById('qt-modal-bg').classList.remove('open');}
-// Mark form dirty on any input/change inside the modal
 (function(){
   document.addEventListener('DOMContentLoaded',function(){
-    var modal=document.getElementById('qt-modal-bg');
-    if(modal){
-      modal.addEventListener('input',function(){if(modal.classList.contains('open'))_qtFormDirty=true;},true);
-      modal.addEventListener('change',function(){if(modal.classList.contains('open'))_qtFormDirty=true;},true);
+    var m=document.getElementById('qt-modal-bg');
+    if(m){
+      m.addEventListener('input',function(){if(m.classList.contains('open'))_qtFormDirty=true;},true);
+      m.addEventListener('change',function(){if(m.classList.contains('open'))_qtFormDirty=true;},true);
     }
   });
 })();
@@ -6043,11 +6048,10 @@ function qtShipLoad(str){
 }
 
 // 安全关闭：新增/编辑模式下有数据时弹确认
-var _qtJustSaved=false; // 保存后点击外部直接关闭，不弹确认
-var _qtFormDirty=false; // 用户实际修改过内容才为 true
+var _qtJustSaved=false;
+var _qtFormDirty=false;
 function qtSafeCloseModal(){
   if(_qtJustSaved){_qtJustSaved=false;qtCloseModal();return;}
-  // 编辑模式：只有实际修改过内容才弹确认；新增模式：有填写内容才弹确认
   if((qtEditId!=null&&_qtFormDirty)||(qtEditId==null&&qtFormHasData())){
     var msg=qtEditId!=null?'编辑内容尚未保存，确定要放弃修改并关闭吗？':'表单中已填写了内容，确定要放弃并关闭吗？';
     if(!confirm(msg)) return;
@@ -6284,13 +6288,14 @@ function qtRenderProductRows(){
               const diffColor=diff===null?'var(--text2)':diff<0?'var(--red-text)':'#1D9E75';
               const bbv=parseFloat(t.bb)||0,rpv=parseFloat(t.ramp)||0,spv=parseFloat(t.ssdp)||0;
               const autoSum=bbv+rpv+spv;
-              const effPrice=price>0?price:(autoSum>0?autoSum:0);
+              const effPrice=parseFloat(t.price)>0?parseFloat(t.price):(autoSum>0?autoSum:price);
               const effDiff=p3v>0&&effPrice>0?effPrice-p3v:null;
               const effDiffStr=effDiff!==null?(effDiff>=0?'+':'')+sym(tcur)+Math.abs(effDiff).toFixed(2):'—';
               const effDiffColor=effDiff===null?'var(--text2)':effDiff<0?'var(--red-text)':'#1D9E75';
               const ramL=d.ram?` (${d.ram})`:'';
               const ssdL=d.ssd?` (${d.ssd})`:'';
               return `<div class="qt-tier-row" style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px 10px">
+                <!-- 数量 + 报价P -->
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
                   <div style="display:flex;align-items:center;gap:4px">
                     <span style="font-size:11px;color:var(--text2);font-weight:500">数量</span>
@@ -6313,31 +6318,47 @@ function qtRenderProductRows(){
                   <button onmousedown="event.preventDefault();qtRemoveTierDOM(this,${i})" style="background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:3px;font-size:11px;padding:2px 8px;cursor:pointer">✕</button>
                 </div>
                 ${pmode==='breakdown'?`
+                <!-- BB / RAM / SSD per tier -->
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;padding:6px 8px;background:var(--bg2);border-radius:5px;margin-bottom:5px">
                   <div>
-                    <div style="font-size:9px;color:var(--text3);margin-bottom:2px">准系统 (Barbone)${ramL?'<br><span style="color:var(--text3)">RAM'+ramL+'</span>':''}</div>
+                    <div style="font-size:9px;color:var(--text3);margin-bottom:2px;line-height:1.4">准系统 (BB)</div>
                     <div style="display:flex;gap:2px">
-                      <select data-tier="${ti}" data-tierf="bb-cur" style="width:auto;padding:1px 3px;font-size:10px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" onchange="qtSyncTiersFromDOM(${i})"><option value="USD" ${(t.bbCur||'USD')==='USD'?'selected':''}>$</option><option value="CNY" ${t.bbCur==='CNY'?'selected':''}>¥</option></select>
-                      <input type="number" data-tier="${ti}" data-tierf="bb" value="${t.bb||''}" placeholder="0" min="0" step="0.01" style="width:100%;font-size:11px;padding:2px 4px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" oninput="qtSyncTiersFromDOM(${i})">
+                      <select data-tier="${ti}" data-tierf="bb-cur" style="width:auto;padding:1px 3px;font-size:10px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" onchange="qtSyncTiersFromDOM(${i})">
+                        <option value="USD" ${(t.bbCur||'USD')==='USD'?'selected':''}>$</option><option value="CNY" ${t.bbCur==='CNY'?'selected':''}>¥</option>
+                      </select>
+                      <input type="number" data-tier="${ti}" data-tierf="bb" value="${t.bb||''}" placeholder="0" min="0" step="0.01"
+                        style="width:100%;font-size:11px;padding:2px 4px;border:1px solid var(--border);border-radius:2px;background:var(--bg)"
+                        oninput="qtSyncTiersFromDOM(${i})">
                     </div>
                   </div>
                   <div>
-                    <div style="font-size:9px;color:var(--text3);margin-bottom:2px">RAM${ramL}</div>
+                    <div style="font-size:9px;color:var(--text3);margin-bottom:2px;line-height:1.4">RAM${ramL}</div>
                     <div style="display:flex;gap:2px">
-                      <select data-tier="${ti}" data-tierf="ramp-cur" style="width:auto;padding:1px 3px;font-size:10px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" onchange="qtSyncTiersFromDOM(${i})"><option value="USD" ${(t.rampCur||'USD')==='USD'?'selected':''}>$</option><option value="CNY" ${t.rampCur==='CNY'?'selected':''}>¥</option></select>
-                      <input type="number" data-tier="${ti}" data-tierf="ramp" value="${t.ramp||''}" placeholder="0" min="0" step="0.01" style="width:100%;font-size:11px;padding:2px 4px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" oninput="qtSyncTiersFromDOM(${i})">
+                      <select data-tier="${ti}" data-tierf="ramp-cur" style="width:auto;padding:1px 3px;font-size:10px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" onchange="qtSyncTiersFromDOM(${i})">
+                        <option value="USD" ${(t.rampCur||'USD')==='USD'?'selected':''}>$</option><option value="CNY" ${t.rampCur==='CNY'?'selected':''}>¥</option>
+                      </select>
+                      <input type="number" data-tier="${ti}" data-tierf="ramp" value="${t.ramp||''}" placeholder="0" min="0" step="0.01"
+                        style="width:100%;font-size:11px;padding:2px 4px;border:1px solid var(--border);border-radius:2px;background:var(--bg)"
+                        oninput="qtSyncTiersFromDOM(${i})">
                     </div>
                   </div>
                   <div>
-                    <div style="font-size:9px;color:var(--text3);margin-bottom:2px">SSD${ssdL}</div>
+                    <div style="font-size:9px;color:var(--text3);margin-bottom:2px;line-height:1.4">SSD${ssdL}</div>
                     <div style="display:flex;gap:2px">
-                      <select data-tier="${ti}" data-tierf="ssdp-cur" style="width:auto;padding:1px 3px;font-size:10px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" onchange="qtSyncTiersFromDOM(${i})"><option value="USD" ${(t.ssdpCur||'USD')==='USD'?'selected':''}>$</option><option value="CNY" ${t.ssdpCur==='CNY'?'selected':''}>¥</option></select>
-                      <input type="number" data-tier="${ti}" data-tierf="ssdp" value="${t.ssdp||''}" placeholder="0" min="0" step="0.01" style="width:100%;font-size:11px;padding:2px 4px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" oninput="qtSyncTiersFromDOM(${i})">
+                      <select data-tier="${ti}" data-tierf="ssdp-cur" style="width:auto;padding:1px 3px;font-size:10px;border:1px solid var(--border);border-radius:2px;background:var(--bg)" onchange="qtSyncTiersFromDOM(${i})">
+                        <option value="USD" ${(t.ssdpCur||'USD')==='USD'?'selected':''}>$</option><option value="CNY" ${t.ssdpCur==='CNY'?'selected':''}>¥</option>
+                      </select>
+                      <input type="number" data-tier="${ti}" data-tierf="ssdp" value="${t.ssdp||''}" placeholder="0" min="0" step="0.01"
+                        style="width:100%;font-size:11px;padding:2px 4px;border:1px solid var(--border);border-radius:2px;background:var(--bg)"
+                        oninput="qtSyncTiersFromDOM(${i})">
                     </div>
                   </div>
                 </div>`:''}
+                <!-- 汇总 -->
                 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:5px 8px;background:var(--bg2);border-radius:4px">
-                  ${pmode==='breakdown'?`<div style="text-align:center"><div style="font-size:11px;font-weight:600;color:var(--text2)" data-tier-sum>${autoSum>0?sym(t.bbCur||'USD')+autoSum.toFixed(2):'—'}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">成本合计</div></div>`:`<div style="text-align:center"><div style="font-size:11px;font-weight:600;color:var(--text2)">${p3v>0?sym(p3cur)+p3v:'—'}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">P3 参考</div></div>`}
+                  ${pmode==='breakdown'
+                    ?`<div style="text-align:center"><div style="font-size:11px;font-weight:600;color:var(--text2)" data-tier-sum>${autoSum>0?sym(t.bbCur||'USD')+autoSum.toFixed(2):'—'}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">成本合计</div></div>`
+                    :`<div style="text-align:center"><div style="font-size:11px;font-weight:600;color:var(--text2)">${p3v>0?sym(p3cur)+p3v:'—'}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">P3 参考</div></div>`}
                   <div style="text-align:center"><div style="font-size:12px;font-weight:600;color:var(--blue-text)">${effPrice>0?sym(tcur)+effPrice:'—'}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">报价 P</div></div>
                   <div style="text-align:center"><div style="font-size:12px;font-weight:600;color:${effDiffColor}" data-tier-diff>${effDiffStr}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px">差价</div></div>
                 </div>
@@ -6391,11 +6412,9 @@ function qtSyncAllRowsFromDOM(){
         const ssdI=tierDiv.querySelector('[data-tierf="ssdp"]');
         const ssdCurI=tierDiv.querySelector('[data-tierf="ssdp-cur"]');
         if(qtyI&&priceI){
-          const bb=parseFloat(bbI?.value)||0;
-          const rp=parseFloat(ramI?.value)||0;
-          const sp=parseFloat(ssdI?.value)||0;
+          const bb=parseFloat(bbI?.value)||0,rp=parseFloat(ramI?.value)||0,sp=parseFloat(ssdI?.value)||0;
           const autoSum=bb+rp+sp;
-          if(autoSum>0&&!priceI.dataset.manualEdit)priceI.value=autoSum;
+          if(autoSum>0&&!priceI.dataset.manualEdit)priceI.value=autoSum.toFixed(2).replace(/\.00$/,'');
           tiers.push({
             qty:qtyI.value,cur:curI?.value||'USD',price:priceI.value,
             bb:bbI?.value||'',bbCur:bbCurI?.value||'USD',
@@ -6417,7 +6436,7 @@ function qtRowModeChange(i, radio){
 }
 
 function qtSyncTiersFromDOM(i){
-  // Sync tier data only, no full re-render (preserves focus)
+  // Sync tier data without full re-render (preserves focus)
   const wrap=document.getElementById('qf-product-rows');
   if(!wrap||!_qtProdRows[i])return;
   const el=wrap.querySelectorAll('.qf-prod-row')[i];
@@ -6440,15 +6459,14 @@ function qtSyncTiersFromDOM(i){
         const rp=parseFloat(ramI?.value)||0;
         const sp=parseFloat(ssdI?.value)||0;
         const autoSum=bb+rp+sp;
-        // Auto-fill price from BB+RAM+SSD if price field is empty or matches previous auto
-        if(priceI&&autoSum>0&&!priceI.dataset.manualEdit){
-          priceI.value=autoSum;
+        if(autoSum>0&&!priceI.dataset.manualEdit){
+          priceI.value=autoSum.toFixed(2).replace(/\.00$/,'');
         }
         tiers.push({
-          qty:qtyI.value, cur:curI?.value||'USD', price:priceI.value,
-          bb:bbI?.value||'', bbCur:bbCurI?.value||'USD',
-          ramp:ramI?.value||'', rampCur:ramCurI?.value||'USD',
-          ssdp:ssdI?.value||'', ssdpCur:ssdCurI?.value||'USD',
+          qty:qtyI.value,cur:curI?.value||'USD',price:priceI.value,
+          bb:bbI?.value||'',bbCur:bbCurI?.value||'USD',
+          ramp:ramI?.value||'',rampCur:ramCurI?.value||'USD',
+          ssdp:ssdI?.value||'',ssdpCur:ssdCurI?.value||'USD',
         });
       }
     });
@@ -6467,14 +6485,12 @@ function qtUpdateTierDiffs(i){
   if(!el)return;
   el.querySelectorAll('.qt-tier-row').forEach((row,ti)=>{
     const t=tiers[ti];if(!t)return;
-    const bb=parseFloat(t.bb)||0;
-    const rp=parseFloat(t.ramp)||0;
-    const sp=parseFloat(t.ssdp)||0;
+    const bb=parseFloat(t.bb)||0,rp=parseFloat(t.ramp)||0,sp=parseFloat(t.ssdp)||0;
     const autoSum=bb+rp+sp;
     const priceI=row.querySelector('[data-tierf="price"]');
     if(priceI&&autoSum>0&&!priceI.dataset.manualEdit){
-      priceI.value=autoSum;
-      t.price=String(autoSum);
+      priceI.value=autoSum.toFixed(2).replace(/\.00$/,'');
+      t.price=priceI.value;
     }
     const price=parseFloat(priceI?.value)||0;
     const diff=p3v>0&&price>0?price-p3v:null;
@@ -6552,7 +6568,7 @@ function qtRowCalc(i){
     const sym=(g('price-cur')||'USD')==='CNY'?'¥':'$';
     diffEl.innerHTML=`<span style="color:${d<0?'var(--red-text)':'#1D9E75'};font-weight:600">${d>=0?'▲ +':'▼ '}${sym}${Math.abs(d).toFixed(2)} vs P3</span>${d<0?' ⚠️ 低于P3':''} `;
   } else if(diffEl){diffEl.innerHTML='';}
-  // If this row has tiers, sync without re-rendering (qtSyncTiersFromDOM handles diffs)
+  // Sync tiers without full re-render (preserves focus)
   if(_qtProdRows[i]&&(_qtProdRows[i].tiers||[]).length>0){
     qtSyncTiersFromDOM(i);
   }
@@ -6647,38 +6663,32 @@ function qtSingleRemoveTier(ti){
   qtRenderSingleTiers();
 }
 function qtAutoSumSingleTier(row){
-  // Auto-sum BB+RAM+SSD into price without re-rendering (preserves focus)
   if(!row)return;
-  qtSyncSingleTiersFromDOM();
   const bbI=row.querySelector('[data-stf="barbone"]');
   const rpI=row.querySelector('[data-stf="ramp"]');
   const spI=row.querySelector('[data-stf="ssdp"]');
   const priceI=row.querySelector('[data-stf="price"]');
   if(!priceI)return;
-  const bb=parseFloat(bbI?.value)||0;
-  const rp=parseFloat(rpI?.value)||0;
-  const sp=parseFloat(spI?.value)||0;
+  const bb=parseFloat(bbI?.value)||0,rp=parseFloat(rpI?.value)||0,sp=parseFloat(spI?.value)||0;
   const sum=bb+rp+sp;
   if(sum>0&&!priceI.dataset.manualEdit){
     priceI.value=sum.toFixed(2).replace(/\.00$/,'');
   }
-  // Update summary values in this row without re-render
+  // Update summary bar in this row
   const p3=parseFloat(document.getElementById('qf-p3')?.value)||0;
   const price=parseFloat(priceI.value)||0;
-  const priceCur=row.querySelector('[data-stf="cur"]')?.value||'USD';
   const sym=c=>c==='CNY'?'¥':'$';
+  const priceCur=row.querySelector('[data-stf="cur"]')?.value||'USD';
   const diff=p3>0&&price>0?price-p3:null;
   const diffColor=diff===null?'var(--text2)':diff<0?'var(--red-text)':'#1D9E75';
-  // update cost total display
-  const grid=row.querySelector('[style*="grid-template-columns"]:last-child');
+  // find the summary grid (last grid in the row)
+  const grids=row.querySelectorAll('[style*="grid-template-columns"]');
+  const grid=grids[grids.length-1];
   if(grid){
     const cells=grid.querySelectorAll(':scope>div');
-    if(cells[0]){const v=cells[0].querySelector('div:first-child');if(v&&sum>0)v.textContent=sym('USD')+sum.toFixed(2);}
-    if(cells[1]){const v=cells[1].querySelector('div:first-child');if(v)v.textContent=price>0?sym(priceCur)+price:'—';}
-    if(cells[2]){
-      const v=cells[2].querySelector('div:first-child');
-      if(v){v.textContent=diff!==null?(diff>=0?'+':'')+sym(priceCur)+Math.abs(diff).toFixed(2):'—';v.style.color=diffColor;}
-    }
+    if(cells[0]){const v=cells[0].querySelector('div');if(v&&sum>0)v.textContent=sym('USD')+sum.toFixed(2);}
+    if(cells[1]){const v=cells[1].querySelector('div');if(v)v.textContent=price>0?sym(priceCur)+price:'—';}
+    if(cells[2]){const v=cells[2].querySelector('div');if(v){v.textContent=diff!==null?(diff>=0?'+':'')+sym(priceCur)+Math.abs(diff).toFixed(2):'—';v.style.color=diffColor;}}
   }
 }
 function qtSyncSingleTiersFromDOM(){
@@ -6780,7 +6790,7 @@ function qtRenderSingleTiers(){
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:8px 10px;background:var(--bg2);border-radius:5px;margin-bottom:6px">
         <div>
           <div style="font-size:10px;color:var(--text3);margin-bottom:3px;display:flex;align-items:center;justify-content:space-between">
-            <span>准系统 (Barbone)${ramSpec?` <span style="font-size:9px;color:var(--blue-text);font-weight:500">${ramSpec}</span>`:''}</span>${mkCurSel('barbone-cur',t.barboneCur||'USD')}
+            <span>准系统 (Barbone)</span>${mkCurSel('barbone-cur',t.barboneCur||'USD')}
           </div>
           ${mkNum('barbone',t.barbone,'0')}
         </div>
