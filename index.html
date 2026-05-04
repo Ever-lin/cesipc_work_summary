@@ -1552,9 +1552,9 @@ function updateUrgentBadge(){
 function load(){
   try{
     const d=localStorage.getItem('ws6');
-    if(d){state=JSON.parse(d);if(!state.monthlies)state.monthlies=[];if(!state.dailies)state.dailies=[];if(!state.genWeeklies)state.genWeeklies=[];if(!state.genMonthlies)state.genMonthlies=[];if(!state.fyTargets)state.fyTargets={};SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});save();}
+    if(d){state=JSON.parse(d);if(!state.projects)state.projects=[];if(!state.weeklies)state.weeklies=[];if(!state.monthlies)state.monthlies=[];if(!state.dailies)state.dailies=[];if(!state.genWeeklies)state.genWeeklies=[];if(!state.genMonthlies)state.genMonthlies=[];if(!state.fyTargets)state.fyTargets={};SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});save();}
     else{state.perf=SEED.slice();state.monthlies=[];state.dailies=[];state.genWeeklies=[];state.genMonthlies=[];state.fyTargets={};save();}
-  }catch(e){state.perf=SEED.slice();state.monthlies=[];state.dailies=[];state.genWeeklies=[];state.genMonthlies=[];save();}
+  }catch(e){state.perf=SEED.slice();state.projects=state.projects||[];state.weeklies=state.weeklies||[];state.monthlies=[];state.dailies=[];state.genWeeklies=[];state.genMonthlies=[];state.fyTargets=state.fyTargets||{};save();}
 }
 load();
 // Migrate old status values to new 5-status system
@@ -3545,6 +3545,7 @@ function saveWeekly(){
 }
 
 function renderSavedWeeklies(){
+  if(!state.weeklies)state.weeklies=[];
   const list=state.weeklies.slice().reverse();
   const el=document.getElementById('saved-weeklies');
   if(!list.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--text2);font-size:12px">暂无已保存的周报内容</div>';return;}
@@ -4993,7 +4994,8 @@ function autoResizeAll(){document.querySelectorAll('textarea.auto-resize').forEa
 document.addEventListener('input',e=>{if(e.target.classList.contains('auto-resize'))autoResize(e.target);});
 
 const BACKUP_SNAPSHOT_KEY='ws6_auto_snapshot';
-const BACKUP_TIMESTAMP_KEY='ws6_last_backup_ts';
+const BACKUP_TIMESTAMP_KEY='ws6_last_backup_ts';       // 自动快照时间（仅用于快照警告）
+const BACKUP_EXPORT_KEY='ws6_last_export_ts';           // 用户手动导出时间（用于 header 和备份弹窗）
 const BACKUP_WARN_MINS=30;
 
 function exportBackup(){
@@ -5009,6 +5011,7 @@ function exportBackup(){
     'descTplMemory',
     'qt_col_settings_v1',
     'backup_schedule_time',
+    'ws6_last_export_ts',
   ];
   // Also grab any mem_* keys
   for(let i=0;i<localStorage.length;i++){
@@ -5027,6 +5030,7 @@ function exportBackup(){
   const a=document.createElement('a');a.href=url;
   a.download=`工作总结完整备份_${ds}.json`;
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  try{localStorage.setItem(BACKUP_EXPORT_KEY,Date.now().toString());}catch(e){}   // Bug1: 用独立 key 记录导出时间
   try{localStorage.setItem(BACKUP_TIMESTAMP_KEY,Date.now().toString());}catch(e){}
   const bar=document.getElementById('auto-backup-bar');if(bar)bar.style.display='none';
   updateLastBackupLabel();
@@ -5066,6 +5070,7 @@ function importBackup(evt){
         renderGeneratedWeeklies();renderGeneratedMonthlies();
         fillProjTextareas('w');fillProjTextareas('wm');updateNextLabels();
         renderSavedDocsList();renderClients();
+        updateLastBackupLabel();  // Bug2: 恢复后刷新 header 备份标签
         alert('✅ 完整数据恢复成功！所有模块（报价、项目、业绩、单据等）已还原。');
 
       // ── 旧格式：仅包含 state（兼容旧备份）──
@@ -5075,11 +5080,17 @@ function importBackup(evt){
         if(!state.monthlies)state.monthlies=[];
         if(!state.dailies)state.dailies=[];
         if(!state.weeklies)state.weeklies=[];
+        if(!state.genWeeklies)state.genWeeklies=[];
+        if(!state.genMonthlies)state.genMonthlies=[];
+        if(!state.fyTargets)state.fyTargets={};
         SEED.forEach(s=>{if(!state.perf.find(p=>p.id===s.id))state.perf.push(s);});
         save();
         renderPerf();renderPivot();renderProjects();refreshProjDatalist();
         renderSavedWeeklies();renderSavedMonthlies();renderSavedDailies();
+        renderGeneratedWeeklies();renderGeneratedMonthlies();  // Bug4: 旧格式补全
         fillProjTextareas('w');fillProjTextareas('wm');updateNextLabels();
+        renderSavedDocsList();renderClients();                  // Bug4: 旧格式补全
+        updateLastBackupLabel();  // Bug2: 恢复后刷新 header 备份标签
         alert('✅ 数据恢复成功（旧版格式）。');
 
       }else{
@@ -8076,19 +8087,19 @@ function autoSnapshotNow(){
   try{
     const snapshot={state:state,qtQuotes:qtQuotes};
     localStorage.setItem(BACKUP_SNAPSHOT_KEY,JSON.stringify(snapshot));
-    localStorage.setItem(BACKUP_TIMESTAMP_KEY,Date.now().toString());
+    localStorage.setItem(BACKUP_TIMESTAMP_KEY,Date.now().toString()); // 仅快照时间，不影响导出标签
   }catch(e){}
 }
 function checkBackupWarning(){
   const bar=document.getElementById('auto-backup-bar');
   if(!bar)return;
-  const tsStr=localStorage.getItem(BACKUP_TIMESTAMP_KEY);
+  const tsStr=localStorage.getItem(BACKUP_EXPORT_KEY); // Bug5: 改用导出时间戳
   const ts=tsStr?parseInt(tsStr):0;
   const diffMins=(Date.now()-ts)/60000;
   if(diffMins>BACKUP_WARN_MINS){
     const mins=Math.round(diffMins);
     document.getElementById('auto-backup-msg').textContent=
-      `⏰ 距上次自动快照已 ${mins} 分钟，数据已暂存到浏览器缓存。建议点击「备份数据」导出 JSON 以防标签页意外关闭丢数据。`;
+      `⏰ 距上次导出备份已 ${mins} 分钟，建议点击「备份数据」导出 JSON 文件以防数据丢失。`;
     bar.style.display='flex';
   }
 }
@@ -11827,17 +11838,17 @@ function openBackupModal() {
   // Last backup time
   const lastInfoEl = document.getElementById('backup-last-info');
   try {
-    const ts = localStorage.getItem(BACKUP_TIMESTAMP_KEY);
+    const ts = localStorage.getItem(BACKUP_EXPORT_KEY); // Bug1: 用导出 key
     if (ts) {
       const diff = Math.round((Date.now() - parseInt(ts)) / 60000);
       const timeStr = new Date(parseInt(ts)).toLocaleString('zh-CN', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
       const warn = diff > 60;
-      lastInfoEl.innerHTML = `${warn ? '⚠️' : '✅'} 上次备份：${timeStr}（${diff < 60 ? diff + ' 分钟前' : Math.round(diff/60) + ' 小时前'}）`;
+      lastInfoEl.innerHTML = `${warn ? '⚠️' : '✅'} 上次导出备份：${timeStr}（${diff < 60 ? diff + ' 分钟前' : Math.round(diff/60) + ' 小时前'}）`;
       lastInfoEl.style.color = warn ? 'var(--amber-text)' : 'var(--green-text)';
       lastInfoEl.style.background = warn ? 'var(--amber-bg)' : 'var(--green-bg)';
       lastInfoEl.style.borderColor = warn ? 'var(--amber)' : 'var(--green)';
     } else {
-      lastInfoEl.textContent = '⚠️ 尚未备份过，建议立即备份以防数据丢失';
+      lastInfoEl.textContent = '⚠️ 尚未导出备份文件，建议立即备份以防数据丢失';
       lastInfoEl.style.color = 'var(--red-text)';
       lastInfoEl.style.background = 'var(--red-bg)';
       lastInfoEl.style.borderColor = 'var(--red-border)';
@@ -11903,7 +11914,7 @@ function updateLastBackupLabel() {
   const el = document.getElementById('last-backup-label');
   if (!el) return;
   try {
-    const ts = localStorage.getItem(BACKUP_TIMESTAMP_KEY);
+    const ts = localStorage.getItem(BACKUP_EXPORT_KEY); // Bug1: 用导出 key
     if (ts) {
       const diff = Math.round((Date.now() - parseInt(ts)) / 60000);
       if (diff < 60) el.textContent = `上次备份 ${diff}m 前`;
