@@ -55,6 +55,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
 .filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
 .ym-s{width:auto;padding:5px 10px;font-size:13px}
 .slabel{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;margin-top:12px;padding-top:8px;border-top:1px solid var(--border2)}
+.slabel-future{font-size:12px;font-weight:600;color:#1D4ED8;margin-bottom:6px;margin-top:16px;padding:6px 10px;border-radius:var(--radius-xs);background:#EFF6FF;border:1px solid #BFDBFE;border-left:3px solid #3B82F6}
 .alert-s{background:var(--green-bg);color:var(--green-text);border:1px solid #C0DD97;padding:8px 12px;border-radius:var(--radius-xs);font-size:12px;margin-bottom:10px}
 .pivot-tbl{width:100%;border-collapse:collapse;font-size:12px}
 .pivot-tbl th{background:var(--bg2);padding:7px 10px;text-align:left;font-weight:500;border:1px solid var(--border2);color:var(--text2);white-space:nowrap}
@@ -810,7 +811,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>4）售后情况</label><textarea id="w-aftersales" class="auto-resize"></textarea></div>
         <div class="field"><label>5）日常事务</label><textarea id="w-daily" class="auto-resize" placeholder="其他日常工作安排"></textarea></div>
 
-        <div class="slabel" id="w-next-goal-label" style="display:flex;align-items:center;justify-content:space-between">下周目标</div>
+        <div class="slabel-future" id="w-next-goal-label" style="display:flex;align-items:center;justify-content:space-between">下周目标</div>
         <div class="field">
           <label style="display:flex;align-items:center;justify-content:space-between">
             <span>1. 业绩目标</span>
@@ -849,7 +850,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         </div>
 
         <div class="slabel" id="w-next-plan-label" style="display:flex;align-items:center;justify-content:space-between">下周工作计划<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span></div>
-        <div class="field"><label style="font-weight:500;display:flex;align-items:center;justify-content:space-between">一、重点项目（按项目节点划分）<button class="btn btn-xs" onclick="fillNextPlanTextareas('w');showRefreshToast()">↻ 刷新</button></label></div>
+        <div class="field"><label style="font-weight:500;display:flex;align-items:center;justify-content:space-between">一、重点项目（按项目节点划分）<button class="btn btn-xs" onclick="(function(){fillNextPlanTextareas('w');const m=document.getElementById('w-month').value;const wk=document.getElementById('w-week').value;showRefreshToast('✅ 已刷新：'+m+'月'+wk+'下周计划项目');})()" >↻ 刷新</button></label></div>
         <div class="field"><label>1）合同签订（含走流程）</label><textarea id="w-np1" class="auto-resize" placeholder="填写下周跟进的合同签订项目"></textarea></div>
         <div class="field"><label>2）产品报价</label><textarea id="w-np2" class="auto-resize" placeholder="填写下周跟进的报价项目"></textarea></div>
         <div class="field"><label>3）方案设计</label><textarea id="w-np3" class="auto-resize" placeholder="填写下周跟进的方案项目"></textarea></div>
@@ -865,7 +866,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>2）长线客户跟进情况如下</label></div>
         <div class="grid2">
           <div class="field">
-            <label style="display:flex;align-items:center;justify-content:space-between">—跟进（每行一家）<button class="btn btn-xs" onclick="fillNlongFollowup('w');showRefreshToast()">↻ 刷新</button></label>
+            <label style="display:flex;align-items:center;justify-content:space-between">—跟进（每行一家）<button class="btn btn-xs" onclick="(function(){fillNlongFollowup('w');const m=document.getElementById('w-month').value;const wk=document.getElementById('w-week').value;showRefreshToast('✅ 已刷新：'+m+'月'+wk+'下周长线跟进');})()" >↻ 刷新</button></label>
             <textarea id="w-nlong-followup" class="auto-resize" placeholder="每行填写一家公司名称"></textarea>
           </div>
           <div class="field">
@@ -916,7 +917,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>4）售后情况</label><textarea id="wm-aftersales" class="auto-resize"></textarea></div>
         <div class="field"><label>5）日常事务</label><textarea id="wm-daily" class="auto-resize" placeholder="其他日常工作安排"></textarea></div>
 
-        <div class="slabel" id="wm-next-goal-label" style="display:flex;align-items:center;justify-content:space-between">下月目标</div>
+        <div class="slabel-future" id="wm-next-goal-label" style="display:flex;align-items:center;justify-content:space-between">下月目标</div>
         <div class="field">
           <label style="display:flex;align-items:center;justify-content:space-between">
             <span>1. 业绩目标</span>
@@ -955,7 +956,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         </div>
 
         <div class="slabel" id="wm-next-plan-label" style="display:flex;align-items:center;justify-content:space-between">下月工作计划<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span></div>
-        <div class="field"><label style="font-weight:500;display:flex;align-items:center;justify-content:space-between">一、重点项目（按项目节点划分）<button class="btn btn-xs" onclick="fillNextPlanTextareas('wm');showRefreshToast()">↻ 刷新</button></label></div>
+        <div class="field"><label style="font-weight:500;display:flex;align-items:center;justify-content:space-between">一、重点项目（按项目节点划分）<button class="btn btn-xs" onclick="(function(){fillNextPlanTextareas('wm');const m=document.getElementById('wm-month').value;showRefreshToast('✅ 已刷新：'+m+'月下月计划项目');})()" >↻ 刷新</button></label></div>
         <div class="field"><label>1）合同签订（含走流程）</label><textarea id="wm-np1" class="auto-resize" placeholder="填写下月跟进的合同签订项目"></textarea></div>
         <div class="field"><label>2）产品报价</label><textarea id="wm-np2" class="auto-resize" placeholder="填写下月跟进的报价项目"></textarea></div>
         <div class="field"><label>3）方案设计</label><textarea id="wm-np3" class="auto-resize" placeholder="填写下月跟进的方案项目"></textarea></div>
@@ -971,7 +972,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>2）长线客户跟进情况如下</label></div>
         <div class="grid2">
           <div class="field">
-            <label style="display:flex;align-items:center;justify-content:space-between">—跟进（每行一家）<button class="btn btn-xs" onclick="fillNlongFollowup('wm');showRefreshToast()">↻ 刷新</button></label>
+            <label style="display:flex;align-items:center;justify-content:space-between">—跟进（每行一家）<button class="btn btn-xs" onclick="(function(){fillNlongFollowup('wm');const m=document.getElementById('wm-month').value;showRefreshToast('✅ 已刷新：'+m+'月下月长线跟进');})()" >↻ 刷新</button></label>
             <textarea id="wm-nlong-followup" class="auto-resize" placeholder="每行填写一家公司名称"></textarea>
           </div>
           <div class="field">
@@ -1031,7 +1032,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="field"><label>4）售后情况</label><textarea id="d-aftersales" class="auto-resize"></textarea></div>
       <div class="field"><label>5）日常事务</label><textarea id="d-daily" class="auto-resize" placeholder="其他日常工作安排"></textarea></div>
 
-      <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">明日计划<span class="inline-flex"><button class="btn btn-sm" onclick="fillDailyTomorrowPlan();showRefreshToast('✅ 已刷新：按行动时间自动抓取')" title="抓取行动时间等于目标日期的项目">↻ 刷新</button><button class="btn btn-sm" onclick="copyDailySection('plan')">复制全部</button></span></div>
+      <div class="slabel-future" style="display:flex;align-items:center;justify-content:space-between">明日计划<span class="inline-flex"><button class="btn btn-sm" onclick="fillDailyTomorrowPlan();showRefreshToast('✅ 已刷新：按行动时间自动抓取')" title="抓取行动时间等于目标日期的项目">↻ 刷新</button><button class="btn btn-sm" onclick="copyDailySection('plan')">复制全部</button></span></div>
       <div style="background:#FFFBEB;border:1px solid #F5D59A;border-radius:var(--radius-xs);padding:7px 10px;margin-bottom:10px;font-size:12px;color:#633806;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <span>📅 抓取行动时间 =</span>
         <input id="d-plan-target-date" type="date" style="width:auto;padding:4px 8px;font-size:12px;border:1px solid #F5D59A;border-radius:var(--radius-xs);background:#FFFBEB;color:#633806;font-family:inherit" onchange="fillDailyTomorrowPlan()" title="默认为日报日期+1天，节假日可改为实际上班日">
