@@ -782,7 +782,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
             <select class="ym-s" id="w-week" onchange="fillProjTextareas('w');updateNextLabels()"><option>第一周</option><option selected>第二周</option><option>第三周</option><option>第四周</option><option>第五周</option></select>
           </div>
         </div>
-        <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目（按项目节点划分）<button class="btn btn-sm" id="w-refresh-proj-btn" onclick="fillProjTextareas('w');showRefreshToast('✅ 已刷新：'+document.getElementById('w-month').value+'月'+document.getElementById('w-week').value+'项目进展')" title="抓取所选月份+周次在「项目情况」记录的进展，按进度阶段分类">↻ 刷新项目（本周）</button></div>
+        <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目（按项目节点划分）<button class="btn btn-sm" id="w-refresh-proj-btn" onclick="(function(){fillProjTextareas('w');const m=document.getElementById('w-month').value;const w=document.getElementById('w-week').value;showRefreshToast('✅ 已刷新：'+m+'月'+w+'项目进展');})()" title="抓取所选月份+周次在「项目情况」记录的进展，按进度阶段分类">↻ 刷新项目</button></div>
         <div class="field"><label>1）合同签订（含走流程）<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：生产/交付、安装/验收、项目完结、合同签订</span></label><textarea id="w-p1" class="auto-resize"></textarea></div>
         <div class="field"><label>2）产品报价<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：产品报价</span></label><textarea id="w-p2" class="auto-resize"></textarea></div>
         <div class="field"><label>3）方案设计<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：方案设计</span></label><textarea id="w-p3" class="auto-resize"></textarea></div>
@@ -797,7 +797,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <div class="field">
             <label style="display:flex;align-items:center;justify-content:space-between">
               <span>跟进客户（每行一家）<span style="font-size:11px;color:var(--text2);margin-left:4px">数量：<input id="w-followup-count" type="number" min="0" placeholder="自动" style="width:48px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onWListCountInput('w','followup')"></span></span>
-              <button class="btn btn-xs" onclick="fillWeeklyFollowup();showRefreshToast()">↻ 刷新</button>
+              <button class="btn btn-xs" onclick="(function(){fillWeeklyFollowup();const m=document.getElementById('w-month').value;const w=document.getElementById('w-week').value;showRefreshToast('✅ 已刷新：'+m+'月'+w+'跟进客户');})()" >↻ 刷新</button>
             </label>
             <textarea id="w-followup" class="auto-resize" placeholder="每行填写一家公司名称" oninput="onWListInput('w','followup')"></textarea>
           </div>
@@ -810,7 +810,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>4）售后情况</label><textarea id="w-aftersales" class="auto-resize"></textarea></div>
         <div class="field"><label>5）日常事务</label><textarea id="w-daily" class="auto-resize" placeholder="其他日常工作安排"></textarea></div>
 
-        <div class="slabel" id="w-next-goal-label">下周目标</div>
+        <div class="slabel" id="w-next-goal-label" style="display:flex;align-items:center;justify-content:space-between">下周目标</div>
         <div class="field">
           <label style="display:flex;align-items:center;justify-content:space-between">
             <span>1. 业绩目标</span>
@@ -860,7 +860,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>1）客户拜访/来访（每行填：时间+客户名）</label><textarea id="w-np-visit" class="auto-resize" placeholder="如：4/21 Orange Ltd"></textarea></div>
         <div class="field"><label>2）出差</label><textarea id="w-np-trip" class="auto-resize" placeholder="出差安排"></textarea></div>
 
-        <div class="slabel" id="w-next-long-label">下周长线工作</div>
+        <div class="slabel" id="w-next-long-label" style="display:flex;align-items:center;justify-content:space-between">下周长线工作</div>
         <div class="field"><label>1）背调客户数</label><input id="w-nlong-new" type="number" placeholder="0" style="max-width:100px"></div>
         <div class="field"><label>2）长线客户跟进情况如下</label></div>
         <div class="grid2">
@@ -888,7 +888,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
             <select class="ym-s" id="wm-month" onchange="fillProjTextareas('wm');updateNextLabels()"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select>
           </div>
         </div>
-        <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目（按项目节点划分）<button class="btn btn-sm" id="wm-refresh-proj-btn" onclick="fillProjTextareas('wm');showRefreshToast('✅ 已刷新：'+document.getElementById('wm-month').value+'月项目进展')" title="抓取所选月份在「项目情况」记录的进展，按进度阶段分类">↻ 刷新项目（本月）</button></div>
+        <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目（按项目节点划分）<button class="btn btn-sm" id="wm-refresh-proj-btn" onclick="(function(){fillProjTextareas('wm');const m=document.getElementById('wm-month').value;showRefreshToast('✅ 已刷新：'+m+'月项目进展');})()" title="抓取所选月份在「项目情况」记录的进展，按进度阶段分类">↻ 刷新项目</button></div>
         <div class="field"><label>1）合同签订（含走流程）<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：生产/交付、安装/验收、项目完结、合同签订</span></label><textarea id="wm-p1" class="auto-resize"></textarea></div>
         <div class="field"><label>2）产品报价<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：产品报价</span></label><textarea id="wm-p2" class="auto-resize"></textarea></div>
         <div class="field"><label>3）方案设计<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：方案设计</span></label><textarea id="wm-p3" class="auto-resize"></textarea></div>
@@ -903,7 +903,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <div class="field">
             <label style="display:flex;align-items:center;justify-content:space-between">
               <span>跟进客户（每行一家）<span style="font-size:11px;color:var(--text2);margin-left:4px">数量：<input id="wm-followup-count" type="number" min="0" placeholder="自动" style="width:48px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onWListCountInput('wm','followup')"></span></span>
-              <button class="btn btn-xs" onclick="fillMonthlyFollowup();showRefreshToast()">↻ 刷新</button>
+              <button class="btn btn-xs" onclick="(function(){fillMonthlyFollowup();const m=document.getElementById('wm-month').value;showRefreshToast('✅ 已刷新：'+m+'月跟进客户');})()" >↻ 刷新</button>
             </label>
             <textarea id="wm-followup" class="auto-resize" placeholder="每行填写一家公司名称" oninput="onWListInput('wm','followup')"></textarea>
           </div>
@@ -916,7 +916,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>4）售后情况</label><textarea id="wm-aftersales" class="auto-resize"></textarea></div>
         <div class="field"><label>5）日常事务</label><textarea id="wm-daily" class="auto-resize" placeholder="其他日常工作安排"></textarea></div>
 
-        <div class="slabel" id="wm-next-goal-label">下月目标</div>
+        <div class="slabel" id="wm-next-goal-label" style="display:flex;align-items:center;justify-content:space-between">下月目标</div>
         <div class="field">
           <label style="display:flex;align-items:center;justify-content:space-between">
             <span>1. 业绩目标</span>
@@ -966,7 +966,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>1）客户拜访/来访（每行填：时间+客户名）</label><textarea id="wm-np-visit" class="auto-resize" placeholder="如：5/1 Orange Ltd"></textarea></div>
         <div class="field"><label>2）出差</label><textarea id="wm-np-trip" class="auto-resize" placeholder="出差安排"></textarea></div>
 
-        <div class="slabel" id="wm-next-long-label">下月长线工作</div>
+        <div class="slabel" id="wm-next-long-label" style="display:flex;align-items:center;justify-content:space-between">下月长线工作</div>
         <div class="field"><label>1）背调客户数</label><input id="wm-nlong-new" type="number" placeholder="0" style="max-width:100px"></div>
         <div class="field"><label>2）长线客户跟进情况如下</label></div>
         <div class="grid2">
@@ -1000,7 +1000,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         </div>
       </div>
 
-      <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目（按项目节点划分）<span class="inline-flex"><button class="btn btn-sm" onclick="fillDailyProjects();fillDailyFollowup();showRefreshToast('✅ 已刷新：当天项目进展')" title="抓取所选日期当天在「项目情况」记录的项目进展">↻ 刷新项目（当天）</button><button class="btn btn-sm" onclick="copyDailySection('projects')">复制全部</button></span></div>
+      <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目（按项目节点划分）<span class="inline-flex"><button class="btn btn-sm" onclick="(function(){fillDailyProjects();fillDailyFollowup();const d=document.getElementById('d-date').value;const label=d?d.replace(/-(\d+)-(\d+)$/,(_,m,dd)=>m+'月'+dd+'号'):'当天';showRefreshToast('✅ 已刷新：'+label+'项目进展');})()" title="抓取所选日期当天在「项目情况」记录的项目进展">↻ 刷新项目</button><button class="btn btn-sm" onclick="copyDailySection('projects')">复制全部</button></span></div>
       <div class="field"><label>1）合同签订（含走流程）<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：生产/交付、安装/验收、项目完结、合同签订</span></label><textarea id="d-p1" class="auto-resize"></textarea></div>
       <div class="field"><label>2）产品报价<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：产品报价</span></label><textarea id="d-p2" class="auto-resize"></textarea></div>
       <div class="field"><label>3）方案设计<span style="font-size:11px;color:var(--text3);margin-left:4px">对应进度：方案设计</span></label><textarea id="d-p3" class="auto-resize"></textarea></div>
@@ -1018,7 +1018,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field">
           <label style="display:flex;align-items:center;justify-content:space-between">
             <span>跟进客户（每行一家）<span style="font-size:11px;color:var(--text2);margin-left:4px">数量：<input id="d-followup-count" type="number" min="0" placeholder="自动" style="width:48px;padding:1px 5px;font-size:11px;display:inline-block" oninput="onDailyCountInput('followup')"></span></span>
-            <button class="btn btn-xs" onclick="fillDailyFollowup();showRefreshToast()">↻ 刷新</button>
+            <button class="btn btn-xs" onclick="(function(){fillDailyFollowup();const d=document.getElementById('d-date').value;const label=d?d.replace(/-(\d+)-(\d+)$/,(_,m,dd)=>m+'月'+dd+'号'):'当天';showRefreshToast('✅ 已刷新：'+label+'跟进的客户');})()" title="抓取所选日期当天的长线跟进客户">↻ 刷新</button>
           </label>
           <textarea id="d-followup" class="auto-resize" placeholder="每行填写一家公司名称" oninput="onDailyListInput('followup')"></textarea>
         </div>
@@ -1031,7 +1031,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
       <div class="field"><label>4）售后情况</label><textarea id="d-aftersales" class="auto-resize"></textarea></div>
       <div class="field"><label>5）日常事务</label><textarea id="d-daily" class="auto-resize" placeholder="其他日常工作安排"></textarea></div>
 
-      <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">明日计划<span class="inline-flex"><button class="btn btn-sm" onclick="fillDailyTomorrowPlan();showRefreshToast()">↻ 刷新</button><button class="btn btn-sm" onclick="copyDailySection('plan')">复制全部</button></span></div>
+      <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">明日计划<span class="inline-flex"><button class="btn btn-sm" onclick="fillDailyTomorrowPlan();showRefreshToast('✅ 已刷新：按行动时间自动抓取')" title="抓取行动时间等于目标日期的项目">↻ 刷新</button><button class="btn btn-sm" onclick="copyDailySection('plan')">复制全部</button></span></div>
       <div style="background:#FFFBEB;border:1px solid #F5D59A;border-radius:var(--radius-xs);padding:7px 10px;margin-bottom:10px;font-size:12px;color:#633806;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <span>📅 抓取行动时间 =</span>
         <input id="d-plan-target-date" type="date" style="width:auto;padding:4px 8px;font-size:12px;border:1px solid #F5D59A;border-radius:var(--radius-xs);background:#FFFBEB;color:#633806;font-family:inherit" onchange="fillDailyTomorrowPlan()" title="默认为日报日期+1天，节假日可改为实际上班日">
@@ -3862,7 +3862,7 @@ function getNextMonth(selMonth){
   return String(nm);
 }
 
-// 更新「下周/下月」标题，显示具体日期/月份（从「下周/下月目标」开始）
+// 更新「下周/下月」标题，日期显示在标题右侧（从「下周/下月目标」开始）
 function updateNextLabels(){
   const fy=document.getElementById('w-fy')?.value||'';
   const month=document.getElementById('w-month')?.value||'';
@@ -3871,25 +3871,25 @@ function updateNextLabels(){
   const wmMonth=document.getElementById('wm-month')?.value||month;
   if(fy&&month&&week){
     const nextWeekStr=getNextWeekLabel(fy,month,week);
-    const badge=`<span style="font-weight:600;color:var(--blue-text);margin-left:4px">${nextWeekStr}</span>`;
-    const sub=`<span style="font-size:11px;color:var(--text2);font-weight:400;margin-left:6px">（重点项目、订单、客户拜访）</span>`;
+    const dateBadge=`<span style="font-size:11px;color:var(--blue-text);font-weight:500;margin-left:auto;padding-left:8px;white-space:nowrap">${nextWeekStr}</span>`;
+    const sub=`<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span>`;
     const el0=document.getElementById('w-next-goal-label');
     const el1=document.getElementById('w-next-plan-label');
     const el2=document.getElementById('w-next-long-label');
-    if(el0)el0.innerHTML=`下周目标 ${badge}`;
-    if(el1)el1.innerHTML=`下周工作计划 ${badge}${sub}`;
-    if(el2)el2.innerHTML=`下周长线工作 ${badge}`;
+    if(el0)el0.innerHTML=`<span>下周目标</span>${dateBadge}`;
+    if(el1)el1.innerHTML=`<span>下周工作计划 ${sub}</span>${dateBadge}`;
+    if(el2)el2.innerHTML=`<span>下周长线工作</span>${dateBadge}`;
   }
   if(wmFy&&wmMonth){
     const nextMonStr=getNextMonthLabel(wmFy,wmMonth);
-    const badge=`<span style="font-weight:600;color:var(--blue-text);margin-left:4px">${nextMonStr}</span>`;
-    const sub=`<span style="font-size:11px;color:var(--text2);font-weight:400;margin-left:6px">（重点项目、订单、客户拜访）</span>`;
+    const dateBadge=`<span style="font-size:11px;color:var(--blue-text);font-weight:500;margin-left:auto;padding-left:8px;white-space:nowrap">${nextMonStr}</span>`;
+    const sub=`<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span>`;
     const el3=document.getElementById('wm-next-goal-label');
     const el4=document.getElementById('wm-next-plan-label');
     const el5=document.getElementById('wm-next-long-label');
-    if(el3)el3.innerHTML=`下月目标 ${badge}`;
-    if(el4)el4.innerHTML=`下月工作计划 ${badge}${sub}`;
-    if(el5)el5.innerHTML=`下月长线工作 ${badge}`;
+    if(el3)el3.innerHTML=`<span>下月目标</span>${dateBadge}`;
+    if(el4)el4.innerHTML=`<span>下月工作计划 ${sub}</span>${dateBadge}`;
+    if(el5)el5.innerHTML=`<span>下月长线工作</span>${dateBadge}`;
   }
 }
 
