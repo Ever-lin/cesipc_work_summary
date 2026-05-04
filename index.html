@@ -537,6 +537,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div style="margin-top:6px;font-weight:600;color:#185FA5">🔘 关键按钮说明</div>
   <div class="hb-row"><span class="hb-tag">💰 从报价导入</span><span>从「报价管理」里选一条报价，自动填入项目名、客户名、数量、报价等字段，省去手动录入。填写表单顶部的按钮。</span></div>
   <div class="hb-row"><span class="hb-tag amber">⚠️ 报价有更新，点击同步</span><span>出现在具体项目卡片上。当「报价管理」里该项目的报价有变化（改了价格/状态/进度），此按钮出现，点击可将最新报价数据同步到项目记录。</span></div>
+  <div class="hb-row"><span class="hb-tag" style="background:var(--blue)">💰 创建对应报价</span><span>出现在项目卡片标题右侧（优先级旁边）。当「报价管理」里没有该项目的报价记录时出现，点击直接打开新增报价弹窗（预填项目名、客户名），填好保存后自动建立双向联动。</span></div>
   <div class="hb-row"><span class="hb-tag">⚡ 快速更新</span><span>出现在项目卡片上。弹出简化版表单，快速补充跟进内容，不需要打开完整编辑表单。</span></div>
   <div class="hb-row"><span class="hb-tag">追加进展</span><span>出现在项目卡片上。在原有项目下新增一次跟进记录，原有历史完整保留。</span></div>
   <div class="hb-row"><span class="hb-tag">编辑最新</span><span>出现在项目卡片上。修改最近一次的跟进记录内容（不新增，原地修改）。</span></div>
@@ -777,8 +778,8 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="card-header"><span class="card-title">填写周报附加内容</span>
           <div class="inline-flex">
             <select class="ym-s" id="w-fy"></select>
-            <select class="ym-s" id="w-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select>
-            <select class="ym-s" id="w-week" onchange="fillProjTextareas('w')"><option>第一周</option><option selected>第二周</option><option>第三周</option><option>第四周</option><option>第五周</option></select>
+            <select class="ym-s" id="w-month" onchange="fillProjTextareas('w');updateNextLabels()"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select>
+            <select class="ym-s" id="w-week" onchange="fillProjTextareas('w');updateNextLabels()"><option>第一周</option><option selected>第二周</option><option>第三周</option><option>第四周</option><option>第五周</option></select>
           </div>
         </div>
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目（按项目节点划分）<button class="btn btn-sm" onclick="fillProjTextareas('w');showRefreshToast()">↻ 刷新项目</button></div>
@@ -847,7 +848,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <textarea id="w-target-deal-detail" class="auto-resize" placeholder="客户名字，项目名称+项目进度术语&#10;如：Orange Ltd，项目A 产品报价"></textarea>
         </div>
 
-        <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">下周工作计划<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span></div>
+        <div class="slabel" id="w-next-plan-label" style="display:flex;align-items:center;justify-content:space-between">下周工作计划<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span></div>
         <div class="field"><label style="font-weight:500;display:flex;align-items:center;justify-content:space-between">一、重点项目（按项目节点划分）<button class="btn btn-xs" onclick="fillNextPlanTextareas('w');showRefreshToast()">↻ 刷新</button></label></div>
         <div class="field"><label>1）合同签订（含走流程）</label><textarea id="w-np1" class="auto-resize" placeholder="填写下周跟进的合同签订项目"></textarea></div>
         <div class="field"><label>2）产品报价</label><textarea id="w-np2" class="auto-resize" placeholder="填写下周跟进的报价项目"></textarea></div>
@@ -859,7 +860,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>1）客户拜访/来访（每行填：时间+客户名）</label><textarea id="w-np-visit" class="auto-resize" placeholder="如：4/21 Orange Ltd"></textarea></div>
         <div class="field"><label>2）出差</label><textarea id="w-np-trip" class="auto-resize" placeholder="出差安排"></textarea></div>
 
-        <div class="slabel">下周长线工作</div>
+        <div class="slabel" id="w-next-long-label">下周长线工作</div>
         <div class="field"><label>1）背调客户数</label><input id="w-nlong-new" type="number" placeholder="0" style="max-width:100px"></div>
         <div class="field"><label>2）长线客户跟进情况如下</label></div>
         <div class="grid2">
@@ -884,7 +885,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="card-header"><span class="card-title">填写月报附加内容</span>
           <div class="inline-flex">
             <select class="ym-s" id="wm-fy"></select>
-            <select class="ym-s" id="wm-month"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select>
+            <select class="ym-s" id="wm-month" onchange="fillProjTextareas('wm');updateNextLabels()"><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option></select>
           </div>
         </div>
         <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">重点项目（按项目节点划分）<button class="btn btn-sm" onclick="fillProjTextareas('wm');showRefreshToast()">↻ 刷新项目</button></div>
@@ -953,7 +954,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <textarea id="wm-target-deal-detail" class="auto-resize" placeholder="客户名字，项目名称+项目进度术语&#10;如：Orange Ltd，项目A 产品报价"></textarea>
         </div>
 
-        <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">下月工作计划<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span></div>
+        <div class="slabel" id="wm-next-plan-label" style="display:flex;align-items:center;justify-content:space-between">下月工作计划<span style="font-size:11px;color:var(--text2);font-weight:400">（重点项目、订单、客户拜访）</span></div>
         <div class="field"><label style="font-weight:500;display:flex;align-items:center;justify-content:space-between">一、重点项目（按项目节点划分）<button class="btn btn-xs" onclick="fillNextPlanTextareas('wm');showRefreshToast()">↻ 刷新</button></label></div>
         <div class="field"><label>1）合同签订（含走流程）</label><textarea id="wm-np1" class="auto-resize" placeholder="填写下月跟进的合同签订项目"></textarea></div>
         <div class="field"><label>2）产品报价</label><textarea id="wm-np2" class="auto-resize" placeholder="填写下月跟进的报价项目"></textarea></div>
@@ -965,7 +966,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
         <div class="field"><label>1）客户拜访/来访（每行填：时间+客户名）</label><textarea id="wm-np-visit" class="auto-resize" placeholder="如：5/1 Orange Ltd"></textarea></div>
         <div class="field"><label>2）出差</label><textarea id="wm-np-trip" class="auto-resize" placeholder="出差安排"></textarea></div>
 
-        <div class="slabel">下月长线工作</div>
+        <div class="slabel" id="wm-next-long-label">下月长线工作</div>
         <div class="field"><label>1）背调客户数</label><input id="wm-nlong-new" type="number" placeholder="0" style="max-width:100px"></div>
         <div class="field"><label>2）长线客户跟进情况如下</label></div>
         <div class="grid2">
@@ -1600,7 +1601,7 @@ function init(){
   if(existingMonthly)loadMonthly(existingMonthly.id);
   renderPerf();renderPivot();refreshProjDatalist();renderSavedWeeklies();renderSavedMonthlies();renderSavedDailies();
   renderGeneratedWeeklies();renderGeneratedMonthlies();
-  fillProjTextareas('w');fillProjTextareas('wm');fillDailyProjects();fillDailyTomorrowPlan();setTimeout(fillDailyFollowup,50);
+  fillProjTextareas('w');fillProjTextareas('wm');updateNextLabels();fillDailyProjects();fillDailyTomorrowPlan();setTimeout(fillDailyFollowup,50);
   // 初始化目标预览
   setTimeout(()=>{
     const ewFy=document.getElementById('ew-fy'),ewMonth=document.getElementById('ew-month');
@@ -1621,7 +1622,7 @@ function switchTab(name){
   if(name==='performance'){renderPerf();renderPivot();}
   if(name==='projects'){renderProjects();refreshProjDatalist();refreshIqtBadge();}
   if(name==='targets'){loadTargetForm();}
-  if(name==='export'){fillProjTextareas('w');fillProjTextareas('wm');fillDailyProjects();renderGeneratedWeeklies();renderGeneratedMonthlies();refreshExportTargetPreviews();}
+  if(name==='export'){fillProjTextareas('w');fillProjTextareas('wm');updateNextLabels();fillDailyProjects();renderGeneratedWeeklies();renderGeneratedMonthlies();refreshExportTargetPreviews();}
   if(name==='clients'){
     renderClients();
     if(_clientScrollName){
@@ -1684,28 +1685,67 @@ function toggleAmt(){
 function fillUnpaidToCollect(prefix) {
   const list = getUnpaidPerf();
   if (!list.length) { toast('暂无未回款业绩记录'); return; }
+  // 打开勾选弹窗，而非一次性全部导入
+  openUnpaidPicker(prefix, list);
+}
 
-  // 总额（万元）
-  const totalYuan = list.reduce((s, r) => s + r.unpaid, 0);
+let _unpaidPickerPrefix = '';
+function openUnpaidPicker(prefix, list) {
+  _unpaidPickerPrefix = prefix;
+  const container = document.getElementById('unpaid-picker-list');
+  container.innerHTML = list.map((r, i) => {
+    const w = (r.unpaid / 10000).toFixed(2).replace(/\.?0+$/, '');
+    return `<label style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border2);transition:background .1s" onmouseover="this.style.background='var(--blue-bg)'" onmouseout="this.style.background=''">
+      <input type="checkbox" data-idx="${i}" data-unpaid="${Math.round(r.unpaid)}" data-client="${r.client.replace(/"/g,'&quot;')}" onchange="updateUnpaidPickerSum()" style="width:15px;height:15px;cursor:pointer">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.client.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        <div style="font-size:11px;color:var(--text2)">未回款 <b style="color:var(--red-text)">${w}W</b> &nbsp;·&nbsp; 业绩 ${(r.perfTotal/10000).toFixed(2).replace(/\.?0+$/,'')}W &nbsp;·&nbsp; 已回款 ${(r.collectTotal/10000).toFixed(2).replace(/\.?0+$/,'')}W</div>
+      </div>
+    </label>`;
+  }).join('');
+  document.getElementById('unpaid-picker-sum').textContent = '0W';
+  document.getElementById('unpaid-picker-bg').style.display = 'flex';
+}
+
+function updateUnpaidPickerSum() {
+  let total = 0;
+  document.querySelectorAll('#unpaid-picker-list input[type=checkbox]:checked').forEach(cb => {
+    total += parseInt(cb.dataset.unpaid) || 0;
+  });
+  const w = (total / 10000).toFixed(2).replace(/\.?0+$/, '');
+  document.getElementById('unpaid-picker-sum').textContent = w + 'W';
+}
+
+function closeUnpaidPicker() {
+  document.getElementById('unpaid-picker-bg').style.display = 'none';
+}
+
+function confirmUnpaidPicker() {
+  const checked = Array.from(document.querySelectorAll('#unpaid-picker-list input[type=checkbox]:checked'));
+  if (!checked.length) { toast('请至少勾选一个客户'); return; }
+  const prefix = _unpaidPickerPrefix;
+
+  // 求和
+  const totalYuan = checked.reduce((s, cb) => s + (parseInt(cb.dataset.unpaid) || 0), 0);
   const totalW = (totalYuan / 10000).toFixed(2).replace(/\.?0+$/, '');
   const totalEl = document.getElementById(prefix + '-target-collect-total');
   if (totalEl) totalEl.value = totalW + 'W';
 
-  // 明细（每行：客户：xxW）
-  const detail = list.map(r => {
-    const w = (r.unpaid / 10000).toFixed(2).replace(/\.?0+$/, '');
-    return r.client + '：' + w + 'W';
+  // 明细
+  const detail = checked.map(cb => {
+    const w = ((parseInt(cb.dataset.unpaid)||0) / 10000).toFixed(2).replace(/\.?0+$/, '');
+    return cb.dataset.client + '：' + w + 'W';
   }).join('\n');
   const detailEl = document.getElementById(prefix + '-target-collect-detail');
   if (detailEl) {
     detailEl.value = detail;
-    // 手动触发 auto-resize 高度重算
     detailEl.style.height = 'auto';
     detailEl.style.height = detailEl.scrollHeight + 'px';
     detailEl.dispatchEvent(new Event('input'));
   }
 
-  toast('✅ 已导入 ' + list.length + ' 个未回款客户，合计 ' + totalW + 'W');
+  closeUnpaidPicker();
+  toast('✅ 已导入 ' + checked.length + ' 个客户，合计 ' + totalW + 'W');
 }
 
 // ── 计算某客户的未回款金额（业绩总额 - 回款总额）──
@@ -2143,25 +2183,18 @@ function refreshProjDatalist(){
 // ===== 从项目情况创建对应报价 =====
 function openCreateQuoteFromProj(projName){
   if(!projName)return;
-  // 找最新项目记录，预填字段
   const entries=state.projects
     .filter(p=>(p.name||p.client)===projName||p.linkedQuoteProject===projName)
     .sort((a,b)=>b.id-a.id);
   const latest=entries[0];
   if(!latest)return;
-  // 记录来源项目，供 qtSave 保存后建立联动
   window._pendingLinkProjName=projName;
-  // 复用现有新增报价弹窗
   qtOpenAdd();
-  // 预填项目名、公司名
   document.getElementById('qf-project').value=latest.name||projName;
   document.getElementById('qf-company').value=latest.client||'';
-  // 预填成单状态（从项目状态映射）
   const dealMap={'跟进中':'open','确认订单':'confirmed','成交':'won','暂无进展':'pause','丢单':'lost'};
   document.getElementById('qf-deal').value=dealMap[latest.status]||'open';
-  // 预填项目进度
   if(latest.progressStage)document.getElementById('qf-stage').value=latest.progressStage;
-  // 修改弹窗标题
   document.getElementById('qt-modal-title').textContent='新增报价（来自项目：'+(latest.name||projName)+'）';
 }
 
@@ -2825,7 +2858,7 @@ function renderProjects(){
           <div style="font-size:12px;color:var(--text2);margin-bottom:1px">${latest.client}</div>
           <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${icon} ${latest.name}</div>
         </div>
-        <div class="inline-flex" style="flex-shrink:0;gap:4px"><span class="badge ${pc}" style="font-size:10px">${latest.priority}</span><span class="badge badge-gray" style="font-size:10px">${sc.label}</span>${latest.progressStage?`<span class="badge badge-blue" style="font-size:10px">${latest.progressStage}</span>`:''}<span class="proj-chevron" style="font-size:11px;color:var(--text3);margin-left:2px">▶</span></div>
+        <div class="inline-flex" style="flex-shrink:0;gap:4px" onclick="event.stopPropagation()">${(()=>{const _pnc=latest.linkedQuoteProject||latest.name||latest.client||'';const _hqr=_pnc&&qtQuotes.some(q=>q.project===_pnc);if(!_hqr&&_pnc){const _safe=_pnc.replace(/'/g,"\\'");return `<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue);font-weight:600;font-size:10px;padding:1px 6px" title="\u521b\u5efa\u5bf9\u5e94\u62a5\u4ef7" onclick="event.stopPropagation();openCreateQuoteFromProj('${_safe}')" >\ud83d\udcb0</button>`;}return '';})()}<span class="badge ${pc}" style="font-size:10px">${latest.priority}</span><span class="badge badge-gray" style="font-size:10px">${sc.label}</span>${latest.progressStage?`<span class="badge badge-blue" style="font-size:10px">${latest.progressStage}</span>`:''}<span class="proj-chevron" style="font-size:11px;color:var(--text3);margin-left:2px">▶</span></div>
       </div>
 
       <div id="proj-body-${cardId}" style="display:none">
@@ -2870,10 +2903,10 @@ function renderProjects(){
             if(hasQUpdate){
               return `<button class="btn btn-xs" style="background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber);font-weight:600" onclick="syncQuoteToProject('${lqp.replace(/'/g,"\\'")}')">⚠️ 报价有更新，点击同步</button>`;
             }
-            const projNameForCheck=latest.linkedQuoteProject||latest.name||latest.client||'';
-            const hasQuoteRecord=projNameForCheck&&qtQuotes.some(q=>q.project===projNameForCheck);
-            if(!hasQuoteRecord&&projNameForCheck){
-              return `<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue);font-weight:600" onclick="openCreateQuoteFromProj('${projNameForCheck.replace(/'/g,"\\'")}')">💰 创建对应报价</button>`;
+            const pnc=latest.linkedQuoteProject||latest.name||latest.client||'';
+            const hqr=pnc&&qtQuotes.some(q=>q.project===pnc);
+            if(!hqr&&pnc){
+              return `<button class="btn btn-xs" style="background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue);font-weight:600" onclick="openCreateQuoteFromProj('${pnc.replace(/'/g,"\\'")}')">💰 创建对应报价</button>`;
             }
             return '';
           })()}
@@ -3282,6 +3315,57 @@ function weekOfDay(dateStr){
   const info=weekInfoOfDay(dateStr);
   return info?info.week:null;
 }
+
+// 返回某月某周的「第N周（M/D-M/D）」标签
+function getWeekLabel(fy, month, week){
+  // 找该月该周内的任意一天（该周在该月的周四）
+  const fyStart = parseInt(fy)||new Date().getFullYear();
+  // month in fy: 4-12 same year, 1-3 next year
+  const calYear = parseInt(month)>=4 ? fyStart : fyStart+1;
+  const mIdx = parseInt(month)-1;
+  // 找该月第一个周四
+  const firstThu = new Date(calYear, mIdx, 1);
+  const ftDow = firstThu.getDay();
+  const daysToFirstThu = ftDow<=4?(4-ftDow):(11-ftDow);
+  firstThu.setDate(1+daysToFirstThu);
+  // 第一周周一
+  const firstMon = new Date(firstThu); firstMon.setDate(firstThu.getDate()-3);
+  const weekLabels=['第一周','第二周','第三周','第四周','第五周'];
+  const weekIdx = weekLabels.indexOf(week);
+  if(weekIdx<0)return week;
+  const mon = new Date(firstMon); mon.setDate(firstMon.getDate()+weekIdx*7);
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+  const fmt = d=>`${d.getMonth()+1}/${d.getDate()}`;
+  return `${week}（${fmt(mon)}-${fmt(sun)}）`;
+}
+
+// 下一周的标签（给定当前周/月/fy）
+function getNextWeekLabel(fy, month, week){
+  const weekLabels=['第一周','第二周','第三周','第四周','第五周'];
+  const idx = weekLabels.indexOf(week);
+  let nextWeek, nextMonth=month, nextFy=fy;
+  if(idx<0||idx>=4){
+    // 进入下月第一周
+    nextWeek='第一周';
+    const mOrder=['4','5','6','7','8','9','10','11','12','1','2','3'];
+    const mi=mOrder.indexOf(String(month));
+    if(mi===-1||mi===11){nextMonth='4';nextFy=String(parseInt(fy)+1);}
+    else nextMonth=mOrder[mi+1];
+  } else {
+    nextWeek=weekLabels[idx+1];
+  }
+  return getWeekLabel(nextFy, nextMonth, nextWeek);
+}
+
+// 下一个月的标签
+function getNextMonthLabel(fy, month){
+  const mOrder=['4','5','6','7','8','9','10','11','12','1','2','3'];
+  const mi=mOrder.indexOf(String(month));
+  let nextMonth, nextFy=fy;
+  if(mi===-1||mi===11){nextMonth='4';nextFy=String(parseInt(fy)+1);}
+  else nextMonth=mOrder[mi+1];
+  return `${nextMonth}月`;
+}
 function fillProjTextareas(prefix){
   const CATS=[
     {id:'p1',stages:['生产/交付','安装/验收','项目完结','合同签订']},
@@ -3297,18 +3381,23 @@ function fillProjTextareas(prefix){
   if(prefix==='w'){
     selWeek=document.getElementById('w-week')?.value;
     selMonth=document.getElementById('w-month')?.value;
+  } else if(prefix==='wm'){
+    selMonth=document.getElementById('wm-month')?.value;
+    // 月报：不限周，只按月过滤
   }
   CATS.forEach(cat=>{
     const el=document.getElementById(prefix+'-'+cat.id);if(!el)return;
     let items;
-    if(selWeek&&selMonth){
+    if(selMonth){
       const matchingGroups=[];
       Object.keys(grouped).forEach(k=>{
         const entries=grouped[k].sort((a,b)=>b.id-a.id);
         const inMonth=entries.filter(p=>{
           if(!p.recordDate)return false;
           const info=weekInfoOfDay(p.recordDate);
-          return info&&info.month===String(selMonth)&&info.week===selWeek;
+          if(!info||info.month!==String(selMonth))return false;
+          if(selWeek&&info.week!==selWeek)return false;
+          return true;
         });
         if(inMonth.length>0){
           const latest=inMonth[0];
@@ -3779,6 +3868,29 @@ function getNextWeekInfo(selMonth, selWeek){
 function getNextMonth(selMonth){
   const nm=parseInt(selMonth,10)===12?1:parseInt(selMonth,10)+1;
   return String(nm);
+}
+
+// 更新「下周/下月」标题，显示具体日期/月份
+function updateNextLabels(){
+  const fy=document.getElementById('w-fy')?.value||'';
+  const month=document.getElementById('w-month')?.value||'';
+  const week=document.getElementById('w-week')?.value||'';
+  const wmFy=document.getElementById('wm-fy')?.value||fy;
+  const wmMonth=document.getElementById('wm-month')?.value||month;
+  if(fy&&month&&week){
+    const nextWeekStr=getNextWeekLabel(fy,month,week);
+    const el1=document.getElementById('w-next-plan-label');
+    const el2=document.getElementById('w-next-long-label');
+    if(el1)el1.innerHTML=`下周工作计划 <span style="font-weight:600;color:var(--blue-text)">${nextWeekStr}</span><span style="font-size:11px;color:var(--text2);font-weight:400;margin-left:6px">（重点项目、订单、客户拜访）</span>`;
+    if(el2)el2.textContent=`下周长线工作 ${nextWeekStr}`;
+  }
+  if(wmFy&&wmMonth){
+    const nextMonStr=getNextMonthLabel(wmFy,wmMonth);
+    const el3=document.getElementById('wm-next-plan-label');
+    const el4=document.getElementById('wm-next-long-label');
+    if(el3)el3.innerHTML=`下月工作计划 <span style="font-weight:600;color:var(--blue-text)">${nextMonStr}</span><span style="font-size:11px;color:var(--text2);font-weight:400;margin-left:6px">（重点项目、订单、客户拜访）</span>`;
+    if(el4)el4.textContent=`下月长线工作 ${nextMonStr}`;
+  }
 }
 
 // 下周/下月工作计划 一、重点项目：自动填入行动时间落在【下一周/下一月】的项目
@@ -7272,36 +7384,27 @@ function qtSave(){
     const linkTarget=window._pendingLinkProjName;
     window._pendingLinkProjName=null;
     const savedProjName=document.getElementById('qf-project').value.trim()||linkTarget;
-    // 为该项目所有记录写入 linkedQuoteProject
     state.projects.forEach(p=>{
       if((p.name||p.client)===linkTarget||p.linkedQuoteProject===linkTarget){
         p.linkedQuoteProject=savedProjName;
       }
     });
     saveState();
-    // 同步报价管理里刚新增记录的 lastSyncedAt，避免立即出现「报价有更新」按钮
     const syncTime=new Date().toISOString();
     qtQuotes.forEach(q=>{if(q.project===savedProjName&&!q.lastSyncedAt){q.lastSyncedAt=syncTime;q.lastSyncedDeal=q.deal||'';q.lastSyncedStage=q.stage||'';}});
     qtPersist();
-    // 保存后切换到报价管理 Tab 并高亮新记录
     setTimeout(()=>{
       switchTab('quotes');
       setTimeout(()=>{
         const newQuote=qtQuotes.find(q=>q.project===savedProjName);
         if(newQuote){
           const rowEl=document.querySelector(`tr[data-id="${newQuote.id}"]`);
-          if(rowEl){
-            rowEl.scrollIntoView({behavior:'smooth',block:'center'});
-            rowEl.style.transition='background 0.4s';
-            rowEl.style.background='#FEF3C7';
-            setTimeout(()=>{rowEl.style.background='';},2200);
-          }
+          if(rowEl){rowEl.scrollIntoView({behavior:'smooth',block:'center'});rowEl.style.transition='background 0.4s';rowEl.style.background='#FEF3C7';setTimeout(()=>{rowEl.style.background='';},2200);}
         }
-        const toast=document.createElement('div');
-        toast.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#185FA5;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);white-space:nowrap';
-        toast.textContent='✅ 报价已创建，已与项目情况建立联动';
-        document.body.appendChild(toast);
-        setTimeout(()=>toast.remove(),2800);
+        const t=document.createElement('div');
+        t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#185FA5;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);white-space:nowrap';
+        t.textContent='✅ 报价已创建，已与项目情况建立联动';
+        document.body.appendChild(t);setTimeout(()=>t.remove(),2800);
       },300);
     },950);
   }
@@ -11822,6 +11925,26 @@ document.getElementById('backup-modal-bg').addEventListener('click', function(e)
 updateLastBackupLabel();
 setInterval(updateLastBackupLabel, 60000);
 </script>
+
+<!-- ===== 未回款选择弹窗 ===== -->
+<div id="unpaid-picker-bg" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center" onclick="if(event.target===this)closeUnpaidPicker()">
+  <div style="background:var(--bg);border-radius:var(--radius);padding:20px;width:420px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:14px;font-weight:600;color:var(--text)">💰 选择回款客户</span>
+      <button onclick="closeUnpaidPicker()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2);line-height:1">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--text2)">勾选本期预计能回款的客户，系统自动求和填入「回款目标」。</div>
+    <div id="unpaid-picker-list" style="flex:1;overflow-y:auto;border:1px solid var(--border2);border-radius:var(--radius-xs);max-height:320px"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg2);border-radius:var(--radius-xs);font-size:13px">
+      <span style="color:var(--text2)">已选合计：</span>
+      <span id="unpaid-picker-sum" style="font-weight:600;color:var(--blue-text)">0W</span>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="closeUnpaidPicker()">取消</button>
+      <button class="btn btn-primary" onclick="confirmUnpaidPicker()">✅ 确认导入</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
