@@ -1743,37 +1743,50 @@ function confirmUnpaidPicker() {
   toast('✅ 已导入 ' + clientCount + ' 个客户 ' + checked.length + ' 条记录，合计 ' + totalW + 'W');
 }
 
-// ── 计算某客户的未回款金额（业绩总额 - 回款总额，全历史统计）──
+// ── 计算未回款业绩条目（按订单逐一抵扣回款，已被完全覆盖的条目不显示）──
 function getUnpaidPerf(){
-  // 全历史回款 map（按客户）
   const perf=state.perf||[];
-  const collectMap={};
-  perf.filter(p=>p.type==='回款'&&!p.noAmount).forEach(p=>{
-    collectMap[p.client]=(collectMap[p.client]||0)+(p.amount||0);
-  });
-  // 全历史业绩 map（按客户），用于计算客户维度未回款
-  const perfTotalMap={};
-  perf.filter(p=>p.type==='业绩'&&!p.noAmount).forEach(p=>{
-    perfTotalMap[p.client]=(perfTotalMap[p.client]||0)+(p.amount||0);
-  });
-  // 返回每条业绩记录（客户维度仍有未回款的）
-  return perf
-    .filter(p=>p.type==='业绩'&&!p.noAmount)
-    .filter(p=>{
-      const clientUnpaid=(perfTotalMap[p.client]||0)-(collectMap[p.client]||0);
-      return clientUnpaid>0.01;
-    })
-    .map(p=>({
-      ...p,
-      collectTotal: collectMap[p.client]||0,
-      perfTotal: perfTotalMap[p.client]||0,
-      clientUnpaid: (perfTotalMap[p.client]||0)-(collectMap[p.client]||0),
-    }))
-    .sort((a,b)=>{
-      // 先按客户名排，再按时间排
-      if(a.client!==b.client)return a.client.localeCompare(b.client);
-      return (a.id||0)-(b.id||0);
+
+  // 按客户分组：业绩条目（按时间排序）和回款总额
+  const clientPerf={}, clientCollect={};
+  perf.filter(p=>p.type==='业绩'&&!p.noAmount)
+    .sort((a,b)=>(a.id||0)-(b.id||0))
+    .forEach(p=>{
+      if(!clientPerf[p.client])clientPerf[p.client]=[];
+      clientPerf[p.client].push({...p});
     });
+  perf.filter(p=>p.type==='回款'&&!p.noAmount).forEach(p=>{
+    clientCollect[p.client]=(clientCollect[p.client]||0)+(p.amount||0);
+  });
+
+  const result=[];
+  Object.keys(clientPerf).forEach(client=>{
+    const entries=clientPerf[client]; // 已按时间排序
+    let remaining=clientCollect[client]||0; // 该客户剩余可抵扣回款
+    const perfTotal=entries.reduce((s,e)=>s+e.amount,0);
+    const clientUnpaid=perfTotal-remaining;
+
+    entries.forEach(entry=>{
+      if(remaining>=entry.amount){
+        // 这条业绩已被回款完全覆盖，跳过
+        remaining-=entry.amount;
+      } else {
+        // 这条业绩未被完全覆盖，加入未回款列表
+        result.push({
+          ...entry,
+          perfTotal,
+          collectTotal: clientCollect[client]||0,
+          clientUnpaid: clientUnpaid>0?clientUnpaid:0,
+        });
+        remaining=0; // 剩余回款已用完
+      }
+    });
+  });
+
+  return result.sort((a,b)=>{
+    if(a.client!==b.client)return a.client.localeCompare(b.client);
+    return (a.id||0)-(b.id||0);
+  });
 }
 
 function renderUnpaidList(){
@@ -1960,12 +1973,12 @@ function renderPerfRowsHtml(entries, showWeek) {
     const rowBg = isCollect ? 'background:var(--teal-bg);' : '';
     const amtColor = isCollect ? 'color:var(--green-text);' : '';
 
-    // 业绩行：右边显示未回款状态 badge
+    // 业绩行：每条都显示客户维度未回款状态，措辞明确是客户总欠款
     let statusBadge = '';
     if (p.type === '业绩' && !p.noAmount) {
-      const globalUnpaid = (gPerfMap[p.client] || 0) - (gCollMap[p.client] || 0);
-      statusBadge = globalUnpaid > 0.01
-        ? `<span style="font-size:10px;font-weight:600;color:var(--red-text);background:var(--red-bg);border:1px solid var(--red-border);padding:1px 6px;border-radius:10px">⚠ 未回款 ${fmt(Math.round(globalUnpaid))}</span>`
+      const clientUnpaid = (gPerfMap[p.client] || 0) - (gCollMap[p.client] || 0);
+      statusBadge = clientUnpaid > 0.01
+        ? `<span style="font-size:10px;font-weight:600;color:var(--red-text);background:var(--red-bg);border:1px solid var(--red-border);padding:1px 6px;border-radius:10px">⚠ 客户欠款 ${fmt(Math.round(clientUnpaid))}</span>`
         : `<span style="font-size:10px;font-weight:600;color:var(--green-text);background:var(--green-bg);padding:1px 6px;border-radius:10px">✓ 已回款</span>`;
     }
 
