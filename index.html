@@ -1904,115 +1904,50 @@ function perfToggleWeek(el){
   }
 }
 
-// ── 按客户配对显示业绩+回款，业绩行标注未回款 ──
+// ── 每条记录独立一行，业绩行标注全局未回款状态，回款行绿色显示 ──
 function renderPerfRowsHtml(entries, showWeek) {
-  // 全历史未回款 map（跨财年累计，真实反映欠款）
+  // 全历史未回款 map
   const allPerf = state.perf || [];
   const gPerfMap = {}, gCollMap = {};
   allPerf.filter(p => p.type === '业绩' && !p.noAmount).forEach(p => { gPerfMap[p.client] = (gPerfMap[p.client] || 0) + (p.amount || 0); });
   allPerf.filter(p => p.type === '回款' && !p.noAmount).forEach(p => { gCollMap[p.client] = (gCollMap[p.client] || 0) + (p.amount || 0); });
 
-  // 按客户分组本期 entries
-  const clients = [...new Set(entries.map(p => p.client))];
   let html = '';
+  entries.forEach(p => {
+    const dc = p.type === '业绩' ? '#378ADD' : p.type === '回款' ? '#1D9E75' : '#EF9F27';
+    const bc = p.type === '业绩' ? 'badge-blue' : p.type === '回款' ? 'badge-green' : 'badge-amber';
+    const weekLabel = showWeek ? `<span style="font-size:11px;color:var(--text3)">${p.month}月 ${p.week||''}</span>` : '';
+    const isCollect = p.type === '回款';
+    const rowBg = isCollect ? 'background:var(--teal-bg);' : '';
+    const amtColor = isCollect ? 'color:var(--green-text);' : '';
 
-  clients.forEach(client => {
-    const rows = entries.filter(p => p.client === client);
-    const perfRows = rows.filter(p => p.type === '业绩');
-    const collectRows = rows.filter(p => p.type === '回款');
-    const dealRows = rows.filter(p => p.type === '新成交' || p.type === '销售成交' || p.type === '借测成交');
-
-    const globalUnpaid = (gPerfMap[client] || 0) - (gCollMap[client] || 0);
-    const hasUnpaid = globalUnpaid > 0.01;
-
-    // 如果只有新成交，直接渲染（无需配对）
-    if (!perfRows.length && !collectRows.length) {
-      dealRows.forEach(p => {
-        html += renderSinglePerfRow(p, showWeek, false);
-      });
-      return;
+    // 业绩行：右边显示未回款状态 badge
+    let statusBadge = '';
+    if (p.type === '业绩' && !p.noAmount) {
+      const globalUnpaid = (gPerfMap[p.client] || 0) - (gCollMap[p.client] || 0);
+      statusBadge = globalUnpaid > 0.01
+        ? `<span style="font-size:10px;font-weight:600;color:var(--red-text);background:var(--red-bg);border:1px solid var(--red-border);padding:1px 6px;border-radius:10px">⚠ 未回款 ${fmt(Math.round(globalUnpaid))}</span>`
+        : `<span style="font-size:10px;font-weight:600;color:var(--green-text);background:var(--green-bg);padding:1px 6px;border-radius:10px">✓ 已回款</span>`;
     }
 
-    // 渲染业绩行（带未回款标注）
-    perfRows.forEach(p => {
-      const dc = '#378ADD';
-      const weekLabel = showWeek ? `<span style="font-size:11px;color:var(--text3);margin-right:2px">${p.month}月 ${p.week||''}</span>` : '';
-      const unpaidBadge = hasUnpaid
-        ? `<span style="font-size:10px;font-weight:600;color:var(--red-text);background:var(--red-bg);border:1px solid var(--red-border);padding:1px 6px;border-radius:10px;margin-left:4px">⚠ 未回款 ${fmt(Math.round(globalUnpaid))}</span>`
-        : `<span style="font-size:10px;font-weight:600;color:var(--green-text);background:var(--green-bg);padding:1px 6px;border-radius:10px;margin-left:4px">✓ 已回款</span>`;
-      html += `<div class="summary-row" style="border-left:3px solid #378ADD;padding-left:9px;margin-left:-1px">
-        <span class="inline-flex" style="flex-wrap:wrap;gap:4px">
-          <span style="width:8px;height:8px;border-radius:50%;background:${dc};display:inline-block;flex-shrink:0;margin-top:3px"></span>
-          <span class="badge badge-blue" style="font-size:10px">业绩</span>
-          ${weekLabel}
-          <span style="font-size:13px;font-weight:500">${p.client}</span>
-          ${unpaidBadge}
-          ${p.noAmount ? '<span class="badge badge-gray" style="font-size:10px">无金额</span>' : ''}
-        </span>
-        <span class="inline-flex">
-          ${(!p.noAmount && p.amount) ? `<span style="font-weight:500">${fmt(p.amount)}</span>` : ''}
-          ${p.note ? `<span style="color:var(--text2);font-size:12px">${p.note}</span>` : ''}
-          <button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="event.stopPropagation();editPerf(${p.id})">编辑</button>
-          <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delPerf(${p.id})">删</button>
-        </span>
-      </div>`;
-    });
-
-    // 渲染回款行：有业绩时缩进显示（归属感），无业绩时普通行
-    if (perfRows.length) {
-      collectRows.forEach(p => {
-        const weekLabel = showWeek ? `<span style="font-size:11px;color:var(--text3);margin-right:2px">${p.month}月 ${p.week||''}</span>` : '';
-        html += `<div class="summary-row" style="border-left:3px solid #1D9E75;padding-left:9px;margin-left:16px;background:var(--teal-bg)">
-          <span class="inline-flex" style="flex-wrap:wrap;gap:4px">
-            <span style="width:8px;height:8px;border-radius:50%;background:#1D9E75;display:inline-block;flex-shrink:0;margin-top:3px"></span>
-            <span class="badge badge-green" style="font-size:10px">回款</span>
-            ${weekLabel}
-            <span style="font-size:13px">${p.client}</span>
-          </span>
-          <span class="inline-flex">
-            ${(!p.noAmount && p.amount) ? `<span style="font-weight:500;color:var(--green-text)">${fmt(p.amount)}</span>` : ''}
-            ${p.note ? `<span style="color:var(--text2);font-size:12px">${p.note}</span>` : ''}
-            <button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="event.stopPropagation();editPerf(${p.id})">编辑</button>
-            <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delPerf(${p.id})">删</button>
-          </span>
-        </div>`;
-      });
-    } else {
-      // 纯回款（本期无对应业绩），普通行显示
-      collectRows.forEach(p => {
-        html += renderSinglePerfRow(p, showWeek, false);
-      });
-    }
-
-    // 新成交条目独立渲染
-    dealRows.forEach(p => {
-      html += renderSinglePerfRow(p, showWeek, false);
-    });
+    html += `<div class="summary-row" style="${rowBg}">
+      <span class="inline-flex">
+        <span style="width:8px;height:8px;border-radius:50%;background:${dc};display:inline-block;margin-right:4px;flex-shrink:0"></span>
+        <span class="badge ${bc}" style="font-size:10px">${p.type}</span>
+        ${weekLabel}
+        <span style="font-size:13px">${p.client}</span>
+        ${p.noAmount ? '<span class="badge badge-gray" style="font-size:10px">无金额</span>' : ''}
+        ${statusBadge}
+      </span>
+      <span class="inline-flex">
+        ${(!p.noAmount && p.amount) ? `<span style="font-weight:500;${amtColor}">${fmt(p.amount)}</span>` : ''}
+        ${p.note ? `<span style="color:var(--text2);font-size:12px">${p.note}</span>` : ''}
+        <button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="event.stopPropagation();editPerf(${p.id})">编辑</button>
+        <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delPerf(${p.id})">删</button>
+      </span>
+    </div>`;
   });
-
   return html;
-}
-
-// 单条 fallback 渲染（新成交/孤立回款等）
-function renderSinglePerfRow(p, showWeek, forceNoIndent) {
-  const dc = p.type === '业绩' ? '#378ADD' : p.type === '回款' ? '#1D9E75' : '#EF9F27';
-  const bc = p.type === '业绩' ? 'badge-blue' : p.type === '回款' ? 'badge-green' : 'badge-amber';
-  const weekLabel = showWeek ? `<span style="font-size:11px;color:var(--text3);margin-right:2px">${p.month}月 ${p.week||''}</span>` : '';
-  return `<div class="summary-row">
-    <span class="inline-flex">
-      <span style="width:8px;height:8px;border-radius:50%;background:${dc};display:inline-block;margin-right:5px;flex-shrink:0"></span>
-      <span class="badge ${bc}" style="font-size:10px">${p.type}</span>
-      ${weekLabel}
-      <span style="font-size:13px">${p.client}</span>
-      ${p.noAmount ? '<span class="badge badge-gray" style="font-size:10px">无金额</span>' : ''}
-    </span>
-    <span class="inline-flex">
-      ${(!p.noAmount && p.amount) ? `<span style="font-weight:500">${fmt(p.amount)}</span>` : ''}
-      ${p.note ? `<span style="color:var(--text2);font-size:12px">${p.note}</span>` : ''}
-      <button class="btn btn-xs" style="background:#E6F1FB;color:#0C447C;border-color:#B8D4F0" onclick="event.stopPropagation();editPerf(${p.id})">编辑</button>
-      <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delPerf(${p.id})">删</button>
-    </span>
-  </div>`;
 }
 
 function renderPerf(){
