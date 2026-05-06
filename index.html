@@ -456,6 +456,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
   <div class="hb-row"><span class="hb-tag">业绩</span><span>合同金额入账，代表这一周/月你完成的销售额。</span></div>
   <div class="hb-row"><span class="hb-tag green">回款</span><span>客户实际打款到账。选择「回款」类型后，右上角会出现 💡 点击选择未回款业绩，列出所有尚未回款的业绩条目（按订单）。点击某条自动填入客户名和金额，系统同时在备注里悄悄记下对应的业绩编号，方便之后精确匹配。</span></div>
   <div class="hb-row"><span class="hb-tag green">💡 未回款业绩</span><span>按客户分组列出每条尚未被回款覆盖的业绩记录。点击某条即选定该订单，系统自动填入客户、金额，并在备注中写入关联标识（#ref:编号），保存后该条业绩就会从列表消失。匹配优先级：① 关联标识 → ② 备注相同 → ③ 金额相同 → ④ 按时间顺序抵扣。</span></div>
+  <div class="hb-row"><span class="hb-tag" style="background:#6B7280">历史回款</span><span>跨财年遗留款，计入本财年回款合计，但不会去抵扣系统里任何业绩条目。适合「订单是上个财年的、系统里没录业绩、本财年收到款」的一次性情况。</span></div>
   <div class="hb-row"><span class="hb-tag amber">新成交</span><span>新签客户或新成交项目，用于统计新客数量（金额可不填）。</span></div>
   <div class="hb-row"><span class="hb-tag gray">数据透视</span><span>下方表格可切换「本月按周」「年度按月」「财年对比」三种视图，横向对比业绩/回款完成情况。</span></div>
   <div class="hb-row"><span class="hb-tag green">📥 导出Excel</span><span>将当前月份的业绩回款数据导出为 CSV。</span></div>
@@ -486,7 +487,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
     <input type="hidden" id="perf-month" value="">
     <input type="hidden" id="perf-week" value="">
     <div class="grid2">
-      <div class="field"><label>类型</label><select id="perf-type" onchange="toggleAmt()"><option value="业绩">业绩</option><option value="回款">回款</option><option value="销售成交">新成交 — 销售成交</option><option value="借测成交">新成交 — 借测成交</option></select></div>
+      <div class="field"><label>类型</label><select id="perf-type" onchange="toggleAmt()"><option value="业绩">业绩</option><option value="回款">回款</option><option value="历史回款">历史回款（跨财年遗留）</option><option value="销售成交">新成交 — 销售成交</option><option value="借测成交">新成交 — 借测成交</option></select></div>
       <div class="field" style="position:relative">
         <label style="display:flex;align-items:center;justify-content:space-between">
           <span>客户名称</span>
@@ -522,7 +523,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <option value="month">年度按月</option>
           <option value="fy">财年对比</option>
         </select>
-        <select class="ym-s" id="pivot-type" onchange="renderPivot()"><option value="业绩">业绩</option><option value="回款">回款</option><option value="业绩回款对照">📊 业绩+回款对照</option><option value="新成交">新成交（全部）</option><option value="销售成交">销售成交</option><option value="借测成交">借测成交</option></select>
+        <select class="ym-s" id="pivot-type" onchange="renderPivot()"><option value="业绩">业绩</option><option value="回款">回款</option><option value="历史回款">历史回款</option><option value="业绩回款对照">📊 业绩+回款对照</option><option value="新成交">新成交（全部）</option><option value="销售成交">销售成交</option><option value="借测成交">借测成交</option></select>
       </div>
     </div>
     <div id="pivot-wrap" style="overflow-x:auto"></div>
@@ -1645,7 +1646,7 @@ function toggleAmt(){
   document.getElementById('amt-row').style.display=isNew?'none':'grid';
   document.getElementById('amt-row-note').style.display=isNew?'block':'none';
   // 回款类型：显示未回款提示并刷新面板
-  const isCollect=type==='回款';
+  const isCollect=type==='回款'||type==='历史回款';
   document.getElementById('unpaid-hint').style.display=isCollect?'':'none';
   if(isCollect)renderUnpaidList();else{document.getElementById('unpaid-panel').style.display='none';}
 }
@@ -1746,6 +1747,7 @@ function confirmUnpaidPicker() {
 
 // ── 计算未回款业绩条目 ──
 // 匹配优先级：1) note 相同  2) 金额精确匹配  3) 按时间顺序抵扣剩余
+function isCollectType(t){return t==='回款'||t==='历史回款';}
 function getUnpaidPerf(){
   const perf=state.perf||[];
 
@@ -1757,6 +1759,7 @@ function getUnpaidPerf(){
       if(!clientPerf[p.client])clientPerf[p.client]=[];
       clientPerf[p.client].push({...p,_matched:false});
     });
+  // 历史回款不参与配对，只有普通「回款」才进入匹配池
   perf.filter(p=>p.type==='回款'&&!p.noAmount)
     .sort((a,b)=>(a.id||0)-(b.id||0))
     .forEach(p=>{
@@ -2004,14 +2007,14 @@ function renderPerfRowsHtml(entries, showWeek) {
   const allPerf = state.perf || [];
   const gPerfMap = {}, gCollMap = {};
   allPerf.filter(p => p.type === '业绩' && !p.noAmount).forEach(p => { gPerfMap[p.client] = (gPerfMap[p.client] || 0) + (p.amount || 0); });
-  allPerf.filter(p => p.type === '回款' && !p.noAmount).forEach(p => { gCollMap[p.client] = (gCollMap[p.client] || 0) + (p.amount || 0); });
+  allPerf.filter(p => isCollectType(p.type) && !p.noAmount).forEach(p => { gCollMap[p.client] = (gCollMap[p.client] || 0) + (p.amount || 0); });
 
   let html = '';
   entries.forEach(p => {
     const dc = p.type === '业绩' ? '#378ADD' : p.type === '回款' ? '#1D9E75' : '#EF9F27';
     const bc = p.type === '业绩' ? 'badge-blue' : p.type === '回款' ? 'badge-green' : 'badge-amber';
     const weekLabel = showWeek ? `<span style="font-size:11px;color:var(--text3)">${p.month}月 ${p.week||''}</span>` : '';
-    const isCollect = p.type === '回款';
+    const isCollect = p.type === '回款' || p.type === '历史回款';
     const rowBg = isCollect ? 'background:var(--teal-bg);' : '';
     const amtColor = isCollect ? 'color:var(--green-text);' : '';
 
@@ -2051,7 +2054,7 @@ function renderPerf(){
     ? state.perf.filter(p=>p.fy===fy)
     : state.perf.filter(p=>p.fy===fy&&p.month===month);
   const ts=md.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
-  const tr=md.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
+  const tr=md.filter(p=>isCollectType(p.type)).reduce((a,b)=>a+b.amount,0);
   const nd=md.filter(p=>p.type==='新成交'||p.type==='销售成交'||p.type==='借测成交');
   // 获取月度目标
   const tgt=getTargets(fy);
@@ -2061,7 +2064,7 @@ function renderPerf(){
   // 获取财年累计
   const fyData=state.perf.filter(p=>p.fy===fy);
   const fyPerf=fyData.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
-  const fyCollect=fyData.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
+  const fyCollect=fyData.filter(p=>isCollectType(p.type)).reduce((a,b)=>a+b.amount,0);
   const fyDeals=fyData.filter(p=>p.type==='新成交'||p.type==='销售成交'||p.type==='借测成交').length;
   const fyPerfTarget=(tgt.perfYear||0)*10000;
   const fyCollectTarget=(tgt.collectYear||0)*10000;
@@ -2131,7 +2134,7 @@ function renderPerf(){
       const mdata=md.filter(p=>p.month===m);
       if(!mdata.length)return;
       const ms=mdata.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
-      const mr=mdata.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
+      const mr=mdata.filter(p=>isCollectType(p.type)).reduce((a,b)=>a+b.amount,0);
       const mn=mdata.filter(p=>p.type==='新成交'||p.type==='销售成交'||p.type==='借测成交');
       const mnSale=mdata.filter(p=>p.type==='销售成交').length;
       const mnBorrow=mdata.filter(p=>p.type==='借测成交').length;
@@ -2158,7 +2161,7 @@ function renderPerf(){
   weeks.forEach(w=>{
     const wd=md.filter(p=>p.week===w);if(!wd.length)return;
     const ws=wd.filter(p=>p.type==='业绩').reduce((a,b)=>a+b.amount,0);
-    const wr=wd.filter(p=>p.type==='回款').reduce((a,b)=>a+b.amount,0);
+    const wr=wd.filter(p=>isCollectType(p.type)).reduce((a,b)=>a+b.amount,0);
     const wn=wd.filter(p=>p.type==='新成交'||p.type==='销售成交'||p.type==='借测成交');
     const wnSale=wd.filter(p=>p.type==='销售成交').length;
     const wnBorrow=wd.filter(p=>p.type==='借测成交').length;
@@ -2272,7 +2275,7 @@ function renderPivot(){
   // ── 业绩+回款对照视图 ──
   if(type==='业绩回款对照'){
     const perfData=state.perf.filter(p=>p.type==='业绩'&&!p.noAmount);
-    const collectData=state.perf.filter(p=>p.type==='回款'&&!p.noAmount);
+    const collectData=state.perf.filter(p=>isCollectType(p.type)&&!p.noAmount);
     // Build global unpaid map for badge
     const globalUnpaid={};
     const gPerfMap={};
@@ -4698,9 +4701,9 @@ function genWeekly(){
   const fyPerfAmt=fyPerf.reduce((a,b)=>a+b.amount,0);
 
   // 回款
-  const weekCollect=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.week===week&&p.type==='回款');
-  const monthCollect=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.type==='回款');
-  const fyCollect=state.perf.filter(p=>p.fy===fy&&fyMonthIdx(p.month)<=mIdx&&p.type==='回款');
+  const weekCollect=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.week===week&&isCollectType(p.type));
+  const monthCollect=state.perf.filter(p=>p.fy===fy&&p.month===month&&isCollectType(p.type));
+  const fyCollect=state.perf.filter(p=>p.fy===fy&&fyMonthIdx(p.month)<=mIdx&&isCollectType(p.type));
   const weekCollectAmt=weekCollect.reduce((a,b)=>a+b.amount,0);
   const monthCollectAmt=monthCollect.reduce((a,b)=>a+b.amount,0);
   const fyCollectAmt=fyCollect.reduce((a,b)=>a+b.amount,0);
@@ -4868,7 +4871,7 @@ function genMonthly(){
 
   // 回款
   const monthCollect=state.perf.filter(p=>p.fy===fy&&p.month===month&&p.type==='回款');
-  const fyCollect=state.perf.filter(p=>p.fy===fy&&fyMonthIdx(p.month)<=mIdx&&p.type==='回款');
+  const fyCollect=state.perf.filter(p=>p.fy===fy&&fyMonthIdx(p.month)<=mIdx&&isCollectType(p.type));
   const monthCollectAmt=monthCollect.reduce((a,b)=>a+b.amount,0);
   const fyCollectAmt=fyCollect.reduce((a,b)=>a+b.amount,0);
 
@@ -5162,7 +5165,7 @@ function exportProjectsExcel(){
 function exportPerfExcel(){
   const fy=document.getElementById('view-fy')?.value||'';
   const month=document.getElementById('view-month')?.value||'';
-  const typeMap={'业绩':'业绩','回款':'回款','销售成交':'新成交-销售成交','借测成交':'新成交-借测成交'};
+  const typeMap={'业绩':'业绩','回款':'回款','历史回款':'历史回款','销售成交':'新成交-销售成交','借测成交':'新成交-借测成交'};
   // Filter by current FY and month
   const filtered=state.perf.filter(p=>{
     if(fy&&p.fy!==fy)return false;
@@ -8184,7 +8187,7 @@ function renderClients(){
     const projs=state.projects.filter(p=>p.client===name);
     // 业绩：按年份过滤
     const perfs=(state.perf||[]).filter(p=>p.client===name&&p.type==='业绩'&&!p.noAmount&&yearMatch(p.calYear));
-    const collects=(state.perf||[]).filter(p=>p.client===name&&p.type==='回款'&&!p.noAmount&&yearMatch(p.calYear));
+    const collects=(state.perf||[]).filter(p=>p.client===name&&isCollectType(p.type)&&!p.noAmount&&yearMatch(p.calYear));
     // 按年份过滤的报价（date字段格式为 YYYY-MM-DD，取前4位为年份）
     const quotesInYear=yearFilter==='all'?quotes:quotes.filter(q=>{
       const y=q.date?(q.date+'').slice(0,4):'';
