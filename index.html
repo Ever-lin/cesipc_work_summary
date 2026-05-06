@@ -1667,16 +1667,31 @@ let _unpaidPickerPrefix = '';
 function openUnpaidPicker(prefix, list) {
   _unpaidPickerPrefix = prefix;
   const container = document.getElementById('unpaid-picker-list');
-  container.innerHTML = list.map((r, i) => {
-    const w = (r.unpaid / 10000).toFixed(2).replace(/\.?0+$/, '');
-    return `<label style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border2);transition:background .1s" onmouseover="this.style.background='var(--blue-bg)'" onmouseout="this.style.background=''">
-      <input type="checkbox" data-idx="${i}" data-unpaid="${Math.round(r.unpaid)}" data-client="${r.client.replace(/"/g,'&quot;')}" onchange="updateUnpaidPickerSum()" style="width:15px;height:15px;cursor:pointer">
+  // 按客户分组，每条业绩条目独立勾选
+  let pickerHtml='';
+  let lastClient2='';
+  list.forEach((p,i)=>{
+    if(p.client!==lastClient2){
+      if(lastClient2) pickerHtml+='<div style="height:3px"></div>';
+      const clientUnpaidFmt='¥'+Math.round(p.clientUnpaid).toLocaleString('zh-CN');
+      pickerHtml+=`<div style="padding:4px 12px;background:var(--bg2);font-size:11px;font-weight:600;color:var(--text2);display:flex;justify-content:space-between">
+        <span>${p.client.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
+        <span style="color:var(--red-text)">${clientUnpaidFmt}</span>
+      </div>`;
+      lastClient2=p.client;
+    }
+    const w=(p.amount/10000).toFixed(2).replace(/\.?0+$/,'');
+    pickerHtml+=`<label style="display:flex;align-items:center;gap:10px;padding:7px 12px 7px 20px;cursor:pointer;border-bottom:1px solid var(--border2);transition:background .1s" onmouseover="this.style.background='var(--blue-bg)'" onmouseout="this.style.background=''">
+      <input type="checkbox" data-idx="${i}" data-unpaid="${Math.round(p.amount)}" data-client="${p.client.replace(/"/g,'&quot;')}" onchange="updateUnpaidPickerSum()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0">
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.client.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
-        <div style="font-size:11px;color:var(--text2)">未回款 <b style="color:var(--red-text)">${w}W</b> &nbsp;·&nbsp; 业绩 ${(r.perfTotal/10000).toFixed(2).replace(/\.?0+$/,'')}W &nbsp;·&nbsp; 已回款 ${(r.collectTotal/10000).toFixed(2).replace(/\.?0+$/,'')}W</div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px;color:var(--text)">${p.fy} ${p.month}月 ${p.week||''} ${p.note?'<span style=color:var(--text3)>'+p.note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').slice(0,25)+'</span>':''}</span>
+          <span style="font-size:12px;font-weight:600;color:var(--red-text)">${w}W</span>
+        </div>
       </div>
     </label>`;
-  }).join('');
+  });
+  container.innerHTML=pickerHtml;
   document.getElementById('unpaid-picker-sum').textContent = '0W';
   document.getElementById('unpaid-picker-bg').style.display = 'flex';
 }
@@ -1696,7 +1711,7 @@ function closeUnpaidPicker() {
 
 function confirmUnpaidPicker() {
   const checked = Array.from(document.querySelectorAll('#unpaid-picker-list input[type=checkbox]:checked'));
-  if (!checked.length) { toast('请至少勾选一个客户'); return; }
+  if (!checked.length) { toast('请至少勾选一条记录'); return; }
   const prefix = _unpaidPickerPrefix;
 
   // 求和
@@ -1705,10 +1720,15 @@ function confirmUnpaidPicker() {
   const totalEl = document.getElementById(prefix + '-target-collect-total');
   if (totalEl) totalEl.value = totalW + 'W';
 
-  // 明细
-  const detail = checked.map(cb => {
-    const w = ((parseInt(cb.dataset.unpaid)||0) / 10000).toFixed(2).replace(/\.?0+$/, '');
-    return cb.dataset.client + '：' + w + 'W';
+  // 明细：同一客户多条合并
+  const clientMap = {};
+  checked.forEach(cb => {
+    const c = cb.dataset.client;
+    clientMap[c] = (clientMap[c] || 0) + (parseInt(cb.dataset.unpaid) || 0);
+  });
+  const detail = Object.entries(clientMap).map(([c, yuan]) => {
+    const w = (yuan / 10000).toFixed(2).replace(/\.?0+$/, '');
+    return c + '：' + w + 'W';
   }).join('\n');
   const detailEl = document.getElementById(prefix + '-target-collect-detail');
   if (detailEl) {
@@ -1718,29 +1738,42 @@ function confirmUnpaidPicker() {
     detailEl.dispatchEvent(new Event('input'));
   }
 
+  const clientCount = Object.keys(clientMap).length;
   closeUnpaidPicker();
-  toast('✅ 已导入 ' + checked.length + ' 个客户，合计 ' + totalW + 'W');
+  toast('✅ 已导入 ' + clientCount + ' 个客户 ' + checked.length + ' 条记录，合计 ' + totalW + 'W');
 }
 
 // ── 计算某客户的未回款金额（业绩总额 - 回款总额，全历史统计）──
 function getUnpaidPerf(){
+  // 全历史回款 map（按客户）
   const perf=state.perf||[];
-  const perfMap={};
-  perf.filter(p=>p.type==='业绩'&&!p.noAmount).forEach(p=>{
-    const k=p.client;
-    if(!perfMap[k])perfMap[k]={client:k,perfTotal:0,collectTotal:0,entries:[]};
-    perfMap[k].perfTotal+=p.amount||0;
-    perfMap[k].entries.push(p);
-  });
+  const collectMap={};
   perf.filter(p=>p.type==='回款'&&!p.noAmount).forEach(p=>{
-    const k=p.client;
-    if(!perfMap[k])perfMap[k]={client:k,perfTotal:0,collectTotal:0,entries:[]};
-    perfMap[k].collectTotal+=p.amount||0;
+    collectMap[p.client]=(collectMap[p.client]||0)+(p.amount||0);
   });
-  return Object.values(perfMap)
-    .map(r=>({...r,unpaid:r.perfTotal-r.collectTotal}))
-    .filter(r=>r.unpaid>0.01)
-    .sort((a,b)=>b.unpaid-a.unpaid);
+  // 全历史业绩 map（按客户），用于计算客户维度未回款
+  const perfTotalMap={};
+  perf.filter(p=>p.type==='业绩'&&!p.noAmount).forEach(p=>{
+    perfTotalMap[p.client]=(perfTotalMap[p.client]||0)+(p.amount||0);
+  });
+  // 返回每条业绩记录（客户维度仍有未回款的）
+  return perf
+    .filter(p=>p.type==='业绩'&&!p.noAmount)
+    .filter(p=>{
+      const clientUnpaid=(perfTotalMap[p.client]||0)-(collectMap[p.client]||0);
+      return clientUnpaid>0.01;
+    })
+    .map(p=>({
+      ...p,
+      collectTotal: collectMap[p.client]||0,
+      perfTotal: perfTotalMap[p.client]||0,
+      clientUnpaid: (perfTotalMap[p.client]||0)-(collectMap[p.client]||0),
+    }))
+    .sort((a,b)=>{
+      // 先按客户名排，再按时间排
+      if(a.client!==b.client)return a.client.localeCompare(b.client);
+      return (a.id||0)-(b.id||0);
+    });
 }
 
 function renderUnpaidList(){
@@ -1750,31 +1783,37 @@ function renderUnpaidList(){
     container.innerHTML='<div style="padding:12px 14px;font-size:12px;color:var(--text2)">暂无未回款的业绩记录</div>';
     return;
   }
-  container.innerHTML=list.map(r=>{
-    const pct=r.perfTotal>0?Math.round((r.collectTotal/r.perfTotal)*100):0;
-    const latestNote=r.entries.length?r.entries[r.entries.length-1].note||'':'';
-    const safeClient=r.client.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-    const safeNote=latestNote.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-    return`<div onclick="selectUnpaidClient(this)"
+  // 按客户分组，客户名显示一次，每条业绩条目列出
+  let html='';
+  let lastClient='';
+  list.forEach(p=>{
+    if(p.client!==lastClient){
+      if(lastClient) html+='<div style="height:4px"></div>';
+      const clientUnpaidFmt='¥'+Math.round(p.clientUnpaid).toLocaleString('zh-CN');
+      html+=`<div style="padding:5px 12px 3px;background:var(--bg2);font-size:11px;font-weight:600;color:var(--text2);display:flex;justify-content:space-between">
+        <span>${p.client.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
+        <span style="color:var(--red-text)">客户未回款合计 ${clientUnpaidFmt}</span>
+      </div>`;
+      lastClient=p.client;
+    }
+    const safeClient=p.client.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    const safeNote=(p.note||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    html+=`<div onclick="selectUnpaidClient(this)"
       data-client="${safeClient}"
-      data-unpaid="${Math.round(r.unpaid)}"
+      data-unpaid="${Math.round(p.amount)}"
       data-note="${safeNote}"
-      data-perf="${Math.round(r.perfTotal)}"
-      data-collect="${Math.round(r.collectTotal)}"
-      style="padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border2);transition:background .1s"
+      style="padding:8px 12px 8px 20px;cursor:pointer;border-bottom:1px solid var(--border2);transition:background .1s"
       onmouseover="this.style.background='var(--blue-bg)'" onmouseout="this.style.background=''">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-        <span style="font-size:13px;font-weight:500;color:var(--text)">${r.client.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
-        <span style="font-size:12px;font-weight:600;color:var(--red-text)">未回款 ¥${Math.round(r.unpaid).toLocaleString('zh-CN')}</span>
-      </div>
-      <div style="display:flex;gap:12px;font-size:11px;color:var(--text2)">
-        <span>业绩 ¥${Math.round(r.perfTotal).toLocaleString('zh-CN')}</span>
-        <span>已回款 ¥${Math.round(r.collectTotal).toLocaleString('zh-CN')}</span>
-        <span style="color:${pct>=80?'var(--green-text)':'var(--amber-text)'}">已回 ${pct}%</span>
-        ${latestNote?`<span>备注：${latestNote.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').slice(0,20)}${latestNote.length>20?'…':''}</span>`:''}
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--text)">
+          ${p.fy} ${p.month}月 ${p.week||''}
+          ${p.note?`<span style="color:var(--text3);margin-left:6px">${p.note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').slice(0,30)}</span>`:''}
+        </span>
+        <span style="font-size:12px;font-weight:600;color:var(--text)">¥${Math.round(p.amount).toLocaleString('zh-CN')}</span>
       </div>
     </div>`;
-  }).join('');
+  });
+  container.innerHTML=html;
 }
 
 function selectUnpaidClient(el){
