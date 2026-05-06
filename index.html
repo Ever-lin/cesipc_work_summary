@@ -521,7 +521,7 @@ textarea.auto-resize{resize:none;overflow:hidden;min-height:60px}
           <option value="month">年度按月</option>
           <option value="fy">财年对比</option>
         </select>
-        <select class="ym-s" id="pivot-type" onchange="renderPivot()"><option value="业绩">业绩</option><option value="回款">回款</option><option value="新成交">新成交（全部）</option><option value="销售成交">销售成交</option><option value="借测成交">借测成交</option></select>
+        <select class="ym-s" id="pivot-type" onchange="renderPivot()"><option value="业绩">业绩</option><option value="回款">回款</option><option value="业绩回款对照">📊 业绩+回款对照</option><option value="新成交">新成交（全部）</option><option value="销售成交">销售成交</option><option value="借测成交">借测成交</option></select>
       </div>
     </div>
     <div id="pivot-wrap" style="overflow-x:auto"></div>
@@ -1686,9 +1686,14 @@ function toggleAmt(){
 function fillUnpaidToCollect(prefix) {
   const list = getUnpaidPerf();
   if (!list.length) { toast('暂无未回款业绩记录'); return; }
-  // 打开勾选弹窗，而非一次性全部导入
   openUnpaidPicker(prefix, list);
 }
+
+
+
+
+
+
 
 let _unpaidPickerPrefix = '';
 function openUnpaidPicker(prefix, list) {
@@ -1749,10 +1754,9 @@ function confirmUnpaidPicker() {
   toast('✅ 已导入 ' + checked.length + ' 个客户，合计 ' + totalW + 'W');
 }
 
-// ── 计算某客户的未回款金额（业绩总额 - 回款总额）──
+// ── 计算某客户的未回款金额（业绩总额 - 回款总额，全历史统计）──
 function getUnpaidPerf(){
   const perf=state.perf||[];
-  // 按客户聚合业绩
   const perfMap={};
   perf.filter(p=>p.type==='业绩'&&!p.noAmount).forEach(p=>{
     const k=p.client;
@@ -1760,13 +1764,11 @@ function getUnpaidPerf(){
     perfMap[k].perfTotal+=p.amount||0;
     perfMap[k].entries.push(p);
   });
-  // 按客户聚合回款
   perf.filter(p=>p.type==='回款'&&!p.noAmount).forEach(p=>{
     const k=p.client;
     if(!perfMap[k])perfMap[k]={client:k,perfTotal:0,collectTotal:0,entries:[]};
     perfMap[k].collectTotal+=p.amount||0;
   });
-  // 只返回未完全回款的客户（未回款额 > 0）
   return Object.values(perfMap)
     .map(r=>({...r,unpaid:r.perfTotal-r.collectTotal}))
     .filter(r=>r.unpaid>0.01)
@@ -2173,6 +2175,121 @@ function renderPivot(){
     });
     html+='</tbody></table>';
   }
+  // ── 业绩+回款对照视图 ──
+  if(type==='业绩回款对照'){
+    const perfData=state.perf.filter(p=>p.type==='业绩'&&!p.noAmount);
+    const collectData=state.perf.filter(p=>p.type==='回款'&&!p.noAmount);
+    // Build global unpaid map for badge
+    const globalUnpaid={};
+    const gPerfMap={};
+    perfData.forEach(p=>{if(!gPerfMap[p.client])gPerfMap[p.client]=0;gPerfMap[p.client]+=p.amount||0;});
+    const gCollMap={};
+    collectData.forEach(p=>{if(!gCollMap[p.client])gCollMap[p.client]=0;gCollMap[p.client]+=p.amount||0;});
+    Object.keys(gPerfMap).forEach(c=>{globalUnpaid[c]=(gPerfMap[c]||0)-(gCollMap[c]||0);});
+
+    if(mode==='week'){
+      // 本月按周：业绩+回款各行，按客户分组
+      const m=month==='all'?null:month;
+      const filt=p=>p.fy===fy&&(m===null||p.month===m);
+      const pData=perfData.filter(filt);
+      const cData=collectData.filter(filt);
+      const weeks=['第一周','第二周','第三周','第四周','第五周'];
+      const activeWeeks=weeks.filter(w=>pData.some(p=>p.week===w)||cData.some(p=>p.week===w));
+      const clients=[...new Set([...pData,...cData].map(p=>p.client))].sort();
+      if(!clients.length){document.getElementById('pivot-wrap').innerHTML='<div style="font-size:12px;color:var(--text2);padding:8px">暂无数据</div>';return;}
+      html=`<table class="pivot-tbl"><thead><tr><th>${fy} ${m?m+'月':'各月'}</th>`;
+      activeWeeks.forEach(w=>{html+=`<th class="nr">${w}</th>`;});
+      html+=`<th class="nr">合计</th><th class="nr">未回款</th></tr></thead><tbody>`;
+      let totalPerf=0,totalColl=0;
+      clients.forEach(c=>{
+        const pr=pData.filter(p=>p.client===c);
+        const cr=cData.filter(p=>p.client===c);
+        const pt=pr.reduce((a,b)=>a+b.amount,0);
+        const ct=cr.reduce((a,b)=>a+b.amount,0);
+        if(!pt&&!ct)return;
+        totalPerf+=pt;totalColl+=ct;
+        const unpaidG=globalUnpaid[c]||0;
+        const unpaidBadge=unpaidG>0.01?`<span style="color:var(--red-text);font-size:10px;font-weight:600;margin-left:4px">未回¥${Math.round(unpaidG).toLocaleString('zh-CN')}</span>`:'';
+        // 业绩行
+        html+=`<tr><td style="font-size:12px;padding-left:8px"><span style="color:var(--blue-text);font-size:10px;font-weight:600;background:var(--blue-bg);padding:1px 5px;border-radius:3px;margin-right:4px">业绩</span>${c}${unpaidBadge}</td>`;
+        activeWeeks.forEach(w=>{const a=pr.filter(p=>p.week===w).reduce((x,b)=>x+b.amount,0);html+=`<td class="nr" style="font-size:12px;color:var(--blue-text)">${a?fmt(a):'—'}</td>`;});
+        html+=`<td class="nr" style="font-size:12px;font-weight:500;color:var(--blue-text)">${pt?fmt(pt):'—'}</td><td></td></tr>`;
+        // 回款行
+        html+=`<tr style="background:var(--teal-bg)"><td style="font-size:12px;padding-left:8px"><span style="color:var(--teal-text);font-size:10px;font-weight:600;background:#C4EDE0;padding:1px 5px;border-radius:3px;margin-right:4px">回款</span>${c}</td>`;
+        activeWeeks.forEach(w=>{const a=cr.filter(p=>p.week===w).reduce((x,b)=>x+b.amount,0);html+=`<td class="nr" style="font-size:12px;color:var(--teal-text)">${a?fmt(a):'—'}</td>`;});
+        html+=`<td class="nr" style="font-size:12px;font-weight:500;color:var(--teal-text)">${ct?fmt(ct):'—'}</td><td class="nr" style="font-size:11px;color:${unpaidG>0.01?'var(--red-text)':'var(--green-text)'};">${unpaidG>0.01?'⚠ '+fmt(Math.round(unpaidG)):'✓ 已回'}</td></tr>`;
+      });
+      html+=`<tr class="tr"><td>合计</td>`;
+      activeWeeks.forEach(w=>{
+        const pa=pData.filter(p=>p.week===w).reduce((x,b)=>x+b.amount,0);
+        const ca=cData.filter(p=>p.week===w).reduce((x,b)=>x+b.amount,0);
+        html+=`<td class="nr" style="font-size:11px">${pa?'业'+fmt(pa):''}${pa&&ca?'<br>':''}${ca?'<span style=color:var(--teal-text)>回'+fmt(ca)+'</span>':''}</td>`;
+      });
+      const totalUnpaid=totalPerf-totalColl;
+      html+=`<td class="nr">${fmt(totalPerf)}<br><span style="color:var(--teal-text)">${fmt(totalColl)}</span></td><td class="nr" style="color:${totalUnpaid>0.01?'var(--red-text)':'var(--green-text)'};font-size:11px">${totalUnpaid>0.01?'⚠ '+fmt(Math.round(totalUnpaid)):'✓ 已回'}</td></tr>`;
+      html+='</tbody></table>';
+    } else if(mode==='month'){
+      const activeMonths=MONTHS_ORDER.filter(m=>perfData.some(p=>p.fy===fy&&p.month===m)||collectData.some(p=>p.fy===fy&&p.month===m));
+      const clients=[...new Set([...perfData.filter(p=>p.fy===fy),...collectData.filter(p=>p.fy===fy)].map(p=>p.client))].sort();
+      if(!clients.length){document.getElementById('pivot-wrap').innerHTML='<div style="font-size:12px;color:var(--text2);padding:8px">暂无数据</div>';return;}
+      html=`<table class="pivot-tbl"><thead><tr><th>${fy} 各月</th>`;
+      activeMonths.forEach(m=>{html+=`<th class="nr">${m}月</th>`;});
+      html+=`<th class="nr">年度合计</th><th class="nr">全局未回款</th></tr></thead><tbody>`;
+      let totalPerf=0,totalColl=0;
+      clients.forEach(c=>{
+        const pr=perfData.filter(p=>p.fy===fy&&p.client===c);
+        const cr=collectData.filter(p=>p.fy===fy&&p.client===c);
+        const pt=pr.reduce((a,b)=>a+b.amount,0);
+        const ct=cr.reduce((a,b)=>a+b.amount,0);
+        if(!pt&&!ct)return;
+        totalPerf+=pt;totalColl+=ct;
+        const unpaidG=globalUnpaid[c]||0;
+        const unpaidBadge=unpaidG>0.01?`<span style="color:var(--red-text);font-size:10px;font-weight:600;margin-left:4px">未回¥${Math.round(unpaidG).toLocaleString('zh-CN')}</span>`:'';
+        html+=`<tr><td style="font-size:12px;padding-left:8px"><span style="color:var(--blue-text);font-size:10px;font-weight:600;background:var(--blue-bg);padding:1px 5px;border-radius:3px;margin-right:4px">业绩</span>${c}${unpaidBadge}</td>`;
+        activeMonths.forEach(m=>{const a=pr.filter(p=>p.month===m).reduce((x,b)=>x+b.amount,0);html+=`<td class="nr" style="font-size:12px;color:var(--blue-text)">${a?fmt(a):'—'}</td>`;});
+        html+=`<td class="nr" style="font-weight:500;color:var(--blue-text)">${pt?fmt(pt):'—'}</td><td></td></tr>`;
+        html+=`<tr style="background:var(--teal-bg)"><td style="font-size:12px;padding-left:8px"><span style="color:var(--teal-text);font-size:10px;font-weight:600;background:#C4EDE0;padding:1px 5px;border-radius:3px;margin-right:4px">回款</span>${c}</td>`;
+        activeMonths.forEach(m=>{const a=cr.filter(p=>p.month===m).reduce((x,b)=>x+b.amount,0);html+=`<td class="nr" style="font-size:12px;color:var(--teal-text)">${a?fmt(a):'—'}</td>`;});
+        html+=`<td class="nr" style="font-weight:500;color:var(--teal-text)">${ct?fmt(ct):'—'}</td><td class="nr" style="font-size:11px;color:${unpaidG>0.01?'var(--red-text)':'var(--green-text)'};">${unpaidG>0.01?'⚠ '+fmt(Math.round(unpaidG)):'✓ 已回'}</td></tr>`;
+      });
+      const totalUnpaid=totalPerf-totalColl;
+      html+=`<tr class="tr"><td>合计（本财年）</td>`;
+      activeMonths.forEach(m=>{
+        const pa=perfData.filter(p=>p.fy===fy&&p.month===m).reduce((x,b)=>x+b.amount,0);
+        const ca=collectData.filter(p=>p.fy===fy&&p.month===m).reduce((x,b)=>x+b.amount,0);
+        html+=`<td class="nr" style="font-size:11px">${pa?fmt(pa):''}${pa&&ca?'<br>':''}${ca?'<span style=color:var(--teal-text)>'+fmt(ca)+'</span>':''}</td>`;
+      });
+      html+=`<td class="nr">${fmt(totalPerf)}<br><span style="color:var(--teal-text)">${fmt(totalColl)}</span></td><td class="nr" style="color:${totalUnpaid>0.01?'var(--red-text)':'var(--green-text)'};font-size:11px">${totalUnpaid>0.01?'⚠ '+fmt(Math.round(totalUnpaid)):'✓ 已回'}</td></tr>`;
+      html+='</tbody></table>';
+    } else {
+      // 财年对比
+      const allFYs=[...new Set(state.perf.map(p=>p.fy))].sort();
+      if(!allFYs.length){document.getElementById('pivot-wrap').innerHTML='<div style="font-size:12px;color:var(--text2);padding:8px">暂无数据</div>';return;}
+      html=`<table class="pivot-tbl"><thead><tr><th>财年对比</th><th class="nr">业绩合计</th><th class="nr">回款合计</th><th class="nr">未回款</th><th class="nr">回款率</th></tr></thead><tbody>`;
+      allFYs.forEach(f=>{
+        const pt=perfData.filter(p=>p.fy===f).reduce((a,b)=>a+b.amount,0);
+        const ct=collectData.filter(p=>p.fy===f).reduce((a,b)=>a+b.amount,0);
+        if(!pt&&!ct)return;
+        const unpaid=pt-ct;
+        const rate=pt>0?Math.round(ct/pt*100):0;
+        html+=`<tr><td style="font-size:12px;font-weight:500">${f}</td>`;
+        html+=`<td class="nr" style="color:var(--blue-text)">${fmt(pt)}</td>`;
+        html+=`<td class="nr" style="color:var(--teal-text)">${fmt(ct)}</td>`;
+        html+=`<td class="nr" style="color:${unpaid>0.01?'var(--red-text)':'var(--green-text)'};font-weight:600">${unpaid>0.01?fmt(Math.round(unpaid)):'✓ 已全回'}</td>`;
+        html+=`<td class="nr"><span style="font-weight:600;color:${rate>=80?'var(--green-text)':rate>=50?'var(--amber-text)':'var(--red-text)'}">${rate}%</span></td></tr>`;
+      });
+      // 全局汇总
+      const allPT=perfData.reduce((a,b)=>a+b.amount,0);
+      const allCT=collectData.reduce((a,b)=>a+b.amount,0);
+      const allUnpaid=allPT-allCT;
+      const allRate=allPT>0?Math.round(allCT/allPT*100):0;
+      html+=`<tr class="tr"><td>全部合计</td><td class="nr" style="color:var(--blue-text)">${fmt(allPT)}</td><td class="nr" style="color:var(--teal-text)">${fmt(allCT)}</td><td class="nr" style="color:${allUnpaid>0.01?'var(--red-text)':'var(--green-text)'};font-weight:600">${allUnpaid>0.01?fmt(Math.round(allUnpaid)):'✓'}</td><td class="nr"><span style="font-weight:600;color:${allRate>=80?'var(--green-text)':allRate>=50?'var(--amber-text)':'var(--red-text)'}">${allRate}%</span></td></tr>`;
+      html+='</tbody></table>';
+    }
+    document.getElementById('pivot-wrap').innerHTML=html;
+    return;
+  }
+
   document.getElementById('pivot-wrap').innerHTML=html;
 }
 
