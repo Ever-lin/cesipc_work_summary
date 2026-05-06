@@ -4912,7 +4912,7 @@ function exportProjectsExcel(){
       `4. 项目数量：${latest.quantity||'暂无'}`,
       `5. 项目报价：${stripEmojiForCRM(latest.quote)||'暂无'}`,
       `6. 跟进详情：${fullProgress}`
-    ].join('\n');
+    ].join('\r\n');
     // 推进计划列：把1-5条合并为一段，每条之间换行
     const colAction=[
       `1. 行动内容：${latest.actionContent||'暂无'}`,
@@ -4920,7 +4920,7 @@ function exportProjectsExcel(){
       `3. 确认信息点：${latest.confirmPoints||'暂无'}`,
       `4. 可能的风险：${latest.risks||'暂无'}`,
       `5. 关键决策人：${latest.decisionMaker||'暂无'}`
-    ].join('\n');
+    ].join('\r\n');
     rows.push({
       '项目名称':latest.name||k,
       '客户名称':latest.client||'',
