@@ -3467,6 +3467,7 @@ function buildCRMTextFull(latest,allEntries){
   const clientHeader=latest.client?`${latest.client}\n`:'';
   const sc=SC[latest.status]||{label:latest.status||''};
   let r=`${clientHeader}`;
+  r+=`跟进详情\n`;
   r+=`1. 项目名称：${icon} ${latest.name||''} ${sc.label?`[${sc.label}]`:''}\n`;
   r+=`2. 项目进度：${latest.progressStage||'暂无'}\n`;
   r+=`3. 项目需求：\n${latest.requirement||'暂无'}\n`;
@@ -3481,6 +3482,13 @@ function buildCRMTextFull(latest,allEntries){
     });
   const followupText=progressLines.length?progressLines.join('\n'):'暂无';
   r+=`\n6. 跟进详情：\n${followupText}`;
+  // 推进计划部分
+  r+=`\n\n推进计划\n`;
+  r+=`1. 行动内容：${latest.actionContent||'暂无'}\n`;
+  r+=`2. 行动时间：${latest.actionTime||'暂无'}\n`;
+  r+=`3. 确认信息点：${latest.confirmPoints||'暂无'}\n`;
+  r+=`4. 可能的风险：${latest.risks||'暂无'}\n`;
+  r+=`5. 关键决策人：${latest.decisionMaker||'暂无'}`;
   return r;
 }
 
@@ -4888,21 +4896,39 @@ function exportProjectsExcel(){
     // expanded search — same fields as renderProjects
     if(pjQ){const hay=(k+' '+(latest.client||'')+' '+(latest.progress||'')+' '+(latest.actionContent||'')+' '+(latest.requirement||'')+' '+(latest.progressStage||'')+' '+(latest.confirmPoints||'')+' '+(latest.decisionMaker||'')+' '+(latest.quote||'')).toLowerCase();if(!hay.includes(pjQ))return;}
     const sc=SC[latest.status]||{label:latest.status};
+    // 汇总所有历史跟进详情记录
+    const allProgressLines=entries.slice().sort((a,b)=>a.id-b.id).flatMap(e=>{
+      const lines=e.progressLog&&e.progressLog.length?e.progressLog:(e.progress&&e.progress.trim()?[e.progress.trim()]:[]);
+      const d=e.recordDate||'';
+      return lines.map(l=>l.trim().startsWith('·')?l.trim():('· '+d+' '+l.trim()));
+    });
+    const fullProgress=allProgressLines.length?allProgressLines.join('\n'):'暂无';
+    // 跟进详情列：把1-6条合并为一段，每条之间换行
+    const icon=projIcon(latest.status);
+    const colFollowup=[
+      `1. 项目名称：${icon} ${latest.name||k} ${sc.label?'['+sc.label+']':''}`,
+      `2. 项目进度：${latest.progressStage||'暂无'}`,
+      `3. 项目需求：${latest.requirement||'暂无'}`,
+      `4. 项目数量：${latest.quantity||'暂无'}`,
+      `5. 项目报价：${stripEmojiForCRM(latest.quote)||'暂无'}`,
+      `6. 跟进详情：${fullProgress}`
+    ].join('\n');
+    // 推进计划列：把1-5条合并为一段，每条之间换行
+    const colAction=[
+      `1. 行动内容：${latest.actionContent||'暂无'}`,
+      `2. 行动时间：${latest.actionTime||'暂无'}`,
+      `3. 确认信息点：${latest.confirmPoints||'暂无'}`,
+      `4. 可能的风险：${latest.risks||'暂无'}`,
+      `5. 关键决策人：${latest.decisionMaker||'暂无'}`
+    ].join('\n');
     rows.push({
       '项目名称':latest.name||k,
       '客户名称':latest.client||'',
       '当前状态':sc.label,
       '项目进度':latest.progressStage||'',
       '优先级':latest.priority||'',
-      '项目需求':latest.requirement||'',
-      '项目数量':latest.quantity||'',
-      '项目报价':latest.quote||'',
-      '跟进详情':latest.progress||'',
-      '行动内容':latest.actionContent||'',
-      '行动时间':latest.actionTime||'',
-      '确认信息点':latest.confirmPoints||'',
-      '可能风险':latest.risks||'',
-      '关键决策人':latest.decisionMaker||'',
+      '跟进详情':colFollowup,
+      '推进计划':colAction,
       '记录日期':latest.recordDate||'',
       '历史记录数':entries.length,
       '保存时间':latest.savedAt||''
